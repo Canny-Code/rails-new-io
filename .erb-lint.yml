@@ -1,0 +1,46 @@
+---
+glob: "**/app/**/*.{html,turbo_stream,js}{+*,}.erb"
+exclude:
+  - '*vendor/*'
+  - '*app/views/svg/*'
+linters:
+  AllowedScriptType:
+    enabled: true
+  ClosingErbTagIndent:
+    enabled: true
+  DeprecatedClasses:
+    enabled: true
+  ErbSafety:
+    enabled: true
+    better_html_config: .better-html.yml
+  ExtraNewline:
+    enabled: true
+  FinalNewline:
+    enabled: true
+  HardCodedString:
+    enabled: false
+  NoJavascriptTagHelper:
+    enabled: true
+  ParserErrors:
+    enabled: true
+  RightTrim:
+    enabled: false
+  RequireInputAutocomplete:
+    enabled: false
+  RubocopText:
+    enabled: true
+  Rubocop:
+    enabled: true
+    rubocop_config:
+      inherit_from:
+        - .rubocop.yml
+  SelfClosingTag:
+    enabled: false
+  SpaceAroundErbTag:
+    enabled: true
+  SpaceInHtmlTag:
+    enabled: true
+  SpaceIndentation:
+    enabled: true
+  TrailingWhitespace:
+    enabled: true

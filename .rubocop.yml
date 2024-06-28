@@ -6,3 +6,28 @@ inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 # # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`
 # Layout/SpaceInsideArrayLiteralBrackets:
 #   Enabled: false
+#
+# Temp solution for now, need to look into it
+# The gist is that by default, this
+#
+# &lt;%= yield %&gt;
+#
+# caused
+#
+# Layout/TrailingEmptyLines: Final newline missing.
+# In file: app/views/layouts/application.html.erb
+#
+# The autofix resulted in
+#    &lt;%= yield
+# %&gt;
+#
+# which is not desirable.
+#
+# Not sure if this happens due to some exotic combo of
+# erb_lint + rubocop + better_html or what, but
+# I don't feel like researching right now
+#
+Layout/TrailingEmptyLines:
+  Enabled: true
+  Exclude:
+    - "**/app/**/*.{html,turbo_stream,js}{+*,}.erb"
