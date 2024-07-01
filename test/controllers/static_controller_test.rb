@@ -24,6 +24,4 @@ class StaticControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", "Live Demo | railsnew.io"
   end
-
-
 end
