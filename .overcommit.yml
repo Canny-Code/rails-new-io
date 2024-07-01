@@ -22,10 +22,21 @@ PreCommit:
     enabled: true
     required: true
     command: ['bundle', 'exec', 'rubocop', '-A']
+    stages: ['commit']
   ErbLint:
     enabled: true
     required: true
     command: ['bundle', 'exec', 'erblint', '--lint-all', '-a']
+    stages: ['commit']
+
+PostCheckout:
+  AddCorrectedFiles:
+    enabled: true
+    required: true
+    description: 'Add files that were auto-corrected by PreCommit hooks'
+    required_executable: 'git'
+    run_in_background: false
+    command: ['git', 'add', '--update']
 
 # PrePush:
 #   RSpec:
