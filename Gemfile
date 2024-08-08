@@ -12,6 +12,8 @@ gem "turbo-rails"
 gem "puma", ">= 5.0"
 gem "redis", ">= 4.0.1"
 
+gem "phlex-rails", "~> 1.2", ">= 1.2.1"
+
 group :development do
   gem "better_html", require: false
   gem "erb_lint", require: false

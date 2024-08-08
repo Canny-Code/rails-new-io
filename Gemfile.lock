@@ -175,6 +175,10 @@ GEM
     parser (3.3.4.1)
       ast (~> 2.4.1)
       racc
+    phlex (1.10.3)
+    phlex-rails (1.2.1)
+      phlex (~> 1.10.0)
+      railties (>= 6.1, < 8)
     propshaft (0.9.0)
       actionpack (>= 7.0.0)
       activesupport (>= 7.0.0)
@@ -339,6 +343,7 @@ DEPENDENCIES
   erb_lint
   jsbundling-rails
   overcommit
+  phlex-rails (~> 1.2, >= 1.2.1)
   propshaft
   puma (>= 5.0)
   rails (~> 7.2.0.rc1)

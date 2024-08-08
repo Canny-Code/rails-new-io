@@ -14,6 +14,12 @@ Bundler.require(*Rails.groups)
 
 module RailsNewIo
   class Application < Rails::Application
+    config.autoload_paths.push(
+      "#{root}/app/views/components",
+      "#{root}/app/views",
+      "#{root}/app/views/layouts"
+    )
+
     config.application_name = "railsnew.io"
 
     config.load_defaults 7.2
