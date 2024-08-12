@@ -3,8 +3,6 @@ source "https://rubygems.org"
 gem "rails", "~> 7.2.0.rc1"
 
 gem "bootsnap", require: false
-gem "cssbundling-rails"
-gem "jsbundling-rails"
 gem "propshaft"
 gem "sqlite3", ">= 1.4"
 gem "stimulus-rails"
@@ -13,6 +11,7 @@ gem "puma", ">= 5.0"
 gem "redis", ">= 4.0.1"
 
 gem "phlex-rails", "~> 1.2", ">= 1.2.1"
+gem "vite_rails", "~> 3.0", ">= 3.0.17"
 
 group :development do
   gem "better_html", require: false
