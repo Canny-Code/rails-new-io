@@ -2,6 +2,8 @@ unless ENV["SKIP_COVERAGE"] == "1"
   require "simplecov"
 
   SimpleCov.start do
+    enable_coverage :branch
+
     add_filter "/config/"
     add_filter "/test/"
 
@@ -16,9 +18,11 @@ unless ENV["SKIP_COVERAGE"] == "1"
 end
 
 ENV["RAILS_ENV"] ||= "test"
+# require "vite_rails" # let's see if we need this
 require_relative "../config/environment"
 require "rails/test_help"
 require "mocha/minitest"
+
 
 module ActiveSupport
   class TestCase
