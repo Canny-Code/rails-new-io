@@ -114,7 +114,7 @@ GEM
     bindex (0.8.1)
     bootsnap (1.18.4)
       msgpack (~> 1.2)
-    brakeman (6.1.2)
+    brakeman (6.2.1)
       racc
     builder (3.3.0)
     capybara (3.40.0)
@@ -136,6 +136,10 @@ GEM
       irb (~> 1.10)
       reline (>= 0.3.8)
     docile (1.4.1)
+    dotenv (3.1.2)
+    dotenv-rails (3.1.2)
+      dotenv (= 3.1.2)
+      railties (>= 6.1)
     drb (2.2.1)
     dry-cli (1.1.0)
     erb_lint (0.6.0)
@@ -204,6 +208,7 @@ GEM
     mission_control-jobs (0.3.1)
       importmap-rails
       irb (~> 1.13)
+      propshaft
       rails (>= 7.1)
       stimulus-rails
       turbo-rails
@@ -405,9 +410,10 @@ DEPENDENCIES
   amazing_print (~> 1.6)
   better_html
   bootsnap
-  brakeman
+  brakeman (~> 6.2, >= 6.2.1)
   capybara
   debug
+  dotenv-rails
   erb_lint
   litestream (~> 0.11.0)
   minio (~> 0.4.0)
