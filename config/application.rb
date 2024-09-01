@@ -22,7 +22,13 @@ module RailsNewIo
 
     config.application_name = "railsnew.io"
 
-    config.load_defaults 7.2
+    config.load_defaults 8.0
+
+    # Use Solid Queue for background jobs
+    config.active_job.queue_adapter = :solid_queue
+    config.solid_queue.connects_to = { database: { writing: :queue } }
+    # Ensure authorization is enabled for the Solid Queue web UI
+    config.mission_control.jobs.base_controller_class = "MissionControl::BaseController"
 
     config.autoload_lib(ignore: %w[assets tasks])
   end

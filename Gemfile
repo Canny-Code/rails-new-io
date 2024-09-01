@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem "rails", "~> 7.2.0"
+gem "rails", github: "rails/rails", branch: "main"
 
 gem "bootsnap", require: false
 gem "propshaft", "~> 0.9.1"
@@ -33,4 +33,13 @@ group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
   gem "rubocop-rails-omakase", require: false
   gem "amazing_print", "~> 1.6"
+  gem "minio", "~> 0.4.0"
 end
+# Add Solid Queue for background jobs
+gem "solid_queue", "~> 0.4"
+# Add a web UI for Solid Queue
+gem "mission_control-jobs", "~> 0.3"
+# Add Solid Cache as an Active Support cache store
+gem "solid_cache", "~> 0.7"
+# Ensure all SQLite databases are backed up
+gem "litestream", "~> 0.10.0"
