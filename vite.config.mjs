@@ -16,4 +16,7 @@ export default defineConfig({
       { delay: 200 }
     )
   ],
+  css: {
+    postcss: './postcss.config.cjs',
+  },
 });

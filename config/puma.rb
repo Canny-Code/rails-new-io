@@ -49,6 +49,10 @@ port ENV.fetch("PORT", 3000)
 
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart
+# Allow puma to manage Litestream replication process
+plugin :litestream
+# Allow puma to manage Solid Queue's supervisor process
+plugin :solid_queue
 
 # Only use a pidfile when requested
 pidfile ENV["PIDFILE"] if ENV["PIDFILE"]

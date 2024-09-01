@@ -1,8 +1,10 @@
 Rails.application.routes.draw do
-  get "up" => "rails/health#show", as: :rails_health_check
+  get "up", to: "rails/health#show", as: :rails_health_check
 
-  get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
-  get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
+  mount MissionControl::Jobs::Engine, at: "/jobs"
+
+  get "service-worker", to: "rails/pwa#service_worker", as: :pwa_service_worker
+  get "manifest", to: "rails/pwa#manifest", as: :pwa_manifest
 
   scope controller: :static do
     get :home
@@ -11,5 +13,5 @@ Rails.application.routes.draw do
     get :about
   end
 
-  root "static#home"
+  root to: "static#home"
 end
