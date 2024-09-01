@@ -12,9 +12,9 @@
 dbs:
   - path:
     replicas:
-      - type: s3
+      - type: minio
         bucket: $LITESTREAM_REPLICA_BUCKET
-        path:
+        path: storage/development.sqlite3
         access-key-id: $LITESTREAM_ACCESS_KEY_ID
         secret-access-key: $LITESTREAM_SECRET_ACCESS_KEY
   - path: storage/development-queue.sqlite3

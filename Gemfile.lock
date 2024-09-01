@@ -166,16 +166,20 @@ GEM
       reline (>= 0.4.2)
     json (2.7.2)
     language_server-protocol (3.17.0.3)
-    litestream (0.10.4)
+    litestream (0.11.0)
+      activejob
       logfmt (>= 0.0.10)
       sqlite3
-    litestream (0.10.4-arm64-darwin)
+    litestream (0.11.0-arm64-darwin)
+      activejob
       logfmt (>= 0.0.10)
       sqlite3
-    litestream (0.10.4-x86_64-darwin)
+    litestream (0.11.0-x86_64-darwin)
+      activejob
       logfmt (>= 0.0.10)
       sqlite3
-    litestream (0.10.4-x86_64-linux)
+    litestream (0.11.0-x86_64-linux)
+      activejob
       logfmt (>= 0.0.10)
       sqlite3
     logfmt (0.0.10)
@@ -273,10 +277,6 @@ GEM
     rake (13.2.1)
     rdoc (6.7.0)
       psych (>= 4.0.0)
-    redis (5.2.0)
-      redis-client (>= 0.22.0)
-    redis-client (0.22.2)
-      connection_pool
     regexp_parser (2.9.2)
     reline (0.5.9)
       io-console (~> 0.5)
@@ -315,7 +315,7 @@ GEM
     ruby2_keywords (0.0.5)
     rubyzip (2.3.2)
     securerandom (0.3.1)
-    selenium-webdriver (4.23.0)
+    selenium-webdriver (4.24.0)
       base64 (~> 0.2)
       logger (~> 1.4)
       rexml (~> 3.2, >= 3.2.5)
@@ -330,10 +330,10 @@ GEM
       simplecov (~> 0.16)
     simplecov_json_formatter (0.1.4)
     smart_properties (1.17.0)
-    solid_cache (0.7.0)
-      activejob (>= 7)
-      activerecord (>= 7)
-      railties (>= 7)
+    solid_cache (1.0.1)
+      activejob (>= 7.2)
+      activerecord (>= 7.2)
+      railties (>= 7.2)
     solid_queue (0.5.0)
       activejob (>= 7.1)
       activerecord (>= 7.1)
@@ -409,26 +409,25 @@ DEPENDENCIES
   capybara
   debug
   erb_lint
-  litestream (~> 0.10.0)
+  litestream (~> 0.11.0)
   minio (~> 0.4.0)
-  mission_control-jobs (~> 0.3)
-  mocha (~> 2.4, >= 2.4.5)
+  mission_control-jobs (~> 0.3.1)
+  mocha (~> 2.4.5)
   overcommit
-  phlex-rails (~> 1.2, >= 1.2.1)
+  phlex-rails (~> 1.2.1)
   propshaft (~> 0.9.1)
-  puma (>= 5.0)
+  puma (>= 6.4.2)
   rails!
-  redis (>= 4.0.1)
   rubocop-rails-omakase
-  selenium-webdriver
+  selenium-webdriver (~> 4.24)
   simplecov
   simplecov-tailwindcss
-  solid_cache (~> 0.7)
-  solid_queue (~> 0.4)
-  sqlite3 (~> 2.0, >= 2.0.4)
+  solid_cache (~> 1.0.1)
+  solid_queue (~> 0.5.0)
+  sqlite3 (~> 2.0.4)
   stimulus-rails
   turbo-rails
-  vite_rails (~> 3.0, >= 3.0.17)
+  vite_rails (~> 3.0.17)
   web-console
 
 BUNDLED WITH

@@ -1,4 +1,7 @@
-unless ENV["SKIP_COVERAGE"] == "1"
+require_relative "support/coverage_helper"
+extend CoverageHelper
+
+unless skip_coverage?
   require "simplecov"
 
   SimpleCov.start do
@@ -26,10 +29,11 @@ require "mocha/minitest"
 
 module ActiveSupport
   class TestCase
-    # Run tests in parallel with specified workers
+    extend CoverageHelper
+
     parallelize(workers: :number_of_processors)
 
-    unless ENV["SKIP_COVERAGE"] == "1"
+    unless skip_coverage?
       parallelize_setup do |worker|
         SimpleCov.command_name "#{SimpleCov.command_name}-#{worker}"
       end

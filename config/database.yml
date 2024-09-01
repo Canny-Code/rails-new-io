@@ -22,7 +22,7 @@ cache: &cache
 development:
   primary:
     <<: *default
-    database: storage/development.sqlite3
+    database: storage/development.sqlite3  # Ensure this line is correct
   queue: *queue
   cache: *cache
 
