@@ -1,5 +1,10 @@
-require "simplecov"
-require "simplecov-tailwindcss"
+require_relative "../../test/support/coverage_helper"
+include CoverageHelper
+
+unless skip_coverage?
+  require "simplecov"
+  require "simplecov-tailwindcss"
+end
 
 namespace :test do
   desc "Run all tests and collate coverage"
