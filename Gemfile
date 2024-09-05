@@ -36,7 +36,7 @@ group :development, :test do
   gem "dotenv-rails"
 end
 # Add Solid Queue for background jobs
-gem "solid_queue", "~> 0.5.0"
+gem "solid_queue", "~> 0.8.1"
 # Add a web UI for Solid Queue
 gem "mission_control-jobs", "~> 0.3.1"
 
