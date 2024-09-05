@@ -42,6 +42,6 @@ gem "mission_control-jobs", "~> 0.3.1"
 
 
 # Add Solid Cache as an Active Support cache store
-gem "solid_cache", "~> 1.0.1"
+gem "solid_cache", "~> 1.0.5"
 # Ensure all SQLite databases are backed up
 gem "litestream", "~> 0.11.0"
