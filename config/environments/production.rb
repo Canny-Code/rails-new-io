@@ -1,20 +1,39 @@
 require "active_support/core_ext/integer/time"
 
-Rails.application.configure do
-  # Settings specified here will take precedence over those in config/application.rb.
-
-  require "tracer"
-  Tracer.trace do |event|
-    if event[:method] == :write && event[:class].to_s.include?("Logger")
-      puts "=" * 200
-      puts "Logger write called from #{event[:path]}:#{event[:line]}"
-      puts "Class: #{event[:class]}"
-      puts event[:args].first if event[:args].is_a?(Array) && event[:args].first.is_a?(String)
-      puts "=" * 200
-    end
+class CustomLogger < ActiveSupport::Logger
+  def initialize(logger)
+    @original_logger = logger
+    super(STDOUT)
   end
 
+  def add(severity, message = nil, progname = nil, &block)
+    puts "=" * 100
+    puts "Logger write: #{message || (block && block.call)}"
+    puts "Called from: #{caller[3]}"
+    puts "=" * 100
+    @original_logger.add(severity, message, progname, &block)
+  end
 
+  def silence(temporary_level = Logger::ERROR)
+    old_logger_level = level
+    self.level = temporary_level
+    yield self
+  ensure
+    self.level = old_logger_level
+  end
+end
+
+Rails.application.configure do
+  # Settings specified here will take precedence over those in config/application.rb.
+  config.after_initialize do
+    Rails.logger = CustomLogger.new(Rails.logger)
+
+    # Reassign the logger for ActiveRecord, ActionController, etc.
+    ActiveSupport::LogSubscriber.logger = Rails.logger
+    ActiveRecord::Base.logger = Rails.logger
+    ActionController::Base.logger = Rails.logger
+    ActionView::Base.logger = Rails.logger
+  end
   # Code is not reloaded between requests.
   config.enable_reloading = false
 

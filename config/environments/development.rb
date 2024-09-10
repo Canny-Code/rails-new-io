@@ -1,8 +1,38 @@
 require "active_support/core_ext/integer/time"
 
+class CustomLogger < ActiveSupport::Logger
+  def initialize(logger)
+    @original_logger = logger
+    super(STDOUT)
+  end
+
+  def add(severity, message = nil, progname = nil, &block)
+    puts "HEREHEHEHRHRHEHEHEHE"
+    puts "Logger write: #{message || (block && block.call)}"
+    puts "Called from: #{caller[3]}"
+    @original_logger.add(severity, message, progname, &block)
+  end
+
+  def silence(temporary_level = Logger::ERROR)
+    old_logger_level = level
+    self.level = temporary_level
+    yield self
+  ensure
+    self.level = old_logger_level
+  end
+end
+
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
+  config.after_initialize do
+    Rails.logger = CustomLogger.new(Rails.logger)
 
+    # Reassign the logger for ActiveRecord, ActionController, etc.
+    ActiveSupport::LogSubscriber.logger = Rails.logger
+    # ActiveRecord::Base.logger = Rails.logger
+    ActionController::Base.logger = Rails.logger
+    ActionView::Base.logger = Rails.logger
+  end
   # In the development environment your application's code is reloaded any time
   # it changes. This slows down response time but is perfect for development
   # since you don't have to restart the web server when you make code changes.
