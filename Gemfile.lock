@@ -287,7 +287,7 @@ GEM
     phlex-rails (1.2.1)
       phlex (~> 1.10.0)
       railties (>= 6.1, < 8)
-    propshaft (0.9.1)
+    propshaft (1.0.0)
       actionpack (>= 7.0.0)
       activesupport (>= 7.0.0)
       rack
@@ -321,7 +321,7 @@ GEM
     rdoc (6.7.0)
       psych (>= 4.0.0)
     regexp_parser (2.9.2)
-    reline (0.5.9)
+    reline (0.5.10)
       io-console (~> 0.5)
     rexml (3.3.4)
       strscan
@@ -473,7 +473,7 @@ DEPENDENCIES
   mocha (~> 2.4.5)
   overcommit
   phlex-rails (~> 1.2.1)
-  propshaft (~> 0.9.1)
+  propshaft (~> 1.0.0)
   puma (>= 6.4.2)
   rails!
   rubocop-rails-omakase
