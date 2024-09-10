@@ -16,6 +16,7 @@ gem "puma", ">= 6.4.2"
 gem "phlex-rails", "~> 1.2.1"
 gem "thruster", "~> 0.1.8"
 gem "vite_rails", "~> 3.0.17"
+gem "tracer"
 
 group :development do
   gem "better_html", require: false

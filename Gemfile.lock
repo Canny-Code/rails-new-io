@@ -410,6 +410,7 @@ GEM
     thruster (0.1.8-x86_64-darwin)
     thruster (0.1.8-x86_64-linux)
     timeout (0.4.1)
+    tracer (0.2.3)
     turbo-rails (2.0.6)
       actionpack (>= 6.0.0)
       activejob (>= 6.0.0)
@@ -484,6 +485,7 @@ DEPENDENCIES
   sqlite3 (~> 2.0.4)
   stimulus-rails
   thruster (~> 0.1.8)
+  tracer
   turbo-rails
   vite_rails (~> 3.0.17)
   web-console
