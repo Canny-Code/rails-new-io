@@ -3,9 +3,9 @@ require "active_support/core_ext/integer/time"
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
-  require 'tracer'
+  require "tracer"
   Tracer.add_filter { |event, file, line, id, binding, klass|
-    if id == :write && klass.to_s.include?('Logger')
+    if id == :write && klass.to_s.include?("Logger")
       puts "Logger write called from #{file}:#{line}"
       puts binding.local_variable_get(:string) if binding.local_variable_defined?(:string)
     end
