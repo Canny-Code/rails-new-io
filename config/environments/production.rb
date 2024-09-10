@@ -4,13 +4,15 @@ Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
   require "tracer"
-  Tracer.add_filter { |event, file, line, id, binding, klass|
-    if id == :write && klass.to_s.include?("Logger")
-      puts "Logger write called from #{file}:#{line}"
-      puts binding.local_variable_get(:string) if binding.local_variable_defined?(:string)
+  Tracer.trace do |event|
+    if event[:method] == :write && event[:class].to_s.include?("Logger")
+      puts "=" * 200
+      puts "Logger write called from #{event[:path]}:#{event[:line]}"
+      puts "Class: #{event[:class]}"
+      puts event[:args].first if event[:args].is_a?(Array) && event[:args].first.is_a?(String)
+      puts "=" * 200
     end
-  }
-  Tracer.on
+  end
 
 
   # Code is not reloaded between requests.
