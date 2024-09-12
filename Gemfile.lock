@@ -321,7 +321,7 @@ GEM
     rdoc (6.7.0)
       psych (>= 4.0.0)
     regexp_parser (2.9.2)
-    reline (0.5.9)
+    reline (0.5.10)
       io-console (~> 0.5)
     rexml (3.3.4)
       strscan
@@ -411,7 +411,7 @@ GEM
     thruster (0.1.8-x86_64-linux)
     timeout (0.4.1)
     tracer (0.2.3)
-    turbo-rails (2.0.6)
+    turbo-rails (2.0.7)
       actionpack (>= 6.0.0)
       activejob (>= 6.0.0)
       railties (>= 6.0.0)
