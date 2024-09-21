@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/rails/rails.git
-  revision: 4aa78117fa427ec6d761b81fb1d3877a20703b9e
+  revision: aeb0fa4bcc7cb838debcca333a12deacaaeb3e30
   branch: main
   specs:
     actioncable (8.0.0.alpha)
@@ -413,9 +413,8 @@ GEM
     thruster (0.1.8-x86_64-darwin)
     thruster (0.1.8-x86_64-linux)
     timeout (0.4.1)
-    turbo-rails (2.0.6)
+    turbo-rails (2.0.9)
       actionpack (>= 6.0.0)
-      activejob (>= 6.0.0)
       railties (>= 6.0.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
@@ -487,7 +486,7 @@ DEPENDENCIES
   sqlite3 (~> 2.0.4)
   stimulus-rails
   thruster (~> 0.1.8)
-  turbo-rails
+  turbo-rails (~> 2.0.9)
   vite_rails (~> 3.0.17)
   web-console
 
