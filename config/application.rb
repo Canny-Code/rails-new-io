@@ -31,5 +31,9 @@ module RailsNewIo
     config.mission_control.jobs.base_controller_class = "MissionControl::BaseController"
 
     config.autoload_lib(ignore: %w[assets tasks])
+
+    config.litestream.replica_bucket = litestream_credentials.replica_bucket rescue "test"
+    config.litestream.replica_key_id = litestream_credentials.replica_key_id rescue "123"
+    config.litestream.replica_access_key = litestream_credentials.replica_access_key rescue "456"
   end
 end

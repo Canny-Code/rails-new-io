@@ -71,6 +71,7 @@ ActiveRecord::Schema[8.0].define(version: 2024_08_18_142916) do
   end
 
   create_table "solid_queue_processes", force: :cascade do |t|
+    t.string "name", null: false
     t.string "kind", null: false
     t.datetime "last_heartbeat_at", null: false
     t.bigint "supervisor_id"
