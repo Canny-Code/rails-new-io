@@ -144,7 +144,7 @@ GEM
       railties (>= 6.0.0)
     iniparse (1.5.0)
     io-console (0.7.2)
-    irb (1.14.0)
+    irb (1.14.1)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     json (2.7.2)
@@ -261,7 +261,7 @@ GEM
     phlex-rails (1.2.1)
       phlex (~> 1.10.0)
       railties (>= 6.1, < 8)
-    propshaft (1.0.0)
+    propshaft (1.1.0)
       actionpack (>= 7.0.0)
       activesupport (>= 7.0.0)
       rack
@@ -427,7 +427,7 @@ GEM
       activemodel (>= 6.0.0)
       bindex (>= 0.4.0)
       railties (>= 6.0.0)
-    webrick (1.8.1)
+    webrick (1.8.2)
     websocket (1.2.11)
     websocket-driver (0.7.6)
       websocket-extensions (>= 0.1.0)
@@ -468,7 +468,7 @@ DEPENDENCIES
   mocha (~> 2.4.5)
   overcommit
   phlex-rails (~> 1.2.1)
-  propshaft (~> 1.0.0)
+  propshaft (~> 1.1.0)
   puma (>= 6.4.3)
   rails (= 8.0.0.beta1)
   rubocop-rails-omakase
