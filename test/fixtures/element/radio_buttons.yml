@@ -1,0 +1,33 @@
+# == Schema Information
+#
+# Table name: element_radio_buttons
+#
+#  id              :integer          not null, primary key
+#  default         :boolean
+#  selected_option :string
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#
+database_sqlite3:
+  default: true
+  selected_option: sqlite3
+
+database_mysql:
+  default: false
+  selected_option: mysql
+
+database_trilogy:
+  default: false
+  selected_option: trilogy
+
+database_postgresql:
+  default: false
+  selected_option: postgresql
+
+database_mariadb_mysql:
+  default: false
+  selected_option: mariadb-mysql
+
+database_mariadb_trilogy:
+  default: false
+  selected_option: mariadb-trilogy

@@ -1,0 +1,22 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# == Schema Information
+#
+# Table name: element_text_fields
+#
+#  id            :integer          not null, primary key
+#  default_value :string
+#  max_length    :integer
+#  value         :string
+#  created_at    :datetime         not null
+#  updated_at    :datetime         not null
+#
+one:
+  default_value: MyString
+  value: MyString
+  max_length: 1
+
+two:
+  default_value: MyString
+  value: MyString
+  max_length: 1

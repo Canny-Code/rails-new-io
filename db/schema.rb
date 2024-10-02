@@ -10,13 +10,70 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_09_01_091744) do
+ActiveRecord::Schema[8.0].define(version: 2024_10_03_103443) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
 
   create_table "_litestream_seq", force: :cascade do |t|
     t.integer "seq"
+  end
+
+  create_table "element_checkboxes", force: :cascade do |t|
+    t.boolean "default"
+    t.boolean "checked"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "element_radio_buttons", force: :cascade do |t|
+    t.boolean "default"
+    t.string "selected_option"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "element_text_fields", force: :cascade do |t|
+    t.string "default_value"
+    t.string "value"
+    t.integer "max_length"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "element_unclassifieds", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "elements", force: :cascade do |t|
+    t.string "label", null: false
+    t.integer "sub_group_id"
+    t.string "variant_type"
+    t.string "variant_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["label"], name: "index_elements_on_label"
+    t.index ["sub_group_id"], name: "index_elements_on_sub_group_id"
+    t.index ["variant_type", "variant_id"], name: "index_elements_on_variant_type_and_variant_id"
+  end
+
+  create_table "groups", force: :cascade do |t|
+    t.string "title", null: false
+    t.integer "page_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["page_id"], name: "index_groups_on_page_id"
+    t.index ["title"], name: "index_groups_on_title"
+  end
+
+  create_table "pages", force: :cascade do |t|
+    t.string "title", null: false
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_pages_on_slug", unique: true
+    t.index ["title"], name: "index_pages_on_title"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -140,10 +197,22 @@ ActiveRecord::Schema[8.0].define(version: 2024_09_01_091744) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "sub_groups", force: :cascade do |t|
+    t.string "title", null: false
+    t.integer "group_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["group_id"], name: "index_sub_groups_on_group_id"
+    t.index ["title"], name: "index_sub_groups_on_title"
+  end
+
+  add_foreign_key "elements", "sub_groups"
+  add_foreign_key "groups", "pages"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "sub_groups", "groups"
 end
