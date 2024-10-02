@@ -19,10 +19,11 @@
 #
 #  page_id  (page_id => pages.id)
 #
-one:
-  title: GroupOne  # Corrected title
-  page: one
 
-two:
-  title: GroupTwo
-  page: two
+databases:
+  title: Databases
+  page: basic_setup
+
+dev_env:
+  title: Development Environment
+  page: basic_setup

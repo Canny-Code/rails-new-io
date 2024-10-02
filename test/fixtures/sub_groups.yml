@@ -19,10 +19,19 @@
 #
 #  group_id  (group_id => groups.id)
 #
-one:
-  title: MyString
-  group: one
 
-two:
-  title: MyString
-  group: two
+relational_dbs:
+  title: Relational Databases
+  group: databases
+
+document_dbs:
+  title: Document Databases
+  group: databases
+
+key_value_dbs:
+  title: Key-Value Stores
+  group: databases
+
+dev_env_default:
+  title: Default
+  group: dev_env

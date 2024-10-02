@@ -10,10 +10,14 @@
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
 #
-one:
+skip_git:
   default: false
   checked: false
 
-two:
-  default: false
+skip_docker:
+  default: true
   checked: false
+
+skip_action_mailer:
+  default: false
+  checked: true

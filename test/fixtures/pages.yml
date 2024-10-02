@@ -15,10 +15,6 @@
 #  index_pages_on_slug   (slug) UNIQUE
 #  index_pages_on_title  (title)
 #
-one:
-  title: PageOne
-  slug: "page-one"
-
-two:
-  title: PageTwo
-  slug: "page-two"
+basic_setup:
+  title: "Basic Setup"
+  slug: "basic-setup"

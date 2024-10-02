@@ -22,14 +22,47 @@
 #
 #  sub_group_id  (sub_group_id => sub_groups.id)
 #
-checkbox:
-  label: Checkbox
-  sub_group: one
-  variant_type: checkbox
-  variant_id: 1
+skip_git:
+  label: Skip Git
+  sub_group: dev_env_default
+  variant: skip_git (Element::Checkbox)
 
-radio_button:
-  label: RadioButton
-  sub_group: two
-  variant_type: radio_button
-  variant_id: 2
+skip_docker:
+  label: Skip Docker
+  sub_group: dev_env_default
+  variant: skip_docker (Element::Checkbox)
+
+skip_action_mailer:
+  label: Skip Action Mailer
+  sub_group: dev_env_default
+  variant: skip_action_mailer (Element::Checkbox)
+  
+database_sqlite3:
+  label: SQLite3
+  sub_group: relational_dbs
+  variant: database_sqlite3 (Element::RadioButton)
+
+database_mysql:
+  label: MySQL
+  sub_group: relational_dbs
+  variant: database_mysql (Element::RadioButton)
+
+database_trilogy:
+  label: Trilogy
+  sub_group: relational_dbs
+  variant: database_trilogy (Element::RadioButton)
+
+database_postgresql:
+  label: PostgreSQL
+  sub_group: relational_dbs
+  variant: database_postgresql (Element::RadioButton)
+
+database_mariadb_mysql:
+  label: MariaDB (MySQL)
+  sub_group: relational_dbs
+  variant: database_mariadb_mysql (Element::RadioButton)
+
+database_mariadb_trilogy:
+  label: MariaDB (Trilogy)
+  sub_group: relational_dbs
+  variant: database_mariadb_trilogy (Element::RadioButton)

@@ -8,10 +8,26 @@
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
 #
-one:
-  default: One
-  selected_option: One
+database_sqlite3:
+  default: true
+  selected_option: sqlite3
 
-two:
-  default: One
-  selected_option: Two
+database_mysql:
+  default: false
+  selected_option: mysql
+
+database_trilogy:
+  default: false
+  selected_option: trilogy
+
+database_postgresql:
+  default: false
+  selected_option: postgresql
+
+database_mariadb_mysql:
+  default: false
+  selected_option: mariadb-mysql
+
+database_mariadb_trilogy:
+  default: false
+  selected_option: mariadb-trilogy
