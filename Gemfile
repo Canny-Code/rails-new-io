@@ -36,7 +36,7 @@ end
 
 group :development, :test do
   gem "brakeman", "~> 6.2.1", require: false
-  gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
+  gem "debug", platforms: %i[ mri ], require: "debug/prelude"
   gem "rubocop-rails-omakase", require: false
   gem "amazing_print", "~> 1.6"
   gem "minio", "~> 0.4.0"
