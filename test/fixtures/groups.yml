@@ -1,0 +1,28 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# == Schema Information
+#
+# Table name: groups
+#
+#  id         :integer          not null, primary key
+#  title      :string           not null
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#  page_id    :integer          not null
+#
+# Indexes
+#
+#  index_groups_on_page_id  (page_id)
+#  index_groups_on_title    (title)
+#
+# Foreign Keys
+#
+#  page_id  (page_id => pages.id)
+#
+one:
+  title: GroupOne  # Corrected title
+  page: one
+
+two:
+  title: GroupTwo
+  page: two

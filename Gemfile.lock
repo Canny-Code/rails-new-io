@@ -75,6 +75,7 @@ GEM
     addressable (2.8.7)
       public_suffix (>= 2.0.2, < 7.0)
     amazing_print (1.6.0)
+    annotaterb (4.12.0)
     ast (2.4.2)
     base64 (0.2.0)
     bcrypt_pbkdf (1.1.1)
@@ -131,6 +132,8 @@ GEM
     erubi (1.13.0)
     et-orbi (1.2.11)
       tzinfo
+    friendly_id (5.5.1)
+      activerecord (>= 4.0.0)
     fugit (1.11.1)
       et-orbi (~> 1, >= 1.2.11)
       raabro (~> 1.4)
@@ -261,7 +264,7 @@ GEM
     phlex-rails (1.2.1)
       phlex (~> 1.10.0)
       railties (>= 6.1, < 8)
-    propshaft (1.0.0)
+    propshaft (1.1.0)
       actionpack (>= 7.0.0)
       activesupport (>= 7.0.0)
       rack
@@ -454,6 +457,7 @@ PLATFORMS
 
 DEPENDENCIES
   amazing_print (~> 1.6)
+  annotaterb
   better_html
   bootsnap
   brakeman (~> 6.2.1)
@@ -461,6 +465,7 @@ DEPENDENCIES
   debug
   dotenv-rails
   erb_lint
+  friendly_id (~> 5.5.1)
   kamal (~> 1.8.3)
   litestream (~> 0.11.2)
   minio (~> 0.4.0)
@@ -468,7 +473,7 @@ DEPENDENCIES
   mocha (~> 2.4.5)
   overcommit
   phlex-rails (~> 1.2.1)
-  propshaft (~> 1.0.0)
+  propshaft (~> 1.1.0)
   puma (>= 6.4.3)
   rails (= 8.0.0.beta1)
   rubocop-rails-omakase

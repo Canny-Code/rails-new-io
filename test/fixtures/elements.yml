@@ -1,0 +1,35 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# == Schema Information
+#
+# Table name: elements
+#
+#  id           :integer          not null, primary key
+#  label        :string           not null
+#  variant_type :string
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
+#  sub_group_id :integer
+#  variant_id   :string
+#
+# Indexes
+#
+#  index_elements_on_label                        (label)
+#  index_elements_on_sub_group_id                 (sub_group_id)
+#  index_elements_on_variant_type_and_variant_id  (variant_type,variant_id)
+#
+# Foreign Keys
+#
+#  sub_group_id  (sub_group_id => sub_groups.id)
+#
+checkbox:
+  label: Checkbox
+  sub_group: one
+  variant_type: checkbox
+  variant_id: 1
+
+radio_button:
+  label: RadioButton
+  sub_group: two
+  variant_type: radio_button
+  variant_id: 2
