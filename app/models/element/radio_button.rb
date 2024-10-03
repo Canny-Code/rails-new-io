@@ -10,4 +10,8 @@
 #
 class Element::RadioButton < ApplicationRecord
   has_one :element, as: :variant
+
+  def displayed?
+    true
+  end
 end
