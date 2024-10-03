@@ -3,7 +3,7 @@ source "https://rubygems.org"
 gem "rails", "8.0.0.beta1"
 
 gem "bootsnap", require: false
-gem "kamal", "~> 1.8.3", require: false
+gem "kamal", "~> 2.1.1", require: false
 gem "mission_control-jobs", "~> 0.3.1"
 gem "litestream", "~> 0.11.2"
 gem "propshaft", "~> 1.0.0"
