@@ -25,9 +25,22 @@ class Element < ApplicationRecord
     Element::Checkbox
     Element::RadioButton
     Element::TextField
+    Element::Unclassified
   ]
 
   belongs_to :sub_group
 
   validates :label, presence: true, uniqueness: { scope: :sub_group_id }
+
+  def self.null
+    new(variant: Element::Null.new)
+  end
+
+  def variant
+    super || Element::Null.new
+  end
+
+  def displayed?
+    variant.displayed?
+  end
 end

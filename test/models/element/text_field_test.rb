@@ -12,7 +12,9 @@
 require "test_helper"
 
 class Element::TextFieldTest < ActiveSupport::TestCase
-  # test "the truth" do
-  #   assert true
-  # end
+  test "text field is displayed" do
+    text_field = Element::TextField.new
+
+    assert text_field.displayed?
+  end
 end
