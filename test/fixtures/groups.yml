@@ -27,3 +27,7 @@ databases:
 dev_env:
   title: Development Environment
   page: basic_setup
+
+essentials:
+  title: Essentials
+  page: basic_setup

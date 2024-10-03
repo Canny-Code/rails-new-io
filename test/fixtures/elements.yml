@@ -66,3 +66,8 @@ database_mariadb_trilogy:
   label: MariaDB (Trilogy)
   sub_group: relational_dbs
   variant: database_mariadb_trilogy (Element::RadioButton)
+
+app_name:
+  label: App Name
+  sub_group: essentials_default
+  variant: app_name (Element::TextField)

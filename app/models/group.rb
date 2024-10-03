@@ -20,4 +20,6 @@
 class Group < ApplicationRecord
   belongs_to :page
   has_many :sub_groups, dependent: :destroy
+
+  validates :title, presence: true, uniqueness: { scope: :page_id }
 end

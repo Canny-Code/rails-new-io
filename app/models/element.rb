@@ -24,7 +24,10 @@ class Element < ApplicationRecord
   delegated_type :variant, types: %w[
     Element::Checkbox
     Element::RadioButton
+    Element::TextField
   ]
 
   belongs_to :sub_group
+
+  validates :label, presence: true, uniqueness: { scope: :sub_group_id }
 end

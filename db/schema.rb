@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_09_29_101500) do
+ActiveRecord::Schema[8.0].define(version: 2024_10_02_184956) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -29,6 +29,14 @@ ActiveRecord::Schema[8.0].define(version: 2024_09_29_101500) do
   create_table "element_radio_buttons", force: :cascade do |t|
     t.boolean "default"
     t.string "selected_option"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "element_text_fields", force: :cascade do |t|
+    t.string "default_value"
+    t.string "value"
+    t.integer "max_length"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

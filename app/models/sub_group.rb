@@ -20,4 +20,6 @@
 class SubGroup < ApplicationRecord
   belongs_to :group
   has_many :elements, dependent: :destroy
+
+  validates :title, presence: true, uniqueness: { scope: :group_id }
 end
