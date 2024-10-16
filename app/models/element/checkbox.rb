@@ -11,7 +11,7 @@
 class Element::Checkbox < ApplicationRecord
   has_one :element, as: :variant
 
-  def self.displayed?
+  def displayed?
     true
   end
 end

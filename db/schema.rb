@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_10_02_184956) do
+ActiveRecord::Schema[8.0].define(version: 2024_10_03_103443) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -37,6 +37,11 @@ ActiveRecord::Schema[8.0].define(version: 2024_10_02_184956) do
     t.string "default_value"
     t.string "value"
     t.integer "max_length"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "element_unclassifieds", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
