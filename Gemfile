@@ -4,7 +4,7 @@ gem "rails", "8.0.0.beta1"
 
 gem "bootsnap", require: false
 gem "friendly_id", "~> 5.5.1"
-gem "kamal", "~> 1.8.3", require: false
+gem "kamal", "~> 2.2.2", require: false
 gem "mission_control-jobs", "~> 0.3.3"
 gem "litestream", "~> 0.11.2"
 gem "propshaft", "~> 1.1.0"
