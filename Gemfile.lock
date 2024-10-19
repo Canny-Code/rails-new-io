@@ -93,7 +93,7 @@ GEM
     bindex (0.8.1)
     bootsnap (1.18.4)
       msgpack (~> 1.2)
-    brakeman (6.2.1)
+    brakeman (6.2.2)
       racc
     builder (3.3.0)
     capybara (3.40.0)
@@ -141,7 +141,7 @@ GEM
       activesupport (>= 6.1)
     i18n (1.14.6)
       concurrent-ruby (~> 1.0)
-    importmap-rails (2.0.1)
+    importmap-rails (2.0.3)
       actionpack (>= 6.0.0)
       activesupport (>= 6.0.0)
       railties (>= 6.0.0)
@@ -214,7 +214,7 @@ GEM
     minio (0.4.0-x86_64-darwin)
     minio (0.4.0-x86_64-linux)
     minitest (5.25.1)
-    mission_control-jobs (0.3.1)
+    mission_control-jobs (0.3.3)
       importmap-rails
       irb (~> 1.13)
       rails (>= 7.1)
@@ -406,7 +406,7 @@ GEM
     thruster (0.1.8-x86_64-darwin)
     thruster (0.1.8-x86_64-linux)
     timeout (0.4.1)
-    turbo-rails (2.0.10)
+    turbo-rails (2.0.11)
       actionpack (>= 6.0.0)
       railties (>= 6.0.0)
     tzinfo (2.0.6)
@@ -456,7 +456,7 @@ DEPENDENCIES
   annotaterb
   better_html
   bootsnap
-  brakeman (~> 6.2.1)
+  brakeman (~> 6.2.2)
   capybara
   debug
   dotenv-rails
@@ -465,7 +465,7 @@ DEPENDENCIES
   kamal (~> 1.8.3)
   litestream (~> 0.11.2)
   minio (~> 0.4.0)
-  mission_control-jobs (~> 0.3.1)
+  mission_control-jobs (~> 0.3.3)
   mocha (~> 2.4.5)
   overcommit
   phlex-rails (~> 1.2.1)
@@ -481,7 +481,7 @@ DEPENDENCIES
   sqlite3 (~> 2.1.0)
   stimulus-rails
   thruster (~> 0.1.8)
-  turbo-rails (~> 2.0.10)
+  turbo-rails (~> 2.0.11)
   vite_rails (~> 3.0.17)
   web-console
 

@@ -5,14 +5,14 @@ gem "rails", "8.0.0.beta1"
 gem "bootsnap", require: false
 gem "friendly_id", "~> 5.5.1"
 gem "kamal", "~> 1.8.3", require: false
-gem "mission_control-jobs", "~> 0.3.1"
+gem "mission_control-jobs", "~> 0.3.3"
 gem "litestream", "~> 0.11.2"
 gem "propshaft", "~> 1.1.0"
 gem "solid_cache", "~> 1.0.6"
 gem "solid_queue", "~> 1.0.0"
 gem "sqlite3", "~> 2.1.0"
 gem "stimulus-rails"
-gem "turbo-rails", "~> 2.0.10"
+gem "turbo-rails", "~> 2.0.11"
 gem "puma", ">= 6.4.3"
 gem "phlex-rails", "~> 1.2.1"
 gem "thruster", "~> 0.1.8"
@@ -35,7 +35,7 @@ group :test do
 end
 
 group :development, :test do
-  gem "brakeman", "~> 6.2.1", require: false
+  gem "brakeman", "~> 6.2.2", require: false
   gem "debug", platforms: %i[ mri ], require: "debug/prelude"
   gem "rubocop-rails-omakase", require: false
   gem "amazing_print", "~> 1.6"
