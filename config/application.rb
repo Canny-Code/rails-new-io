@@ -12,6 +12,8 @@ require "rails/test_unit/railtie"
 
 Bundler.require(*Rails.groups)
 
+Dotenv::Rails.files.delete(".env")
+
 module RailsNewIo
   class Application < Rails::Application
     config.autoload_paths.push(
