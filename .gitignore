@@ -56,3 +56,4 @@ node_modules
 llm
 
 /config/credentials/test.key
+.kamal/secrets

@@ -1,10 +1,10 @@
 source "https://rubygems.org"
 
-gem "rails", "8.0.0.beta1"
+gem "rails", "8.0.0.rc1"
 
 gem "bootsnap", require: false
 gem "friendly_id", "~> 5.5.1"
-gem "kamal", "~> 1.8.3", require: false
+gem "kamal", "~> 2.2.2", require: false
 gem "mission_control-jobs", "~> 0.3.3"
 gem "litestream", "~> 0.11.2"
 gem "propshaft", "~> 1.1.0"
@@ -16,7 +16,7 @@ gem "turbo-rails", "~> 2.0.11"
 gem "puma", ">= 6.4.3"
 gem "phlex-rails", "~> 1.2.1"
 gem "thruster", "~> 0.1.8"
-gem "vite_rails", "~> 3.0.17"
+gem "vite_rails", "~> 3.0.18"
 
 group :development do
   gem "annotaterb"
