@@ -29,7 +29,7 @@ end
 group :test do
   gem "capybara"
   gem "selenium-webdriver", "~> 4.25.0"
-  gem "mocha", "~> 2.4.5"
+  gem "mocha", "~> 2.5.0"
   gem "simplecov", require: false
   gem "simplecov-tailwindcss", require: false
 end
