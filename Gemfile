@@ -28,7 +28,7 @@ end
 
 group :test do
   gem "capybara"
-  gem "selenium-webdriver", "~> 4.25.0"
+  gem "selenium-webdriver", "~> 4.26.0"
   gem "mocha", "~> 2.4.5"
   gem "simplecov", require: false
   gem "simplecov-tailwindcss", require: false
