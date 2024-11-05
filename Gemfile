@@ -16,7 +16,7 @@ gem "turbo-rails", "~> 2.0.11"
 gem "puma", ">= 6.4.3"
 gem "phlex-rails", "~> 1.2.1"
 gem "thruster", "~> 0.1.8"
-gem "vite_rails", "~> 3.0.18"
+gem "vite_rails", "~> 3.0.19"
 
 group :development do
   gem "annotaterb"
