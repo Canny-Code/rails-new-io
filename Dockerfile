@@ -78,9 +78,5 @@ USER rails
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
-ENV HTTP_PORT="3000" \
-    TARGET_PORT="3001"
-
-# Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
-CMD ["bundle", "exec", "thrust", "./bin/rails", "server"]
+EXPOSE 80
+CMD ["./bin/thrust", "./bin/rails", "server"]

@@ -37,19 +37,18 @@ builder:
 
 env:
   clear:
-    HOST: alpha.railsnew.io
-    PORT: 3001
-    RAILS_SERVE_STATIC_FILES: true
-    RAILS_LOG_TO_STDOUT: true
     SKIP_COVERAGE: "1"
+    RAILS_LOG_LEVEL: debug
+    SOLID_QUEUE_IN_PUMA: true
   secret:
     - RAILS_MASTER_KEY
 
 proxy:
   ssl: true
   host: alpha.railsnew.io
-  app_port: 3000
-  healthcheck:
-    path: /up
-    interval: 3
-    timeout: 30
+
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole"
