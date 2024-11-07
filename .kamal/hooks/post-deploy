@@ -2,6 +2,7 @@
 
 echo "$KAMAL_PERFORMER deployed $KAMAL_VERSION to $KAMAL_DESTINATION in $KAMAL_RUNTIME seconds"
 
-echo "Running migrations"
+# echo "Running migrations"
+echo "Loading schema"
 
-kamal exec rails db:migrate
+kamal exec rails db:schema:load
