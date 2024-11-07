@@ -6,3 +6,4 @@ echo "$KAMAL_PERFORMER deployed $KAMAL_VERSION to $KAMAL_DESTINATION in $KAMAL_R
 echo "Loading schema"
 
 kamal exec rails db:schema:load
+kamal exec rails db:schema:load:queue
