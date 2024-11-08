@@ -17,7 +17,7 @@
     "port": 3037
   },
   "production": {
-    "autoBuild": true,
-    "publicOutputDir": "vite"
+    "autoBuild": false,
+    "publicOutputDir": "assets"
   }
 }
