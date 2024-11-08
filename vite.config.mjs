@@ -19,4 +19,13 @@ export default defineConfig({
   css: {
     postcss: './postcss.config.cjs',
   },
+  build: {
+    manifest: true,
+    outDir: 'public/assets',
+    rollupOptions: {
+      input: {
+        application: './app/javascript/application.js'
+      }
+    }
+  }
 });
