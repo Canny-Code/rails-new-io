@@ -24,7 +24,7 @@ export default defineConfig({
     outDir: 'public/assets',
     rollupOptions: {
       input: {
-        application: './app/javascript/application.js'
+        input: resolve(__dirname, 'app/javascript/entrypoints/application.js')
       }
     }
   }
