@@ -22,10 +22,5 @@ export default defineConfig({
   build: {
     manifest: true,
     outDir: 'public/assets',
-    rollupOptions: {
-      input: {
-        application: './app/javascript/entrypoints/application.js'
-      }
-    }
-  }
+  },
 });
