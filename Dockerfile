@@ -11,9 +11,10 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libsqlite3-0 \
     build-essential libssl-dev git pkg-config python-is-python3 libgmp-dev ca-certificates gnupg xz-utils \
     libffi-dev libyaml-dev libreadline-dev zlib1g-dev libncurses5-dev libgdbm-dev \
-    libc6-dev && \
+    libc6-dev gcc-10 g++-10 make && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
-
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 \
+    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
 
 # Set production environment
 ENV RAILS_ENV="production" \
@@ -43,7 +44,8 @@ FROM base AS build
 # Install application gems
 COPY Gemfile Gemfile.lock ./
 RUN bundle config set --local build.nokogiri --use-system-libraries && \
-    bundle install --jobs 4 --retry 3 && \
+    bundle config build.msgpack --with-cflags="-O2" && \
+    bundle install --jobs 4 --retry 5 && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git
 
 # Install node modules
