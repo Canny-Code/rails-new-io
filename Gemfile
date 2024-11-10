@@ -6,7 +6,7 @@ gem "bootsnap", require: false
 gem "friendly_id", "~> 5.5.1"
 gem "kamal", "~> 2.3.0", require: false
 gem "thruster", "~> 0.1.8", require: false
-gem "mission_control-jobs", "~> 0.4.0"
+gem "mission_control-jobs", "~> 0.5.0"
 gem "litestream", "~> 0.12.0"
 gem "propshaft", "~> 1.1.0"
 gem "solid_cache", "~> 1.0.6"
