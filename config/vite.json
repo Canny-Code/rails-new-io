@@ -17,6 +17,7 @@
     "port": 3037
   },
   "production": {
-    "autoBuild": false
+    "autoBuild": false,
+    "publicOutputDir": "public"
   }
 }
