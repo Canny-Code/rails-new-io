@@ -38,6 +38,7 @@ builder:
 env:
   clear:
     SKIP_COVERAGE: "1"
+    RAILS_SERVE_STATIC_FILES: true
     RAILS_LOG_LEVEL: debug
     SOLID_QUEUE_IN_PUMA: true
   secret:
