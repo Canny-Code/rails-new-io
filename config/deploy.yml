@@ -11,12 +11,6 @@ servers:
   web:
     hosts:
       - 5.161.247.143
-    labels:
-      traefik.http.routers.rails_new_io.rule: Host(`alpha.railsnew.io`)
-      traefik.http.routers.rails_new_io_secure.entrypoints: websecure
-      traefik.http.routers.rails_new_io_secure.rule: Host(`alpha.railsnew.io`)
-      traefik.http.routers.rails_new_io_secure.tls: true
-      traefik.http.routers.rails_new_io_secure.tls.certresolver: letsencrypt
     options:
       network: "private"
   job:
@@ -26,21 +20,6 @@ servers:
     options:
       network: "private"
 
-traefik:
-  options:
-    publish:
-      - "443:443"
-    volume:
-      - "/letsencrypt/acme.json:/letsencrypt/acme.json"
-    network: "private"
-  args:
-    entryPoints.web.address: ":80"
-    entryPoints.websecure.address: ":443"
-    certificatesResolvers.letsencrypt.acme.email: "trinity@railsnew.io"
-    certificatesResolvers.letsencrypt.acme.storage: "/letsencrypt/acme.json"
-    certificatesResolvers.letsencrypt.acme.httpchallenge: true
-    certificatesResolvers.letsencrypt.acme.httpchallenge.entrypoint: web
-
 registry:
   server: ghcr.io
   username: trinitytakei
@@ -48,7 +27,9 @@ registry:
     - KAMAL_REGISTRY_PASSWORD
 
 builder:
-  multiarch: <%= ENV["CI"].present? ? false : true %>
+  arch:
+    - amd64
+    - arm64
   cache:
     type: registry
     image: trinitytakei/rails-new-io-build-cache
@@ -56,10 +37,19 @@ builder:
 
 env:
   clear:
-    HOST: alpha.railsnew.io
-    PORT: 3001
-    RAILS_SERVE_STATIC_FILES: true
-    RAILS_LOG_TO_STDOUT: true
     SKIP_COVERAGE: "1"
+    RAILS_SERVE_STATIC_FILES: true
+    RAILS_LOG_LEVEL: debug
+    SOLID_QUEUE_IN_PUMA: true
   secret:
     - RAILS_MASTER_KEY
+
+proxy:
+  ssl: true
+  host: alpha.railsnew.io
+
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole"

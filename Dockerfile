@@ -9,7 +9,9 @@ WORKDIR /rails
 # Install base packages
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libsqlite3-0 \
-    build-essential libssl-dev git pkg-config python-is-python3 libgmp-dev ca-certificates gnupg xz-utils && \
+    build-essential libssl-dev git pkg-config python-is-python3 libgmp-dev ca-certificates gnupg xz-utils \
+    libffi-dev libyaml-dev libreadline-dev zlib1g-dev libncurses5-dev libgdbm-dev \
+    libc6-dev && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Set production environment
@@ -40,7 +42,8 @@ FROM base AS build
 # Install application gems
 COPY Gemfile Gemfile.lock ./
 RUN bundle config set --local build.nokogiri --use-system-libraries && \
-    bundle install --jobs 4 --retry 3 && \
+    bundle config build.msgpack --with-cflags="-O2" && \
+    bundle install --jobs 4 --retry 5 && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git
 
 # Install node modules
@@ -55,8 +58,6 @@ RUN bundle exec bootsnap precompile app/ lib/
 
 # Precompiling assets for production without requiring secret RAILS_MASTER_KEY
 RUN RAILS_ENV=production SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
-
-# RUN yarn vite build
 
 # Final stage for app image
 FROM base
@@ -78,9 +79,5 @@ USER rails
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
-ENV HTTP_PORT="3000" \
-    TARGET_PORT="3001"
-
-# Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
-CMD ["bundle", "exec", "thrust", "./bin/rails", "server"]
+EXPOSE 80
+CMD ["./bin/thrust", "./bin/rails", "server"]

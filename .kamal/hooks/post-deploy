@@ -1,0 +1,9 @@
+#!/bin/bash
+
+echo "$KAMAL_PERFORMER deployed $KAMAL_VERSION to $KAMAL_DESTINATION in $KAMAL_RUNTIME seconds"
+
+echo "Running migrations"
+
+kamal bundle exec rails db:migrate
+kamal bundle exec rails db:migrate:queue
+kamal bundle exec rails db:migrate:cache
