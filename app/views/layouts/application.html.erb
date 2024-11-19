@@ -17,6 +17,12 @@
     <%= vite_javascript_tag "application" %>
   </head>
   <body>
+    <% if notice %>
+      <p class="p-4 mb-4 text-sm text-green-800 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800"><%= notice %></p>
+    <% end %>
+    <% if alert %>
+      <p class="p-4 mb-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800"><%= alert %></p>
+    <% end %>
     <%= render Nav::Main::Component.new %>
     <%= yield %>
     <!-- 100% privacy-first analytics -->

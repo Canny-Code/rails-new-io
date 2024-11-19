@@ -43,9 +43,37 @@ module ActiveSupport
       end
     end
 
-    # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
-
-    # Add more helper methods to be used by all tests here...
   end
+end
+
+def sign_in(user)
+  OmniAuth.config.test_mode = true
+  OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new(
+    provider: user.provider,
+    uid: user.uid,
+    info: {
+      email: user.email
+    }
+  )
+  Rails.application.env_config["omniauth.auth"] = OmniAuth.config.mock_auth[:github]
+  post "/auth/github"
+  follow_redirect!
+end
+
+# random github user
+def login_with_github
+  OmniAuth.config.test_mode = true
+  OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new(Faker::Omniauth.github)
+  Rails.application.env_config["omniauth.auth"] = OmniAuth.config.mock_auth[:github]
+  post "/auth/github"
+  follow_redirect!
+end
+
+def silence_omniauth_logger
+  original_logger = OmniAuth.config.logger
+  OmniAuth.config.logger = Logger.new("/dev/null")
+  yield
+ensure
+  OmniAuth.config.logger = original_logger
 end

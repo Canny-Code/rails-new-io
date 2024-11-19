@@ -1,0 +1,40 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# == Schema Information
+#
+# Table name: users
+#
+#  id         :integer          not null, primary key
+#  email      :string
+#  image      :string
+#  name       :string
+#  provider   :string
+#  slug       :string
+#  uid        :string
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#
+# Indexes
+#
+#  index_users_on_slug  (slug) UNIQUE
+#
+
+john:
+  name: John Doe
+  email: john@example.com
+  image: https://github.com/images/john.jpg
+  provider: github
+  uid: '123456'
+  slug: john-doe
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+jane:
+  name: Jane Smith
+  email: jane@example.com
+  image: https://github.com/images/jane.jpg
+  provider: github
+  uid: '789012'
+  slug: jane-smith
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
