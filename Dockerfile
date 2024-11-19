@@ -20,7 +20,7 @@ ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle"
 
-FROM base AS build
+FROM base AS nodejs
 
 # Install Node.js and Yarn
 ARG NODE_VERSION=22.3.0
@@ -38,8 +38,7 @@ RUN case "$(dpkg --print-architecture)" in \
 # Verify Node.js and Yarn installation
 RUN node --version && yarn --version
 
-# Throw-away build stage to reduce size of final image
-FROM base AS build
+FROM nodejs AS build
 
 # Install application gems
 COPY Gemfile Gemfile.lock ./
