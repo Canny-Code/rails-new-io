@@ -1,3 +1,12 @@
+GIT
+  remote: https://github.com/omniauth/omniauth-github.git
+  revision: f27bb4e018150d87e9444ad13955acfc9e76f4d7
+  branch: master
+  specs:
+    omniauth-github (2.0.1)
+      omniauth (~> 2.0)
+      omniauth-oauth2 (~> 1.8)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -132,6 +141,12 @@ GEM
     erubi (1.13.0)
     et-orbi (1.2.11)
       tzinfo
+    faraday (2.12.1)
+      faraday-net_http (>= 2.0, < 3.5)
+      json
+      logger
+    faraday-net_http (3.4.0)
+      net-http (>= 0.5.0)
     friendly_id (5.5.1)
       activerecord (>= 4.0.0)
     fugit (1.11.1)
@@ -139,6 +154,7 @@ GEM
       raabro (~> 1.4)
     globalid (1.2.1)
       activesupport (>= 6.1)
+    hashie (5.0.0)
     i18n (1.14.6)
       concurrent-ruby (~> 1.0)
     importmap-rails (2.0.3)
@@ -151,6 +167,8 @@ GEM
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     json (2.7.2)
+    jwt (2.9.3)
+      base64
     kamal (2.3.0)
       activesupport (>= 7.0)
       base64 (~> 0.2)
@@ -227,6 +245,10 @@ GEM
     mocha (2.5.0)
       ruby2_keywords (>= 0.0.5)
     msgpack (1.7.2)
+    multi_xml (0.7.1)
+      bigdecimal (~> 3.1)
+    net-http (0.5.0)
+      uri
     net-imap (0.5.0)
       date
       net-protocol
@@ -254,6 +276,23 @@ GEM
       racc (~> 1.4)
     nokogiri (1.16.7-x86_64-linux)
       racc (~> 1.4)
+    oauth2 (2.0.9)
+      faraday (>= 0.17.3, < 3.0)
+      jwt (>= 1.0, < 3.0)
+      multi_xml (~> 0.5)
+      rack (>= 1.2, < 4)
+      snaky_hash (~> 2.0)
+      version_gem (~> 1.1)
+    omniauth (2.1.2)
+      hashie (>= 3.4.6)
+      rack (>= 2.2.3)
+      rack-protection
+    omniauth-oauth2 (1.8.0)
+      oauth2 (>= 1.4, < 3)
+      omniauth (~> 2.0)
+    omniauth-rails_csrf_protection (1.0.2)
+      actionpack (>= 4.2)
+      omniauth (~> 2.0)
     ostruct (0.6.0)
     overcommit (0.64.0)
       childprocess (>= 0.6.3, < 6)
@@ -280,6 +319,10 @@ GEM
     raabro (1.4.0)
     racc (1.8.1)
     rack (3.1.7)
+    rack-protection (4.1.0)
+      base64 (>= 0.1.0)
+      logger (>= 1.6.0)
+      rack (>= 3.0.0, < 4)
     rack-proxy (0.7.7)
       rack
     rack-session (2.0.0)
@@ -373,6 +416,9 @@ GEM
       simplecov (~> 0.16)
     simplecov_json_formatter (0.1.4)
     smart_properties (1.17.0)
+    snaky_hash (2.0.1)
+      hashie
+      version_gem (~> 1.1, >= 1.1.1)
     solid_cache (1.0.6)
       activejob (>= 7.2)
       activerecord (>= 7.2)
@@ -418,6 +464,7 @@ GEM
     unicode-display_width (2.6.0)
     uri (0.13.1)
     useragent (0.16.10)
+    version_gem (1.1.4)
     vite_rails (3.0.19)
       railties (>= 5.1, < 9)
       vite_ruby (~> 3.0, >= 3.2.2)
@@ -472,6 +519,8 @@ DEPENDENCIES
   minio (~> 0.4.0)
   mission_control-jobs (~> 0.4.0)
   mocha (~> 2.5.0)
+  omniauth-github!
+  omniauth-rails_csrf_protection
   overcommit
   phlex-rails (~> 1.2.1)
   propshaft (~> 1.1.0)

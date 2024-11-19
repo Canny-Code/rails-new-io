@@ -8,6 +8,8 @@ gem "kamal", "~> 2.3.0", require: false
 gem "thruster", "~> 0.1.8", require: false
 gem "mission_control-jobs", "~> 0.4.0"
 gem "litestream", "~> 0.12.0"
+gem "omniauth-github", github: "omniauth/omniauth-github", branch: "master"
+gem "omniauth-rails_csrf_protection"
 gem "propshaft", "~> 1.1.0"
 gem "solid_cache", "~> 1.0.6"
 gem "solid_queue", "~> 1.0.1"

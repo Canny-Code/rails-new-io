@@ -13,5 +13,11 @@ Rails.application.routes.draw do
     get :about
   end
 
+  get "dashboard", to: "dashboard#show"
+
+  get "auth/github/callback", to: "sessions#create"
+  get "auth/failure", to: "sessions#failure"
+  delete "sign_out", to: "sessions#destroy"
+
   root to: "static#home"
 end
