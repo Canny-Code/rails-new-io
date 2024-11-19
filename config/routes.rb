@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get "pages/show"
   get "up", to: "rails/health#show", as: :rails_health_check
 
   mount MissionControl::Jobs::Engine, at: "/jobs"
@@ -13,5 +14,7 @@ Rails.application.routes.draw do
     get :about
   end
 
-  root to: "static#home"
+  resources :pages, only: :show
+
+  root to: "pages#show", defaults: { slug: "basic-setup" }
 end

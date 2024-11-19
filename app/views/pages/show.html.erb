@@ -1,0 +1,62 @@
+<div class="relative overflow-hidden">
+  <!-- TODO check if we need this -->
+  <div class="hidden sm:block sm:absolute sm:inset-y-0 sm:h-full sm:w-full pointer-events-none">
+    <div class="relative h-full max-w-screen-xl mx-auto"></div>
+  </div>
+  <div id="app-name-input" class="flex justify-center items-center bg-deep-azure-zeta pt-10 pb-10">
+    <div class="mr-10 md:mr-0">
+      <label for="app-name">
+        <span class="px-5 my-3 text-gray-500">Enter the name of your awesome app!</span>
+      </label>
+      <div data-controller="text-field-change" data-text-field-change-generated-output-outlet="#app-name-output">
+        <input id="app-name"
+               data-text-field-change-target="input"
+               name="app-name"
+               data-action="keyup->text-field-change#update"
+        data-default-value="my_app"
+        autocomplete="off"
+        placeholder="my_app"
+        class="appearance-none w-full px-5 py-3 border-2 border-gray-300 text-base leading-6 mx-5 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-lg">
+      </input>
+    </div>
+  </div>
+</div>
+</div>
+<div id="rails-new-command-generator-holder" data-controller="clipboard" class="flex-col bg-deep-azure-zeta pt-3 z-50">
+  <div id="rails-new-output-container"
+  class="text-gray-200 max-w-6xl mt-3 sm:mt-3 md:mt-3 lg:mt-4 xl:mt-4 h-auto sm:h-auto md:h-20 lg:h-20 xl:h-auto mb-6 mx-auto flex items-center">
+    <p id="rails-new-output-text" data-target="clipboard.source"
+    class="font-mono text-left px-5 sm:px-5 md:px-8 lg:px-10 xl:px-12 text-xs md:text-sm lg:text-sm xl:text-sm break-normal">
+      <code>rails new </code>
+      <code data-controller="generated-output" id="app-name-output">my_app</code>
+      <code id="api-flag"></code>
+      <code data-controller="generated-output" id="database-choice"></code>
+      <code id="rails-flags"></code>
+      <code id="rails-bytes"></code>
+    </p>
+  </div>
+  <div
+  class="sm:flex-wrap md:flex items-center justify-center divide-y sm:divide-y-2 md:divide-y-0 divide-gray-400 bg-deep-azure-zeta sm:pb-0 md:pb-8">
+    <a id="copy-to-clipboard"
+     data-action="click->clipboard#copy"
+      class="block bg-ruby md:rounded-lg ml-0 md:mr-5 px-6 text-gray-50 shadow-2xl whitespace-no-wrap py-3"
+      >📋️ Copy to Clipboard</a>
+    <div id="copied-to-clipboard-notice"
+       class="hidden bg-apple md:rounded-lg ml-0 md:mr-5 px-6 text-gray-100 shadow-2xl whitespace-no-wrap py-3"
+  >
+      📋️ Copied to Clipboard!
+    </div>
+    <a href="#"
+     id="verify-my-setup-link"
+     class="block bg-deep-azure-gamma
+           md:rounded-lg
+           min-w-full sm:min-w-full md:min-w-0
+           text-left sm:text-left md:text-center
+           ml-0 md:mr-5
+           px-6 text-gray-100 shadow-2xl whitespace-no-wrap py-3
+           hidden">
+      🏆️ Verify My Setup
+    </a>
+  </div>
+</div>
+<%= render Pages::Groups::Component.new(group: @page.groups.first) %>

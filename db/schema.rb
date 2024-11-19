@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_10_03_103443) do
+ActiveRecord::Schema[8.0].define(version: 2024_11_18_170650) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -53,7 +53,11 @@ ActiveRecord::Schema[8.0].define(version: 2024_10_03_103443) do
     t.string "variant_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "description"
+    t.string "image_path"
+    t.integer "position"
     t.index ["label"], name: "index_elements_on_label"
+    t.index ["position"], name: "index_elements_on_position"
     t.index ["sub_group_id"], name: "index_elements_on_sub_group_id"
     t.index ["variant_type", "variant_id"], name: "index_elements_on_variant_type_and_variant_id"
   end
@@ -63,6 +67,7 @@ ActiveRecord::Schema[8.0].define(version: 2024_10_03_103443) do
     t.integer "page_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "behavior_type"
     t.index ["page_id"], name: "index_groups_on_page_id"
     t.index ["title"], name: "index_groups_on_title"
   end
