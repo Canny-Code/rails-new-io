@@ -10,7 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
+<<<<<<< HEAD
 ActiveRecord::Schema[8.0].define(version: 2024_11_21_182456) do
+=======
+ActiveRecord::Schema[8.0].define(version: 2024_11_19_161136) do
+>>>>>>> d57fc51 (Initial version of Github login)
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
