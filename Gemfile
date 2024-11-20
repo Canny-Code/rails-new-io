@@ -5,7 +5,7 @@ gem "rails", "8.0.0.rc2"
 gem "bootsnap", require: false
 gem "friendly_id", "~> 5.5.1"
 gem "kamal", "~> 2.3.0", require: false
-gem "thruster", "~> 0.1.8", require: false
+gem "thruster", "~> 0.1.9", require: false
 gem "mission_control-jobs", "~> 0.4.0"
 gem "litestream", "~> 0.12.0"
 gem "omniauth-github", github: "omniauth/omniauth-github", branch: "master"
