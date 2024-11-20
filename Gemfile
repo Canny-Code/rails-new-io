@@ -17,7 +17,7 @@ gem "sqlite3", "~> 2.2.0"
 gem "stimulus-rails"
 gem "turbo-rails", "~> 2.0.11"
 gem "puma", ">= 6.4.3"
-gem "phlex-rails", "~> 1.2.1"
+gem "phlex-rails", "~> 1.2.2"
 gem "vite_rails", "~> 3.0.19"
 
 group :development do
