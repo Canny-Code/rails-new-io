@@ -1,5 +1,8 @@
 Rails.application.config.middleware.use OmniAuth::Builder do
-  github_oauth_credentials = Rails.application.credentials.github_oauth
+  next if ENV["RAILS_BUILD"]
+
+  credentials = Rails.application.credentials
+  github_oauth_credentials = credentials.github_oauth
 
   provider :github,
     github_oauth_credentials.client_id,

@@ -1,5 +1,6 @@
 class SessionsController < ApplicationController
   def create
+    Rails.logger.info "OmniAuth Auth Hash: #{request.env['omniauth.auth'].inspect}"
     @user = User.create_from_omniauth(request.env["omniauth.auth"])
 
     if @user.persisted?
@@ -17,5 +18,8 @@ class SessionsController < ApplicationController
   end
 
   def failure
+    Rails.logger.error "OmniAuth Failure: #{request.env['omniauth.error'].inspect}"
+    Rails.logger.error "OmniAuth Error Type: #{request.env['omniauth.error.type'].inspect}"
+    redirect_to root_path, alert: "Authentication failed"
   end
 end
