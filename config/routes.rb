@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get "users/show"
   get "up", to: "rails/health#show", as: :rails_health_check
 
   mount MissionControl::Jobs::Engine, at: "/jobs"
@@ -19,6 +20,7 @@ Rails.application.routes.draw do
   get "auth/failure", to: "sessions#failure"
   delete "sign_out", to: "sessions#destroy"
 
+  resources :users, only: [ :show ], path: ""
 
   root to: "static#home"
 end

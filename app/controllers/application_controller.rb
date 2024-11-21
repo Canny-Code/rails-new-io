@@ -6,7 +6,7 @@ class ApplicationController < ActionController::Base
   helper_method :user_signed_in?
 
   def authenticate_user!
-    redirect_to root_path, alert: "Requires authentication" unless user_signed_in?
+    redirect_to root_path, alert: "Please sign in first." unless user_signed_in?
   end
 
   def current_user

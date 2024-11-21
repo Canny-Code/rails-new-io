@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_11_19_161136) do
+ActiveRecord::Schema[8.0].define(version: 2024_11_21_182456) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -219,6 +219,8 @@ ActiveRecord::Schema[8.0].define(version: 2024_11_19_161136) do
     t.string "image"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "slug"
+    t.index ["slug"], name: "index_users_on_slug", unique: true
   end
 
   add_foreign_key "elements", "sub_groups"

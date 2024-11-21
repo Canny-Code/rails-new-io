@@ -34,6 +34,7 @@ group :test do
   gem "mocha", "~> 2.5.0"
   gem "simplecov", require: false
   gem "simplecov-tailwindcss", require: false
+  gem "faker"
 end
 
 group :development, :test do
