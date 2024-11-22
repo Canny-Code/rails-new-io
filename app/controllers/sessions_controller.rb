@@ -1,6 +1,6 @@
 class SessionsController < ApplicationController
   def create
-    @user = User.create_from_omniauth(request.env["omniauth.auth"])
+    @user = User.from_omniauth(request.env["omniauth.auth"])
 
     if @user.persisted?
       session[:user_id] = @user.id

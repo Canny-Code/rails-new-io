@@ -25,6 +25,7 @@ ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
 require "mocha/minitest"
+require "minitest/mock"
 
 
 module ActiveSupport
@@ -67,6 +68,13 @@ def login_with_github
   OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new(Faker::Omniauth.github)
   Rails.application.env_config["omniauth.auth"] = OmniAuth.config.mock_auth[:github]
   post "/auth/github"
+  follow_redirect!
+end
+
+def sign_out(_user)
+  OmniAuth.config.mock_auth[:github] = nil
+  Rails.application.env_config["omniauth.auth"] = nil
+  delete "/sign_out"
   follow_redirect!
 end
 

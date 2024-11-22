@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_11_21_182456) do
+ActiveRecord::Schema[8.0].define(version: 2024_11_22_054725) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -79,6 +79,17 @@ ActiveRecord::Schema[8.0].define(version: 2024_11_21_182456) do
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_pages_on_slug", unique: true
     t.index ["title"], name: "index_pages_on_title"
+  end
+
+  create_table "repositories", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "github_url", null: false
+    t.integer "user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["github_url"], name: "index_repositories_on_github_url", unique: true
+    t.index ["name"], name: "index_repositories_on_name"
+    t.index ["user_id"], name: "index_repositories_on_user_id"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -220,11 +231,15 @@ ActiveRecord::Schema[8.0].define(version: 2024_11_21_182456) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "slug"
+    t.text "github_token"
+    t.string "github_username", null: false
+    t.index ["github_username"], name: "index_users_on_github_username", unique: true
     t.index ["slug"], name: "index_users_on_slug", unique: true
   end
 
   add_foreign_key "elements", "sub_groups"
   add_foreign_key "groups", "pages"
+  add_foreign_key "repositories", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
