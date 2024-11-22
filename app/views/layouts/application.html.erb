@@ -15,6 +15,7 @@
     <link rel="apple-touch-icon" href="/icon.png">
     <%= vite_client_tag %>
     <%= vite_javascript_tag "application" %>
+    <%= Sentry.get_trace_propagation_meta.html_safe %>
   </head>
   <body>
     <% if notice %>
