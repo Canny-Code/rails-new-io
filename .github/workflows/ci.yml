@@ -59,17 +59,28 @@ jobs:
           ruby-version: .ruby-version
           bundler-cache: true
 
+      - name: Create dummy credentials
+        run: |
+          mkdir -p config/credentials
+          echo "1234567890abcdef1234567890abcdef" > config/credentials/test.key
+          bin/rails credentials:edit --environment test <<EOF
+          github_oauth:
+            client_id: dummy
+            client_secret: dummy
+          EOF
+        env:
+          EDITOR: cat
+          RAILS_MASTER_KEY: "1234567890abcdef1234567890abcdef"
+
       - name: Precompile assets
         env:
           RAILS_ENV: test
-          RAILS_BUILD: "true"
+          RAILS_MASTER_KEY: "1234567890abcdef1234567890abcdef"
         run: bin/rails assets:precompile
 
       - name: Run tests
         env:
           RAILS_ENV: test
-          RAILS_BUILD: "true"
-          # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test test:system
 
       - name: Keep screenshots from failed system tests

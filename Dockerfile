@@ -53,11 +53,13 @@ RUN yarn install --frozen-lockfile
 # Copy application code
 COPY . .
 
+# Generate encrypted dummy credentials for asset precompilation
+RUN bin/docker/generate-dummy-credentials
 # Precompile bootsnap code for faster boot times
 RUN bundle exec bootsnap precompile app/ lib/
 
 # Precompiling assets for production without requiring secret RAILS_MASTER_KEY
-RUN RAILS_ENV=production RAILS_BUILD=1 SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
+RUN RAILS_ENV=production ./bin/rails assets:precompile
 
 # Final stage for app image
 FROM base
