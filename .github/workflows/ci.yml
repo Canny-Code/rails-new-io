@@ -66,6 +66,7 @@ jobs:
           EDITOR="echo 'github_oauth:\n  client_id: dummy\n  client_secret: dummy' >" bin/rails credentials:edit --environment test
         env:
           RAILS_MASTER_KEY: "1234567890abcdef1234567890abcdef"
+          RAILS_ENV: test
 
       - name: Precompile assets
         env:
