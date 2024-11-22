@@ -21,7 +21,7 @@ class GithubRepositoryNameValidator
   end
 
   def available?
-    client = Octokit::Client.new(access_token: ENV['GITHUB_ACCESS_TOKEN'])
+    client = Octokit::Client.new(access_token: ENV["GITHUB_ACCESS_TOKEN"])
     begin
       client.repository("#{@owner}/#{@name}")
       false # Repository exists
