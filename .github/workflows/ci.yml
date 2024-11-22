@@ -63,7 +63,21 @@ jobs:
         run: |
           mkdir -p config/credentials
           echo "1234567890abcdef1234567890abcdef" > config/credentials/test.key
-          EDITOR="echo 'github_oauth:\n  client_id: dummy\n  client_secret: dummy' >" bin/rails credentials:edit --environment test
+          ruby -e '
+            require "rails"
+            content = <<~YAML
+              github_oauth:
+                client_id: dummy
+                client_secret: dummy
+            YAML
+            encrypted = ActiveSupport::EncryptedConfiguration.new(
+              config_path: "config/credentials/test.yml.enc",
+              key_path: "config/credentials/test.key",
+              env_key: "RAILS_MASTER_KEY",
+              raise_if_missing_key: true
+            )
+            encrypted.write(content)
+          '
         env:
           RAILS_MASTER_KEY: "1234567890abcdef1234567890abcdef"
           RAILS_ENV: test
