@@ -59,27 +59,29 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "github auth with no email" do
-    auth_hash = OmniAuth::AuthHash.new({
-      provider: "github",
-      uid: "123456",
-      info: {
-        nickname: "test nickname",
-        name: "Test User",
-        email: nil,
-        image: "https://avatars.githubusercontent.com/u/123545?v=3"
-      }
-    })
+    silence_omniauth_logger do
+      auth_hash = OmniAuth::AuthHash.new({
+        provider: "github",
+        uid: "123456",
+        info: {
+          nickname: "test nickname",
+          name: "Test User",
+          email: nil,
+          image: "https://avatars.githubusercontent.com/u/123545?v=3"
+        }
+      })
 
-    OmniAuth.config.mock_auth[:github] = auth_hash
+      OmniAuth.config.mock_auth[:github] = auth_hash
 
-    # Start with the initial auth request
-    post "/auth/github"
-    assert_response :redirect
-    # Now follow through to the callback
-    follow_redirect!
+      # Start with the initial auth request
+      post "/auth/github"
+      assert_response :redirect
+      # Now follow through to the callback
+      follow_redirect!
 
-    assert_redirected_to dashboard_url
-    assert_not_nil session[:user_id]
+      assert_redirected_to dashboard_url
+      assert_not_nil session[:user_id]
+    end
   end
 
   test "redirect to previous page after login" do
