@@ -12,11 +12,11 @@ class RepositoriesController < ApplicationController
   end
 
   def create
-    service = GithubRepositoryService.new(@user)
-
     begin
-      repository = service.create_repository(repository_params[:name])
-      redirect_to user_repository_path(@user, repository), notice: "Repository created successfully!"
+      GithubRepositoryService.new(@user)
+        .create_repository(repository_params[:name])
+
+      redirect_to user_repositories_path(@user), notice: "Repository created successfully!"
     rescue GithubRepositoryService::Error => e
       redirect_to new_user_repository_path(@user), alert: e.message
     end

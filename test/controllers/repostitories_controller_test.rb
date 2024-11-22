@@ -35,7 +35,7 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    assert_redirected_to user_repository_path(@user, Repository.last)
+    assert_redirected_to user_repositories_path(@user)
     assert_equal "Repository created successfully!", flash[:notice]
   end
 
