@@ -1,7 +1,7 @@
 # app/controllers/repositories_controller.rb
 class RepositoriesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_user
+  before_action :set_user, except: [ :check_name ]
 
   def index
     @repositories = @user.repositories
@@ -22,6 +22,13 @@ class RepositoriesController < ApplicationController
     end
   end
 
+  def check_name
+    validator = GithubRepositoryNameValidator.new(
+      params[:name],
+      current_user.github_username
+    )
+    render json: { available: validator.valid? }
+  end
   private
 
   def set_user
