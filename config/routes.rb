@@ -25,4 +25,6 @@ Rails.application.routes.draw do
   end
 
   root to: "static#home"
+
+  get "/repositories/check_name", to: "repositories#check_name"
 end
