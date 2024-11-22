@@ -63,13 +63,8 @@ jobs:
         run: |
           mkdir -p config/credentials
           echo "1234567890abcdef1234567890abcdef" > config/credentials/test.key
-          bin/rails credentials:edit --environment test <<EOF
-          github_oauth:
-            client_id: dummy
-            client_secret: dummy
-          EOF
+          EDITOR="echo 'github_oauth:\n  client_id: dummy\n  client_secret: dummy' >" bin/rails credentials:edit --environment test
         env:
-          EDITOR: cat
           RAILS_MASTER_KEY: "1234567890abcdef1234567890abcdef"
 
       - name: Precompile assets
