@@ -63,8 +63,7 @@ jobs:
         run: |
           mkdir -p config/credentials
           echo "1234567890abcdef1234567890abcdef" > config/credentials/test.key
-          ruby -e '
-            require "rails"
+          bin/rails runner '
             content = <<~YAML
               github_oauth:
                 client_id: dummy
