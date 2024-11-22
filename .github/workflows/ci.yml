@@ -76,15 +76,19 @@ jobs:
               raise_if_missing_key: true
             )
             encrypted.write(content)
+            exit 0 if File.exist?("config/credentials/test.yml.enc")
+            exit 1
           '
         env:
           RAILS_MASTER_KEY: "1234567890abcdef1234567890abcdef"
           RAILS_ENV: test
+          SECRET_KEY_BASE: "1234567890abcdef1234567890abcdef"
 
       - name: Precompile assets
         env:
           RAILS_ENV: test
           RAILS_MASTER_KEY: "1234567890abcdef1234567890abcdef"
+          SECRET_KEY_BASE: "1234567890abcdef1234567890abcdef"
         run: bin/rails assets:precompile
 
       - name: Run tests
