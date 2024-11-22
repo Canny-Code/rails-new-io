@@ -53,8 +53,6 @@ RUN yarn install --frozen-lockfile
 # Copy application code
 COPY . .
 
-# Generate encrypted dummy credentials for asset precompilation
-RUN bin/docker/generate-dummy-credentials
 # Precompile bootsnap code for faster boot times
 RUN bundle exec bootsnap precompile app/ lib/
 
