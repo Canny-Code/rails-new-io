@@ -60,13 +60,10 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "github auth with no email" do
-    Repository.delete_all
-    User.delete_all
-
     OmniAuth.config.test_mode = true
     auth_hash = OmniAuth::AuthHash.new({
       provider: "github",
-      uid: "123456",
+      uid: "1238383456",
       info: {
         name: "Test User",
         email: nil,
@@ -105,14 +102,11 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "github auth fails when user cannot be persisted" do
-    Repository.delete_all
-    User.delete_all
-
     silence_omniauth_logger do
       OmniAuth.config.test_mode = true
       auth_hash = OmniAuth::AuthHash.new({
         provider: "github",
-        uid: "123456",
+        uid: "12382900456",
         info: {
           name: "foo",
           email: "test@example.com",
@@ -136,7 +130,7 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
       post "/auth/github"
       follow_redirect!
 
-      assert_redirected_to root_url
+      assert_redirected_to root_path
       assert_equal "Failure", flash[:alert]
       assert_nil session[:user_id]
     end

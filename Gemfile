@@ -2,6 +2,7 @@ source "https://rubygems.org"
 
 gem "rails", "8.0.0"
 
+gem "aasm", "~> 5.5.0"
 gem "bootsnap", require: false
 gem "friendly_id", "~> 5.5.1"
 gem "git", "~> 2.3.2"
@@ -35,6 +36,7 @@ end
 
 group :test do
   gem "capybara"
+  gem "database_cleaner-active_record"
   gem "selenium-webdriver", "~> 4.26.0"
   gem "mocha", "~> 2.5.0"
   gem "simplecov", require: false

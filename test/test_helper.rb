@@ -26,12 +26,15 @@ require_relative "../config/environment"
 require "rails/test_help"
 require "mocha/minitest"
 require "minitest/mock"
+require "database_cleaner/active_record"
 
 ActiveRecord::Encryption.configure(
   primary_key: "test" * 4,
   deterministic_key: "test" * 4,
   key_derivation_salt: "test" * 4
 )
+
+DatabaseCleaner.strategy = :transaction
 
 module ActiveSupport
   class TestCase
@@ -50,6 +53,14 @@ module ActiveSupport
     end
 
     fixtures :all
+
+    def setup
+      DatabaseCleaner.start
+    end
+
+    def teardown
+      DatabaseCleaner.clean
+    end
   end
 end
 

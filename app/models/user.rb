@@ -26,6 +26,7 @@ class User < ApplicationRecord
   encrypts :github_token, deterministic: true, downcase: false
 
   has_many :repositories, dependent: :destroy
+  has_many :generated_apps, dependent: :destroy
 
   validates :provider, presence: true
   validates :uid, presence: true, uniqueness: true
@@ -42,7 +43,7 @@ class User < ApplicationRecord
     user.image = omniauth_params.info.image
     user.github_username = omniauth_params.dig("extra", "raw_info", "login")
     user.github_token = omniauth_params.dig("credentials", "token")
-    user.save
+    user.save if user.valid?
 
     user
   end
