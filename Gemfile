@@ -50,4 +50,7 @@ group :development, :test do
   gem "amazing_print", "~> 1.6"
   gem "minio", "~> 0.4.0"
   gem "dotenv-rails"
+  gem "simplecov", require: false
+  gem "simplecov-tailwindcss", require: false
+  gem "faker"
 end

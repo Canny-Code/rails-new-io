@@ -90,7 +90,6 @@ class AppStatus < ApplicationRecord
 
     event :restart do
       transitions from: [ :generating, :failed ], to: :pending
-      after do
         self.error_message = nil
         track_transition(:pending)
       end
@@ -106,7 +105,6 @@ class AppStatus < ApplicationRecord
   end
 
   def broadcast_status_steps
-    status_data = StatusStepsCalculator.call(generated_app)
     channel = "#{generated_app.to_gid}:app_status"
 
     Turbo::StreamsChannel.broadcast_replace_to(
@@ -116,8 +114,6 @@ class AppStatus < ApplicationRecord
       locals: { generated_app: generated_app }
     )
   end
-
-  private
 
   def track_transition(to_state)
     history_entry = {
