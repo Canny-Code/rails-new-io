@@ -1,3 +1,36 @@
+# == Schema Information
+#
+# Table name: generated_apps
+#
+#  id                    :integer          not null, primary key
+#  build_log_url         :string
+#  configuration_options :json             not null
+#  description           :text
+#  github_repo_name      :string
+#  github_repo_url       :string
+#  is_public             :boolean          default(TRUE)
+#  last_build_at         :datetime
+#  name                  :string           not null
+#  rails_version         :string           not null
+#  ruby_version          :string           not null
+#  selected_gems         :json             not null
+#  status                :string           default("pending")
+#  created_at            :datetime         not null
+#  updated_at            :datetime         not null
+#  user_id               :integer          not null
+#
+# Indexes
+#
+#  index_generated_apps_on_github_repo_url   (github_repo_url) UNIQUE
+#  index_generated_apps_on_name              (name)
+#  index_generated_apps_on_status            (status)
+#  index_generated_apps_on_user_id           (user_id)
+#  index_generated_apps_on_user_id_and_name  (user_id,name) UNIQUE
+#
+# Foreign Keys
+#
+#  user_id  (user_id => users.id)
+#
 require "test_helper"
 
 class GeneratedAppTest < ActiveSupport::TestCase

@@ -1,3 +1,26 @@
+# == Schema Information
+#
+# Table name: app_statuses
+#
+#  id               :integer          not null, primary key
+#  completed_at     :datetime
+#  error_message    :text
+#  started_at       :datetime
+#  status           :string           not null
+#  status_history   :json
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  generated_app_id :integer          not null
+#
+# Indexes
+#
+#  index_app_statuses_on_generated_app_id  (generated_app_id)
+#  index_app_statuses_on_status            (status)
+#
+# Foreign Keys
+#
+#  generated_app_id  (generated_app_id => generated_apps.id)
+#
 blog_app_status:
   generated_app: blog_app
   status: completed
@@ -42,6 +65,19 @@ failed_api_status:
     - from: "pushing_to_github"
       to: "failed"
       timestamp: <%= 50.minutes.ago %>
+
+failed_api_status_2:
+  generated_app: api_project_2
+  status: failed
+  started_at: <%= 2.hours.ago %>
+  completed_at: <%= 1.hour.ago %>
+  error_message: "Failed to deploy"
+
+completed_api_status:
+  generated_app: api_project_3
+  status: completed
+  started_at: <%= 3.hours.ago %>
+  completed_at: <%= 2.hours.ago %>
 
 pending_status:
   generated_app: blog_app

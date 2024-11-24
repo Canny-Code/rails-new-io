@@ -72,6 +72,10 @@ class AppStatus < ApplicationRecord
     end
   end
 
+  def self.states
+    aasm.states.map(&:name)
+  end
+
   private
 
   def track_transition(to_state)
