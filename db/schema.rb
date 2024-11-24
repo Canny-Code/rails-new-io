@@ -10,13 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_11_22_054725) do
+ActiveRecord::Schema[8.0].define(version: 2024_11_24_031606) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
 
   create_table "_litestream_seq", force: :cascade do |t|
     t.integer "seq"
+  end
+
+  create_table "app_statuses", force: :cascade do |t|
+    t.integer "generated_app_id", null: false
+    t.string "status", null: false
+    t.datetime "started_at"
+    t.datetime "completed_at"
+    t.text "error_message"
+    t.json "status_history", default: []
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["generated_app_id"], name: "index_app_statuses_on_generated_app_id"
+    t.index ["status"], name: "index_app_statuses_on_status"
   end
 
   create_table "element_checkboxes", force: :cascade do |t|
@@ -60,6 +73,27 @@ ActiveRecord::Schema[8.0].define(version: 2024_11_22_054725) do
     t.index ["position"], name: "index_elements_on_position"
     t.index ["sub_group_id"], name: "index_elements_on_sub_group_id"
     t.index ["variant_type", "variant_id"], name: "index_elements_on_variant_type_and_variant_id"
+  end
+
+  create_table "generated_apps", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.integer "user_id", null: false
+    t.string "ruby_version", null: false
+    t.string "rails_version", null: false
+    t.json "selected_gems", default: [], null: false
+    t.json "configuration_options", default: {}, null: false
+    t.string "github_repo_url"
+    t.string "github_repo_name"
+    t.string "build_log_url"
+    t.datetime "last_build_at"
+    t.boolean "is_public", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["github_repo_url"], name: "index_generated_apps_on_github_repo_url", unique: true
+    t.index ["name"], name: "index_generated_apps_on_name"
+    t.index ["user_id", "name"], name: "index_generated_apps_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_generated_apps_on_user_id"
   end
 
   create_table "groups", force: :cascade do |t|
@@ -237,7 +271,9 @@ ActiveRecord::Schema[8.0].define(version: 2024_11_22_054725) do
     t.index ["slug"], name: "index_users_on_slug", unique: true
   end
 
+  add_foreign_key "app_statuses", "generated_apps"
   add_foreign_key "elements", "sub_groups"
+  add_foreign_key "generated_apps", "users"
   add_foreign_key "groups", "pages"
   add_foreign_key "repositories", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

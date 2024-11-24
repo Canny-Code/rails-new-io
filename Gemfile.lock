@@ -10,6 +10,8 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
+    aasm (5.5.0)
+      concurrent-ruby (~> 1.0)
     actioncable (8.0.0)
       actionpack (= 8.0.0)
       activesupport (= 8.0.0)
@@ -119,6 +121,10 @@ GEM
     concurrent-ruby (1.3.4)
     connection_pool (2.4.1)
     crass (1.0.6)
+    database_cleaner-active_record (2.2.0)
+      activerecord (>= 5.a)
+      database_cleaner-core (~> 2.0.0)
+    database_cleaner-core (2.0.1)
     date (3.4.0)
     debug (1.9.2)
       irb (~> 1.10)
@@ -526,12 +532,14 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
+  aasm (~> 5.5.0)
   amazing_print (~> 1.6)
   annotaterb
   better_html
   bootsnap
   brakeman (~> 6.2.2)
   capybara
+  database_cleaner-active_record
   debug
   dotenv-rails
   erb_lint

@@ -1,0 +1,49 @@
+blog_app_status:
+  generated_app: blog_app
+  status: completed
+  started_at: <%= 2.days.ago %>
+  completed_at: <%= 2.days.ago + 5.minutes %>
+  status_history:
+    - from: "pending"
+      to: "generating"
+      timestamp: <%= 2.days.ago %>
+    - from: "generating"
+      to: "pushing_to_github"
+      timestamp: <%= 2.days.ago + 2.minutes %>
+    - from: "pushing_to_github"
+      to: "running_ci"
+      timestamp: <%= 2.days.ago + 4.minutes %>
+    - from: "running_ci"
+      to: "completed"
+      timestamp: <%= 2.days.ago + 5.minutes %>
+
+saas_starter_status:
+  generated_app: saas_starter
+  status: generating
+  started_at: <%= 5.minutes.ago %>
+  status_history:
+    - from: "pending"
+      to: "generating"
+      timestamp: <%= 5.minutes.ago %>
+
+failed_api_status:
+  generated_app: api_project
+  status: failed
+  started_at: <%= 1.hour.ago %>
+  completed_at: <%= 50.minutes.ago %>
+  error_message: "Failed to push to GitHub: Authentication error"
+  status_history:
+    - from: "pending"
+      to: "generating"
+      timestamp: <%= 1.hour.ago %>
+    - from: "generating"
+      to: "pushing_to_github"
+      timestamp: <%= 55.minutes.ago %>
+    - from: "pushing_to_github"
+      to: "failed"
+      timestamp: <%= 50.minutes.ago %>
+
+pending_status:
+  generated_app: blog_app
+  status: pending
+  status_history: []

@@ -27,7 +27,7 @@ john:
   email: john@example.com
   image: https://github.com/images/john.jpg
   provider: github
-  uid: '123456'
+  uid: "92839283"
   slug: john-doe
   github_username: johndoe
   github_token: "test-github-token"
