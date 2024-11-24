@@ -1,3 +1,26 @@
+# == Schema Information
+#
+# Table name: app_statuses
+#
+#  id               :integer          not null, primary key
+#  completed_at     :datetime
+#  error_message    :text
+#  started_at       :datetime
+#  status           :string           not null
+#  status_history   :json
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  generated_app_id :integer          not null
+#
+# Indexes
+#
+#  index_app_statuses_on_generated_app_id  (generated_app_id)
+#  index_app_statuses_on_status            (status)
+#
+# Foreign Keys
+#
+#  generated_app_id  (generated_app_id => generated_apps.id)
+#
 require "test_helper"
 
 class AppStatusTest < ActiveSupport::TestCase
@@ -75,5 +98,10 @@ class AppStatusTest < ActiveSupport::TestCase
   test "belongs to generated app" do
     assert_respond_to @pending_status, :generated_app
     assert_equal @generated_app, @pending_status.generated_app
+  end
+
+  test ".states returns all possible states" do
+    expected_states = %i[pending generating pushing_to_github running_ci completed failed]
+    assert_equal expected_states, AppStatus.states
   end
 end
