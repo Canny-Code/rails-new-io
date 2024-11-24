@@ -59,7 +59,7 @@ class DashboardControllerTest < ActionDispatch::IntegrationTest
 
     # Verify order (created_at desc)
     rows = css_select("tr td:first-child").map(&:text)
-    assert_equal ["weather-api", "inventory-api"], rows,
+    assert_equal [ "weather-api", "inventory-api" ], rows,
       "Failed APIs should be ordered by created_at desc"
   end
 end
