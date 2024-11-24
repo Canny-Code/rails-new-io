@@ -48,6 +48,7 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
       OmniAuth.config.test_mode = true
       OmniAuth.config.mock_auth[:github] = :invalid_credentials
       Rails.application.env_config["omniauth.auth"] = OmniAuth.config.mock_auth[:github]
+
       get "/auth/github/callback"
       follow_redirect!
 
@@ -59,29 +60,35 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "github auth with no email" do
-    silence_omniauth_logger do
-      auth_hash = OmniAuth::AuthHash.new({
-        provider: "github",
-        uid: "123456",
-        info: {
-          nickname: "test nickname",
-          name: "Test User",
-          email: nil,
-          image: "https://avatars.githubusercontent.com/u/123545?v=3"
+    Repository.delete_all
+    User.delete_all
+
+    OmniAuth.config.test_mode = true
+    auth_hash = OmniAuth::AuthHash.new({
+      provider: "github",
+      uid: "123456",
+      info: {
+        name: "Test User",
+        email: nil,
+        image: "https://avatars.githubusercontent.com/u/123545?v=3"
+      },
+      extra: {
+        raw_info: {
+          login: "test"
         }
-      })
+      },
+      credentials: {
+        token: "very-secret-token"
+      }
+    })
 
-      OmniAuth.config.mock_auth[:github] = auth_hash
+    OmniAuth.config.mock_auth[:github] = auth_hash
 
-      # Start with the initial auth request
-      post "/auth/github"
-      assert_response :redirect
-      # Now follow through to the callback
-      follow_redirect!
+    post "/auth/github"
+    follow_redirect!
 
-      assert_redirected_to dashboard_url
-      assert_not_nil session[:user_id]
-    end
+    assert_redirected_to dashboard_url
+    assert_not_nil session[:user_id]
   end
 
   test "redirect to previous page after login" do
@@ -98,22 +105,36 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "github auth fails when user cannot be persisted" do
+    Repository.delete_all
+    User.delete_all
+
     silence_omniauth_logger do
+      OmniAuth.config.test_mode = true
       auth_hash = OmniAuth::AuthHash.new({
         provider: "github",
-        uid: "", # Invalid uid (blank) will cause persistence to fail
+        uid: "123456",
         info: {
-          nickname: "test nickname",
           name: "foo",
           email: "test@example.com",
           image: "https://avatars.githubusercontent.com/u/123545?v=3"
+        },
+        extra: {
+          raw_info: {
+            login: nil
+          }
+        },
+        credentials: {
+          token: "very-secret-token"
         }
       })
 
       OmniAuth.config.mock_auth[:github] = auth_hash
-      Rails.application.env_config["omniauth.auth"] = auth_hash
+      OmniAuth.config.on_failure = Proc.new { |env|
+        OmniAuth::FailureEndpoint.new(env).redirect_to_failure
+      }
 
-      get "/auth/github/callback"
+      post "/auth/github"
+      follow_redirect!
 
       assert_redirected_to root_url
       assert_equal "Failure", flash[:alert]

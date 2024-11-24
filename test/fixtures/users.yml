@@ -30,7 +30,7 @@ john:
   uid: '123456'
   slug: john-doe
   github_username: johndoe
-  github_token: fake-token-john
+  github_token: "test-github-token"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -42,6 +42,6 @@ jane:
   uid: '789012'
   slug: jane-smith
   github_username: jane_smith
-  github_token: fake-token-jane
+  github_token: "test-github-token"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
