@@ -8,7 +8,9 @@
     </td>
     <td class="px-6 py-4"><%= time_ago_in_words(generated_app.created_at) %> ago</td>
     <td class="px-6 py-4">
-      <%= link_to "View", generated_app_path(generated_app), class: "text-blue-600 hover:text-blue-800" %>
+      <%= link_to "View", generated_app_path(generated_app),
+        class: "text-blue-600 hover:text-blue-800",
+        data: { turbo_frame: "_top" } %>
     </td>
   </tr>
 <% end %>

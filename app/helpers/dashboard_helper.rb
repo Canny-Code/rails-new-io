@@ -1,12 +1,14 @@
 module DashboardHelper
   def sort_link_to(name, column)
-    direction = if params[:sort] == column.to_s && params[:direction] == "asc"
+    sort_column = params[:sort].blank? ? "created_at" : params[:sort]
+
+    direction = if sort_column == column.to_s && params[:direction] == "asc"
       "desc"
     else
       "asc"
     end
 
-    icon = if params[:sort] == column.to_s
+    icon = if sort_column == column.to_s
       direction == "asc" ? "↓" : "↑"
     end
 

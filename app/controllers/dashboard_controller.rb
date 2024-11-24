@@ -25,10 +25,10 @@ class DashboardController < ApplicationController
   private
 
   def sort_column
-    %w[name status created_at].include?(params[:sort]) ? params[:sort] : 'created_at'
+    %w[name status created_at].include?(params[:sort]) ? params[:sort] : "created_at"
   end
 
   def sort_direction
-    %w[asc desc].include?(params[:direction]) ? params[:direction] : 'desc'
+    %w[asc desc].include?(params[:direction]) ? params[:direction] : "desc"
   end
 end
