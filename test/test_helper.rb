@@ -27,6 +27,11 @@ require "rails/test_help"
 require "mocha/minitest"
 require "minitest/mock"
 
+ActiveRecord::Encryption.configure(
+  primary_key: "test" * 4,
+  deterministic_key: "test" * 4,
+  key_derivation_salt: "test" * 4
+)
 
 module ActiveSupport
   class TestCase

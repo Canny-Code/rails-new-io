@@ -4,6 +4,7 @@ gem "rails", "8.0.0"
 
 gem "bootsnap", require: false
 gem "friendly_id", "~> 5.5.1"
+gem "git", "~> 2.3.2"
 gem "kamal", "~> 2.3.0", require: false
 gem "thruster", "~> 0.1.9", require: false
 gem "mission_control-jobs", "~> 0.6.0"
