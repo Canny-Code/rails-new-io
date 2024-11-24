@@ -11,11 +11,9 @@ class GithubCodePushServiceTest < ActiveSupport::TestCase
       rails_version: "7.1.2"
     )
 
-    # Ensure app is in the correct state
     @generated_app.app_status.start_generation!
 
-    # Create temp directory for test
-    @temp_dir = Rails.root.join("tmp", "test_#{Time.current.to_i}")
+    @temp_dir = Rails.root.join("tmp", "test_#{name}_#{Time.current.to_i}")
     FileUtils.mkdir_p(@temp_dir)
 
     @service = GithubCodePushService.new(@generated_app, @temp_dir)
