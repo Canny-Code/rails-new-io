@@ -104,4 +104,28 @@ class AppStatusTest < ActiveSupport::TestCase
     expected_states = %i[pending generating pushing_to_github running_ci completed failed]
     assert_equal expected_states, AppStatus.states
   end
+
+  test "restart transitions from failed to pending" do
+    app_status = app_statuses(:failed_api_status)
+    assert_equal "failed", app_status.status
+
+    app_status.restart!
+
+    assert_equal "pending", app_status.status
+    assert_nil app_status.error_message
+    assert_includes app_status.status_history, {
+      "from" => "failed",
+      "to" => "pending",
+      "timestamp" => app_status.status_history.last["timestamp"]
+    }
+  end
+
+  test "restart cannot transition from non-failed states" do
+    app_status = app_statuses(:completed_api_status)
+    assert_equal "completed", app_status.status
+
+    assert_raises(AASM::InvalidTransition) do
+      app_status.restart!
+    end
+  end
 end
