@@ -14,7 +14,6 @@
 #  rails_version         :string           not null
 #  ruby_version          :string           not null
 #  selected_gems         :json             not null
-#  status                :string           default("pending")
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
 #  user_id               :integer          not null
@@ -23,7 +22,6 @@
 #
 #  index_generated_apps_on_github_repo_url   (github_repo_url) UNIQUE
 #  index_generated_apps_on_name              (name)
-#  index_generated_apps_on_status            (status)
 #  index_generated_apps_on_user_id           (user_id)
 #  index_generated_apps_on_user_id_and_name  (user_id,name) UNIQUE
 #
