@@ -24,7 +24,9 @@ Rails.application.routes.draw do
   end
 
 
-  resources :generated_apps, only: [ :show ]
+  resources :generated_apps, only: [ :show ] do
+    resources :generation_attempts, only: [ :create ]
+  end
 
   constraints lambda { |request| request.session[:user_id].present? } do
     root to: "dashboard#show", as: :authenticated_root

@@ -22,7 +22,11 @@
 #  generated_app_id  (generated_app_id => generated_apps.id)
 #
 class AppStatus < ApplicationRecord
+  include ActionView::RecordIdentifier
+
   belongs_to :generated_app
+
+  after_update :broadcast_status_change
 
   include AASM
 
@@ -70,6 +74,14 @@ class AppStatus < ApplicationRecord
         track_transition(:failed)
       end
     end
+
+    event :restart do
+      transitions from: :failed, to: :pending
+      after do
+        self.error_message = nil
+        track_transition(:pending)
+      end
+    end
   end
 
   def self.states
@@ -87,5 +99,14 @@ class AppStatus < ApplicationRecord
 
     self.status_history = status_history.push(history_entry)
     save!
+  end
+
+  def broadcast_status_change
+    generated_app.broadcast_replace_to(
+      [ :generated_app, generated_app.user_id ],
+      target: dom_id(generated_app, generated_app.user_id),
+      partial: "generated_apps/generated_app",
+      locals: { generated_app: generated_app }
+    )
   end
 end
