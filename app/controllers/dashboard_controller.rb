@@ -1,4 +1,9 @@
 class DashboardController < ApplicationController
+  DEFAULT_SORT_COLUMN = "created_at"
+  DEFAULT_SORT_DIRECTION = "desc"
+  ALLOWED_SORT_COLUMNS = %w[name status created_at].freeze
+  ALLOWED_SORT_DIRECTIONS = %w[asc desc].freeze
+
   before_action :authenticate_user!
 
   def show
@@ -25,10 +30,10 @@ class DashboardController < ApplicationController
   private
 
   def sort_column
-    %w[name status created_at].include?(params[:sort]) ? params[:sort] : "created_at"
+    ALLOWED_SORT_COLUMNS.include?(params[:sort]) ? params[:sort] : DEFAULT_SORT_COLUMN
   end
 
   def sort_direction
-    %w[asc desc].include?(params[:direction]) ? params[:direction] : "desc"
+    ALLOWED_SORT_DIRECTIONS.include?(params[:direction]) ? params[:direction] : DEFAULT_SORT_DIRECTION
   end
 end

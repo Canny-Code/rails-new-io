@@ -1,15 +1,12 @@
 module DashboardHelper
   def sort_link_to(name, column)
-    sort_column = params[:sort].blank? ? "created_at" : params[:sort]
+    current_direction = params[:direction] || DashboardController::DEFAULT_SORT_DIRECTION
+    current_column = params[:sort] || DashboardController::DEFAULT_SORT_COLUMN
 
-    direction = if sort_column == column.to_s && params[:direction] == "asc"
+    direction = if column.to_s == current_column && current_direction == "asc"
       "desc"
     else
       "asc"
-    end
-
-    icon = if sort_column == column.to_s
-      direction == "asc" ? "↓" : "↑"
     end
 
     link_to(dashboard_path(
@@ -22,8 +19,8 @@ module DashboardHelper
       data: { turbo_frame: "generated_apps_list" }
     ) do
       concat name
-      if icon
-        concat content_tag(:span, icon, class: "ml-2")
+      if column.to_s == current_column
+        concat content_tag(:span, direction == "asc" ? "↓" : "↑", class: "ml-2")
       end
     end
   end
