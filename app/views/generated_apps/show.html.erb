@@ -36,9 +36,13 @@
       <div>
         <h3 class="text-sm font-medium text-gray-500">GitHub Repository</h3>
         <p class="mt-1">
-          <%= link_to @generated_app.github_repo_url, @generated_app.github_repo_url,
+          <% if @generated_app.github_repo_url.present? %>
+            <%= link_to @generated_app.github_repo_url,
+              URI.parse(@generated_app.github_repo_url).to_s,
               class: "text-blue-600 hover:text-blue-800",
-              target: "_blank" %>
+              target: "_blank",
+              rel: "noopener noreferrer" %>
+          <% end %>
         </p>
       </div>
       <div>

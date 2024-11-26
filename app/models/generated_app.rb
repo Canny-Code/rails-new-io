@@ -44,6 +44,13 @@ class GeneratedApp < ApplicationRecord
                     message: "only allows letters, numbers, dashes and underscores, must start and end with a letter or number"
                   }
   validates :ruby_version, :rails_version, presence: true
+  validates :github_repo_url,
+    format: {
+      with: %r{\Ahttps://github\.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+\z},
+      message: "must be a valid GitHub repository URL"
+    },
+    allow_blank: true
+
 
   def github_repository_name
     name # customize if needed; this doesn't necessarily have to be the same as the repo name

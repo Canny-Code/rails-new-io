@@ -105,7 +105,7 @@ class AppStatus < ApplicationRecord
   def broadcast_status_change
     generated_app.broadcast_replace_to(
       [ :generated_app, generated_app.user_id ],
-      target: dom_id(generated_app, generated_app.user_id),
+      target: "generated_app_#{generated_app.id}",
       partial: "generated_apps/generated_app",
       locals: { generated_app: generated_app }
     )
