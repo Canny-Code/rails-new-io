@@ -10,7 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_11_25_135935) do
+ActiveRecord::Schema[8.0].define(version: 2024_11_26_211640) do
+  create_table "app_generation_log_entries", force: :cascade do |t|
+    t.integer "generated_app_id", null: false
+    t.integer "level", default: 0, null: false
+    t.integer "phase", default: 0, null: false
+    t.text "message", null: false
+    t.json "metadata"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["generated_app_id", "created_at"], name: "idx_on_generated_app_id_created_at_eac7d7a1a2"
+    t.index ["generated_app_id"], name: "index_app_generation_log_entries_on_generated_app_id"
+  end
+
   create_table "app_statuses", force: :cascade do |t|
     t.integer "generated_app_id", null: false
     t.string "status", null: false
@@ -282,6 +294,7 @@ ActiveRecord::Schema[8.0].define(version: 2024_11_25_135935) do
     t.index ["slug"], name: "index_users_on_slug", unique: true
   end
 
+  add_foreign_key "app_generation_log_entries", "generated_apps"
   add_foreign_key "app_statuses", "generated_apps"
   add_foreign_key "elements", "sub_groups"
   add_foreign_key "generated_apps", "users"

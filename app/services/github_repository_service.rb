@@ -4,19 +4,21 @@ class GithubRepositoryService
   class RepositoryExistsError < Error; end
   class ApiError < Error; end
 
-  def initialize(user)
-    @user = user
+  def initialize(generated_app)
+    @generated_app = generated_app
+    @user = generated_app.user
     @max_retries = 3
-    @logger = Rails.logger
+    @logger = AppGeneration::Logger.new(generated_app)
   end
 
   def create_repository(name)
     if repository_exists?(name)
+      @logger.error("Repository '#{name}' already exists")
       raise RepositoryExistsError, "Repository '#{name}' already exists"
     end
 
     with_error_handling do
-      log_action("Creating repository: #{name} for user: #{@user.github_username}")
+      @logger.info("Creating repository: #{name}", { username: @user.github_username })
 
       options = {
         private: false,
@@ -31,6 +33,7 @@ class GithubRepositoryService
         github_url: response.html_url
       )
 
+      @logger.info("Repository created successfully", { url: response.html_url })
       response
     end
   end
@@ -59,27 +62,27 @@ class GithubRepositoryService
     begin
       yield
     rescue Octokit::TooManyRequests => e
-      log_error("Rate limit exceeded: #{e.message}")
+      @logger.warn("Rate limit exceeded, waiting for reset", {
+        reset_time: client.rate_limit.resets_at,
+        retry_count: retries
+      })
+
       reset_time = client.rate_limit.resets_at
       sleep_time = [ reset_time - Time.now, 0 ].max
       sleep(sleep_time)
+
       retry if (retries += 1) <= @max_retries
+
+      @logger.error("Rate limit exceeded and retry attempts exhausted")
       raise ApiError, "Rate limit exceeded and retry attempts exhausted"
     rescue Octokit::Error => e
-      log_error("GitHub API error: #{e.message}")
+      @logger.error("GitHub API error", { error: e.message, retry_count: retries })
+
       retry if (retries += 1) <= @max_retries
       raise ApiError, "GitHub API error: #{e.message}"
     rescue StandardError => e
-      log_error("Unexpected error: #{e.message}")
+      @logger.error("Unexpected error", { error: e.message })
       raise Error, "Unexpected error: #{e.message}"
     end
-  end
-
-  def log_action(message)
-    @logger.info("[GithubRepositoryService] #{message}")
-  end
-
-  def log_error(message)
-    @logger.error("[GithubRepositoryService] #{message}")
   end
 end
