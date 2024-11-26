@@ -1,0 +1,23 @@
+<div id="<%= dom_id(notification) %>"
+     class="<%= notification.read? ? "bg-gray-50" : "bg-white" %> p-4">
+  <div class="flex items-start">
+    <div class="flex-1">
+      <%= link_to notification.url, class: "block hover:bg-gray-50" do %>
+        <p class="text-sm text-gray-900"><%= notification.message %></p>
+        <p class="text-xs text-gray-500 mt-1">
+          <%= time_ago_in_words(notification.created_at) %> ago
+        </p>
+      <% end %>
+    </div>
+    <% unless notification.read? %>
+      <div class="ml-4">
+        <%= button_to notification_path(notification),
+                      method: :patch,
+                      class: "text-sm text-blue-600 hover:text-blue-800",
+                      data: { turbo_frame: dom_id(notification) } do %>
+          Mark as read
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

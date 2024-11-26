@@ -1,0 +1,17 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="bg-white shadow sm:rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+      <h1 class="text-lg font-medium text-gray-900">Notifications</h1>
+
+      <div id="notifications" class="mt-6 divide-y divide-gray-200">
+        <% if @notifications.any? %>
+          <%= render partial: "notifications/notification", collection: @notifications %>
+        <% else %>
+          <div class="text-center py-6 text-gray-500">
+            No notifications yet
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

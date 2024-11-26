@@ -1,0 +1,19 @@
+notification_one:
+  type: "AppStatusChangeNotifier::Notification"
+  event_id: <%= ActiveRecord::FixtureSet.identify(:app_status_change_one) %>
+  recipient_id: <%= ActiveRecord::FixtureSet.identify(:john) %>
+  recipient_type: "User"
+  read_at: null
+  seen_at: null
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+notification_two:
+  type: "AppStatusChangeNotifier::Notification"
+  event_id: <%= ActiveRecord::FixtureSet.identify(:app_status_change_two) %>
+  recipient_id: <%= ActiveRecord::FixtureSet.identify(:jane) %>
+  recipient_type: "User"
+  read_at: null
+  seen_at: null
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
