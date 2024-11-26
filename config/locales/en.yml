@@ -29,3 +29,6 @@
 
 en:
   hello: "Hello world"
+  notifiers:
+    app_status_change_notifier:
+      message: "%{app_name} status changed from %{old_status} to %{new_status}"

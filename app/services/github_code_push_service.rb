@@ -101,7 +101,7 @@ class GithubCodePushService
 
   def update_app_status
     generated_app.update!(github_repo_url: repository_url)
-    generated_app.app_status.start_github_push!
+    generated_app.push_to_github!
   end
 
   def repository_url

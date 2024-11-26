@@ -27,6 +27,7 @@ class AppStatus < ApplicationRecord
   belongs_to :generated_app
 
   after_update :broadcast_status_change
+  after_save :notify_status_change, if: :saved_change_to_status?
 
   include AASM
 
@@ -108,5 +109,14 @@ class AppStatus < ApplicationRecord
       partial: "generated_apps/generated_app",
       locals: { generated_app: generated_app }
     )
+  end
+
+  def notify_status_change
+    AppStatusChangeNotifier.with(
+      generated_app_id: generated_app.id,
+      generated_app_name: generated_app.name,
+      old_status: status_before_last_save,
+      new_status: status
+    ).deliver(generated_app.user)
   end
 end

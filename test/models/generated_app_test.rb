@@ -158,4 +158,151 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
     assert_nil AppStatus.find_by(id: status_id)
   end
+
+  test "lifecycle methods" do
+    app = GeneratedApp.create!(
+      name: "test-app",
+      user: @user,
+      ruby_version: "3.2.0",
+      rails_version: "7.1.0"
+    )
+
+    # Initial state
+    assert app.app_status.pending?
+    assert_nil app.started_at
+    assert_nil app.completed_at
+    assert_nil app.error_message
+
+    # Start generation
+    app.generate!
+    assert app.app_status.generating?
+    assert_not_nil app.started_at
+    assert_nil app.completed_at
+
+    # Push to GitHub
+    app.push_to_github!
+    assert app.app_status.pushing_to_github?
+
+    # Start CI
+    app.start_ci!
+    assert app.app_status.running_ci?
+
+    # Complete generation
+    app.mark_as_completed!
+    assert app.app_status.completed?
+    assert_not_nil app.completed_at
+    assert_nil app.error_message
+
+    # Fail generation (from pending)
+    app = GeneratedApp.create!(
+      name: "test-app-2",
+      user: @user,
+      ruby_version: "3.2.0",
+      rails_version: "7.1.0"
+    )
+    error_message = "Something went wrong"
+    app.mark_as_failed!(error_message)
+    assert app.app_status.failed?
+
+    assert_equal error_message, app.reload.app_status.reload.error_message
+
+    # Reset status
+    app.restart!
+    assert app.app_status.pending?
+    assert_nil app.error_message
+  end
+
+  test "notifies status changes" do
+    app = GeneratedApp.create!(
+      name: "test-app",
+      user: @user,
+      ruby_version: "3.2.0",
+      rails_version: "7.1.0"
+    )
+
+    assert_difference "Noticed::Event.count" do
+      app.generate!
+    end
+
+    assert_difference "Noticed::Event.count" do
+      app.push_to_github!
+    end
+
+    assert_difference "Noticed::Event.count" do
+      app.start_ci!
+    end
+
+    assert_difference "Noticed::Event.count" do
+      app.mark_as_completed!
+    end
+
+    # Test failure path with a new app
+    app = GeneratedApp.create!(
+      name: "test-app-2",
+      user: @user,
+      ruby_version: "3.2.0",
+      rails_version: "7.1.0"
+    )
+
+    assert_difference "Noticed::Event.count" do
+      app.mark_as_failed!("Error")
+    end
+  end
+
+  test "updates last_build_at on status changes" do
+    app = GeneratedApp.create!(
+      name: "test-app",
+      user: @user,
+      ruby_version: "3.2.0",
+      rails_version: "7.1.0"
+    )
+
+    # Initial state
+    assert app.app_status.pending?
+    assert_nil app.started_at
+    assert_nil app.completed_at
+    assert_nil app.error_message
+
+    # Start generation
+    assert_changes -> { app.reload.last_build_at } do
+      app.generate!
+    end
+    assert app.generating?
+
+    # Push to GitHub
+    assert_changes -> { app.reload.last_build_at } do
+      app.push_to_github!
+    end
+    assert app.app_status.pushing_to_github?
+
+    # Start CI
+    assert_changes -> { app.reload.last_build_at } do
+      app.start_ci!
+    end
+    assert app.running_ci?
+
+    # Complete generation
+    assert_changes -> { app.reload.last_build_at } do
+      app.mark_as_completed!
+    end
+    assert app.completed?
+
+    # Test failure path with a new app
+    app = GeneratedApp.create!(
+      name: "test-app-2",
+      user: @user,
+      ruby_version: "3.2.0",
+      rails_version: "7.1.0"
+    )
+    error_message = "Something went wrong"
+    app.mark_as_failed!(error_message)
+    assert app.app_status.failed?
+
+    assert_equal error_message, app.reload.app_status.reload.error_message
+
+    # Reset status
+    app.restart!
+    assert app.app_status.pending?
+    assert_nil app.error_message
+  end
 end

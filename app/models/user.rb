@@ -27,6 +27,10 @@ class User < ApplicationRecord
 
   has_many :repositories, dependent: :destroy
   has_many :generated_apps, dependent: :destroy
+  has_many :notifications, as: :recipient,
+                          dependent: :destroy,
+                          class_name: "Noticed::Notification"
+
 
   validates :provider, presence: true
   validates :uid, presence: true, uniqueness: true
@@ -46,5 +50,9 @@ class User < ApplicationRecord
     user.save if user.valid?
 
     user
+  end
+
+  def notifications
+    Noticed::Notification.where(recipient: self)
   end
 end

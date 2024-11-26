@@ -7,10 +7,6 @@ export default class extends Controller {
     'mobileNavigationDropdown'
   ]
 
-  connect() {
-    console.log('============ waa ==================')
-  }
-
   toggleHamburger() {
     this.hamburgerMenuOpenTarget.classList.add('hidden')
     this.hamburgerMenuCloseTarget.classList.remove('hidden')
