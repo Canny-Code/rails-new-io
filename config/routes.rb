@@ -19,13 +19,14 @@ Rails.application.routes.draw do
 
   get "dashboard", to: "dashboard#show"
 
-  resources :users, only: [ :show ], path: "" do
-    resources :repositories, only: [ :new, :create, :show, :index ]
-  end
-
+  resources :notifications, only: [ :index, :update ]
 
   resources :generated_apps, only: [ :show ] do
     resources :generation_attempts, only: [ :create ]
+  end
+
+  resources :users, only: [ :show ], path: "" do
+    resources :repositories, only: [ :new, :create, :show, :index ]
   end
 
   constraints lambda { |request| request.session[:user_id].present? } do

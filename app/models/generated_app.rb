@@ -30,12 +30,12 @@
 #  user_id  (user_id => users.id)
 #
 class GeneratedApp < ApplicationRecord
-  broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
+  include HasGenerationLifecycle
 
-  delegate :status, :started_at, :completed_at, :error_message, to: :app_status
+  broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
+  broadcasts_to ->(generated_app) { [ :notification_badge, generated_app.user_id ] }
 
   belongs_to :user
-  has_one :app_status, dependent: :destroy
 
   validates :name, presence: true,
                   uniqueness: { scope: :user_id },
@@ -45,15 +45,7 @@ class GeneratedApp < ApplicationRecord
                   }
   validates :ruby_version, :rails_version, presence: true
 
-  after_create :create_initial_status
-
   def github_repository_name
     name # customize if needed; this doesn't necessarily have to be the same as the repo name
-  end
-
-  private
-
-  def create_initial_status
-    create_app_status!
   end
 end

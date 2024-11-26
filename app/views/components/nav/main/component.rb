@@ -57,8 +57,10 @@ class Nav::Main::Component < ApplicationComponent
           end
 
           # Add Get in button on the right
-          div(class: "hidden md:absolute md:flex md:items-center md:justify-end md:inset-y-0 md:right-0") do
+          div(class: "hidden md:absolute md:flex md:items-center md:justify-end md:inset-y-0 md:right-0 gap-4") do
             if current_user
+              render NotificationBadge::Component.new
+
               button_to(
                 "/sign_out",
                 method: :delete,

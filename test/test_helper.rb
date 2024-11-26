@@ -61,6 +61,9 @@ module ActiveSupport
     def teardown
       DatabaseCleaner.clean
     end
+
+    set_fixture_class noticed_notifications: AppStatusChangeNotifier::Notification
+    set_fixture_class noticed_events: AppStatusChangeNotifier
   end
 end
 
