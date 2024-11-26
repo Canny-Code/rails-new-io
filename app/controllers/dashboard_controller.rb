@@ -7,27 +7,38 @@ class DashboardController < ApplicationController
   before_action :authenticate_user!
 
   def show
-    @pagy, @generated_apps = pagy(
-      current_user.generated_apps
-        .includes(:app_status)
-        .order(sort_column => sort_direction)
-    )
-
-    if params[:status].present?
-      @generated_apps = @generated_apps.joins(:app_status)
-                                     .where(app_statuses: { status: params[:status] })
-    end
-
-    if params[:search].present?
-      @generated_apps = @generated_apps.where("name LIKE ?", "%#{params[:search]}%")
-    end
-
-    if params[:sort].present?
-      @generated_apps = @generated_apps.order(params[:sort] => params[:direction])
-    end
+    @pagy, @generated_apps = pagy(filtered_apps)
   end
 
   private
+
+  def filtered_apps
+    apps = base_query
+    apps = filter_by_status(apps)
+    apps = filter_by_search(apps)
+    apply_sorting(apps)
+  end
+
+  def base_query
+    current_user.generated_apps
+                .includes(:app_status)
+                .order(sort_column => sort_direction)
+  end
+
+  def filter_by_status(scope)
+    return scope if params[:status].blank?
+    scope.joins(:app_status).where(app_statuses: { status: params[:status] })
+  end
+
+  def filter_by_search(scope)
+    return scope if params[:search].blank?
+    scope.where("name LIKE ?", "%#{sanitize_sql_like(params[:search])}%")
+  end
+
+  def apply_sorting(scope)
+    return scope if params[:sort].blank?
+    scope.order(sort_column => sort_direction)
+  end
 
   def sort_column
     ALLOWED_SORT_COLUMNS.include?(params[:sort]) ? params[:sort] : DEFAULT_SORT_COLUMN
@@ -35,5 +46,9 @@ class DashboardController < ApplicationController
 
   def sort_direction
     ALLOWED_SORT_DIRECTIONS.include?(params[:direction]) ? params[:direction] : DEFAULT_SORT_DIRECTION
+  end
+
+  def sanitize_sql_like(string)
+    string.gsub(/[\\%_]/) { |m| "\\#{m}" }
   end
 end
