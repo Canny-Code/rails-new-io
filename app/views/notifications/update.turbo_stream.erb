@@ -1,0 +1,7 @@
+<%= turbo_stream.replace dom_id(@notification) do %>
+  <%= render partial: "notifications/notification", locals: { notification: @notification } %>
+<% end %>
+
+<%= turbo_stream.update "notification_badge" do %>
+  <%= render NotificationBadge::Component.new %>
+<% end %>
