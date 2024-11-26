@@ -4,12 +4,14 @@ require "ostruct"
 
 class GithubRepositoryServiceTest < ActiveSupport::TestCase
   def setup
-    Repository.delete_all
     @user = users(:john)
-
     @user.define_singleton_method(:github_token) { "fake-token" }
 
-    @service = GithubRepositoryService.new(@user)
+    @generated_app = generated_apps(:blog_app)
+    @generated_app.update!(user: @user)
+    @generated_app.create_app_status! # Ensure app_status exists for logger
+
+    @service = GithubRepositoryService.new(@generated_app)
     @client = Minitest::Mock.new
     @repository_name = "test-repo"
   end
@@ -26,9 +28,16 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       } ]
 
       assert_difference -> { @user.repositories.count }, 1 do
-        result = @service.create_repository(@repository_name)
-        assert_equal response.html_url, result.html_url
+        assert_difference -> { AppGeneration::LogEntry.count }, 2 do # Two log entries: start and success
+          result = @service.create_repository(@repository_name)
+          assert_equal response.html_url, result.html_url
+        end
       end
+
+      # Verify log entries
+      log_entries = @generated_app.log_entries.recent_first
+      assert_equal "Repository created successfully", log_entries.first.message
+      assert_equal "Creating repository: #{@repository_name}", log_entries.second.message
     end
 
     @client.verify
@@ -41,11 +50,18 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
     end
 
     Octokit::Client.stub :new, mock_client do
-      error = assert_raises(GithubRepositoryService::RepositoryExistsError) do
-        @service.create_repository(@repository_name)
+      assert_difference -> { AppGeneration::LogEntry.count }, 1 do # One error log entry
+        error = assert_raises(GithubRepositoryService::RepositoryExistsError) do
+          @service.create_repository(@repository_name)
+        end
+
+        assert_equal "Repository 'test-repo' already exists", error.message
       end
 
-      assert_equal "Repository 'test-repo' already exists", error.message
+      # Verify log entry
+      log_entry = @generated_app.log_entries.last
+      assert log_entry.error?
+      assert_equal "Repository 'test-repo' already exists", log_entry.message
     end
   end
 
@@ -59,11 +75,30 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
     end
 
     Octokit::Client.stub :new, mock_client do
-      error = assert_raises(GithubRepositoryService::ApiError) do
-        @service.create_repository(@repository_name)
+      # We expect 5 log entries:
+      # 1. Warning for first rate limit hit
+      # 2. Warning for second rate limit hit
+      # 3. Warning for third rate limit hit
+      # 4. Warning for fourth rate limit hit
+      # 5. Final error after max retries
+      assert_difference -> { AppGeneration::LogEntry.count }, 5 do
+        error = assert_raises(GithubRepositoryService::ApiError) do
+          @service.create_repository(@repository_name)
+        end
+
+        assert_match /Rate limit exceeded/, error.message
       end
 
-      assert_match /Rate limit exceeded/, error.message
+      # Verify log entries
+      log_entries = @generated_app.log_entries.recent_first
+      assert log_entries[0].error?, "Last entry should be error"
+      assert_match /Rate limit exceeded and retry attempts exhausted/, log_entries[0].message
+
+      # Check that we have 4 warning entries for the retries
+      assert_equal 4, log_entries[1..].count { |entry| entry.warn? }
+      log_entries[1..].each do |entry|
+        assert_match /Rate limit exceeded, waiting for reset/, entry.message
+      end
     end
   end
 
@@ -74,11 +109,28 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
     end
 
     Octokit::Client.stub :new, mock_client do
-      error = assert_raises(GithubRepositoryService::ApiError) do
-        @service.create_repository(@repository_name)
+      # We expect 4 log entries:
+      # 1. Error for first attempt
+      # 2. Error for first retry
+      # 3. Error for second retry
+      # 4. Final error after max retries
+      assert_difference -> { AppGeneration::LogEntry.count }, 4 do
+        error = assert_raises(GithubRepositoryService::ApiError) do
+          @service.create_repository(@repository_name)
+        end
+
+        assert_match /GitHub API error/, error.message
       end
 
-      assert_match /GitHub API error/, error.message
+      # Verify log entries
+      log_entries = @generated_app.log_entries.recent_first
+      assert_equal 4, log_entries.count { |entry| entry.error? }
+
+      log_entries.each do |entry|
+        assert entry.error?
+        assert_match /GitHub API error/, entry.message
+        assert entry.metadata.key?("retry_count") if entry != log_entries.last
+      end
     end
   end
 
