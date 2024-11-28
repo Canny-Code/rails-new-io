@@ -109,6 +109,15 @@ class AppStatus < ApplicationRecord
       partial: "generated_apps/generated_app",
       locals: { generated_app: generated_app }
     )
+
+    generated_app.broadcast_replace_to(
+      [ :notification_badge, generated_app.user_id ],
+      target: "#{generated_app.user_id}_notification_badge",
+      content: ApplicationController.render(
+        NotificationBadge::Component.new(user: generated_app.user),
+        layout: false
+      )
+    )
   end
 
   def notify_status_change
