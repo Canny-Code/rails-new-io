@@ -32,6 +32,10 @@ class GithubRepositoryService
         name: name,
         github_url: response.html_url
       )
+      @generated_app.update!(
+        github_repo_name: name,
+        github_repo_url: response.html_url
+      )
 
       @logger.info("Repository created successfully", { url: response.html_url })
       response

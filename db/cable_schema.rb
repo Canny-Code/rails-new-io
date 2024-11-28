@@ -10,7 +10,41 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_11_26_211640) do
+ActiveRecord::Schema[8.0].define(version: 2024_11_27_145247) do
+  create_table "acidic_job_entries", force: :cascade do |t|
+    t.integer "execution_id", null: false
+    t.string "step", null: false
+    t.string "action", null: false
+    t.datetime "timestamp", null: false
+    t.json "data"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["execution_id", "step"], name: "index_acidic_job_entries_on_execution_id_and_step"
+    t.index ["execution_id"], name: "index_acidic_job_entries_on_execution_id"
+  end
+
+  create_table "acidic_job_executions", force: :cascade do |t|
+    t.string "idempotency_key", null: false
+    t.json "serialized_job", default: "{}", null: false
+    t.datetime "last_run_at"
+    t.datetime "locked_at"
+    t.string "recover_to"
+    t.json "definition", default: "{}"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["idempotency_key"], name: "index_acidic_job_executions_on_idempotency_key", unique: true
+  end
+
+  create_table "acidic_job_values", force: :cascade do |t|
+    t.integer "execution_id", null: false
+    t.string "key", null: false
+    t.json "value", default: "{}", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["execution_id", "key"], name: "index_acidic_job_values_on_execution_id_and_key", unique: true
+    t.index ["execution_id"], name: "index_acidic_job_values_on_execution_id"
+  end
+
   create_table "app_generation_log_entries", force: :cascade do |t|
     t.integer "generated_app_id", null: false
     t.integer "level", default: 0, null: false
@@ -90,6 +124,7 @@ ActiveRecord::Schema[8.0].define(version: 2024_11_26_211640) do
     t.boolean "is_public", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "source_path"
     t.index ["github_repo_url"], name: "index_generated_apps_on_github_repo_url", unique: true
     t.index ["name"], name: "index_generated_apps_on_name"
     t.index ["user_id", "name"], name: "index_generated_apps_on_user_id_and_name", unique: true
@@ -294,6 +329,8 @@ ActiveRecord::Schema[8.0].define(version: 2024_11_26_211640) do
     t.index ["slug"], name: "index_users_on_slug", unique: true
   end
 
+  add_foreign_key "acidic_job_entries", "acidic_job_executions", column: "execution_id"
+  add_foreign_key "acidic_job_values", "acidic_job_executions", column: "execution_id"
   add_foreign_key "app_generation_log_entries", "generated_apps"
   add_foreign_key "app_statuses", "generated_apps"
   add_foreign_key "elements", "sub_groups"

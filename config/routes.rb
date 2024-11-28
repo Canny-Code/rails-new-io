@@ -23,6 +23,7 @@ Rails.application.routes.draw do
 
   resources :generated_apps, only: [ :show ] do
     resources :generation_attempts, only: [ :create ]
+    resources :log_entries, only: [ :index ]
   end
 
   resources :users, only: [ :show ], path: "" do

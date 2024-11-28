@@ -1,0 +1,36 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-6 flex items-center justify-between">
+    <h1 class="text-2xl font-bold">
+      Log Entries for <%= @generated_app.name %>
+    </h1>
+    <%= link_to "Back to App", generated_app_path(@generated_app),
+          class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="divide-y divide-gray-200">
+      <% @log_entries.each do |entry| %>
+        <div class="p-4 <%= log_level_color(entry.level) %>">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-900">
+                <%= entry.message %>
+              </p>
+              <div class="mt-1 text-sm text-gray-500">
+                <span class="font-medium"><%= entry.phase %></span>
+                <span class="mx-2">•</span>
+                <time datetime="<%= entry.created_at.iso8601 %>">
+                  <%= entry.created_at.strftime("%Y-%m-%d %H:%M:%S") %>
+                </time>
+              </div>
+              <% if entry.metadata.present? %>
+                <pre class="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                  <%= JSON.pretty_generate(entry.metadata) %>
+                </pre>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

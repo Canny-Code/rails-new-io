@@ -12,6 +12,11 @@ GEM
   specs:
     aasm (5.5.0)
       concurrent-ruby (~> 1.0)
+    acidic_job (1.0.0.rc1)
+      activejob (>= 7.1)
+      activerecord (>= 7.1)
+      activesupport (>= 7.1)
+      railties (>= 7.1)
     actioncable (8.0.0)
       actionpack (= 8.0.0)
       activesupport (= 8.0.0)
@@ -541,6 +546,7 @@ PLATFORMS
 
 DEPENDENCIES
   aasm (~> 5.5.0)
+  acidic_job (= 1.0.0.rc1)
   amazing_print (~> 1.6)
   annotaterb
   better_html

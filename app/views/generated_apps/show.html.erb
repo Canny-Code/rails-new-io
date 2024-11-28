@@ -49,6 +49,13 @@
         <h3 class="text-sm font-medium text-gray-500">Visibility</h3>
         <p class="mt-1"><%= @generated_app.is_public? ? "Public" : "Private" %></p>
       </div>
+      <div>
+        <%= link_to generated_app_log_entries_path(@generated_app),
+          class: "text-sm text-blue-600 hover:text-blue-800" do %>
+          View Logs
+          <span class="text-gray-500">(<%= @generated_app.log_entries.count %>)</span>
+        <% end %>
+      </div>
     </div>
   </div>
 </div>

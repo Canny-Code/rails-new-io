@@ -4,14 +4,38 @@ require "timeout"
 class CommandExecutionService
   ALLOWED_COMMANDS = [ "rails new" ].freeze
   COMMAND_PATTERN = /\A
-    rails\s+new\s+                    # Command start
-    [\w-]+\s+                         # App name (required)
-    (?!generate|destroy|server)       # Negative lookahead for other rails commands
+  rails\s+new\s+                    # Command start
+  [a-zA-Z]                         # App name must start with a letter
+  [a-zA-Z0-9_-]*\s+               # Rest of app name can have letters, numbers, underscores, hyphens
+  (?!generate|destroy|server)       # Negative lookahead for other rails commands
+  (?:
     (?:
-      (?:--?[\w-]+(?:\s+[\w-]+)?     # Options with or without values
-      \s*)*                          # Multiple options allowed
-    )
-  \z/x
+      # Single character options with possible values
+      -[rndGMOCATJBjc]\s+[\w\/.=-]+\s*|
+
+      # Double-dash options with possible values
+      --(?:
+        (?:ruby|name|template|database|javascript|css)=[\w\/.=-]+|
+
+        # Boolean options (with or without --no- or --skip- prefix)
+        (?:(?:no-|skip-)?(?:
+          namespace|collision-check|git|docker|keeps|action-mailer|action-mailbox|
+          action-text|active-record|active-job|active-storage|action-cable|
+          asset-pipeline|javascript|hotwire|jbuilder|test|system-test|bootsnap|
+          dev-gems|thruster|rubocop|brakeman|ci|kamal|solid|dev|devcontainer|
+          edge|main|api|minimal|bundle|decrypted-diffs|
+          pretend|quiet|skip
+        ))|
+
+        # RC option with value
+        rc=[\w\/.=-]+
+      )
+      \s*
+    )*
+  )
+\z/x
+
+
   VALID_OPTIONS = /\A--?[a-z][\w-]*\z/  # Must start with letter after dash(es)
   MAX_TIMEOUT = 300 # 5 minutes
 
@@ -75,24 +99,42 @@ class CommandExecutionService
   def setup_environment
     @temp_dir = Dir.mktmpdir
     @logger.info("Created temporary directory", { path: @temp_dir })
+    @generated_app.update(source_path: @temp_dir)
   end
 
   def run_isolated_process
     @logger.info("Executing command", { command: @command, directory: @temp_dir })
+    log_environment_details
 
-    Open3.popen3(@command, chdir: @temp_dir) do |stdin, stdout, stderr, wait_thr|
+    env = {
+      "BUNDLE_GEMFILE" => nil,
+      "RAILS_ENV" => "development",
+      "NODE_ENV" => "development",
+      "PATH" => ENV["PATH"]
+    }
+
+    @logger.info("Environment variables for command execution", {
+      env: env,
+      command: @command,
+      directory: @temp_dir
+    })
+
+    stdout_buffer = []
+    stderr_buffer = []
+
+    Open3.popen3(env, @command, chdir: @temp_dir) do |stdin, stdout, stderr, wait_thr|
       @pid = wait_thr&.pid
       @logger.info("Process started", { pid: @pid })
 
       stdout_thread = Thread.new do
         stdout.each_line do |line|
-          @logger.info("Command output", { output: line.strip })
+          stdout_buffer << line.strip
         end
       end
 
       stderr_thread = Thread.new do
         stderr.each_line do |line|
-          @logger.error("Command error", { error: line.strip })
+          stderr_buffer << line.strip
         end
       end
 
@@ -100,7 +142,20 @@ class CommandExecutionService
       stderr_thread.join
 
       exit_status = wait_thr&.value
-      raise "Command failed with status: #{exit_status}" unless exit_status&.success?
+
+      if exit_status&.success?
+        @logger.info("Command completed successfully", {
+          output: stdout_buffer.join("\n"),
+          errors: stderr_buffer.join("\n")
+        })
+      else
+        @logger.error("Command failed", {
+          output: stdout_buffer.join("\n"),
+          errors: stderr_buffer.join("\n"),
+          status: exit_status
+        })
+        raise "Command failed with status: #{exit_status}"
+      end
 
       @temp_dir
     end
@@ -116,10 +171,18 @@ class CommandExecutionService
         # Process doesn't exist anymore, which is fine
       end
     end
+  end
 
-    if @temp_dir && Dir.exist?(@temp_dir)
-      FileUtils.remove_entry_secure(@temp_dir)
-      @logger.info("Cleaned up temporary directory", { path: @temp_dir })
-    end
+  def log_environment_details
+    @logger.info("System environment details", {
+      ruby_version: RUBY_VERSION,
+      ruby_platform: RUBY_PLATFORM,
+      rails_version: Rails.version,
+      pwd: Dir.pwd,
+      path: ENV["PATH"],
+      gem_path: ENV["GEM_PATH"],
+      gem_home: ENV["GEM_HOME"],
+      bundler_version: Bundler::VERSION
+    })
   end
 end

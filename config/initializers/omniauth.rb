@@ -10,6 +10,6 @@ Rails.application.config.middleware.use OmniAuth::Builder do
     provider :github,
       github_oauth_credentials.client_id,
       github_oauth_credentials.client_secret,
-      scope: "public_repo"
+      scope: "public_repo workflow"
   end
 end
