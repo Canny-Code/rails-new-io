@@ -4,12 +4,17 @@ class NotificationBadge::Component < ApplicationComponent
   include Phlex::Rails::Helpers::TurboStreamFrom
   delegate :current_user, to: :helpers
 
+  def initialize(user: nil)
+    @user = user
+  end
+
   def view_template
-    return unless current_user
+    user = @user || current_user
+    return unless user
 
-    turbo_stream_from [ :notification_badge, current_user.id ]
+    turbo_stream_from [ :notification_badge, user.id ]
 
-    a(id: "#{current_user.id}_notification_badge", href: "/notifications", class: "relative inline-flex items-center text-gray-400 hover:text-gray-500", data: { turbo_frame: "_top" }) do
+    a(id: "#{user.id}_notification_badge", href: "/notifications", class: "relative inline-flex items-center text-gray-400 hover:text-gray-500", data: { turbo_frame: "_top" }) do
       span(class: "sr-only") { "View notifications" }
 
       svg(class: "h-6 w-6", fill: "none", viewbox: "0 0 24 24", stroke: "currentColor") do |s|
@@ -21,9 +26,9 @@ class NotificationBadge::Component < ApplicationComponent
         )
       end
 
-      if current_user.notifications.unread.any?
+      if user.notifications.unread.any?
         span(class: "absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full") do
-          plain current_user.notifications.unread.count
+          plain user.notifications.unread.count
         end
       end
     end
