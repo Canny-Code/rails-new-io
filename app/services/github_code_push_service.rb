@@ -21,18 +21,17 @@ class GithubCodePushService
 
   INVALID_STATE_MESSAGE = "App must be in generating state to execute"
 
-  def initialize(generated_app, source_path)
+  def initialize(generated_app)
     @generated_app = generated_app
+    @logger = AppGeneration::Logger.new(generated_app)
     @user = generated_app.user
-    @repository_name = generated_app.github_repository_name
-    @source_path = source_path
-    @temp_dir = File.join(Rails.root, "tmp", "repos", SecureRandom.hex)
+    @repository_name = generated_app.github_repo_name
+    @source_path = generated_app.source_path
   end
 
   def execute
     validate_source_path
     validate_current_state
-    setup_repository
     push_code
     update_app_status
   rescue Git::Error => e
@@ -49,11 +48,7 @@ class GithubCodePushService
 
   private
 
-  attr_reader :generated_app, :user, :repository_name, :source_path, :temp_dir
-
-  def setup_repository
-    setup_temp_directory
-  end
+  attr_reader :generated_app, :user, :repository_name, :source_path
 
   def validate_current_state
     unless generated_app.app_status.generating?
@@ -67,13 +62,8 @@ class GithubCodePushService
     end
   end
 
-  def setup_temp_directory
-    FileUtils.mkdir_p(@temp_dir)
-    FileUtils.cp_r(File.join(@source_path, "."), @temp_dir)
-  end
-
   def push_code
-    @git = Git.init(temp_dir)
+    @git = Git.open("#{@source_path}/#{generated_app.name}")
     configure_git
     commit_files
     setup_remote
@@ -109,7 +99,9 @@ class GithubCodePushService
   end
 
   def cleanup
-    FileUtils.rm_rf(temp_dir)
+    return if Rails.env.development?
+
+    FileUtils.rm_rf(@source_path)
   end
 
   def handle_error(error, type)

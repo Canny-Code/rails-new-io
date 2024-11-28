@@ -14,6 +14,7 @@
 #  rails_version         :string           not null
 #  ruby_version          :string           not null
 #  selected_gems         :json             not null
+#  source_path           :string
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
 #  user_id               :integer          not null
@@ -34,7 +35,7 @@ class GeneratedApp < ApplicationRecord
 
   broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
   # TODO: what is this? Seems like it doesn't do shit
-  broadcasts_to ->(generated_app) { [ :notification_badge, generated_app.user_id ] }
+  broadcasts_to ->(generated_app) { [ :notification_badge, generated_app.id ] }
 
   belongs_to :user
 
@@ -51,9 +52,4 @@ class GeneratedApp < ApplicationRecord
       message: "must be a valid GitHub repository URL"
     },
     allow_blank: true
-
-
-  def github_repository_name
-    name # customize if needed; this doesn't necessarily have to be the same as the repo name
-  end
 end

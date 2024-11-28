@@ -2,6 +2,7 @@ source "https://rubygems.org"
 
 gem "rails", "8.0.0"
 
+gem "acidic_job", "= 1.0.0.rc1"
 gem "aasm", "~> 5.5.0"
 gem "bootsnap", require: false
 gem "friendly_id", "~> 5.5.1"

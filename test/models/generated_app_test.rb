@@ -14,6 +14,7 @@
 #  rails_version         :string           not null
 #  ruby_version          :string           not null
 #  selected_gems         :json             not null
+#  source_path           :string
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
 #  user_id               :integer          not null

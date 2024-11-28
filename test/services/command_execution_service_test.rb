@@ -5,20 +5,33 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
   def setup
     @generated_app = generated_apps(:blog_app)
     @generated_app.create_app_status! # Ensure app_status exists for logger
-    @valid_command = "rails new #{@generated_app.name} -d postgres -c tailwind --skip-bootsnap"
+    @valid_command = "rails new #{@generated_app.name} -d postgres --css=tailwind --skip-bootsnap"
     @service = CommandExecutionService.new(@generated_app, @valid_command)
   end
 
   test "executes valid rails new command" do
-    @service.stub :run_isolated_process, @temp_dir do
-      assert_difference -> { AppGeneration::LogEntry.count }, 2 do
+    output = "Sample output"
+    error = "Sample error"
+
+    Open3.stub :popen3, mock_popen3(output, error, success: true) do
+      assert_difference -> { AppGeneration::LogEntry.count }, 6 do
         assert_nothing_raised { @service.execute }
       end
 
-      log_entries = @generated_app.log_entries.order(created_at: :desc).limit(2)
+      log_entries = @generated_app.log_entries.order(created_at: :desc).limit(6)
 
-      assert_equal "Cleaned up temporary directory", log_entries[0].message
-      assert_equal "Created temporary directory", log_entries[1].message
+      expected_messages = [
+        "Command completed successfully",
+        "Process started",
+        "Environment variables for command execution",
+        "System environment details",
+        "Executing command",
+        "Created temporary directory"
+      ]
+
+      expected_messages.each_with_index do |message, index|
+        assert_equal message, log_entries[index].message, "Log entry #{index} doesn't match"
+      end
       assert log_entries.all? { |entry| entry.info? }
     end
   end
@@ -91,13 +104,12 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
   test "handles timeouts" do
     @service.stub :run_isolated_process, -> { raise Timeout::Error } do
-      assert_difference -> { AppGeneration::LogEntry.count }, 2 do # Validation logs and temp dir logs
+      assert_difference -> { AppGeneration::LogEntry.count }, 1 do
         assert_raises(Timeout::Error) { @service.execute }
       end
 
-      log_entries = @generated_app.log_entries.order(created_at: :desc).limit(2)
-      assert_equal "Cleaned up temporary directory", log_entries[0].message
-      assert_equal "Created temporary directory", log_entries[1].message
+      log_entries = @generated_app.log_entries.order(created_at: :desc).limit(1)
+      assert_equal "Created temporary directory", log_entries[0].message
       assert log_entries.all? { |entry| entry.info? }
     end
   end
@@ -114,16 +126,17 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       log_entries = @generated_app.log_entries.order(created_at: :desc).limit(6)
 
       # Verify the sequence of logs
-      assert_equal "Cleaned up temporary directory", log_entries[0].message
-      assert_equal "Command error", log_entries[1].message
-      assert_equal "Command output", log_entries[2].message
-      assert_equal "Process started", log_entries[3].message
+      assert_equal "Command completed successfully", log_entries[0].message
+      assert_equal "Process started", log_entries[1].message
+      assert_equal "Environment variables for command execution", log_entries[2].message
+      assert_equal "System environment details", log_entries[3].message
       assert_equal "Executing command", log_entries[4].message
       assert_equal "Created temporary directory", log_entries[5].message
 
       # Verify specific log content
-      output_log = log_entries.find { |entry| entry.message == "Command output" }
-      assert_equal output, output_log.metadata["output"]
+      completed_log = log_entries.find { |entry| entry.message == "Command completed successfully" }
+      assert_equal output, completed_log.metadata["output"]
+      assert_equal error, completed_log.metadata["errors"]
     end
   end
 
@@ -132,12 +145,30 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     error = "Error message"
 
     Open3.stub :popen3, mock_popen3(output, error, success: false) do
-      assert_difference -> { AppGeneration::LogEntry.count }, 5 do # Validation, setup, start, error, and failure logs
+      assert_difference -> { AppGeneration::LogEntry.count }, 6 do
         assert_raises(RuntimeError) { @service.execute }
       end
 
       log_entries = @generated_app.log_entries.recent_first
-      assert log_entries.any? { |entry| entry.error? && entry.metadata["error"] == error }
+
+      # Verify the sequence of logs
+      expected_messages = [
+        "Command failed",
+        "Process started",
+        "Environment variables for command execution",
+        "System environment details",
+        "Executing command",
+        "Created temporary directory"
+      ]
+
+      expected_messages.each_with_index do |message, index|
+        assert_equal message, log_entries[index].message
+      end
+
+      # Verify error details
+      error_log = log_entries.find { |entry| entry.message == "Command failed" }
+      assert error_log.error?
+      assert_equal error, error_log.metadata["errors"]
     end
   end
 
@@ -169,7 +200,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
   private
 
   def mock_popen3(stdout, stderr, success: true, pid: 12345)
-    lambda do |command, **options, &block|
+    lambda do |env, command, **options, &block|
       mock_stdin = StringIO.new
       mock_stdout = StringIO.new(stdout)
       mock_stderr = StringIO.new(stderr)

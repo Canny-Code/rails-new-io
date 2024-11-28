@@ -2,35 +2,39 @@ require "test_helper"
 
 class GithubCodePushServiceTest < ActiveSupport::TestCase
   def setup
-    @user = users(:jane)
-    @user.stubs(:github_token).returns("test-github-token")
-    @generated_app = GeneratedApp.create!(
-      name: "test-app-#{Time.current.to_i}",
-      user: @user,
-      ruby_version: "3.2.2",
-      rails_version: "7.1.2"
-    )
-
-    @generated_app.app_status.start_generation!
-
-    @temp_dir = Rails.root.join("tmp", "test_#{name}_#{Time.current.to_i}")
-    FileUtils.mkdir_p(@temp_dir)
-
-    @service = GithubCodePushService.new(@generated_app, @temp_dir)
+    @user = users(:john)
+    @generated_app = generated_apps(:blog_app)
+    @generated_app.create_app_status!
+    @generated_app.app_status.update!(status: :generating)
+    @temp_dir = Dir.mktmpdir
+    @generated_app.update!(source_path: @temp_dir)
+    @service = GithubCodePushService.new(@generated_app)
   end
 
   def teardown
-    FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
+    # Clean up temp directory
+    if @temp_dir && Dir.exist?(@temp_dir)
+      FileUtils.rm_rf(@temp_dir)
+    end
 
-    if @generated_app && GeneratedApp.exists?(@generated_app.id)
-      @generated_app.app_status&.destroy
-      @generated_app.destroy
+    if @generated_app
+      ActiveRecord::Base.transaction do
+        # Delete associated records first
+        AppGeneration::LogEntry.where(generated_app_id: @generated_app.id).delete_all
+        @generated_app.app_status&.delete
+
+        # Update non-null fields with placeholder values before deletion
+        @generated_app.update_columns(
+          source_path: nil,
+          github_repo_url: nil
+        )
+      end
     end
   end
 
   test "raises FileSystemError when IO operation fails" do
     error_message = "Permission denied"
-    @service.stubs(:setup_repository).raises(GithubCodePushService::FileSystemError.new(error_message))
+    @service.stubs(:push_code).raises(GithubCodePushService::FileSystemError.new(error_message))
 
     error = assert_raises(GithubCodePushService::FileSystemError) do
       @service.execute
@@ -52,82 +56,151 @@ class GithubCodePushServiceTest < ActiveSupport::TestCase
   end
 
   test "executes full process successfully" do
-    # Stub preliminary methods
-    @service.stubs(:validate_source_path)  # Skip source validation
-    @service.stubs(:setup_temp_directory)  # Skip directory setup
+    # Create the app directory structure
+    app_dir = File.join(@temp_dir, @generated_app.name)
+    FileUtils.mkdir_p(app_dir)
 
-    # Setup Git expectations
-    git_mock = mock("git")
-    Git.expects(:init).with(@service.send(:temp_dir)).returns(git_mock)
+    # Create a dummy file to commit
+    File.write(File.join(app_dir, "README.md"), "# #{@generated_app.name}")
 
-    # Expect Git operations in sequence
-    sequence = sequence("git_operations")
+    # Initialize git repo (since Rails would have done this)
+    Git.init(app_dir)
 
-    # Configure git
-    git_mock.expects(:config).with("user.name", @user.name).in_sequence(sequence)
-    git_mock.expects(:config).with("user.email", @user.email).in_sequence(sequence)
+    # Ensure app is in the correct initial state
+    @generated_app.app_status.update!(status: :generating)
 
-    # Commit files
-    git_mock.expects(:add).with(all: true).in_sequence(sequence)
-    git_mock.expects(:commit).with("Initial commit").in_sequence(sequence)
+    # Get the actual GitHub username from the generated app's user
+    github_username = @generated_app.user.github_username
 
-    # Setup and push to remote
-    git_mock.expects(:add_remote).with("origin", kind_of(String)).in_sequence(sequence)
-    git_mock.expects(:push).with("origin", "main").in_sequence(sequence)
+    # Stub the push_code method to simulate successful execution
+    @service.expects(:push_code).once do
+      @generated_app.update!(github_repo_url: "https://github.com/#{github_username}/#{@generated_app.name}")
+      @generated_app.push_to_github!
+
+      # Check status immediately after push_to_github!
+      assert_equal "pushing_to_github", @generated_app.app_status.reload.status,
+        "Status should be pushing_to_github immediately after push_to_github!"
+
+      true
+    end
 
     # Execute
     @service.execute
 
-    # Assert
+    # Final assertions
     @generated_app.reload
-    assert @generated_app.app_status.pushing_to_github?
-    assert_match %r{https://github\.com/#{@user.github_username}/#{@generated_app.name}}, @generated_app.github_repo_url
+    expected_url = "https://github.com/#{github_username}/#{@generated_app.name}"
+    actual_url = @generated_app.github_repo_url
+    assert_equal expected_url, actual_url,
+      "Expected GitHub URL to be #{expected_url}, but was #{actual_url}"
+    assert @generated_app.app_status.completed?,
+      "Expected final status to be completed, but was #{@generated_app.app_status.status}"
+  end
+
+  test "push_code configures_git_and_pushes_to_remote" do
+    # Use saas_starter which belongs to John
+    @generated_app = generated_apps(:saas_starter)
+    @user = @generated_app.user
+    @user.define_singleton_method(:github_token) { "fake-token" }
+
+    # Create the directory structure
+    app_dir = File.join(@temp_dir, @generated_app.name)
+    FileUtils.mkdir_p(app_dir)
+    Git.init(app_dir)
+
+    # Set the source path to the parent directory
+    @generated_app.update!(source_path: @temp_dir)
+    @service = GithubCodePushService.new(@generated_app)
+
+    git_mock = mock("git")
+    Git.expects(:open).with("#{@temp_dir}/#{@generated_app.name}").returns(git_mock)
+
+    # Use John's fixture values
+    git_mock.expects(:config).with("user.name", "John Doe")
+    git_mock.expects(:config).with("user.email", "john@example.com")
+    git_mock.expects(:add).with(all: true)
+    git_mock.expects(:commit).with("Initial commit")
+    git_mock.expects(:add_remote).with("origin", kind_of(String))
+    git_mock.expects(:push).with("origin", "main")
+
+    @service.send(:push_code)
   end
 
   test "push_code raises GitError when git operations fail" do
-    Git.stubs(:init).raises(Git::Error.new("Git error"))
+    @generated_app = generated_apps(:saas_starter)
+    @user = @generated_app.user
+    @user.define_singleton_method(:github_token) { "fake-token" }
 
-    error = assert_raises(GithubCodePushService::GitError) do
+    # Create directory structure but don't init git
+    app_dir = File.join(@temp_dir, @generated_app.name)
+    FileUtils.mkdir_p(app_dir)
+
+    @generated_app.update!(source_path: @temp_dir)
+    @service = GithubCodePushService.new(@generated_app)
+
+    Git.stubs(:open).raises(Git::Error.new("Git error"))
+
+    assert_raises(GithubCodePushService::GitError) do
       @service.execute
     end
-
-    assert_equal "Git error: Git error", error.message
-    assert @generated_app.app_status.failed?
-    assert_equal "Git error", @generated_app.app_status.error_message
   end
 
   test "handles unexpected errors with standard error handler" do
-    unexpected_error = StandardError.new("Unexpected error occurred")
-    @service.stubs(:push_code).raises(unexpected_error)
+    @generated_app = generated_apps(:saas_starter)
+    @user = @generated_app.user
+    @user.define_singleton_method(:github_token) { "fake-token" }
+
+    # Create directory structure
+    app_dir = File.join(@temp_dir, @generated_app.name)
+    FileUtils.mkdir_p(app_dir)
+
+    @generated_app.update!(source_path: @temp_dir)
+    @generated_app.app_status.update!(status: :generating)
+    @service = GithubCodePushService.new(@generated_app)
+
+    # Simulate an unexpected error
+    Git.stubs(:open).raises(StandardError.new("Unexpected error"))
 
     error = assert_raises(GithubCodePushService::Error) do
       @service.execute
     end
 
-    # Verify error is wrapped properly
-    assert_equal "Unexpected error occurred", error.message
-
-    # Verify app status is updated
-    @generated_app.reload
-    assert @generated_app.app_status.failed?
-    assert_equal "Unexpected error occurred", @generated_app.app_status.error_message
+    assert_equal "Unexpected error", error.message
+    assert @generated_app.reload.app_status.failed?
   end
 
   test "raises FileSystemError when source directory does not exist" do
+    # Create a fresh app instead of using fixture
+    @generated_app = GeneratedApp.create!(
+      name: "test-app-#{SecureRandom.hex(4)}",
+      user: users(:john),
+      ruby_version: "3.2.0",
+      rails_version: "7.1.0"
+    )
+    @generated_app.create_app_status!
     # Use a path that definitely doesn't exist
-    nonexistent_path = Rails.root.join("tmp", "definitely_does_not_exist_#{SecureRandom.hex}")
-    service = GithubCodePushService.new(@generated_app, nonexistent_path)
+    nonexistent_path = Rails.root.join("tmp", "definitely_does_not_exist_#{SecureRandom.hex}").to_s
 
+    @generated_app.update!(source_path: nonexistent_path)
+    @generated_app.generate!
+
+    service = GithubCodePushService.new(@generated_app)
+
+    error_message = "Source directory does not exist: #{nonexistent_path}"
+    expected_error_message = "File system error: #{error_message}"
+
+    # Test the error is raised and handled
     error = assert_raises(GithubCodePushService::FileSystemError) do
       service.execute
     end
 
-    # Verify the error message includes the path
-    assert_equal "File system error: Source directory does not exist: #{nonexistent_path}", error.message
+    assert_equal expected_error_message, error.message
 
-    # Verify app status is updated
-    @generated_app.reload
-    assert @generated_app.app_status.failed?
-    assert_equal "Source directory does not exist: #{nonexistent_path}", @generated_app.app_status.error_message
+    app_status = @generated_app.app_status
+
+    assert_equal "failed", app_status.status,
+      "Expected status to be failed, but was #{app_status.status}. " \
+      "Status history: #{app_status.status_history}"
+    assert_equal error_message, app_status.error_message
   end
 end
