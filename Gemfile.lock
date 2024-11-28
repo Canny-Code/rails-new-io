@@ -260,7 +260,7 @@ GEM
       railties (>= 7.1)
       stimulus-rails
       turbo-rails
-    mocha (2.6.0)
+    mocha (2.6.1)
       ruby2_keywords (>= 0.0.5)
     msgpack (1.7.2)
     multi_xml (0.7.1)
@@ -564,7 +564,7 @@ DEPENDENCIES
   litestream (~> 0.12.0)
   minio (~> 0.4.0)
   mission_control-jobs (~> 0.6.0)
-  mocha (~> 2.6.0)
+  mocha (~> 2.6.1)
   noticed (~> 2.4.3)
   octokit (~> 9.2.0)
   omniauth-github!
