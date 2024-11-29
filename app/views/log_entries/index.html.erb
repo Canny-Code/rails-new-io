@@ -6,31 +6,14 @@
     <%= link_to "Back to App", generated_app_path(@generated_app),
           class: "text-blue-600 hover:text-blue-800" %>
   </div>
+  <turbo-cable-stream-source
+    channel="Turbo::StreamsChannel"
+    signed-stream-name="<%= Turbo::StreamsChannel.signed_stream_name("#{@generated_app.to_gid}:app_generation_log_entries") %>">
+  </turbo-cable-stream-source>
+
   <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-    <div class="divide-y divide-gray-200">
-      <% @log_entries.each do |entry| %>
-        <div class="p-4 <%= log_level_color(entry.level) %>">
-          <div class="flex justify-between items-start">
-            <div class="flex-1">
-              <p class="text-sm font-medium text-gray-900">
-                <%= entry.message %>
-              </p>
-              <div class="mt-1 text-sm text-gray-500">
-                <span class="font-medium"><%= entry.phase %></span>
-                <span class="mx-2">•</span>
-                <time datetime="<%= entry.created_at.iso8601 %>">
-                  <%= entry.created_at.strftime("%Y-%m-%d %H:%M:%S") %>
-                </time>
-              </div>
-              <% if entry.metadata.present? %>
-                <pre class="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                  <%= JSON.pretty_generate(entry.metadata) %>
-                </pre>
-              <% end %>
-            </div>
-          </div>
-        </div>
-      <% end %>
+    <div class="divide-y divide-gray-200" id="app_generation_log_entries">
+      <%= render partial: "app_generation/log_entries/log_entry", collection: @log_entries %>
     </div>
   </div>
 </div>

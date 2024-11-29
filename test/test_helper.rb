@@ -77,6 +77,7 @@ def sign_in(user)
     }
   )
   Rails.application.env_config["omniauth.auth"] = OmniAuth.config.mock_auth[:github]
+  Current.user = user
   post "/auth/github"
   follow_redirect!
 end
@@ -95,6 +96,7 @@ def sign_out(_user)
   Rails.application.env_config["omniauth.auth"] = nil
   delete "/sign_out"
   follow_redirect!
+  Current.user = nil
 end
 
 def silence_omniauth_logger

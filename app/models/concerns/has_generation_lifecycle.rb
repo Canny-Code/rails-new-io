@@ -43,7 +43,7 @@ module HasGenerationLifecycle
   def mark_as_completed!
     touch(:last_build_at)
     app_status.complete!
-    logger.info("App generation completed successfully")
+    logger.info("App generation completed successfully 🎉")
   end
 
   def mark_as_failed!(error_message)

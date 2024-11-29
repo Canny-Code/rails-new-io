@@ -3,6 +3,7 @@
 # Table name: app_generation_log_entries
 #
 #  id               :integer          not null, primary key
+#  entry_type       :string
 #  level            :string           not null
 #  message          :text             not null
 #  metadata         :json
@@ -14,6 +15,7 @@
 # Indexes
 #
 #  idx_on_generated_app_id_created_at_eac7d7a1a2         (generated_app_id,created_at)
+#  index_app_generation_log_entries_on_entry_type        (entry_type)
 #  index_app_generation_log_entries_on_generated_app_id  (generated_app_id)
 #
 # Foreign Keys

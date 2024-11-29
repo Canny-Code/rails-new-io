@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_11_27_145247) do
+ActiveRecord::Schema[8.0].define(version: 2024_11_29_165413) do
   create_table "acidic_job_entries", force: :cascade do |t|
     t.integer "execution_id", null: false
     t.string "step", null: false
@@ -47,12 +47,14 @@ ActiveRecord::Schema[8.0].define(version: 2024_11_27_145247) do
 
   create_table "app_generation_log_entries", force: :cascade do |t|
     t.integer "generated_app_id", null: false
-    t.integer "level", default: 0, null: false
-    t.integer "phase", default: 0, null: false
+    t.string "level", null: false
+    t.string "phase", null: false
     t.text "message", null: false
     t.json "metadata"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "entry_type"
+    t.index ["entry_type"], name: "index_app_generation_log_entries_on_entry_type"
     t.index ["generated_app_id", "created_at"], name: "idx_on_generated_app_id_created_at_eac7d7a1a2"
     t.index ["generated_app_id"], name: "index_app_generation_log_entries_on_generated_app_id"
   end
@@ -182,6 +184,16 @@ ActiveRecord::Schema[8.0].define(version: 2024_11_27_145247) do
     t.index ["github_url"], name: "index_repositories_on_github_url", unique: true
     t.index ["name"], name: "index_repositories_on_name"
     t.index ["user_id"], name: "index_repositories_on_user_id"
+  end
+
+  create_table "solid_cable_messages", force: :cascade do |t|
+    t.binary "channel", limit: 1024, null: false
+    t.binary "payload", limit: 536870912, null: false
+    t.datetime "created_at", null: false
+    t.integer "channel_hash", limit: 8, null: false
+    t.index ["channel"], name: "index_solid_cable_messages_on_channel"
+    t.index ["channel_hash"], name: "index_solid_cable_messages_on_channel_hash"
+    t.index ["created_at"], name: "index_solid_cable_messages_on_created_at"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
