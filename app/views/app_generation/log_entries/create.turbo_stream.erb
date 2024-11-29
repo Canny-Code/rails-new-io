@@ -1,0 +1,7 @@
+<% Rails.logger.debug " TURBO STREAM DEBUG:" %>
+<% Rails.logger.debug "  Rendering template for log entry: #{log_entry.id}" %>
+<% Rails.logger.debug "  Target: app_generation_log_entries" %>
+
+<%= turbo_stream.prepend "app_generation_log_entries" do %>
+  <%= render "app_generation/log_entries/log_entry", log_entry: log_entry %>
+<% end %>

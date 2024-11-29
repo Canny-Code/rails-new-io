@@ -21,6 +21,7 @@ cache: &cache
 
 cable: &cable
   <<: *default
+  migrations_paths: db/cable_migrate
   database: storage/<%= Rails.env %>-cable.sqlite3
 
 development:

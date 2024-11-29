@@ -31,16 +31,39 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
   end
 
 
-  test "successful github sign in" do
-    login_with_github
+  test "successful github sign_in" do
+    auth_hash = OmniAuth::AuthHash.new({
+      provider: "github",
+      uid: "123545",
+      info: {
+        name: "Test User",
+        email: "test@example.com",
+        nickname: "testuser",
+        image: "http://example.com/image.jpg"
+      },
+      credentials: {
+        token: "mock_token"
+      },
+      extra: {
+        raw_info: {
+          login: "testuser"
+        }
+      }
+    })
+
+    OmniAuth.config.test_mode = true
+    OmniAuth.config.mock_auth[:github] = auth_hash
+
+    # Set up the omniauth.auth environment
+    get "/auth/github/callback", env: { 'omniauth.auth': auth_hash }
 
     assert_response :redirect
     assert_redirected_to dashboard_url
-    email = OmniAuth.config.mock_auth[:github][:info][:email]
-    name = OmniAuth.config.mock_auth[:github][:info][:name]
-    assert_equal "Logged in as #{name}", flash[:notice]
-    assert User.pluck(:email).include?(email)
-    assert_equal controller.current_user.email, email
+
+    user = User.find_by(email: "test@example.com")
+    assert user.present?
+    assert_equal session[:user_id], user.id
+    assert_equal "Logged in as Test User", flash[:notice]
   end
 
   test "github oauth failure" do

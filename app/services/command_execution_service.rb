@@ -104,7 +104,7 @@ class CommandExecutionService
 
   def run_isolated_process
     @logger.info("Executing command", { command: @command, directory: @temp_dir })
-    log_environment_details
+    log_system_environment_details
 
     env = {
       "BUNDLE_GEMFILE" => nil,
@@ -112,34 +112,33 @@ class CommandExecutionService
       "NODE_ENV" => "development",
       "PATH" => ENV["PATH"]
     }
+    log_environment_variables_for_command_execution(env)
 
-    @logger.info("Environment variables for command execution", {
-      env: env,
-      command: @command,
-      directory: @temp_dir
-    })
-
-    stdout_buffer = []
-    stderr_buffer = []
+    stdout_buffer = Buffer.new(@generated_app, :stdout)
+    stderr_buffer = Buffer.new(@generated_app, :stderr)
 
     Open3.popen3(env, @command, chdir: @temp_dir) do |stdin, stdout, stderr, wait_thr|
       @pid = wait_thr&.pid
-      @logger.info("Process started", { pid: @pid })
+      @logger.info("Rails app generation process started", { pid: @pid })
 
       stdout_thread = Thread.new do
         stdout.each_line do |line|
-          stdout_buffer << line.strip
+          stdout_buffer.append(line.strip)
         end
       end
 
       stderr_thread = Thread.new do
         stderr.each_line do |line|
-          stderr_buffer << line.strip
+          stderr_buffer.append(line.strip)
         end
       end
 
       stdout_thread.join
       stderr_thread.join
+
+      # Final flush of any remaining logs
+      stdout_buffer.flush
+      stderr_buffer.flush
 
       exit_status = wait_thr&.value
 
@@ -173,7 +172,7 @@ class CommandExecutionService
     end
   end
 
-  def log_environment_details
+  def log_system_environment_details
     @logger.info("System environment details", {
       ruby_version: RUBY_VERSION,
       ruby_platform: RUBY_PLATFORM,
@@ -183,6 +182,14 @@ class CommandExecutionService
       gem_path: ENV["GEM_PATH"],
       gem_home: ENV["GEM_HOME"],
       bundler_version: Bundler::VERSION
+    })
+  end
+
+  def log_environment_variables_for_command_execution(env)
+    @logger.info("Environment variables for command execution", {
+      command: @command,
+      directory: @temp_dir,
+      env: env
     })
   end
 end

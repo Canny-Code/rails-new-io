@@ -3,6 +3,7 @@
 # Table name: app_generation_log_entries
 #
 #  id               :integer          not null, primary key
+#  entry_type       :string
 #  level            :string           not null
 #  message          :text             not null
 #  metadata         :json
@@ -14,6 +15,7 @@
 # Indexes
 #
 #  idx_on_generated_app_id_created_at_eac7d7a1a2         (generated_app_id,created_at)
+#  index_app_generation_log_entries_on_entry_type        (entry_type)
 #  index_app_generation_log_entries_on_generated_app_id  (generated_app_id)
 #
 # Foreign Keys
@@ -22,7 +24,20 @@
 #
 module AppGeneration
   class LogEntry < ApplicationRecord
+    include LogEntryIcons
+
     self.table_name = "app_generation_log_entries"
+
+    after_create_commit -> {
+      stream_name = "#{generated_app.to_gid}:app_generation_log_entries"
+
+      Turbo::StreamsChannel.broadcast_prepend_to(
+        stream_name,
+        target: "app_generation_log_entries",
+        partial: "app_generation/log_entries/log_entry",
+        locals: { log_entry: self }
+      )
+    }
 
     belongs_to :generated_app
 
