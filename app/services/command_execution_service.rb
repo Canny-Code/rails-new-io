@@ -114,8 +114,7 @@ class CommandExecutionService
     }
     log_environment_variables_for_command_execution(env)
 
-    stdout_buffer = Buffer.new(@generated_app, :stdout)
-    stderr_buffer = Buffer.new(@generated_app, :stderr)
+    buffer = Buffer.new(@generated_app)
 
     Open3.popen3(env, @command, chdir: @temp_dir) do |stdin, stdout, stderr, wait_thr|
       @pid = wait_thr&.pid
@@ -123,35 +122,24 @@ class CommandExecutionService
 
       stdout_thread = Thread.new do
         stdout.each_line do |line|
-          stdout_buffer.append(line.strip)
-        end
-      end
-
-      stderr_thread = Thread.new do
-        stderr.each_line do |line|
-          stderr_buffer.append(line.strip)
+          buffer.append(line.strip)
         end
       end
 
       stdout_thread.join
-      stderr_thread.join
-
-      # Final flush of any remaining logs
-      stdout_buffer.flush
-      stderr_buffer.flush
+      buffer.flush
 
       exit_status = wait_thr&.value
+      output = buffer.join("\n").presence || "No output"
 
       if exit_status&.success?
         @logger.info("Command completed successfully", {
-          output: stdout_buffer.join("\n"),
-          errors: stderr_buffer.join("\n")
+          output: output
         })
       else
         @logger.error("Command failed", {
-          output: stdout_buffer.join("\n"),
-          errors: stderr_buffer.join("\n"),
-          status: exit_status
+          status: exit_status,
+          output: output
         })
         raise "Command failed with status: #{exit_status}"
       end
