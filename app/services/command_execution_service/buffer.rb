@@ -2,39 +2,31 @@ class CommandExecutionService
   class Buffer
     FLUSH_INTERVAL = 1.second
 
-    def initialize(generated_app, stream_type)
+    def initialize(generated_app)
       @generated_app = generated_app
-      @stream_type = stream_type
-      @entries = []
       @mutex = Mutex.new
       @output = []
+      @log_entry = create_initial_log_entry
+      @last_flush = Time.current
     end
 
     def append(message)
       synchronize do
         @output << message
-        entries << {
-          level: @stream_type == :stderr ? :error : :info,
-          message: message,
-          metadata: { stream: @stream_type },
-          timestamp: Time.current
-        }
+        flush if should_flush?
       end
     end
 
     def flush
       synchronize do
-        entries.each do |entry|
-          AppGeneration::LogEntry.create!(
-            generated_app: @generated_app,
-            level: entry[:level],
-            message: entry[:message],
-            metadata: entry[:metadata],
-            phase: @generated_app.status,
-            created_at: entry[:timestamp]
-          )
-        end
-        entries.clear
+        message = @output.join("\n")
+        message = "No output" if message.blank?
+
+        @log_entry.update!(
+          message: message,
+          phase: @generated_app.status
+        )
+        @last_flush = Time.current
       end
     end
 
@@ -46,10 +38,22 @@ class CommandExecutionService
 
     private
 
-    attr_reader :entries
+    def create_initial_log_entry
+      AppGeneration::LogEntry.create!(
+        generated_app: @generated_app,
+        level: :info,
+        message: "Initializing Rails application generation...",
+        metadata: { stream: :stdout },
+        phase: @generated_app.status
+      )
+    end
 
     def synchronize(&block)
       @mutex.synchronize(&block)
+    end
+
+    def should_flush?
+      Time.current - @last_flush >= FLUSH_INTERVAL
     end
   end
 end

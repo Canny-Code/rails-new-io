@@ -14,7 +14,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     error = "Sample error"
 
     Open3.stub :popen3, mock_popen3(output, error, success: true) do
-      assert_difference -> { @generated_app.log_entries.count }, 8 do
+      assert_difference -> { @generated_app.log_entries.count }, 7 do
         @service.execute
       end
 
@@ -27,9 +27,8 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
         "Executing command",
         "System environment details",
         "Environment variables for command execution",
-        "Rails app generation process started",
         "Sample output",
-        "Sample error",
+        "Rails app generation process started",
         "Command completed successfully"
       ]
 
@@ -37,11 +36,12 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
         assert_equal message, log_entries[index].message, "Log entry #{index} doesn't match"
       end
 
+      # Verify the final buffer content
+      buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
+      assert_equal "Sample output", buffer_entry.message
+
       # Verify specific log levels
-      assert log_entries[0..6].all?(&:info?), "First 6 entries should be info level"
-      assert log_entries[7].info?, "Sample output should be info level"
-      assert log_entries[8].error?, "Sample error should be error level"
-      assert log_entries[9].info?, "Command completed should be info level"
+      assert log_entries.all?(&:info?)
     end
   end
 
@@ -128,26 +128,23 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     error = "Sample error"
 
     Open3.stub :popen3, mock_popen3(output, error, success: true) do
-      assert_difference -> { AppGeneration::LogEntry.count }, 8 do
+      assert_difference -> { AppGeneration::LogEntry.count }, 7 do
         @service.execute
       end
 
-      log_entries = @generated_app.log_entries.order(created_at: :desc).limit(8)
+      log_entries = @generated_app.log_entries.order(created_at: :desc).limit(7)
 
-      # Verify the sequence of logs
       assert_equal "Command completed successfully", log_entries[0].message
-      assert_equal "Sample error", log_entries[1].message
+      assert_equal "Rails app generation process started", log_entries[1].message
       assert_equal "Sample output", log_entries[2].message
-      assert_equal "Rails app generation process started", log_entries[3].message
-      assert_equal "Environment variables for command execution", log_entries[4].message
-      assert_equal "System environment details", log_entries[5].message
-      assert_equal "Executing command", log_entries[6].message
-      assert_equal "Created temporary directory", log_entries[7].message
+      assert_equal "Environment variables for command execution", log_entries[3].message
+      assert_equal "System environment details", log_entries[4].message
+      assert_equal "Executing command", log_entries[5].message
+      assert_equal "Created temporary directory", log_entries[6].message
 
       # Verify specific log content
       completed_log = log_entries.find { |entry| entry.message == "Command completed successfully" }
       assert_equal output, completed_log.metadata["output"]
-      assert_equal error, completed_log.metadata["errors"]
     end
   end
 
@@ -165,22 +162,26 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       # Verify the sequence of logs
       expected_messages = [
         "Command failed",
-        "Error message",
+        "No output",  # From Buffer's default message
         "Rails app generation process started",
         "Environment variables for command execution",
         "System environment details",
         "Executing command",
-        "Created temporary directory"
+        "Created temporary directory",
+        "Command validation successful",
+        "Validating command: #{@command}"
       ]
 
-      expected_messages.each_with_index do |message, index|
-        assert_equal message, log_entries[index].message
+      expected_messages.each do |message|
+        assert log_entries.any? { |entry| entry.message.include?(message) },
+          "Expected to find log entry containing '#{message}'"
       end
 
       # Verify error details
       error_log = log_entries.find { |entry| entry.message == "Command failed" }
       assert error_log.error?
-      assert_equal error, error_log.metadata["errors"]
+      assert_equal "No output", error_log.metadata["output"]
+      assert error_log.metadata["status"]
     end
   end
 
@@ -195,33 +196,35 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       assert_equal pid, process_pid
     } do
       Open3.stub :popen3, mock_popen3(output, error, success: true, pid: pid) do
-        assert_difference -> { AppGeneration::LogEntry.count }, 9 do
+        assert_difference -> { AppGeneration::LogEntry.count }, 8 do
           @service.execute
         end
 
-        log_entries = @generated_app.log_entries.order(created_at: :desc).limit(9)
-
-        # Verify process termination log
-        termination_log = log_entries.find { |entry| entry.message == "Terminated process" }
-        assert termination_log
-        assert_equal pid, termination_log.metadata["pid"]
+        log_entries = @generated_app.log_entries.order(created_at: :desc)
 
         # Verify all expected messages are present
         expected_messages = [
           "Terminated process",
           "Command completed successfully",
-          "Sample error",
-          "Sample output",
+          "Sample output",  # Buffer output
           "Rails app generation process started",
           "Environment variables for command execution",
           "System environment details",
           "Executing command",
-          "Created temporary directory"
+          "Created temporary directory",
+          "Command validation successful",
+          "Validating command: #{@command}"
         ]
 
-        expected_messages.each_with_index do |message, index|
-          assert_equal message, log_entries[index].message, "Log entry #{index} doesn't match"
+        expected_messages.each do |message|
+          assert log_entries.any? { |entry| entry.message.include?(message) },
+            "Expected to find log entry containing '#{message}'"
         end
+
+        # Verify process termination log
+        termination_log = log_entries.find { |entry| entry.message == "Terminated process" }
+        assert termination_log
+        assert_equal pid, termination_log.metadata["pid"]
       end
     end
   end

@@ -28,7 +28,7 @@ module AppGeneration
 
     self.table_name = "app_generation_log_entries"
 
-    after_create_commit -> {
+    after_commit -> {
       stream_name = "#{generated_app.to_gid}:app_generation_log_entries"
 
       Turbo::StreamsChannel.broadcast_prepend_to(
@@ -37,7 +37,7 @@ module AppGeneration
         partial: "app_generation/log_entries/log_entry",
         locals: { log_entry: self }
       )
-    }
+    }, on: [ :create, :update ]
 
     belongs_to :generated_app
 
