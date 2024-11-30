@@ -15,6 +15,7 @@ module HasGenerationLifecycle
 
     def create_app_status
       build_app_status.save!
+      logger.info("Starting app generation workflow")
     end
 
     def logger
@@ -25,7 +26,12 @@ module HasGenerationLifecycle
   def generate!
     touch(:last_build_at)
     app_status.start_generation!
-    logger.info("Starting app generation")
+  end
+
+  def create_github_repo!
+    touch(:last_build_at)
+    app_status.start_github_repo_creation!
+    logger.info("Starting GitHub repo creation")
   end
 
   def push_to_github!

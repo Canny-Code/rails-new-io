@@ -36,7 +36,7 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
 
       # Verify log entries
       log_entries = @generated_app.log_entries.recent_first
-      assert_equal "Repository created successfully", log_entries.first.message
+      assert_equal "GitHub repo #{@repository_name} created successfully", log_entries.first.message
       assert_equal "Creating repository: #{@repository_name}", log_entries.second.message
     end
 
