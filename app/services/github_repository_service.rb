@@ -37,7 +37,7 @@ class GithubRepositoryService
         github_repo_url: response.html_url
       )
 
-      @logger.info("Repository created successfully", { url: response.html_url })
+      @logger.info("GitHub repo #{name} created successfully", { url: response.html_url })
       response
     end
   end

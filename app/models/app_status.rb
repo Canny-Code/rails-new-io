@@ -33,14 +33,20 @@ class AppStatus < ApplicationRecord
 
   aasm column: :status do
     state :pending, initial: true
+    state :creating_github_repo
     state :generating
     state :pushing_to_github
     state :running_ci
     state :completed
     state :failed
 
+    event :start_github_repo_creation do
+      transitions from: :pending, to: :creating_github_repo
+      after { track_transition(:creating_github_repo) }
+    end
+
     event :start_generation do
-      transitions from: :pending, to: :generating
+      transitions from: [ :pending, :creating_github_repo ], to: :generating
       after do
         update(started_at: Time.current)
         track_transition(:generating)
@@ -66,7 +72,7 @@ class AppStatus < ApplicationRecord
     end
 
     event :fail do
-      transitions from: [ :pending, :generating, :pushing_to_github, :running_ci ], to: :failed
+      transitions from: [ :pending, :creating_github_repo, :generating, :pushing_to_github, :running_ci ], to: :failed
       after do |error_message|
         update(
           completed_at: Time.current,

@@ -9,11 +9,11 @@ module LogEntryIcons
 
   def message_icons
     case message.downcase
-    when /starting app generation/
+    when /starting app generation workflow/
       "🐙 🛤️ 🏗️ 🪄 🔄 "
-    when /creating repository/
+    when /starting github repo creation/
       "🐙 🏗️ 🔄 "
-    when /repository created successfully/
+    when /github repo .+ created successfully/
       "🐙 🏗️ ✅ "
     when /validating command/
       "🤖 🔍 🔄 "

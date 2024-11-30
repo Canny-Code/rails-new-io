@@ -54,7 +54,7 @@ class AppStatusTest < ActiveSupport::TestCase
   end
 
   test "can fail from any state" do
-    states = [ :pending, :generating, :pushing_to_github, :running_ci ]
+    states = [ :pending, :creating_github_repo, :generating, :pushing_to_github, :running_ci ]
     error_message = "Something went wrong"
 
     states.each do |state|
@@ -62,6 +62,8 @@ class AppStatusTest < ActiveSupport::TestCase
 
       # Move to the target state
       case state
+      when :creating_github_repo
+        status.start_github_repo_creation!
       when :generating
         status.start_generation!
       when :pushing_to_github
@@ -101,7 +103,7 @@ class AppStatusTest < ActiveSupport::TestCase
   end
 
   test ".states returns all possible states" do
-    expected_states = %i[pending generating pushing_to_github running_ci completed failed]
+    expected_states = %i[pending creating_github_repo generating pushing_to_github running_ci completed failed]
     assert_equal expected_states, AppStatus.states
   end
 
@@ -127,5 +129,51 @@ class AppStatusTest < ActiveSupport::TestCase
     assert_raises(AASM::InvalidTransition) do
       app_status.restart!
     end
+  end
+
+  test "follows github repo creation path state transitions" do
+    status = AppStatus.create!(generated_app: @generated_app)
+    assert_nil status.started_at
+
+    status.start_github_repo_creation!
+    assert status.creating_github_repo?
+    assert_nil status.started_at
+
+    status.start_generation!
+    assert status.generating?
+    assert_not_nil status.started_at
+  end
+
+  test "can fail from creating_github_repo state" do
+    status = AppStatus.create!(generated_app: @generated_app)
+    error_message = "Failed to create GitHub repository"
+
+    status.start_github_repo_creation!
+    assert status.creating_github_repo?
+
+    status.fail!(error_message)
+    assert status.failed?
+    assert_equal error_message, status.error_message
+    assert_not_nil status.completed_at
+  end
+
+  test "tracks status history through github repo creation" do
+    status = AppStatus.create!(generated_app: @generated_app)
+
+    status.start_github_repo_creation!
+    status.start_generation!
+    status.fail!("Error occurred")
+
+    assert_equal 3, status.status_history.size
+
+    first_transition = status.status_history.first
+    assert_equal "pending", first_transition["from"]
+    assert_equal "creating_github_repo", first_transition["to"]
+    assert_not_nil first_transition["timestamp"]
+
+    second_transition = status.status_history.second
+    assert_equal "creating_github_repo", second_transition["from"]
+    assert_equal "generating", second_transition["to"]
+    assert_not_nil second_transition["timestamp"]
   end
 end

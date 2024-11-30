@@ -306,4 +306,49 @@ class GeneratedAppTest < ActiveSupport::TestCase
     assert app.app_status.pending?
     assert_nil app.error_message
   end
+
+  test "follows complete lifecycle with github repo creation" do
+    app = GeneratedApp.create!(
+      name: "test-app",
+      user: @user,
+      ruby_version: "3.2.0",
+      rails_version: "7.1.0"
+    )
+
+    # Initial state
+    assert app.app_status.pending?
+    assert_nil app.started_at
+    assert_nil app.completed_at
+    assert_nil app.error_message
+
+    # Create GitHub repo
+    assert_changes -> { app.reload.last_build_at } do
+      app.create_github_repo!
+    end
+    assert app.app_status.creating_github_repo?
+
+    # Start generation
+    assert_changes -> { app.reload.last_build_at } do
+      app.generate!
+    end
+    assert app.generating?
+
+    # Push to GitHub
+    assert_changes -> { app.reload.last_build_at } do
+      app.push_to_github!
+    end
+    assert app.app_status.pushing_to_github?
+
+    # Start CI
+    assert_changes -> { app.reload.last_build_at } do
+      app.start_ci!
+    end
+    assert app.running_ci?
+
+    # Complete generation
+    assert_changes -> { app.reload.last_build_at } do
+      app.mark_as_completed!
+    end
+    assert app.completed?
+  end
 end
