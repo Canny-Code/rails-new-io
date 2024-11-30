@@ -11,21 +11,30 @@ class CommandExecutionService
     end
 
     def append(message)
+      should_flush = false
+
       synchronize do
         @output << message
-        flush if should_flush?
+        should_flush = should_flush?
       end
+
+      flush if should_flush
     end
 
     def flush
+      message = nil
+
       synchronize do
         message = @output.join("\n")
         message = "No output" if message.blank?
+      end
 
-        @log_entry.update!(
-          message: message,
-          phase: @generated_app.status
-        )
+      @log_entry.update!(
+        message: message,
+        phase: @generated_app.status
+      )
+
+      synchronize do
         @last_flush = Time.current
       end
     end
