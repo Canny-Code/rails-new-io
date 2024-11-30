@@ -182,7 +182,8 @@ class GithubCodePushServiceTest < ActiveSupport::TestCase
     nonexistent_path = Rails.root.join("tmp", "definitely_does_not_exist_#{SecureRandom.hex}").to_s
 
     @generated_app.update!(source_path: nonexistent_path)
-    @generated_app.generate!
+    @generated_app.create_github_repo!  # First transition to creating_github_repo
+    @generated_app.generate!            # Then transition to generating
 
     service = GithubCodePushService.new(@generated_app)
 

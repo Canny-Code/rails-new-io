@@ -174,6 +174,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
     assert_nil app.completed_at
     assert_nil app.error_message
 
+    # Create GitHub repo
+    app.create_github_repo!
+    assert app.app_status.creating_github_repo?
+
     # Start generation
     app.generate!
     assert app.app_status.generating?
@@ -222,6 +226,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
     )
 
     assert_difference "Noticed::Event.count" do
+      app.create_github_repo!
+    end
+
+    assert_difference "Noticed::Event.count" do
       app.generate!
     end
 
@@ -263,6 +271,12 @@ class GeneratedAppTest < ActiveSupport::TestCase
     assert_nil app.started_at
     assert_nil app.completed_at
     assert_nil app.error_message
+
+    # Create GitHub repo
+    assert_changes -> { app.reload.last_build_at } do
+      app.create_github_repo!
+    end
+    assert app.app_status.creating_github_repo?
 
     # Start generation
     assert_changes -> { app.reload.last_build_at } do
