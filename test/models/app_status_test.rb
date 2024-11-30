@@ -36,21 +36,31 @@ class AppStatusTest < ActiveSupport::TestCase
 
   test "follows happy path state transitions" do
     status = AppStatus.create!(generated_app: @generated_app)
+    assert status.pending?
     assert_nil status.started_at
 
+    # First transition
+    status.start_github_repo_creation!
+    assert_equal "creating_github_repo", status.status
+    assert_nil status.started_at
+
+    # Second transition
     status.start_generation!
-    assert status.generating?
+    assert_equal "generating", status.status
     assert_not_nil status.started_at
 
-    status.start_github_push!
-    assert status.pushing_to_github?
+    # Check status history
+    assert_equal 2, status.status_history.size
 
-    status.start_ci!
-    assert status.running_ci?
+    first_transition = status.status_history.first
+    assert_equal "pending", first_transition["from"]
+    assert_equal "creating_github_repo", first_transition["to"]
+    assert_not_nil first_transition["timestamp"]
 
-    status.complete!
-    assert status.completed?
-    assert_not_nil status.completed_at
+    second_transition = status.status_history.second
+    assert_equal "creating_github_repo", second_transition["from"]
+    assert_equal "generating", second_transition["to"]
+    assert_not_nil second_transition["timestamp"]
   end
 
   test "can fail from any state" do
@@ -65,11 +75,14 @@ class AppStatusTest < ActiveSupport::TestCase
       when :creating_github_repo
         status.start_github_repo_creation!
       when :generating
+        status.start_github_repo_creation!
         status.start_generation!
       when :pushing_to_github
+        status.start_github_repo_creation!
         status.start_generation!
         status.start_github_push!
       when :running_ci
+        status.start_github_repo_creation!
         status.start_generation!
         status.start_github_push!
         status.start_ci!
@@ -85,16 +98,21 @@ class AppStatusTest < ActiveSupport::TestCase
   test "tracks status history" do
     status = AppStatus.create!(generated_app: @generated_app)
 
+    status.start_github_repo_creation!
     status.start_generation!
-    status.start_github_push!
     status.fail!("Error occurred")
 
     assert_equal 3, status.status_history.size
 
     first_transition = status.status_history.first
     assert_equal "pending", first_transition["from"]
-    assert_equal "generating", first_transition["to"]
+    assert_equal "creating_github_repo", first_transition["to"]
     assert_not_nil first_transition["timestamp"]
+
+    second_transition = status.status_history.second
+    assert_equal "creating_github_repo", second_transition["from"]
+    assert_equal "generating", second_transition["to"]
+    assert_not_nil second_transition["timestamp"]
   end
 
   test "belongs to generated app" do

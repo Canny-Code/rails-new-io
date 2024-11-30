@@ -46,7 +46,7 @@ class AppStatus < ApplicationRecord
     end
 
     event :start_generation do
-      transitions from: [ :pending, :creating_github_repo ], to: :generating
+      transitions from: :creating_github_repo, to: :generating
       after do
         update(started_at: Time.current)
         track_transition(:generating)

@@ -17,9 +17,10 @@ class GithubRepositoryService
       raise RepositoryExistsError, "Repository '#{name}' already exists"
     end
 
-    with_error_handling do
-      @logger.info("Creating repository: #{name}", { username: @user.github_username })
+    @generated_app.create_github_repo!
+    @logger.info("Creating repository: #{name}", { username: @user.github_username })
 
+    with_error_handling do
       options = {
         private: false,
         auto_init: false,

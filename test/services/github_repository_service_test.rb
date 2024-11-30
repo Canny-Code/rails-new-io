@@ -28,7 +28,7 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       } ]
 
       assert_difference -> { @user.repositories.count }, 1 do
-        assert_difference -> { AppGeneration::LogEntry.count }, 2 do # Two log entries: start and success
+        assert_difference -> { AppGeneration::LogEntry.count }, 3 do
           result = @service.create_repository(@repository_name)
           assert_equal response.html_url, result.html_url
         end
@@ -142,6 +142,28 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
 
     @service.stub :client, client_mock do
       assert_equal false, @service.send(:repository_exists?, "test-repo")
+    end
+  end
+
+  test "transitions to creating_github_repo state before creating repository" do
+    service = GithubRepositoryService.new(@generated_app)
+
+    # Track if creating_github_repo! was called
+    creating_github_repo_called = false
+    @generated_app.define_singleton_method(:create_github_repo!) do
+      creating_github_repo_called = true
+    end
+
+    # Stub external calls
+    service.stub(:repository_exists?, false) do
+      mock_client = Minitest::Mock.new
+      mock_response = Struct.new(:html_url).new("https://github.com/user/repo")
+      mock_client.expect(:create_repository, mock_response, [ "test-repo", Hash ])
+
+      service.stub(:client, mock_client) do
+        service.create_repository("test-repo")
+        assert creating_github_repo_called, "creating_github_repo! should have been called"
+      end
     end
   end
 end
