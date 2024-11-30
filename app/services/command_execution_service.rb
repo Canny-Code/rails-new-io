@@ -15,7 +15,7 @@ class CommandExecutionService
 
       # Double-dash options with possible values
       --(?:
-        (?:ruby|name|template|database|javascript|css)=[\w\/.=-]+|
+        (?:ruby|name|template|database|javascript|css|asset-pipeline)=[\w\/.=-]+|
 
         # Boolean options (with or without --no- or --skip- prefix)
         (?:(?:no-|skip-)?(?:
@@ -23,7 +23,7 @@ class CommandExecutionService
           action-text|active-record|active-job|active-storage|action-cable|
           asset-pipeline|javascript|hotwire|jbuilder|test|system-test|bootsnap|
           dev-gems|thruster|rubocop|brakeman|ci|kamal|solid|dev|devcontainer|
-          edge|main|api|minimal|bundle|decrypted-diffs|
+          edge|main|api|minimal|bundle|decrypted-diffs|spring|
           pretend|quiet|skip
         ))|
 
@@ -33,8 +33,7 @@ class CommandExecutionService
       \s*
     )*
   )
-\z/x
-
+  \z/x
 
   VALID_OPTIONS = /\A--?[a-z][\w-]*\z/  # Must start with letter after dash(es)
   MAX_TIMEOUT = 300 # 5 minutes

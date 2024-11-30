@@ -5,43 +5,54 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
   def setup
     @generated_app = generated_apps(:blog_app)
     @generated_app.create_app_status! # Ensure app_status exists for logger
-    @valid_command = "rails new #{@generated_app.name} -d postgres --css=tailwind --skip-bootsnap"
-    @service = CommandExecutionService.new(@generated_app, @valid_command)
+    @valid_commands = [
+      "rails new #{@generated_app.name} -d postgres --css=tailwind --skip-bootsnap",
+      "rails new #{@generated_app.name} --skip-action-mailbox --skip-jbuilder --asset-pipeline=propshaft --javascript=esbuild --css=tailwind --skip-spring"
+    ]
+    @service = CommandExecutionService.new(@generated_app, @valid_commands.first)
   end
 
   test "executes valid rails new command" do
     output = "Sample output"
     error = "Sample error"
 
-    Open3.stub :popen3, mock_popen3(output, error, success: true) do
-      assert_difference -> { @generated_app.log_entries.count }, 7 do
-        @service.execute
+    @valid_commands.each do |command|
+      # Store the current count to only delete new entries
+      initial_count = @generated_app.log_entries.count
+
+      service = CommandExecutionService.new(@generated_app, command)
+
+      Open3.stub :popen3, mock_popen3(output, error, success: true) do
+        assert_difference -> { @generated_app.log_entries.count }, 7 do
+          service.execute
+        end
+
+        log_entries = @generated_app.log_entries.order(created_at: :asc).offset(initial_count)
+
+        expected_messages = [
+          "Validating command: #{command}",
+          "Command validation successful",
+          "Created temporary directory",
+          "Executing command",
+          "System environment details",
+          "Environment variables for command execution",
+          "Sample output"
+        ]
+
+        expected_messages.each_with_index do |message, index|
+          assert_equal message, log_entries[index].message, "Log entry #{index} doesn't match for command: #{command}"
+        end
+
+        # Verify the final buffer content
+        buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
+        assert_equal "Sample output", buffer_entry.message
+
+        # Verify specific log levels
+        assert log_entries.all?(&:info?)
+
+        # Clean up only the entries from this iteration
+        @generated_app.log_entries.where("id > ?", @generated_app.log_entries.limit(initial_count).pluck(:id).last).destroy_all
       end
-
-      log_entries = @generated_app.log_entries.order(created_at: :asc)
-
-      expected_messages = [
-        "Validating command: rails new personal-blog -d postgres --css=tailwind --skip-bootsnap",
-        "Command validation successful",
-        "Created temporary directory",
-        "Executing command",
-        "System environment details",
-        "Environment variables for command execution",
-        "Sample output",
-        "Rails app generation process started",
-        "Command completed successfully"
-      ]
-
-      expected_messages.each_with_index do |message, index|
-        assert_equal message, log_entries[index].message, "Log entry #{index} doesn't match"
-      end
-
-      # Verify the final buffer content
-      buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
-      assert_equal "Sample output", buffer_entry.message
-
-      # Verify specific log levels
-      assert log_entries.all?(&:info?)
     end
   end
 
