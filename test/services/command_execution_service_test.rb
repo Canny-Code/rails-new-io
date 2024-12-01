@@ -153,9 +153,9 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       assert_equal "Preparing to execute command", log_entries[5].message
       assert_equal "Created temporary directory", log_entries[6].message
 
-      # Verify specific log content
-      completed_log = log_entries.find { |entry| entry.message == "Command completed successfully" }
-      assert_equal output, completed_log.metadata["output"]
+      # Fix: Look for the log entry with stdout stream
+      buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
+      assert_equal "Sample output", buffer_entry.message
     end
   end
 

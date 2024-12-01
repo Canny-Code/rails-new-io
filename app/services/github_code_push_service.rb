@@ -32,6 +32,7 @@ class GithubCodePushService
   def execute
     validate_source_path
     validate_current_state
+    generated_app.push_to_github!
     push_code
     update_app_status
   rescue Git::Error => e
@@ -91,7 +92,6 @@ class GithubCodePushService
 
   def update_app_status
     generated_app.update!(github_repo_url: repository_url)
-    generated_app.push_to_github!
   end
 
   def repository_url
