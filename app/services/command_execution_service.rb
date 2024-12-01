@@ -102,7 +102,7 @@ class CommandExecutionService
   end
 
   def run_isolated_process
-    @logger.info("Executing command", { command: @command, directory: @temp_dir })
+    @logger.info("Preparing to execute command", { command: @command, directory: @temp_dir })
     log_system_environment_details
 
     env = {
@@ -133,7 +133,9 @@ class CommandExecutionService
 
       if exit_status&.success?
         @logger.info("Command completed successfully", {
-          output: output
+          command: @command,
+          app_name: @generated_app.name,
+          directory: @temp_dir
         })
       else
         @logger.error("Command failed", {

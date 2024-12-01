@@ -14,7 +14,7 @@ class CommandExecutionService
       should_flush = false
 
       synchronize do
-        @output << message
+        @output << message.gsub("\n", "<br>")
         should_flush = should_flush?
       end
 
