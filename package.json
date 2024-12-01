@@ -19,5 +19,6 @@
   "devDependencies": {
     "vite-plugin-full-reload": "^1.2.0",
     "vite-plugin-stimulus-hmr": "^3.0.0"
-  }
+  },
+  "packageManager": "yarn@4.5.3"
 }
