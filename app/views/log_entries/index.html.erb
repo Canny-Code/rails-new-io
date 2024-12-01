@@ -10,9 +10,11 @@
     channel="Turbo::StreamsChannel"
     signed-stream-name="<%= Turbo::StreamsChannel.signed_stream_name("#{@generated_app.to_gid}:app_generation_log_entries") %>">
   </turbo-cable-stream-source>
-
   <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-    <div class="divide-y divide-gray-200" id="app_generation_log_entries">
+    <div data-controller="log-scroll"
+         data-log-scroll-target="container"
+         class="divide-y divide-gray-200 h-[600px] overflow-y-auto"
+         id="app_generation_log_entries">
       <%= render partial: "app_generation/log_entries/log_entry", collection: @log_entries %>
     </div>
   </div>

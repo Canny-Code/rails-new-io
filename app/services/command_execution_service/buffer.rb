@@ -8,6 +8,7 @@ class CommandExecutionService
       @output = []
       @log_entry = create_initial_log_entry
       @last_flush = Time.current
+      @completed = false
     end
 
     def append(message)
@@ -21,6 +22,11 @@ class CommandExecutionService
       flush if should_flush
     end
 
+    def complete!
+      @completed = true
+      flush
+    end
+
     def flush
       message = nil
 
@@ -29,10 +35,11 @@ class CommandExecutionService
         message = "No output" if message.blank?
       end
 
-      @log_entry.update!(
-        message: message,
-        phase: @generated_app.status
-      )
+      if @completed
+        @log_entry.update!(message: message, entry_type: nil)
+      else
+        @log_entry.update!(message: message)
+      end
 
       synchronize do
         @last_flush = Time.current
@@ -53,7 +60,8 @@ class CommandExecutionService
         level: :info,
         message: "Initializing Rails application generation...",
         metadata: { stream: :stdout },
-        phase: @generated_app.status
+        phase: @generated_app.status,
+        entry_type: "rails_output"
       )
     end
 

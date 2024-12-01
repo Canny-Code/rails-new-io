@@ -1,11 +1,15 @@
 <%= turbo_frame_tag "log_entry_#{log_entry.id}" do %>
-  <div class="log-entry <%= log_entry.level %>" data-timestamp="<%= log_entry.created_at.to_i %>">
+  <div class="log-entry <%= log_entry.level %>" data-timestamp="<%= log_entry.created_at.to_i %>" data-entry-type="<%= log_entry.entry_type %>">
     <div class="p-4 <%= log_level_color(log_entry.level) %>">
       <div class="flex justify-between items-start">
         <div class="flex-1">
-          <p class="text-sm font-medium text-gray-900">
-            <%= log_entry.decorated_message %>
-          </p>
+          <div class="text-sm font-medium text-gray-900 message-content">
+            <% if log_entry.entry_type == 'rails_output' %>
+              <%= simple_format(log_entry.message) %>
+            <% else %>
+              <%= log_entry.decorated_message %>
+            <% end %>
+          </div>
           <div class="mt-1 text-sm text-gray-500">
             <span class="font-medium"><%= log_entry.phase %></span>
             <span class="mx-2">•</span>

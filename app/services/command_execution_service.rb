@@ -126,7 +126,7 @@ class CommandExecutionService
       end
 
       stdout_thread.join
-      buffer.flush
+      buffer.complete!
 
       exit_status = wait_thr&.value
       output = buffer.join("\n").presence || "No output"
