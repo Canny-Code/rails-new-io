@@ -8,7 +8,6 @@ module AppGeneration
     def call
       validate_initial_state!
 
-      @generated_app.generate!
       AppGenerationJob.perform_later(@generated_app.id)
 
       true

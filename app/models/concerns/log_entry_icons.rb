@@ -2,7 +2,7 @@ module LogEntryIcons
   extend ActiveSupport::Concern
 
   def decorated_message
-    "#{message_icons}#{message}"
+    simple_format("#{message_icons}#{message}")
   end
 
   private
@@ -10,8 +10,10 @@ module LogEntryIcons
   def message_icons
     case message.downcase
     when /starting app generation workflow/
-      "🐙 🛤️ 🏗️ 🪄 🔄 "
+      "🐙 🛤️ 🏗️ 🪄 🎬 "
     when /starting github repo creation/
+      "🐙 🏗️ 🚀 "
+    when /creating repository/
       "🐙 🏗️ 🔄 "
     when /github repo .+ created successfully/
       "🐙 🏗️ ✅ "
@@ -21,6 +23,8 @@ module LogEntryIcons
       "🤖 🔍 ✅ "
     when /created temporary directory/
       "📂 🏗️ ✅ "
+    when /preparing to execute command/
+      "🛠️ ⚙️ ⌛ "
     when /system environment details/
       "💻 📈 "
     when /environment variables for command execution/
@@ -28,7 +32,7 @@ module LogEntryIcons
     when /rails app generation process started/
       "🛤️ 🏗️ 🔄 "
     when /starting github push/
-      "🐙 ⬆️ 🔄 "
+      "🐙 ⬆️ 🚀⏳ "
     when /app generation completed successfully/
       "🐙 🛤️ 🏗️ 🪄 ✅ "
     else

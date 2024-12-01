@@ -33,7 +33,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
           "Validating command: #{command}",
           "Command validation successful",
           "Created temporary directory",
-          "Executing command",
+          "Preparing to execute command",
           "System environment details",
           "Environment variables for command execution",
           "Sample output"
@@ -150,7 +150,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       assert_equal "Sample output", log_entries[2].message
       assert_equal "Environment variables for command execution", log_entries[3].message
       assert_equal "System environment details", log_entries[4].message
-      assert_equal "Executing command", log_entries[5].message
+      assert_equal "Preparing to execute command", log_entries[5].message
       assert_equal "Created temporary directory", log_entries[6].message
 
       # Verify specific log content
@@ -177,7 +177,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
         "Rails app generation process started",
         "Environment variables for command execution",
         "System environment details",
-        "Executing command",
+        "Preparing to execute command",
         "Created temporary directory",
         "Command validation successful",
         "Validating command: #{@command}"
@@ -221,7 +221,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
           "Rails app generation process started",
           "Environment variables for command execution",
           "System environment details",
-          "Executing command",
+          "Preparing to execute command",
           "Created temporary directory",
           "Command validation successful",
           "Validating command: #{@command}"

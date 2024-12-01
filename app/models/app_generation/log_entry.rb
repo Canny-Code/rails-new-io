@@ -25,6 +25,7 @@
 module AppGeneration
   class LogEntry < ApplicationRecord
     include LogEntryIcons
+    include ActionView::Helpers::TextHelper
 
     self.table_name = "app_generation_log_entries"
 
@@ -37,7 +38,18 @@ module AppGeneration
         partial: "app_generation/log_entries/log_entry",
         locals: { log_entry: self }
       )
-    }, on: [ :create, :update ]
+    }, on: :create
+
+    after_commit -> {
+      stream_name = "#{generated_app.to_gid}:app_generation_log_entries"
+
+      Turbo::StreamsChannel.broadcast_replace_to(
+        stream_name,
+        target: "log_entry_#{id}",
+        partial: "app_generation/log_entries/log_entry",
+        locals: { log_entry: self }
+      )
+    }, on: :update
 
     belongs_to :generated_app
 

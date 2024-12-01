@@ -1,46 +1,49 @@
-
-<div class="p-4 <%= log_level_color(log_entry.level) %>">
-  <div class="flex justify-between items-start">
-    <div class="flex-1">
-      <p class="text-sm font-medium text-gray-900">
-        <%= log_entry.decorated_message %>
-      </p>
-      <div class="mt-1 text-sm text-gray-500">
-        <span class="font-medium"><%= log_entry.phase %></span>
-        <span class="mx-2">•</span>
-        <time datetime="<%= log_entry.created_at.iso8601 %>">
-          <%= log_entry.created_at.strftime("%Y-%m-%d %H:%M:%S") %>
-        </time>
-      </div>
-      <% if log_entry.metadata.present? %>
-        <div class="mt-2 text-xs">
-          <table class="min-w-full divide-y divide-gray-200">
-            <tbody class="divide-y divide-gray-200">
-              <% log_entry.metadata.each do |key, value| %>
-                <tr>
-                  <td class="py-2 px-3 bg-gray-50 text-gray-500 font-medium whitespace-nowrap"><%= key %></td>
-                  <td class="py-2 px-3 font-bold w-full">
-                    <% if value.is_a?(Hash) %>
-                      <table class="min-w-full divide-y divide-gray-200">
-                        <tbody class="divide-y divide-gray-200">
-                          <% value.each do |sub_key, sub_value| %>
-                            <tr>
-                              <td class="py-1 px-2 bg-gray-50 text-gray-500 whitespace-nowrap"><%= sub_key %></td>
-                              <td class="py-1 px-2 font-bold w-full"><%= sub_value %></td>
-                            </tr>
-                          <% end %>
-                        </tbody>
-                      </table>
-                    <% else %>
-                      <%= value %>
-                    <% end %>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
+<%= turbo_frame_tag "log_entry_#{log_entry.id}" do %>
+  <div class="log-entry <%= log_entry.level %>" data-timestamp="<%= log_entry.created_at.to_i %>">
+    <div class="p-4 <%= log_level_color(log_entry.level) %>">
+      <div class="flex justify-between items-start">
+        <div class="flex-1">
+          <p class="text-sm font-medium text-gray-900">
+            <%= log_entry.decorated_message %>
+          </p>
+          <div class="mt-1 text-sm text-gray-500">
+            <span class="font-medium"><%= log_entry.phase %></span>
+            <span class="mx-2">•</span>
+            <time datetime="<%= log_entry.created_at.iso8601 %>">
+              <%= log_entry.created_at.strftime("%Y-%m-%d %H:%M:%S") %>
+            </time>
+          </div>
+          <% if log_entry.metadata.present? %>
+            <div class="mt-2 text-xs">
+              <table class="min-w-full divide-y divide-gray-200">
+                <tbody class="divide-y divide-gray-200">
+                  <% log_entry.metadata.each do |key, value| %>
+                    <tr>
+                      <td class="py-2 px-3 bg-gray-50 text-gray-500 font-medium whitespace-nowrap"><%= key %></td>
+                      <td class="py-2 px-3 font-bold w-full">
+                        <% if value.is_a?(Hash) %>
+                          <table class="min-w-full divide-y divide-gray-200">
+                            <tbody class="divide-y divide-gray-200">
+                              <% value.each do |sub_key, sub_value| %>
+                                <tr>
+                                  <td class="py-1 px-2 bg-gray-50 text-gray-500 whitespace-nowrap"><%= sub_key %></td>
+                                  <td class="py-1 px-2 font-bold w-full"><%= sub_value %></td>
+                                </tr>
+                              <% end %>
+                            </tbody>
+                          </table>
+                        <% else %>
+                          <%= value %>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
         </div>
-      <% end %>
+      </div>
     </div>
   </div>
-</div>
+<% end %>

@@ -28,11 +28,13 @@ class AppGenerationJob < ApplicationJob
   end
 
   def generate_rails_app
+    @generated_app.generate!
     command = build_rails_command
     CommandExecutionService.new(@generated_app, command).execute
   end
 
   def push_to_github
+    @generated_app.push_to_github!
     GithubCodePushService.new(@generated_app).execute
   end
 
