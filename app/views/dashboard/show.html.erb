@@ -1,0 +1,44 @@
+<%= turbo_stream_from [ :generated_app, current_user.id ] %>
+<%= turbo_stream_from [ :notification_badge, current_user.id ] %>
+<h1 class="ml-4 mt-12 text-2xl font-bold">Welcome <%= current_user.name %>! What will you build today?</h1>
+<div class="container mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">My Generated Apps</h1>
+    <%= form_tag dashboard_path, method: :get, data: { turbo_frame: "generated_apps_list" } do %>
+      <%= text_field_tag :search, params[:search],
+          placeholder: "Search generated apps...",
+          class: "rounded-lg border-gray-300",
+          data: {
+            controller: "autosubmit",
+            action: "input->autosubmit#submit",
+            autosubmit_target: "input"
+          } %>
+    <% end %>
+  </div>
+  <%= turbo_frame_tag "generated_apps_list" do %>
+    <div class="bg-white rounded-lg shadow">
+      <table class="min-w-full">
+        <thead>
+          <tr>
+            <th class="py-3 text-left"><%= sort_link_to "Name", :name %></th>
+            <th class="px-2 py-3 text-left"><%= sort_link_to "Status", :status %></th>
+            <th class="px-2 py-3 text-left"><%= sort_link_to "Created", :created_at %></th>
+            <th class="px-2 py-3 text-left">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @generated_apps.any? %>
+            <%= render @generated_apps %>
+          <% else %>
+            <tr>
+              <td colspan="4" class="text-center">No apps found</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-4">
+      <%== pagy_nav(@pagy) %>
+    </div>
+  <% end %>
+</div>

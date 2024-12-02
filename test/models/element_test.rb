@@ -27,4 +27,18 @@
 require "test_helper"
 
 class ElementTest < ActiveSupport::TestCase
+  test "#null returns a new Element with Null variant" do
+    element = Element.null
+    assert_equal "Element::Null", element.variant_type
+  end
+
+  test "#variant returns Null variant when super is nil" do
+    element = Element.new
+    assert_instance_of Element::Null, element.variant
+  end
+
+  test "#displayed? delegates to variant" do
+    element = Element.new(variant: Element::RadioButton.new)
+    assert element.displayed?
+  end
 end

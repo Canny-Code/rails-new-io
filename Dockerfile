@@ -55,7 +55,7 @@ RUN yarn install --frozen-lockfile
 COPY . .
 
 # Precompiling assets for production without requiring secret RAILS_MASTER_KEY
-RUN RAILS_ENV=production SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
+RUN RAILS_ENV=production RAILS_BUILD=1 SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
 RUN rm -rf node_modules
 

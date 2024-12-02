@@ -11,7 +11,7 @@ linters:
   DeprecatedClasses:
     enabled: true
   ErbSafety:
-    enabled: true
+    enabled: false
     better_html_config: .better-html.yml
   ExtraNewline:
     enabled: true

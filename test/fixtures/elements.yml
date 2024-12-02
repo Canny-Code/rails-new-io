@@ -40,7 +40,7 @@ skip_action_mailer:
   label: Skip Action Mailer
   sub_group: dev_env_default
   variant: skip_action_mailer (Element::Checkbox)
-  
+
 database_sqlite3:
   label: SQLite3
   sub_group: relational_dbs

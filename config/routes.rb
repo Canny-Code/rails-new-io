@@ -14,7 +14,31 @@ Rails.application.routes.draw do
     get :about
   end
 
+  get "auth/github/callback", to: "sessions#create"
+  get "auth/failure", to: "sessions#failure"
+  delete "sign_out", to: "sessions#destroy"
+
+  get "dashboard", to: "dashboard#show"
+
+  resources :notifications, only: [ :index, :update ]
+
+  resources :generated_apps, only: [ :show ] do
+    resources :generation_attempts, only: [ :create ]
+    resources :log_entries, only: [ :index ]
+  end
+
+  resources :users, only: [ :show ], path: "" do
+    resources :repositories, only: [ :new, :create, :show, :index ]
+  end
+
   resources :pages, only: :show
 
-  root to: "pages#show", defaults: { slug: "basic-setup" }
+  constraints lambda { |request| request.session[:user_id].present? } do
+    root to: "dashboard#show", as: :authenticated_root
+  end
+
+  root to: "static#home"
+
+  # named routes
+  get "/repositories/check_name", to: "repositories#check_name", as: :check_repository_name
 end

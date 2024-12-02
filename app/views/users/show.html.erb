@@ -1,0 +1,41 @@
+<div class="mt-4 ml-4 flex space-x-4">
+  <%= link_to new_user_repository_path(@user),
+              class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+    </svg>
+    Create new repository
+  <% end %>
+  <%= link_to dashboard_path,
+              class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    </svg>
+    Go to my dashboard
+  <% end %>
+</div>
+<div class="mt-8">
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="px-4 py-5 sm:px-6">
+      <h3 class="text-lg leading-6 font-medium text-gray-900">Profile Information</h3>
+    </div>
+    <div class="border-t border-gray-200">
+      <dl>
+        <% [
+          [ "Name", @user.name ],
+          [ "Email", @user.email ],
+          [ "GitHub Username", @user.github_username ],
+          [ "Provider", @user.provider ],
+          [ "UID", @user.uid ],
+          [ "Slug", @user.slug ],
+          [ "Created", @user.created_at.strftime("%B %d, %Y") ]
+        ].each_with_index do |(label, value), index| %>
+          <div class="<%= index.even? ? "bg-gray-50" : "bg-white" %> px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500"><%= label %></dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"><%= value %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </div>
+  </div>
+</div>
