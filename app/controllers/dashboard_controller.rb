@@ -31,7 +31,8 @@ class DashboardController < ApplicationController
   end
 
   def filter_by_search(scope)
-    scope if params[:search].blank?
+    return scope if params[:search].blank?
+    scope.where("name LIKE ?", "%#{params[:search]}%")
   end
 
   def apply_sorting(scope)

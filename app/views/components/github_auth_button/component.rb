@@ -3,7 +3,7 @@ class GithubAuthButton::Component < ApplicationComponent
 
   delegate :current_user, to: :helpers
 
-  def template
+  def view_template
     div(class: "flex items-center justify-center") do
       if current_user
         button_to(

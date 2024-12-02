@@ -90,6 +90,7 @@ class AppStatus < ApplicationRecord
 
     event :restart do
       transitions from: [ :generating, :failed ], to: :pending
+      after do
         self.error_message = nil
         track_transition(:pending)
       end
