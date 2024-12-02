@@ -24,10 +24,12 @@
 class AppStatus < ApplicationRecord
   include ActionView::RecordIdentifier
 
-  belongs_to :generated_app
+  belongs_to :generated_app, touch: true
+
+  after_update :broadcast_status_change, if: :saved_change_to_status?
+  after_save :notify_status_change, if: :saved_change_to_status?
 
   after_update :broadcast_status_change
-  after_save :notify_status_change, if: :saved_change_to_status?
 
   include AASM
 
@@ -55,16 +57,20 @@ class AppStatus < ApplicationRecord
 
     event :start_github_push do
       transitions from: :generating, to: :pushing_to_github
-      after { track_transition(:pushing_to_github) }
+      after do
+        track_transition(:pushing_to_github)
+      end
     end
 
     event :start_ci do
       transitions from: :pushing_to_github, to: :running_ci
-      after { track_transition(:running_ci) }
+      after do
+        track_transition(:running_ci)
+      end
     end
 
     event :complete do
-      transitions from: [ :running_ci, :pushing_to_github ], to: :completed
+      transitions from: :running_ci, to: :completed
       after do
         update(completed_at: Time.current)
         track_transition(:completed)
@@ -95,6 +101,22 @@ class AppStatus < ApplicationRecord
     aasm.states.map(&:name)
   end
 
+  def state_sequence
+    [ :pending, :creating_github_repo, :generating, :pushing_to_github, :running_ci, :completed ]
+  end
+
+  def broadcast_status_steps
+    status_data = StatusStepsCalculator.call(generated_app)
+    channel = "#{generated_app.to_gid}:app_status"
+
+    Turbo::StreamsChannel.broadcast_replace_to(
+      channel,
+      target: "status_steps_content",
+      partial: "shared/status_steps",
+      locals: { generated_app: generated_app }
+    )
+  end
+
   private
 
   def track_transition(to_state)
@@ -105,7 +127,8 @@ class AppStatus < ApplicationRecord
     }
 
     self.status_history = status_history.push(history_entry)
-    save!
+    save
+    broadcast_status_steps
   end
 
   def broadcast_status_change
@@ -133,5 +156,14 @@ class AppStatus < ApplicationRecord
       old_status: status_before_last_save,
       new_status: status
     ).deliver(generated_app.user)
+  end
+
+  def broadcast_status_change
+    generated_app.broadcast_replace_to(
+      [ :generated_app, generated_app.user_id ],
+      target: dom_id(generated_app, generated_app.user_id),
+      partial: "generated_apps/generated_app",
+      locals: { generated_app: generated_app }
+    )
   end
 end

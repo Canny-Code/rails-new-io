@@ -59,7 +59,7 @@ class CommandExecutionService
         generated_app: @generated_app,
         level: :info,
         message: "Initializing Rails application generation...",
-        metadata: { stream: :stdout },
+        metadata: { stream: :stdout, is_rails_output: true },
         phase: @generated_app.status,
         entry_type: "rails_output"
       )

@@ -1,23 +1,26 @@
 <%= turbo_frame_tag "log_entry_#{log_entry.id}" do %>
-  <div class="log-entry <%= log_entry.level %>" data-timestamp="<%= log_entry.created_at.to_i %>" data-entry-type="<%= log_entry.entry_type %>">
-    <div class="p-4 <%= log_level_color(log_entry.level) %>">
+  <div class="log-entry <%= log_entry.level %>"
+       data-timestamp="<%= log_entry.created_at.to_i %>"
+       data-entry-type="<%= log_entry.entry_type %>"
+       data-rails-output="<%= rails_output?(log_entry) %>">
+    <div class="p-4 <%= rails_output?(log_entry) ? "bg-black text-green-400" : log_level_color(log_entry.level) %>">
       <div class="flex justify-between items-start">
         <div class="flex-1">
-          <div class="text-sm font-medium text-gray-900 message-content">
-            <% if log_entry.entry_type == 'rails_output' %>
-              <%= simple_format(log_entry.message) %>
+          <div class="text-sm font-medium message-content">
+            <% if rails_output?(log_entry) %>
+              <%= simple_format(log_entry.message, class: "text-green-400") %>
             <% else %>
               <%= log_entry.decorated_message %>
             <% end %>
           </div>
-          <div class="mt-1 text-sm text-gray-500">
+          <div class="mt-1 text-sm <%= rails_output?(log_entry) ? "hidden" : "text-gray-500" %>">
             <span class="font-medium"><%= log_entry.phase %></span>
             <span class="mx-2">•</span>
             <time datetime="<%= log_entry.created_at.iso8601 %>">
               <%= log_entry.created_at.strftime("%Y-%m-%d %H:%M:%S") %>
             </time>
           </div>
-          <% if log_entry.metadata.present? %>
+          <% if log_entry.metadata.present? && !rails_output?(log_entry) %>
             <div class="mt-2 text-xs">
               <table class="min-w-full divide-y divide-gray-200">
                 <tbody class="divide-y divide-gray-200">

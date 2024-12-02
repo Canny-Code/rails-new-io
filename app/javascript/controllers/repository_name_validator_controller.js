@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { debounce } from "../utils/debounce"
 
 export default class extends Controller {
   static targets = ["input", "message", "spinner"]
@@ -10,18 +11,10 @@ export default class extends Controller {
   static classes = ["error", "success"]
 
   initialize() {
-    this.timeout = null
-    this.debouncedValidate = this.debounce(
+    this.debouncedValidate = debounce(
       this.performValidation.bind(this),
       this.debounceValue
     )
-  }
-
-  debounce(func, wait) {
-    return (...args) => {
-      clearTimeout(this.timeout)
-      this.timeout = setTimeout(() => func.apply(this, args), wait)
-    }
   }
 
   validate() {
@@ -80,11 +73,5 @@ export default class extends Controller {
 
   hideMessage() {
     this.messageTarget.classList.add("hidden")
-  }
-
-  disconnect() {
-    if (this.timeout) {
-      clearTimeout(this.timeout)
-    }
   }
 }

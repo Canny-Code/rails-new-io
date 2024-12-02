@@ -34,7 +34,7 @@ class GithubCodePushService
     validate_current_state
     generated_app.push_to_github!
     push_code
-    update_app_status
+    update_app_status_on_success
   rescue Git::Error => e
     handle_error(e, :git)
   rescue FileSystemError, Errno::EACCES, Errno::EPERM, IOError => e
@@ -90,8 +90,11 @@ class GithubCodePushService
     @git.push("origin", "main")
   end
 
-  def update_app_status
+  def update_app_status_on_success
     generated_app.update!(github_repo_url: repository_url)
+    @logger.info("GitHub push finished successfully", {
+      repository_url: repository_url
+    })
   end
 
   def repository_url

@@ -15,40 +15,42 @@ export default class extends Controller {
   }
 
   scrollToBottom() {
-    const railsOutputEntry = this.containerTarget.querySelector('[data-entry-type="rails_output"]')
+    const railsOutputEntry = this.containerTarget.querySelector('[data-entry-type][data-rails-output="true"]')
     if (railsOutputEntry) {
       const container = this.containerTarget
       const entryTop = railsOutputEntry.offsetTop
       const entryHeight = railsOutputEntry.offsetHeight
       const containerHeight = container.clientHeight
 
-      // Calculate position to show the bottom of the rails_output entry
       const scrollPosition = entryTop + entryHeight - containerHeight
       container.scrollTop = scrollPosition
-
-      console.log("Scrolled to rails output bottom", {
-        entryTop,
-        entryHeight,
-        containerHeight,
-        scrollPosition
-      })
     } else {
-      this.containerTarget.scrollTop = 0
-      console.log("No rails output found, scrolled to top")
+      this.scrollToTop()
     }
+  }
+
+  scrollToTop() {
+    this.containerTarget.scrollTop = 0
   }
 
   setupMutationObserver() {
     this.observer = new MutationObserver((mutations) => {
-      console.log("Mutation detected:", mutations)
-      this.scrollToBottom()
+      const addedNodes = mutations.flatMap(m => Array.from(m.addedNodes))
+      const hasRailsOutput = addedNodes.some(node =>
+        node.nodeType === Node.ELEMENT_NODE &&
+        node.querySelector('[data-rails-output="true"]')
+      )
+
+      if (hasRailsOutput) {
+        this.scrollToBottom()
+      } else {
+        this.scrollToTop()
+      }
     })
 
     this.observer.observe(this.containerTarget, {
       childList: true,
-      subtree: true,
-      characterData: true,
-      characterDataOldValue: true
+      subtree: true
     })
   }
 }

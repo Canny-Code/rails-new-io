@@ -145,7 +145,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
       log_entries = @generated_app.log_entries.order(created_at: :desc).limit(7)
 
-      assert_equal "Command completed successfully", log_entries[0].message
+      assert_equal "Rails app generation process finished successfully", log_entries[0].message
       assert_equal "Rails app generation process started", log_entries[1].message
       assert_equal "Sample output", log_entries[2].message
       assert_equal "Environment variables for command execution", log_entries[3].message
@@ -216,7 +216,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
         # Verify all expected messages are present
         expected_messages = [
           "Terminated process",
-          "Command completed successfully",
+          "Rails app generation process finished successfully",
           "Sample output",  # Buffer output
           "Rails app generation process started",
           "Environment variables for command execution",

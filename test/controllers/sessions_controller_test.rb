@@ -19,7 +19,7 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "authenticated github user should get dashboard" do
-    login_with_github
+    sign_in(users(:john))
 
     get dashboard_url
     assert_response :success
@@ -125,6 +125,14 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "github auth fails when user cannot be persisted" do
+    # Clean up in correct order to respect foreign key constraints
+    AppGeneration::LogEntry.delete_all  # Delete log entries first
+    AppStatus.delete_all               # Then app statuses
+    GeneratedApp.delete_all           # Then generated apps
+    Noticed::Notification.delete_all  # Then notifications
+    Repository.delete_all            # Then repositories
+    User.delete_all                 # Finally users
+
     silence_omniauth_logger do
       OmniAuth.config.test_mode = true
       auth_hash = OmniAuth::AuthHash.new({

@@ -31,8 +31,7 @@ class DashboardController < ApplicationController
   end
 
   def filter_by_search(scope)
-    return scope if params[:search].blank?
-    scope.where("name LIKE ?", "%#{sanitize_sql_like(params[:search])}%")
+    scope if params[:search].blank?
   end
 
   def apply_sorting(scope)
@@ -46,9 +45,5 @@ class DashboardController < ApplicationController
 
   def sort_direction
     ALLOWED_SORT_DIRECTIONS.include?(params[:direction]) ? params[:direction] : DEFAULT_SORT_DIRECTION
-  end
-
-  def sanitize_sql_like(string)
-    string.gsub(/[\\%_]/) { |m| "\\#{m}" }
   end
 end
