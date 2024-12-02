@@ -25,7 +25,16 @@ ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
 require "mocha/minitest"
+require "minitest/mock"
+require "database_cleaner/active_record"
 
+ActiveRecord::Encryption.configure(
+  primary_key: "test" * 4,
+  deterministic_key: "test" * 4,
+  key_derivation_salt: "test" * 4
+)
+
+DatabaseCleaner.strategy = :transaction
 
 module ActiveSupport
   class TestCase
@@ -43,9 +52,57 @@ module ActiveSupport
       end
     end
 
-    # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
-    # Add more helper methods to be used by all tests here...
+    def setup
+      DatabaseCleaner.start
+    end
+
+    def teardown
+      DatabaseCleaner.clean
+    end
+
+    set_fixture_class noticed_notifications: AppStatusChangeNotifier::Notification
+    set_fixture_class noticed_events: AppStatusChangeNotifier
   end
+end
+
+def sign_in(user)
+  OmniAuth.config.test_mode = true
+  OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new(
+    provider: user.provider,
+    uid: user.uid,
+    info: {
+      email: user.email
+    }
+  )
+  Rails.application.env_config["omniauth.auth"] = OmniAuth.config.mock_auth[:github]
+  Current.user = user
+  post "/auth/github"
+  follow_redirect!
+end
+
+# random github user
+def login_with_github
+  OmniAuth.config.test_mode = true
+  OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new(Faker::Omniauth.github)
+  Rails.application.env_config["omniauth.auth"] = OmniAuth.config.mock_auth[:github]
+  post "/auth/github"
+  follow_redirect!
+end
+
+def sign_out(_user)
+  OmniAuth.config.mock_auth[:github] = nil
+  Rails.application.env_config["omniauth.auth"] = nil
+  delete "/sign_out"
+  follow_redirect!
+  Current.user = nil
+end
+
+def silence_omniauth_logger
+  original_logger = OmniAuth.config.logger
+  OmniAuth.config.logger = Logger.new("/dev/null")
+  yield
+ensure
+  OmniAuth.config.logger = original_logger
 end

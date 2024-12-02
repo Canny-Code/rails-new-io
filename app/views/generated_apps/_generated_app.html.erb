@@ -1,0 +1,44 @@
+<tr class="border-t" id="generated_app_<%= generated_app.id %>">
+  <td class="px-6 py-4"><%= generated_app.name %></td>
+  <td class="px-6 py-4">
+    <span class="px-2 py-1 rounded-full text-sm <%= status_color(generated_app.status) %>">
+      <%= generated_app.status %>
+    </span>
+  </td>
+  <td class="px-6 py-4"><%= time_ago_in_words(generated_app.created_at) %> ago</td>
+  <td class="px-6 py-4 flex gap-2">
+    <%= link_to generated_app_path(generated_app),
+      class: "text-blue-600 hover:text-blue-800",
+      data: { turbo_frame: "_top" } do %>
+      <div class="flex items-center">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        View
+      </div>
+    <% end %>
+    <%= link_to generated_app_log_entries_path(generated_app),
+    class: "text-blue-600 hover:text-blue-800",
+    data: { turbo_frame: "_top" } do %>
+      <div class="flex items-center">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+        </svg>
+        View Logs
+      </div>
+    <% end %>
+    <% if generated_app.status == "failed" %>
+      <%= button_to generated_app_generation_attempts_path(generated_app),
+          class: "text-blue-600 hover:text-blue-800",
+          form: { data: { turbo: true } } do %>
+        <div class="flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Restart
+        </div>
+      <% end %>
+    <% end %>
+  </td>
+</tr>

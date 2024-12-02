@@ -5,7 +5,10 @@
 # Table name: elements
 #
 #  id           :integer          not null, primary key
+#  description  :text
+#  image_path   :string
 #  label        :string           not null
+#  position     :integer
 #  variant_type :string
 #  created_at   :datetime         not null
 #  updated_at   :datetime         not null
@@ -15,6 +18,7 @@
 # Indexes
 #
 #  index_elements_on_label                        (label)
+#  index_elements_on_position                     (position)
 #  index_elements_on_sub_group_id                 (sub_group_id)
 #  index_elements_on_variant_type_and_variant_id  (variant_type,variant_id)
 #
@@ -36,7 +40,7 @@ skip_action_mailer:
   label: Skip Action Mailer
   sub_group: dev_env_default
   variant: skip_action_mailer (Element::Checkbox)
-  
+
 database_sqlite3:
   label: SQLite3
   sub_group: relational_dbs
@@ -66,3 +70,8 @@ database_mariadb_trilogy:
   label: MariaDB (Trilogy)
   sub_group: relational_dbs
   variant: database_mariadb_trilogy (Element::RadioButton)
+
+app_name:
+  label: App Name
+  sub_group: essentials_default
+  variant: app_name (Element::TextField)

@@ -15,9 +15,31 @@
     <link rel="apple-touch-icon" href="/icon.png">
     <%= vite_client_tag %>
     <%= vite_javascript_tag "application" %>
+    <%= Sentry.get_trace_propagation_meta.html_safe %>
   </head>
   <body>
+    <% if notice %>
+      <p class="p-4 mb-4 text-sm text-green-800 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800"><%= notice %></p>
+    <% end %>
+    <% if alert %>
+      <p class="p-4 mb-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800"><%= alert %></p>
+    <% end %>
+    <header class="bg-white shadow">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+        <%= link_to "Rails.new", root_path, class: "text-xl font-bold text-gray-900" %>
+        <% if current_user %>
+          <%= link_to user_path(current_user),
+                      class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+            <img src="<%= current_user.image %>" class="w-5 h-5 rounded-full mr-2" />
+            My Profile
+          <% end %>
+        <% end %>
+      </div>
+    </header>
     <%= render Nav::Main::Component.new %>
     <%= yield %>
+    <!-- 100% privacy-first analytics -->
+    <script async defer src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+    <noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt="" referrerpolicy="no-referrer-when-downgrade" /></noscript>
   </body>
 </html>

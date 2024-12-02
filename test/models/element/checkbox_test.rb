@@ -11,7 +11,11 @@
 require "test_helper"
 
 class Element::CheckboxTest < ActiveSupport::TestCase
-  # test "the truth" do
-  #   assert true
-  # end
+  setup do
+    @checkbox = Element::Checkbox.new
+  end
+
+  test "checkbox is displayed" do
+    assert @checkbox.displayed?
+  end
 end

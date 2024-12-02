@@ -19,4 +19,8 @@ export default defineConfig({
   css: {
     postcss: './postcss.config.cjs',
   },
+  build: {
+    manifest: true,
+    outDir: '.',
+  },
 });

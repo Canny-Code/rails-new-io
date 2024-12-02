@@ -35,3 +35,7 @@ key_value_dbs:
 dev_env_default:
   title: Default
   group: dev_env
+
+essentials_default:
+  title: Default
+  group: essentials

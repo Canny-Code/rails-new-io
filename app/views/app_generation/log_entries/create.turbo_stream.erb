@@ -1,0 +1,3 @@
+<%= turbo_stream.prepend "app_generation_log_entries" do %>
+  <%= render "app_generation/log_entries/log_entry", log_entry: log_entry %>
+<% end %>

@@ -19,12 +19,18 @@ cache: &cache
   migrations_paths: db/cache_migrate
   database: storage/<%= Rails.env %>-cache.sqlite3
 
+cable: &cable
+  <<: *default
+  migrations_paths: db/cable_migrate
+  database: storage/<%= Rails.env %>-cable.sqlite3
+
 development:
   primary:
     <<: *default
     database: storage/development.sqlite3  # Ensure this line is correct
   queue: *queue
   cache: *cache
+  cable: *cable
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -35,7 +41,6 @@ test:
     database: storage/test.sqlite3
   queue: *queue
   cache: *cache
-
 
 # SQLite3 write its data on the local filesystem, as such it requires
 # persistent disks. If you are deploying to a managed service, you should
@@ -49,3 +54,4 @@ production:
     database: /rails/storage/production.sqlite3
   queue: *queue
   cache: *cache
+  cable: *cable

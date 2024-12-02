@@ -18,4 +18,16 @@ class Page < ApplicationRecord
   friendly_id :title, use: :slugged
 
   has_many :groups, dependent: :destroy
+
+  validates :title, presence: true, uniqueness: true
+  validates :slug, uniqueness: true
+  validate :slug_present
+
+  private
+
+  def slug_present
+    if slug.nil? || slug.empty?
+      errors.add(:slug, "can't be blank")
+    end
+  end
 end

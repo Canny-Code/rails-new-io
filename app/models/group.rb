@@ -2,11 +2,12 @@
 #
 # Table name: groups
 #
-#  id         :integer          not null, primary key
-#  title      :string           not null
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  page_id    :integer          not null
+#  id            :integer          not null, primary key
+#  behavior_type :string
+#  title         :string           not null
+#  created_at    :datetime         not null
+#  updated_at    :datetime         not null
+#  page_id       :integer          not null
 #
 # Indexes
 #
@@ -20,4 +21,6 @@
 class Group < ApplicationRecord
   belongs_to :page
   has_many :sub_groups, dependent: :destroy
+
+  validates :title, presence: true, uniqueness: { scope: :page_id }
 end

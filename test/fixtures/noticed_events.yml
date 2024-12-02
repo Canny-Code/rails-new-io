@@ -1,0 +1,25 @@
+app_status_change_one:
+  type: "AppStatusChangeNotifier"
+  record_type: null
+  record_id: null
+  params:
+    :generated_app_id: <%= ActiveRecord::FixtureSet.identify(:blog_app) %>
+    :generated_app_name: "personal-blog"
+    :old_status: "failed"
+    :new_status: "pending"
+  notifications_count: 1
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+app_status_change_two:
+  type: "AppStatusChangeNotifier"
+  record_type: null
+  record_id: null
+  params:
+    :generated_app_id: <%= ActiveRecord::FixtureSet.identify(:blog_app) %>
+    :generated_app_name: "personal-blog"
+    :old_status: "pending"
+    :new_status: "completed"
+  notifications_count: 1
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
