@@ -17,10 +17,10 @@
             class: "text-blue-600 hover:text-blue-800" %>
     </div>
   </div>
-  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+  <div class="shadow overflow-hidden sm:rounded-lg">
     <div data-controller="log-scroll"
          data-log-scroll-target="container"
-         class="divide-y divide-gray-200 h-[600px] overflow-y-auto"
+         class="divide-y divide-gray-700 h-screen overflow-y-auto"
          id="app_generation_log_entries">
       <%= render partial: "app_generation/log_entries/log_entry", collection: @log_entries %>
     </div>

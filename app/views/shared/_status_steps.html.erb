@@ -3,6 +3,6 @@
   steps = status_data[:steps]
   current_index = status_data[:current_index] %>
 <div id="status_steps_content"
-     class="sticky top-0 bg-white z-10 py-4 border-b">
+     class="sticky-step-bubbles bg-white/80 py-4 border-b">
   <%= render "shared/status_steps_content", status_data.merge(generated_app: generated_app) %>
 </div>
