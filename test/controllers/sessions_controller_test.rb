@@ -125,6 +125,9 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "github auth fails when user cannot be persisted" do
+    Repository.delete_all
+    User.delete_all
+
     silence_omniauth_logger do
       OmniAuth.config.test_mode = true
       auth_hash = OmniAuth::AuthHash.new({
