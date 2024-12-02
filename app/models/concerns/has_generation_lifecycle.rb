@@ -43,7 +43,7 @@ module HasGenerationLifecycle
   def start_ci!
     touch(:last_build_at)
     app_status.start_ci!
-    logger.info("Starting CI run")
+    logger.info("Starting CI run (for now, async on GitHub)")
   end
 
   def mark_as_completed!

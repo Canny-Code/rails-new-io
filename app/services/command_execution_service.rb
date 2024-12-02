@@ -132,7 +132,7 @@ class CommandExecutionService
       output = buffer.join("\n").presence || "No output"
 
       if exit_status&.success?
-        @logger.info("Command completed successfully", {
+        @logger.info("Rails app generation process finished successfully", {
           command: @command,
           app_name: @generated_app.name,
           directory: @temp_dir
@@ -142,7 +142,7 @@ class CommandExecutionService
           status: exit_status,
           output: output
         })
-        raise "Command failed with status: #{exit_status}"
+        raise "Rails app generation failed with status: #{exit_status}"
       end
 
       @temp_dir

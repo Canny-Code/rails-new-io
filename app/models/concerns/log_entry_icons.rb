@@ -31,8 +31,14 @@ module LogEntryIcons
       "🔧 ⚙️ "
     when /rails app generation process started/
       "🛤️ 🏗️ 🔄 "
+    when /rails app generation process finished successfully/
+      "🛤️ 🏗️ ✅ "
     when /starting github push/
-      "🐙 ⬆️ 🚀⏳ "
+      "🐙 ⬆️ 🚀 🔄 "
+    when /github push finished successfully/
+      "🐙 ⬆️ 🚀 ✅ "
+    when /starting ci run/
+      "🐙 ⚙️ ⌛ "
     when /app generation completed successfully/
       "🐙 🛤️ 🏗️ 🪄 ✅ "
     else
