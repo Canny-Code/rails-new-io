@@ -11,4 +11,8 @@ module LogEntriesHelper
       "bg-white"
     end
   end
+
+  def rails_output?(log_entry)
+    log_entry.metadata&.dig("is_rails_output")
+  end
 end

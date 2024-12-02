@@ -32,14 +32,11 @@ gem "turbo-rails", "~> 2.0.11"
 gem "vite_rails", "~> 3.0.19"
 
 group :development do
+  gem "aasm-diagram", "~> 0.1.3"
   gem "annotaterb"
   gem "better_html", require: false
   gem "erb_lint", require: false
   gem "overcommit", require: false
-  gem "web-console"
-end
-
-group :test do
   gem "capybara"
   gem "database_cleaner-active_record"
   gem "selenium-webdriver", "~> 4.27.0"

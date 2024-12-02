@@ -49,18 +49,61 @@ class AppStatusTest < ActiveSupport::TestCase
     assert_equal "generating", status.status
     assert_not_nil status.started_at
 
-    # Check status history
-    assert_equal 2, status.status_history.size
+    # Push to GitHub
+    status.start_github_push!
+    assert_equal "pushing_to_github", status.status
 
-    first_transition = status.status_history.first
-    assert_equal "pending", first_transition["from"]
-    assert_equal "creating_github_repo", first_transition["to"]
-    assert_not_nil first_transition["timestamp"]
+    # Start CI
+    status.start_ci!
+    assert_equal "running_ci", status.status
 
-    second_transition = status.status_history.second
-    assert_equal "creating_github_repo", second_transition["from"]
-    assert_equal "generating", second_transition["to"]
-    assert_not_nil second_transition["timestamp"]
+    # Complete
+    status.complete!
+    assert_equal "completed", status.status
+    assert_not_nil status.completed_at
+
+    # Verify we can't skip states
+    [
+      {
+        from: :pending,
+        invalid_transitions: [ :start_generation!, :start_github_push!, :start_ci!, :complete! ]
+      },
+      {
+        from: :creating_github_repo,
+        invalid_transitions: [ :start_github_push!, :start_ci!, :complete! ]
+      },
+      {
+        from: :generating,
+        invalid_transitions: [ :start_ci!, :complete! ]
+      },
+      {
+        from: :pushing_to_github,
+        invalid_transitions: [ :complete! ]
+      }
+    ].each do |test_case|
+      test_status = AppStatus.create!(generated_app: @generated_app)
+
+      # Move to the starting state if not pending
+      unless test_case[:from] == :pending
+        case test_case[:from]
+        when :creating_github_repo
+          test_status.start_github_repo_creation!
+        when :generating
+          test_status.start_github_repo_creation!
+          test_status.start_generation!
+        when :pushing_to_github
+          test_status.start_github_repo_creation!
+          test_status.start_generation!
+          test_status.start_github_push!
+        end
+      end
+
+      test_case[:invalid_transitions].each do |invalid_transition|
+        assert_raises(AASM::InvalidTransition, "Should not allow #{invalid_transition} from #{test_case[:from]} state") do
+          test_status.send(invalid_transition)
+        end
+      end
+    end
   end
 
   test "can fail from any state" do
@@ -193,5 +236,45 @@ class AppStatusTest < ActiveSupport::TestCase
     assert_equal "creating_github_repo", second_transition["from"]
     assert_equal "generating", second_transition["to"]
     assert_not_nil second_transition["timestamp"]
+  end
+
+  test "status transitions match log entry phases" do
+    status = AppStatus.create!(generated_app: @generated_app)
+
+    # Create a logger to simulate the real process
+    logger = AppGeneration::Logger.new(@generated_app)
+
+    # Create initial log entry (normally done by Buffer)
+    AppGeneration::LogEntry.create!(
+      generated_app: @generated_app,
+      level: :info,
+      message: "Initializing Rails application generation...",
+      metadata: { stream: :stdout },
+      phase: status.status,
+      entry_type: "rails_output"
+    )
+
+    # Simulate the complete generation process with logging
+    status.start_github_repo_creation!
+    logger.info("Starting GitHub repo creation")
+
+    status.start_generation!
+    logger.info("Starting generation")
+
+    status.start_github_push!
+    logger.info("Starting GitHub push")
+
+    status.start_ci!
+    logger.info("Starting CI")
+
+    status.complete!
+    logger.info("Completed successfully")
+
+    # Get unique phases in order of creation
+    actual_phases = @generated_app.log_entries.order(:created_at).pluck(:phase).uniq
+    expected_phases = %w[pending creating_github_repo generating pushing_to_github running_ci completed]
+
+    assert_equal expected_phases, actual_phases,
+      "Log entry phases should match status transitions"
   end
 end

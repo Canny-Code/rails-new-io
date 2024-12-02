@@ -45,5 +45,6 @@ namespace :test do
     end
 
     puts "\n\033[32mDone! You can view the coverage report by running `open coverage/index.html`.\033[0m"
+    puts "Or click: file:///Users/mia/workspace/rails/rails-new-io/coverage/index.html"
   end
 end

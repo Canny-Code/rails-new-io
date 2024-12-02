@@ -36,6 +36,8 @@ class GeneratedApp < ApplicationRecord
   broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
   broadcasts_to ->(generated_app) { [ :notification_badge, generated_app.user_id ] }
 
+  after_update_commit :broadcast_clone_box, if: :completed?
+
   belongs_to :user
 
   validates :name, presence: true,
@@ -51,4 +53,15 @@ class GeneratedApp < ApplicationRecord
       message: "must be a valid GitHub repository URL"
     },
     allow_blank: true
+
+  private
+
+  def broadcast_clone_box
+    Turbo::StreamsChannel.broadcast_update_to(
+      "#{to_gid}:app_generation_log_entries",
+      target: "github_clone_box",
+      partial: "shared/github_clone_box",
+      locals: { generated_app: self }
+    )
+  end
 end
