@@ -34,6 +34,7 @@ class GeneratedApp < ApplicationRecord
   include HasGenerationLifecycle
 
   broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
+  # TODO: what is this? Seems like it doesn't do shit
   broadcasts_to ->(generated_app) { [ :notification_badge, generated_app.user_id ] }
 
   after_update_commit :broadcast_clone_box, if: :completed?
