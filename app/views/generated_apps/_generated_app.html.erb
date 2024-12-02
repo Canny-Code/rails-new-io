@@ -18,7 +18,16 @@
         View
       </div>
     <% end %>
-
+    <%= link_to generated_app_log_entries_path(generated_app),
+    class: "text-blue-600 hover:text-blue-800",
+    data: { turbo_frame: "_top" } do %>
+      <div class="flex items-center">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+        </svg>
+        View Logs
+      </div>
+    <% end %>
     <% if generated_app.status == "failed" %>
       <%= button_to generated_app_generation_attempts_path(generated_app),
           class: "text-blue-600 hover:text-blue-800",

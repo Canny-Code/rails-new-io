@@ -9,6 +9,7 @@ class AppGenerationJob < ApplicationJob
       workflow.step :create_github_repository
       workflow.step :generate_rails_app
       workflow.step :push_to_github
+      workflow.step :start_ci
       workflow.step :complete_generation
     end
   rescue StandardError => e
@@ -35,6 +36,14 @@ class AppGenerationJob < ApplicationJob
 
   def push_to_github
     GithubCodePushService.new(@generated_app).execute
+  end
+
+  def start_ci
+    # Right now, we don't actually start a CI run.
+    # It's triggered by pushing to GitHub.
+    # In the future (if there will be a CI service)
+    # we'll start a CI run here.
+    @generated_app.start_ci!
   end
 
   def complete_generation

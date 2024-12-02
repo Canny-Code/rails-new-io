@@ -47,4 +47,18 @@ class LogEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
     assert_equal "Please sign in first.", flash[:alert]
   end
+
+  test "should show github clone box when app is completed" do
+    @generated_app.app_status.update!(status: :pushing_to_github)
+    get generated_app_log_entries_path(@generated_app)
+    assert_response :success
+    assert_select "#github_clone_box", text: /git clone/, count: 0
+
+    @generated_app.app_status.start_ci!
+    @generated_app.app_status.complete!
+
+    get generated_app_log_entries_path(@generated_app)
+    assert_response :success
+    assert_select "#github_clone_box", /git clone git@github.com:johndoe\/saas-starter.git/
+  end
 end

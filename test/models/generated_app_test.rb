@@ -365,4 +365,116 @@ class GeneratedAppTest < ActiveSupport::TestCase
     end
     assert app.completed?
   end
+
+  test "broadcasts clone box when completed" do
+    app = GeneratedApp.create!(
+      name: "test-app",
+      user: @user,
+      ruby_version: "3.2.0",
+      rails_version: "7.1.0",
+      github_repo_url: "https://github.com/johndoe/test-app"
+    )
+
+    Turbo::StreamsChannel.expects(:broadcast_update_to).with(
+      "#{app.to_gid}:app_generation_log_entries",
+      target: "github_clone_box",
+      partial: "shared/github_clone_box",
+      locals: { generated_app: app }
+    )
+
+    app.app_status.update!(status: :pushing_to_github)
+    app.app_status.start_ci!
+    app.app_status.complete!
+  end
+
+  test "lifecycle methods follow correct state transitions" do
+    app = GeneratedApp.create!(
+      name: "test-app",
+      user: @user,
+      ruby_version: "3.2.0",
+      rails_version: "7.1.0"
+    )
+
+    # Initial state
+    assert app.app_status.pending?
+    assert_nil app.started_at
+    assert_nil app.completed_at
+    assert_nil app.error_message
+
+    # Verify we can't skip states
+    assert_raises(AASM::InvalidTransition) { app.generate! }
+    assert_raises(AASM::InvalidTransition) { app.push_to_github! }
+    assert_raises(AASM::InvalidTransition) { app.start_ci! }
+    assert_raises(AASM::InvalidTransition) { app.mark_as_completed! }
+
+    # Create GitHub repo
+    app.create_github_repo!
+    assert app.app_status.creating_github_repo?
+
+    # Verify we can't skip states after creating repo
+    assert_raises(AASM::InvalidTransition) { app.push_to_github! }
+    assert_raises(AASM::InvalidTransition) { app.start_ci! }
+    assert_raises(AASM::InvalidTransition) { app.mark_as_completed! }
+
+    # Start generation
+    app.generate!
+    assert app.app_status.generating?
+    assert_not_nil app.started_at
+
+    # Verify we can't skip states during generation
+    assert_raises(AASM::InvalidTransition) { app.start_ci! }
+    assert_raises(AASM::InvalidTransition) { app.mark_as_completed! }
+
+    # Push to GitHub
+    app.push_to_github!
+    assert app.app_status.pushing_to_github?
+
+    # Verify we can't skip CI
+    assert_raises(AASM::InvalidTransition) { app.mark_as_completed! }
+
+    # Start CI
+    app.start_ci!
+    assert app.app_status.running_ci?
+
+    # Complete generation
+    app.mark_as_completed!
+    assert app.app_status.completed?
+    assert_not_nil app.completed_at
+    assert_nil app.error_message
+  end
+
+  test "can fail from any non-completed state" do
+    error_message = "Something went wrong"
+
+    [ :pending, :creating_github_repo, :generating, :pushing_to_github, :running_ci ].each do |state|
+      app = GeneratedApp.create!(
+        name: "test-app-#{state}",
+        user: @user,
+        ruby_version: "3.2.0",
+        rails_version: "7.1.0"
+      )
+
+      # Move to the target state
+      case state
+      when :creating_github_repo
+        app.create_github_repo!
+      when :generating
+        app.create_github_repo!
+        app.generate!
+      when :pushing_to_github
+        app.create_github_repo!
+        app.generate!
+        app.push_to_github!
+      when :running_ci
+        app.create_github_repo!
+        app.generate!
+        app.push_to_github!
+        app.start_ci!
+      end
+
+      app.mark_as_failed!(error_message)
+      assert app.app_status.failed?
+      assert_equal error_message, app.error_message
+    end
+  end
 end

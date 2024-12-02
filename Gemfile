@@ -32,6 +32,7 @@ gem "turbo-rails", "~> 2.0.11"
 gem "vite_rails", "~> 3.0.19"
 
 group :development do
+  gem "aasm-diagram", "~> 0.1.3"
   gem "annotaterb"
   gem "better_html", require: false
   gem "erb_lint", require: false
