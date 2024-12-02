@@ -19,7 +19,7 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "authenticated github user should get dashboard" do
-    login_with_github
+    sign_in(users(:john))
 
     get dashboard_url
     assert_response :success
