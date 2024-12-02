@@ -74,8 +74,4 @@ export default class extends Controller {
   hideMessage() {
     this.messageTarget.classList.add("hidden")
   }
-
-  disconnect() {
-    // No need for timeout cleanup as it's handled by the debounce utility
-  }
 }
