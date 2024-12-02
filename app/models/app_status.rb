@@ -155,22 +155,4 @@ class AppStatus < ApplicationRecord
       new_status: status
     ).deliver(generated_app.user)
   end
-
-  def broadcast_status_change
-    generated_app.broadcast_replace_to(
-      [ :generated_app, generated_app.user_id ],
-      target: dom_id(generated_app, generated_app.user_id),
-      partial: "generated_apps/generated_app",
-      locals: { generated_app: generated_app }
-    )
-  end
-
-  def notify_status_change
-    AppStatusChangeNotifier.with(
-      generated_app_id: generated_app.id,
-      generated_app_name: generated_app.name,
-      old_status: status_before_last_save,
-      new_status: status
-    ).deliver(generated_app.user)
-  end
 end
