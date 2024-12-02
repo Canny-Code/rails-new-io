@@ -136,7 +136,6 @@ GEM
     debug (1.9.2)
       irb (~> 1.10)
       reline (>= 0.3.8)
-    docile (1.4.1)
     dotenv (3.1.4)
     dotenv-rails (3.1.4)
       dotenv (= 3.1.4)
@@ -154,8 +153,6 @@ GEM
     erubi (1.13.0)
     et-orbi (1.2.11)
       tzinfo
-    faker (3.5.1)
-      i18n (>= 1.8.11, < 2)
     faraday (2.12.1)
       faraday-net_http (>= 2.0, < 3.5)
       json
@@ -448,14 +445,6 @@ GEM
     sentry-ruby (5.21.0)
       bigdecimal
       concurrent-ruby (~> 1.0, >= 1.0.2)
-    simplecov (0.22.0)
-      docile (~> 1.1)
-      simplecov-html (~> 0.11)
-      simplecov_json_formatter (~> 0.1)
-    simplecov-html (0.13.1)
-    simplecov-tailwindcss (2.2.0)
-      simplecov (~> 0.16)
-    simplecov_json_formatter (0.1.4)
     smart_properties (1.17.0)
     snaky_hash (2.0.1)
       hashie
@@ -559,7 +548,6 @@ DEPENDENCIES
   debug
   dotenv-rails
   erb_lint
-  faker
   faraday-retry (~> 2.2.1)
   friendly_id (~> 5.5.1)
   git (~> 2.3.2)
@@ -582,8 +570,6 @@ DEPENDENCIES
   selenium-webdriver (~> 4.27.0)
   sentry-rails
   sentry-ruby
-  simplecov
-  simplecov-tailwindcss
   solid_cable (~> 3.0.2)
   solid_cache (~> 1.0.6)
   solid_queue (~> 1.0.2)

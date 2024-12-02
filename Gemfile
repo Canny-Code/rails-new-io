@@ -41,9 +41,6 @@ group :development do
   gem "database_cleaner-active_record"
   gem "selenium-webdriver", "~> 4.27.0"
   gem "mocha", "~> 2.6.1"
-  gem "simplecov", require: false
-  gem "simplecov-tailwindcss", require: false
-  gem "faker"
 end
 
 group :development, :test do

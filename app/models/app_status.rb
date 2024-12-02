@@ -29,6 +29,8 @@ class AppStatus < ApplicationRecord
   after_update :broadcast_status_change, if: :saved_change_to_status?
   after_save :notify_status_change, if: :saved_change_to_status?
 
+  after_update :broadcast_status_change
+
   include AASM
 
   aasm column: :status do
@@ -154,5 +156,14 @@ class AppStatus < ApplicationRecord
       old_status: status_before_last_save,
       new_status: status
     ).deliver(generated_app.user)
+  end
+
+  def broadcast_status_change
+    generated_app.broadcast_replace_to(
+      [ :generated_app, generated_app.user_id ],
+      target: dom_id(generated_app, generated_app.user_id),
+      partial: "generated_apps/generated_app",
+      locals: { generated_app: generated_app }
+    )
   end
 end
