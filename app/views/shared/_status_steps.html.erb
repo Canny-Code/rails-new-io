@@ -1,4 +1,4 @@
-
+<%-
   status_data = calculate_status_steps(generated_app)
   current_state = status_data[:current_state]
   steps = status_data[:steps]
@@ -6,5 +6,5 @@
 %>
 <div id="status_steps_content"
      class="sticky top-0 bg-white z-10 py-4 border-b">
-    <%= render "shared/status_steps_content", status_data.merge(generated_app: generated_app) %>
+  <%= render "shared/status_steps_content", status_data.merge(generated_app: generated_app) %>
 </div>
