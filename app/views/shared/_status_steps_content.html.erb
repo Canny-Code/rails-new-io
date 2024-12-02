@@ -1,7 +1,7 @@
 <div class="container mx-auto px-4">
   <div class="flex justify-between">
     <% steps.each_with_index do |step, index| %>
-      <div class="flex-1 flex items-center <%= index == steps.length - 1 ? 'flex-initial' : '' %>">
+      <div class="flex-1 flex items-center <%= index == steps.length - 1 ? "flex-initial" : "" %>">
         <div class="relative">
           <% if step[:state] == :failed %>
             <div class="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold">
@@ -25,7 +25,7 @@
               <%= step[:number] %>
             </div>
           <% end %>
-          <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 min-w-[100px] text-xs text-gray-500 text-center whitespace-nowrap <%= step[:state] == current_state ? 'text-blue-500 font-medium' : '' %>">
+          <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 min-w-[100px] text-xs text-gray-500 text-center whitespace-nowrap <%= step[:state] == current_state ? "text-blue-500 font-medium" : "" %>">
             <%= step[:state].to_s.titleize %>
           </div>
         </div>
