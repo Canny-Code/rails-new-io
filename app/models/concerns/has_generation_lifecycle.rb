@@ -21,10 +21,6 @@ module HasGenerationLifecycle
     def logger
       @logger ||= AppGeneration::Logger.new(self)
     end
-
-    def logger
-      @logger ||= AppGeneration::Logger.new(self)
-    end
   end
 
   def generate!

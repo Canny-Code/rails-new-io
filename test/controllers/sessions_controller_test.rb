@@ -125,8 +125,13 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "github auth fails when user cannot be persisted" do
-    Repository.delete_all
-    User.delete_all
+    # Clean up in correct order to respect foreign key constraints
+    AppGeneration::LogEntry.delete_all  # Delete log entries first
+    AppStatus.delete_all               # Then app statuses
+    GeneratedApp.delete_all           # Then generated apps
+    Noticed::Notification.delete_all  # Then notifications
+    Repository.delete_all            # Then repositories
+    User.delete_all                 # Finally users
 
     silence_omniauth_logger do
       OmniAuth.config.test_mode = true
