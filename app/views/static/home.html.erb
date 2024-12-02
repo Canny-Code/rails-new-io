@@ -1,6 +1,36 @@
 <% content_for :title, "Home" %>
 
-<article class="max-w-2xl mx-auto pt-20">
-  <p>Find me in app/views/static/<span class="italic font-semibold">home</span>.html.erb</p>
-  <p class="prose-xl">Just some placeholder text for the future <span class="font-bold text-2xl">"home"</span> page</p>
-</article>
+      <!-- Above the fold -->
+      <div class="bg-background relative min-h-[calc(100vh-40px)] mb-32" id="above-the-fold">
+        <div class="container mx-auto px-4">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start min-h-[calc(100vh-40px)]">
+            <!-- Content column -->
+            <div class="lg:col-span-7 py-12 lg:py-0">
+              <h1 class="mt-16 font-extrabold text-4xl tracking-tight text-gray-900 md:text-4xl leading-[1.1]">rails<span class="text-[#ac3b61]">new</span>.io</h1>
+              <h2 class="pt-24 text-6xl font-extrabold text-balance leading-tight tracking-tight text-slate-900 sm:text-7xl max-w-[36rem] xl:max-w-[43.5rem]">Your Rails Project Builder with Extra Rizz</h2>
+              <p class="text-gray-600 text-xl my-16 max-w-lg text-slate-700 mt-4">
+                Turn your perfect Rails setup into a reusable recipe. Because your future self called – they're tired of copy-pasting configs and playing CLI flag bingo.
+              </p>
+              <div class="mt-10 flex">
+                <div>
+                  <a href="#cta-box"
+                      class="inline-flex justify-center items-center px-6 py-3 mr-6 text-lg border-2 border-[#ac3b61] rounded-lg bg-[#ac3b61] text-white font-semibold hover:bg-[#e935a3] transition-colors scroll-smooth"
+                      onclick="document.getElementById('cta-box').scrollIntoView({ behavior: 'smooth', block: 'start' }); return false;">
+                    Count Me In, Chef 🧑‍🍳
+                  </a>
+                </div>
+                <%= render GithubAuthButton::Component.new %>
+              </div>
+            </div>
+            <!-- Image column - moved inside grid container -->
+            <div class="lg:col-span-5 lg:sticky lg:top-16">
+              <div class="relative aspect-[3/4] w-full overflow-hidden rounded-xl shadow-xl">
+                <%= image_tag "mia-trinity.jpg", class: "object-cover w-full h-full" %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- End of above the fold -->

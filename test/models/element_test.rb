@@ -3,10 +3,7 @@
 # Table name: elements
 #
 #  id           :integer          not null, primary key
-#  description  :text
-#  image_path   :string
 #  label        :string           not null
-#  position     :integer
 #  variant_type :string
 #  created_at   :datetime         not null
 #  updated_at   :datetime         not null
@@ -16,7 +13,6 @@
 # Indexes
 #
 #  index_elements_on_label                        (label)
-#  index_elements_on_position                     (position)
 #  index_elements_on_sub_group_id                 (sub_group_id)
 #  index_elements_on_variant_type_and_variant_id  (variant_type,variant_id)
 #
