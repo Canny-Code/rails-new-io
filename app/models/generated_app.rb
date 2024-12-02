@@ -41,7 +41,6 @@ class GeneratedApp < ApplicationRecord
   belongs_to :user
 
   belongs_to :user
-  has_one :app_status, dependent: :destroy
 
   validates :name, presence: true,
                   uniqueness: { scope: :user_id },

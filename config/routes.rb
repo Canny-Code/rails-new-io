@@ -30,6 +30,10 @@ Rails.application.routes.draw do
     resources :repositories, only: [ :new, :create, :show, :index ]
   end
 
+  resources :users, only: [ :show ], path: "" do
+    resources :repositories, only: [ :new, :create, :show, :index ]
+  end
+
   constraints lambda { |request| request.session[:user_id].present? } do
     root to: "dashboard#show", as: :authenticated_root
   end
