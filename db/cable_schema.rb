@@ -53,6 +53,8 @@ ActiveRecord::Schema[8.0].define(version: 2024_11_29_165413) do
     t.json "metadata"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "entry_type"
+    t.index ["entry_type"], name: "index_app_generation_log_entries_on_entry_type"
     t.index ["generated_app_id", "created_at"], name: "idx_on_generated_app_id_created_at_eac7d7a1a2"
     t.index ["generated_app_id"], name: "index_app_generation_log_entries_on_generated_app_id"
   end

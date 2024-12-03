@@ -8,7 +8,7 @@ module Pages
           @sub_group = sub_group
         end
 
-        def template
+        def view_template
           if @sub_group.title == "Default"
             @sub_group.elements.order(:position).each do |element|
               render Pages::Groups::SubGroups::Elements::Component.new(element: element)

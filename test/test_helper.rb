@@ -27,6 +27,7 @@ require "rails/test_help"
 require "mocha/minitest"
 require "minitest/mock"
 require "database_cleaner/active_record"
+require "phlex/testing/view_helper"
 
 ActiveRecord::Encryption.configure(
   primary_key: "test" * 4,

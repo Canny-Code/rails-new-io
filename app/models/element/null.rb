@@ -22,4 +22,8 @@ class Element::Null
   def self.polymorphic_name
     "Element::Null"
   end
+
+  def marked_for_destruction?
+    false
+  end
 end

@@ -2,19 +2,21 @@
 #
 # Table name: elements
 #
-#  id           :integer          not null, primary key
-#  description  :text
-#  image_path   :string
-#  label        :string           not null
-#  position     :integer
-#  variant_type :string
-#  created_at   :datetime         not null
-#  updated_at   :datetime         not null
-#  sub_group_id :integer
-#  variant_id   :string
+#  id                 :integer          not null, primary key
+#  command_line_value :string
+#  description        :text
+#  image_path         :string
+#  label              :string           not null
+#  position           :integer
+#  variant_type       :string
+#  created_at         :datetime         not null
+#  updated_at         :datetime         not null
+#  sub_group_id       :integer
+#  variant_id         :string
 #
 # Indexes
 #
+#  index_elements_on_command_line_value           (command_line_value)
 #  index_elements_on_label                        (label)
 #  index_elements_on_position                     (position)
 #  index_elements_on_sub_group_id                 (sub_group_id)
@@ -25,6 +27,10 @@
 #  sub_group_id  (sub_group_id => sub_groups.id)
 #
 class Element < ApplicationRecord
+  include CommandLineValueGenerator
+
+  before_save :set_command_line_value
+
   delegated_type :variant, types: %w[
     Element::Checkbox
     Element::RadioButton
@@ -46,5 +52,11 @@ class Element < ApplicationRecord
 
   def displayed?
     variant.displayed?
+  end
+
+  private
+
+  def set_command_line_value
+    self.command_line_value = generate_command_line_value
   end
 end

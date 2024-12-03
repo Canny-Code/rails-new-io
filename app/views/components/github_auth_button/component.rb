@@ -1,11 +1,9 @@
 class GithubAuthButton::Component < ApplicationComponent
   include Phlex::Rails::Helpers::ButtonTo
 
-  delegate :current_user, to: :helpers
-
   def view_template
     div(class: "flex items-center justify-center") do
-      if current_user
+      if Current.user
         button_to(
           "/sign_out",
           method: :delete,
@@ -18,7 +16,6 @@ class GithubAuthButton::Component < ApplicationComponent
         button_to(
           "/auth/github",
           method: :post,
-          form: { target: "_blank" },
           data: { turbo: false },
           class: "inline-flex items-center justify-center px-6 py-3 mr-6 text-lg border border-transparent font-medium rounded-md text-white bg-gray-900 hover:bg-gray-700 min-w-[14rem]"
         ) do

@@ -13,6 +13,11 @@ module GroupBehavior
         "radio-button-choice-generated-output-outlet": "#database-choice",
         "output-prefix": "-d"
       }
+    when "generic_checkbox"
+      {
+        controller: "check-box",
+        "check-box-generated-output-outlet": "#rails-flags"
+      }
     else
       {}
     end

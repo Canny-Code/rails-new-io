@@ -1,0 +1,20 @@
+{
+  "../../node_modules/@hotwired/turbo-rails/node_modules/@rails/actioncable/src/index.js": {
+    "file": "assets/index-FRQGQGEM.js",
+    "name": "index",
+    "src": "../../node_modules/@hotwired/turbo-rails/node_modules/@rails/actioncable/src/index.js",
+    "isDynamicEntry": true
+  },
+  "entrypoints/application.js": {
+    "file": "assets/application-Dy5SO9lw.js",
+    "name": "entrypoints/application.js",
+    "src": "entrypoints/application.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "../../node_modules/@hotwired/turbo-rails/node_modules/@rails/actioncable/src/index.js"
+    ],
+    "css": [
+      "assets/application-_7nBhssf.css"
+    ]
+  }
+}

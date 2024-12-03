@@ -9,7 +9,7 @@ module Pages
             @element = element
           end
 
-          def template
+          def view_template
             case element.variant_type
             when "Element::RadioButton"
               render Pages::Groups::SubGroups::Elements::RadioButton::Component.new(
@@ -17,6 +17,7 @@ module Pages
                 description: element.description,
                 image_path: element.image_path,
                 name: "#{element.sub_group.group.title}",
+                command_line_value: element.command_line_value,
                 data: {
                   checked: element.position == 0,
                   is_default: element.position == 0 ? "true" : "false",
@@ -24,9 +25,24 @@ module Pages
                 }
               )
             when "Element::Checkbox"
-              render Pages::Groups::SubGroups::Elements::Checkbox::Component.new(element: element)
+              render Pages::Groups::SubGroups::Elements::Checkbox::Component.new(
+                label: element.label,
+                description: element.description,
+                image_path: element.image_path,
+                name: "#{element.sub_group.group.title}",
+                checked: element.variant.checked,
+                command_line_value: element.command_line_value,
+                display_when: element.variant.display_when,
+                data: {
+                  action: "change->check-box#update"
+                }
+              )
             when "Element::TextField"
-              render Pages::Groups::SubGroups::Elements::TextField::Component.new(element: element)
+              render Pages::Groups::SubGroups::Elements::TextField::Component.new(
+                label: element.label,
+                description: element.description,
+                name: element.label,
+              )
             else
               raise "Unknown element variant_type: #{element.variant_type}"
             end

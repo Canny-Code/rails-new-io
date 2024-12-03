@@ -7,7 +7,7 @@ module Pages
         @group = group
       end
 
-      def template
+      def view_template
         div(data_id: "rails-menu-card-holder") do
           div(class: "max-w-2xl mx-auto py-6 sm:px-6 lg:px-8") do
             div(data_id: "rails-menu-card", class: "max-w-none mx-auto") do
@@ -23,9 +23,9 @@ module Pages
                     div(class: "ml-4 mt-4") do
                       h3(
                         class: "text-lg leading-6 font-medium text-azure-tint-100"
-                      ) { " Our Database Menu 🗄️" }
+                      ) { @group.title }
                       p(class: "mt-1 text-sm leading-5 text-azure-tint-300") do
-                        " More than a toy app? Pick a heavy-duty tool!"
+                        @group.description
                       end
                     end
                   end

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <title>Trilogy</title>
+  <!-- Connection lines -->
+  <path d="M12 16 L20 10 M12 16 L20 22 M20 10 L20 22"
+        stroke="#2188FF"
+        stroke-width="2"
+        fill="none"/>
+
+  <!-- Three circles -->
+  <circle cx="12" cy="16" r="4" fill="#333333"/>
+  <circle cx="20" cy="10" r="4" fill="#2188FF"/>
+  <circle cx="20" cy="22" r="4" fill="#333333"/>
+</svg> 

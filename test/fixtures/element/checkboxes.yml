@@ -4,11 +4,12 @@
 #
 # Table name: element_checkboxes
 #
-#  id         :integer          not null, primary key
-#  checked    :boolean
-#  default    :boolean
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
+#  id           :integer          not null, primary key
+#  checked      :boolean
+#  default      :boolean
+#  display_when :string           default("checked")
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
 #
 skip_git:
   default: false
