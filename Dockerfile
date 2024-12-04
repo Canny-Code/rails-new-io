@@ -33,12 +33,20 @@ RUN case "$(dpkg --print-architecture)" in \
       *) echo "Unsupported architecture"; exit 1 ;; \
     esac \
     && curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${ARCH}.tar.xz | tar -xJ -C /usr/local --strip-components=1 \
-    && npm install -g yarn@$YARN_VERSION
+    && corepack enable \
+    && corepack prepare yarn@4.5.3 --activate
 
-# Verify Node.js and Yarn installation
-RUN yarn install --immutable
+# Verify Yarn installation
+RUN yarn --version
 
 FROM nodejs AS build
+
+# Copy package files first
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn/releases/ ./.yarn/releases/
+
+# Now run yarn install
+RUN yarn install --immutable
 
 # Install application gems
 COPY Gemfile Gemfile.lock ./
@@ -46,12 +54,6 @@ RUN bundle config set --local build.nokogiri --use-system-libraries && \
     bundle config build.msgpack --with-cflags="-O2" && \
     bundle install --jobs 4 --retry 5 && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git
-
-# Install node modules
-COPY .yarn/releases /.yarn/releases
-COPY .yarn/plugins /.yarn/plugins
-COPY package.json yarn.lock .yarnrc.yml ./
-RUN yarn install --frozen-lockfile
 
 # Copy application code
 COPY . .
