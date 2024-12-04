@@ -10,7 +10,7 @@ gem "friendly_id", "~> 5.5.1"
 gem "git", "~> 2.3.2"
 gem "kamal", "~> 2.3.0", require: false
 gem "thruster", "~> 0.1.9", require: false
-gem "mission_control-jobs", "~> 0.6.0"
+gem "mission_control-jobs", "~> 1.0.1"
 gem "noticed", "~> 2.4.3"
 gem "litestream", "~> 0.12.0"
 gem "octokit", "~> 9.2.0"
