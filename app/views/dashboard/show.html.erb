@@ -43,9 +43,12 @@
           </table>
         </div>
 
-        <div class="mt-4">
+        <!-- Pagination TODO - fix this for more and disable it for less than 2 pages -->
+        <%# <%== pagy_nav(@pagy) if @pagy.pages > 1 %>
+        <div class="flex justify-center mt-6">  
           <%== pagy_nav(@pagy) %>
         </div>
+
       <% end %>
     </div>
   <% else %>
