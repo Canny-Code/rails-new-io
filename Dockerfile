@@ -24,7 +24,7 @@ FROM base AS nodejs
 
 # Install Node.js and Yarn
 ARG NODE_VERSION=22.3.0
-ARG YARN_VERSION=1.22.19
+ARG YARN_VERSION=4.5.3
 ENV PATH=/usr/local/node/bin:/usr/local/bin:$PATH
 
 RUN case "$(dpkg --print-architecture)" in \
@@ -36,7 +36,7 @@ RUN case "$(dpkg --print-architecture)" in \
     && npm install -g yarn@$YARN_VERSION
 
 # Verify Node.js and Yarn installation
-RUN node --version && yarn --version
+RUN yarn install --immutable
 
 FROM nodejs AS build
 
@@ -48,7 +48,9 @@ RUN bundle config set --local build.nokogiri --use-system-libraries && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git
 
 # Install node modules
-COPY package.json yarn.lock ./
+COPY .yarn/releases /.yarn/releases
+COPY .yarn/plugins /.yarn/plugins
+COPY package.json yarn.lock .yarnrc.yml ./
 RUN yarn install --frozen-lockfile
 
 # Copy application code
