@@ -1,0 +1,44 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# == Schema Information
+#
+# Table name: commits
+#
+#  id             :integer          not null, primary key
+#  message        :text             not null
+#  parent_sha     :string
+#  sha            :string           not null
+#  state_snapshot :json             not null
+#  versioned_type :string           not null
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#  author_id      :integer          not null
+#  versioned_id   :integer          not null
+#
+# Indexes
+#
+#  index_commits_on_author_id  (author_id)
+#  index_commits_on_sha        (sha) UNIQUE
+#  index_commits_on_versioned  (versioned_type,versioned_id)
+#
+# Foreign Keys
+#
+#  author_id  (author_id => users.id)
+#
+blog_initial:
+  sha: "abc123def456"
+  message: "Initial blog setup with authentication"
+  state_snapshot: { "name": "personal-blog", "gems": ["devise"] }
+  parent_sha: null
+  author: jane
+  versioned: blog_app
+  versioned_type: "GeneratedApp"
+
+api_initial:
+  sha: "def456abc789"
+  message: "Initial API setup with CORS"
+  state_snapshot: { "name": "inventory-api", "gems": ["jsonapi-serializer"] }
+  parent_sha: null
+  author: jane
+  versioned: api_project
+  versioned_type: "GeneratedApp"

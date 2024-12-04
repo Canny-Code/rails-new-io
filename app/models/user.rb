@@ -26,7 +26,7 @@ class User < ApplicationRecord
   encrypts :github_token, deterministic: true, downcase: false
 
   has_many :repositories, dependent: :destroy
-  has_many :generated_apps, dependent: :destroy
+  has_many :generated_apps, dependent: :nullify
   has_many :notifications, as: :recipient,
                           dependent: :destroy,
                           class_name: "Noticed::Notification"

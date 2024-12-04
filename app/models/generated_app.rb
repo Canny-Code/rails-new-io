@@ -17,20 +17,24 @@
 #  source_path           :string
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
+#  recipe_id             :integer          not null
 #  user_id               :integer          not null
 #
 # Indexes
 #
 #  index_generated_apps_on_github_repo_url   (github_repo_url) UNIQUE
 #  index_generated_apps_on_name              (name)
+#  index_generated_apps_on_recipe_id         (recipe_id)
 #  index_generated_apps_on_user_id           (user_id)
 #  index_generated_apps_on_user_id_and_name  (user_id,name) UNIQUE
 #
 # Foreign Keys
 #
-#  user_id  (user_id => users.id)
+#  recipe_id  (recipe_id => recipes.id)
+#  user_id    (user_id => users.id)
 #
 class GeneratedApp < ApplicationRecord
+  include GitBackedModel
   include HasGenerationLifecycle
 
   broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
@@ -39,8 +43,8 @@ class GeneratedApp < ApplicationRecord
   after_update_commit :broadcast_clone_box, if: :completed?
 
   belongs_to :user
-
-  belongs_to :user
+  belongs_to :recipe
+  has_many :app_changes, dependent: :destroy
 
   validates :name, presence: true,
                   uniqueness: { scope: :user_id },
@@ -55,6 +59,18 @@ class GeneratedApp < ApplicationRecord
       message: "must be a valid GitHub repository URL"
     },
     allow_blank: true
+  validates :recipe, presence: true
+
+  def apply_ingredient!(ingredient, configuration = {})
+    transaction do
+      app_changes.create!(
+        ingredient: ingredient,
+        configuration: configuration
+      )
+
+      recipe.add_ingredient!(ingredient) if update_recipe?
+    end
+  end
 
   private
 
@@ -65,5 +81,9 @@ class GeneratedApp < ApplicationRecord
       partial: "shared/github_clone_box",
       locals: { generated_app: self }
     )
+  end
+
+  def repo_name
+    name  # Use the app's name as the repo name
   end
 end

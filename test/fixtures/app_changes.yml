@@ -1,0 +1,41 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# == Schema Information
+#
+# Table name: app_changes
+#
+#  id               :integer          not null, primary key
+#  applied_at       :datetime
+#  configuration    :json
+#  error_message    :text
+#  success          :boolean
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  generated_app_id :integer          not null
+#  ingredient_id    :integer          not null
+#
+# Indexes
+#
+#  index_app_changes_on_generated_app_id  (generated_app_id)
+#  index_app_changes_on_ingredient_id     (ingredient_id)
+#
+# Foreign Keys
+#
+#  generated_app_id  (generated_app_id => generated_apps.id) ON DELETE => cascade
+#  ingredient_id     (ingredient_id => ingredients.id) ON DELETE => cascade
+#
+devise_setup:
+  generated_app: blog_app
+  ingredient: rails_authentication
+  configuration: { user_model: true, confirmable: false }
+  applied_at: <%= 1.day.ago %>
+  success: true
+  error_message: null
+
+api_setup:
+  generated_app: api_project
+  ingredient: api_setup
+  configuration: { versioning: true, documentation: true }
+  applied_at: <%= 2.days.ago %>
+  success: true
+  error_message: null

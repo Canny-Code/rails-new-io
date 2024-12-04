@@ -1,0 +1,46 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# == Schema Information
+#
+# Table name: ingredients
+#
+#  id               :integer          not null, primary key
+#  category         :string
+#  configures_with  :text
+#  conflicts_with   :text
+#  description      :text
+#  name             :string           not null
+#  requires         :text
+#  template_content :text             not null
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  created_by_id    :integer          not null
+#
+# Indexes
+#
+#  index_ingredients_on_created_by_id  (created_by_id)
+#  index_ingredients_on_name           (name) UNIQUE
+#
+# Foreign Keys
+#
+#  created_by_id  (created_by_id => users.id)
+#
+rails_authentication:
+  name: "Rails Authentication"
+  description: "Adds Devise authentication with basic user model"
+  template_content: "# Add devise gem\ngem 'devise'\n# Generate devise setup\nrails generate devise:install"
+  conflicts_with: "custom_authentication"
+  requires: ""
+  configures_with: "{ user_model: true, confirmable: false }"
+  created_by: john
+  category: "authentication"
+
+api_setup:
+  name: "API Setup"
+  description: "Sets up JSON API with CORS and serialization"
+  template_content: "# Add API gems\ngem 'jsonapi-serializer'\ngem 'rack-cors'"
+  conflicts_with: ""
+  requires: ""
+  configures_with: "{ versioning: true, documentation: false }"
+  created_by: jane
+  category: "api"

@@ -17,24 +17,33 @@
 #  source_path           :string
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
+#  recipe_id             :integer          not null
 #  user_id               :integer          not null
 #
 # Indexes
 #
 #  index_generated_apps_on_github_repo_url   (github_repo_url) UNIQUE
 #  index_generated_apps_on_name              (name)
+#  index_generated_apps_on_recipe_id         (recipe_id)
 #  index_generated_apps_on_user_id           (user_id)
 #  index_generated_apps_on_user_id_and_name  (user_id,name) UNIQUE
 #
 # Foreign Keys
 #
-#  user_id  (user_id => users.id)
+#  recipe_id  (recipe_id => recipes.id)
+#  user_id    (user_id => users.id)
 #
 require "test_helper"
 
 class GeneratedAppTest < ActiveSupport::TestCase
   def setup
-    @user = users(:jane)
+    @user = users(:john)
+    @recipe = recipes(:blog_recipe)
+
+    # Stub GitRepo to avoid GitHub API calls
+    @git_repo = mock("GitRepo")
+    @git_repo.stubs(:commit_changes)
+    GitRepo.stubs(:new).returns(@git_repo)
   end
 
   test "creates app status after creation" do
@@ -42,7 +51,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
       name: "test-app",
       user: @user,
       ruby_version: "3.2.0",
-      rails_version: "7.1.0"
+      rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
     )
 
     assert_not_nil app.app_status
@@ -73,7 +85,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
         name: invalid_name,
         user: @user,
         ruby_version: "3.2.0",
-        rails_version: "7.1.0"
+        rails_version: "7.1.0",
+        recipe: @recipe,
+        selected_gems: [],
+        configuration_options: {}
       )
       assert_not app.valid?, "#{invalid_name} should be invalid"
       assert_includes app.errors[:name], "only allows letters, numbers, dashes and underscores, must start and end with a letter or number"
@@ -92,7 +107,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
         name: valid_name,
         user: @user,
         ruby_version: "3.2.0",
-        rails_version: "7.1.0"
+        rails_version: "7.1.0",
+        recipe: @recipe,
+        selected_gems: [],
+        configuration_options: {}
       )
       assert app.valid?, "#{valid_name} should be valid"
     end
@@ -103,14 +121,20 @@ class GeneratedAppTest < ActiveSupport::TestCase
       name: "my-app",
       user: @user,
       ruby_version: "3.2.0",
-      rails_version: "7.1.0"
+      rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
     )
 
     second_app = GeneratedApp.new(
       name: "my-app",
       user: @user,
       ruby_version: "3.2.0",
-      rails_version: "7.1.0"
+      rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
     )
 
     assert_not second_app.valid?
@@ -122,7 +146,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
       name: "test-app",
       user: @user,
       ruby_version: "3.2.0",
-      rails_version: "7.1.0"
+      rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
     )
 
     assert_respond_to app, :status
@@ -137,6 +164,7 @@ class GeneratedAppTest < ActiveSupport::TestCase
       user: @user,
       ruby_version: "3.2.0",
       rails_version: "7.1.0",
+      recipe: @recipe,
       selected_gems: [ "devise", "rspec" ],
       configuration_options: { database: "postgresql", css: "tailwind" }
     )
@@ -151,7 +179,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
       name: "test-app",
       user: @user,
       ruby_version: "3.2.0",
-      rails_version: "7.1.0"
+      rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
     )
 
     status_id = app.app_status.id
@@ -161,11 +192,19 @@ class GeneratedAppTest < ActiveSupport::TestCase
   end
 
   test "lifecycle methods" do
+    @git_repo.expects(:commit_changes).with(
+      message: "Initial commit",
+      author: @user
+    )
+
     app = GeneratedApp.create!(
       name: "test-app",
       user: @user,
       ruby_version: "3.2.0",
-      rails_version: "7.1.0"
+      rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
     )
 
     # Initial state
@@ -203,7 +242,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
       name: "test-app-2",
       user: @user,
       ruby_version: "3.2.0",
-      rails_version: "7.1.0"
+      rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
     )
     error_message = "Something went wrong"
     app.mark_as_failed!(error_message)
@@ -222,7 +264,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
       name: "test-app",
       user: @user,
       ruby_version: "3.2.0",
-      rails_version: "7.1.0"
+      rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
     )
 
     assert_difference "Noticed::Event.count" do
@@ -250,7 +295,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
       name: "test-app-2",
       user: @user,
       ruby_version: "3.2.0",
-      rails_version: "7.1.0"
+      rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
     )
 
     assert_difference "Noticed::Event.count" do
@@ -263,7 +311,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
       name: "test-app",
       user: @user,
       ruby_version: "3.2.0",
-      rails_version: "7.1.0"
+      rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
     )
 
     # Initial state
@@ -307,7 +358,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
       name: "test-app-2",
       user: @user,
       ruby_version: "3.2.0",
-      rails_version: "7.1.0"
+      rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
     )
     error_message = "Something went wrong"
     app.mark_as_failed!(error_message)
@@ -326,7 +380,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
       name: "test-app",
       user: @user,
       ruby_version: "3.2.0",
-      rails_version: "7.1.0"
+      rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
     )
 
     # Initial state
@@ -372,6 +429,9 @@ class GeneratedAppTest < ActiveSupport::TestCase
       user: @user,
       ruby_version: "3.2.0",
       rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {},
       github_repo_url: "https://github.com/johndoe/test-app"
     )
 
@@ -392,7 +452,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
       name: "test-app",
       user: @user,
       ruby_version: "3.2.0",
-      rails_version: "7.1.0"
+      rails_version: "7.1.0",
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
     )
 
     # Initial state
@@ -451,7 +514,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
         name: "test-app-#{state}",
         user: @user,
         ruby_version: "3.2.0",
-        rails_version: "7.1.0"
+        rails_version: "7.1.0",
+        recipe: @recipe,
+        selected_gems: [],
+        configuration_options: {}
       )
 
       # Move to the target state

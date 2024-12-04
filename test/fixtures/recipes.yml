@@ -1,0 +1,45 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# == Schema Information
+#
+# Table name: recipes
+#
+#  id              :integer          not null, primary key
+#  cli_flags       :string
+#  description     :text
+#  head_commit_sha :string
+#  name            :string           not null
+#  rails_version   :string
+#  ruby_version    :string
+#  status          :string           default("draft")
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  created_by_id   :integer          not null
+#
+# Indexes
+#
+#  index_recipes_on_created_by_id  (created_by_id)
+#
+# Foreign Keys
+#
+#  created_by_id  (created_by_id => users.id)
+#
+blog_recipe:
+  name: "Personal Blog Template"
+  description: "A blog template with authentication and markdown support"
+  cli_flags: "--database=postgresql --css=tailwind"
+  ruby_version: "3.2.2"
+  rails_version: "7.1.2"
+  status: "published"
+  head_commit_sha: "abc123def456"
+  created_by: jane
+
+api_recipe:
+  name: "API Starter"
+  description: "REST API starter with CORS and serialization"
+  cli_flags: "--api --database=postgresql"
+  ruby_version: "3.2.2"
+  rails_version: "7.1.2"
+  status: "published"
+  head_commit_sha: "def456abc789"
+  created_by: jane
