@@ -19,7 +19,7 @@
 #
 # Foreign Keys
 #
-#  generated_app_id  (generated_app_id => generated_apps.id)
+#  generated_app_id  (generated_app_id => generated_apps.id) ON DELETE => cascade
 #
 class AppStatus < ApplicationRecord
   include ActionView::RecordIdentifier

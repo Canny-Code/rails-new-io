@@ -20,7 +20,7 @@
 #
 # Foreign Keys
 #
-#  generated_app_id  (generated_app_id => generated_apps.id)
+#  generated_app_id  (generated_app_id => generated_apps.id) ON DELETE => cascade
 #
 module AppGeneration
   class LogEntry < ApplicationRecord

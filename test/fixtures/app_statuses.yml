@@ -19,7 +19,7 @@
 #
 # Foreign Keys
 #
-#  generated_app_id  (generated_app_id => generated_apps.id)
+#  generated_app_id  (generated_app_id => generated_apps.id) ON DELETE => cascade
 #
 blog_app_status:
   generated_app: blog_app

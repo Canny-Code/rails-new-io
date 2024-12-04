@@ -41,6 +41,7 @@ test:
     database: storage/test.sqlite3
   queue: *queue
   cache: *cache
+  cable: *cable
 
 # SQLite3 write its data on the local filesystem, as such it requires
 # persistent disks. If you are deploying to a managed service, you should

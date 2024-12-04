@@ -58,8 +58,9 @@ class GithubCodePushService
   end
 
   def validate_source_path
-    unless Dir.exist?(@source_path)
-      raise FileSystemError.new("Source directory does not exist: #{@source_path}")
+    source_path = @generated_app.source_path
+    unless File.directory?(source_path)
+      raise FileSystemError, "Source directory does not exist: #{source_path}"
     end
   end
 

@@ -17,23 +17,27 @@
 #  source_path           :string
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
+#  recipe_id             :integer          not null
 #  user_id               :integer          not null
 #
 # Indexes
 #
 #  index_generated_apps_on_github_repo_url   (github_repo_url) UNIQUE
 #  index_generated_apps_on_name              (name)
+#  index_generated_apps_on_recipe_id         (recipe_id)
 #  index_generated_apps_on_user_id           (user_id)
 #  index_generated_apps_on_user_id_and_name  (user_id,name) UNIQUE
 #
 # Foreign Keys
 #
-#  user_id  (user_id => users.id)
+#  recipe_id  (recipe_id => recipes.id)
+#  user_id    (user_id => users.id)
 #
 blog_app:
   name: personal-blog
   description: "A personal blog with authentication and markdown support"
-  user: jane
+  user_id: <%= ActiveRecord::FixtureSet.identify(:jane) %>
+  recipe_id: <%= ActiveRecord::FixtureSet.identify(:blog_recipe) %>
   ruby_version: "3.2.2"
   rails_version: "7.1.2"
   selected_gems: ["devise", "redcarpet", "tailwindcss-rails"]
@@ -48,7 +52,8 @@ blog_app:
 saas_starter:
   name: saas-starter
   description: "SaaS starter template with authentication and billing"
-  user: john
+  user_id: <%= ActiveRecord::FixtureSet.identify(:john) %>
+  recipe_id: <%= ActiveRecord::FixtureSet.identify(:blog_recipe) %>
   ruby_version: "3.2.2"
   rails_version: "7.1.2"
   selected_gems: ["devise", "pay", "stripe", "sidekiq"]
@@ -65,6 +70,7 @@ api_project:
   name: "inventory-api"
   description: "REST API for inventory management"
   user: jane
+  recipe: api_recipe
   ruby_version: "3.2.2"
   rails_version: "7.1.2"
   selected_gems: ["jsonapi-serializer", "rack-cors", "rswag"]
@@ -81,6 +87,7 @@ api_project_2:
   name: "weather-api"
   description: "Weather API service"
   user: jane
+  recipe: api_recipe
   ruby_version: "3.2.2"
   rails_version: "7.1.2"
   selected_gems: ["jsonapi-serializer"]
@@ -96,6 +103,7 @@ api_project_3:
   name: "payment-api"
   description: "Payment processing API"
   user: jane
+  recipe: api_recipe
   ruby_version: "3.2.2"
   rails_version: "7.1.2"
   selected_gems: ["jsonapi-serializer"]

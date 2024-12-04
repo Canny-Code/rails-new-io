@@ -25,7 +25,6 @@ recipe = Recipe.create!(
 ```ruby
 # User adds devise to their recipe
 recipe.add_ingredient!(devise_ingredient, configuration: { api_only: true })
-```
 
 # This:
 # 1. Checks compatibility via ingredient_compatible?()
@@ -34,6 +33,7 @@ recipe.add_ingredient!(devise_ingredient, configuration: { api_only: true })
 # 2. Creates RecipeIngredient with next position
 # 3. Creates a Commit recording this change
 # 4. Updates git repository with new state
+```
 
 3. **Generating an App from a Recipe**:
 

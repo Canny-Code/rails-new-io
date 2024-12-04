@@ -10,15 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_12_03_123457) do
-  create_table "_litestream_lock", id: false, force: :cascade do |t|
-    t.integer "id"
-  end
-
-  create_table "_litestream_seq", force: :cascade do |t|
-    t.integer "seq"
-  end
-
+ActiveRecord::Schema[8.0].define(version: 2024_12_04_133653) do
   create_table "acidic_job_entries", force: :cascade do |t|
     t.integer "execution_id", null: false
     t.string "step", null: false
@@ -53,6 +45,19 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_03_123457) do
     t.index ["execution_id"], name: "index_acidic_job_values_on_execution_id"
   end
 
+  create_table "app_changes", force: :cascade do |t|
+    t.integer "generated_app_id", null: false
+    t.integer "ingredient_id", null: false
+    t.json "configuration"
+    t.datetime "applied_at"
+    t.boolean "success"
+    t.text "error_message"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["generated_app_id"], name: "index_app_changes_on_generated_app_id"
+    t.index ["ingredient_id"], name: "index_app_changes_on_ingredient_id"
+  end
+
   create_table "app_generation_log_entries", force: :cascade do |t|
     t.integer "generated_app_id", null: false
     t.string "level", null: false
@@ -78,6 +83,21 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_03_123457) do
     t.datetime "updated_at", null: false
     t.index ["generated_app_id"], name: "index_app_statuses_on_generated_app_id"
     t.index ["status"], name: "index_app_statuses_on_status"
+  end
+
+  create_table "commits", force: :cascade do |t|
+    t.string "sha", null: false
+    t.text "message", null: false
+    t.json "state_snapshot", null: false
+    t.string "parent_sha"
+    t.integer "author_id", null: false
+    t.string "versioned_type", null: false
+    t.integer "versioned_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_commits_on_author_id"
+    t.index ["sha"], name: "index_commits_on_sha", unique: true
+    t.index ["versioned_type", "versioned_id"], name: "index_commits_on_versioned"
   end
 
   create_table "element_checkboxes", force: :cascade do |t|
@@ -142,8 +162,10 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_03_123457) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "source_path"
+    t.integer "recipe_id", null: false
     t.index ["github_repo_url"], name: "index_generated_apps_on_github_repo_url", unique: true
     t.index ["name"], name: "index_generated_apps_on_name"
+    t.index ["recipe_id"], name: "index_generated_apps_on_recipe_id"
     t.index ["user_id", "name"], name: "index_generated_apps_on_user_id_and_name", unique: true
     t.index ["user_id"], name: "index_generated_apps_on_user_id"
   end
@@ -157,6 +179,21 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_03_123457) do
     t.string "description"
     t.index ["page_id"], name: "index_groups_on_page_id"
     t.index ["title"], name: "index_groups_on_title"
+  end
+
+  create_table "ingredients", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.text "template_content", null: false
+    t.text "conflicts_with"
+    t.text "requires"
+    t.text "configures_with"
+    t.integer "created_by_id", null: false
+    t.string "category"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_ingredients_on_created_by_id"
+    t.index ["name"], name: "index_ingredients_on_name", unique: true
   end
 
   create_table "noticed_events", force: :cascade do |t|
@@ -190,6 +227,33 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_03_123457) do
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_pages_on_slug", unique: true
     t.index ["title"], name: "index_pages_on_title"
+  end
+
+  create_table "recipe_ingredients", force: :cascade do |t|
+    t.integer "recipe_id", null: false
+    t.integer "ingredient_id", null: false
+    t.integer "position", null: false
+    t.json "configuration"
+    t.datetime "applied_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ingredient_id"], name: "index_recipe_ingredients_on_ingredient_id"
+    t.index ["recipe_id", "position"], name: "index_recipe_ingredients_on_recipe_id_and_position", unique: true
+    t.index ["recipe_id"], name: "index_recipe_ingredients_on_recipe_id"
+  end
+
+  create_table "recipes", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.string "cli_flags"
+    t.string "ruby_version"
+    t.string "rails_version"
+    t.string "status", default: "draft"
+    t.string "head_commit_sha"
+    t.integer "created_by_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_recipes_on_created_by_id"
   end
 
   create_table "repositories", force: :cascade do |t|
@@ -350,11 +414,19 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_03_123457) do
 
   add_foreign_key "acidic_job_entries", "acidic_job_executions", column: "execution_id"
   add_foreign_key "acidic_job_values", "acidic_job_executions", column: "execution_id"
-  add_foreign_key "app_generation_log_entries", "generated_apps"
-  add_foreign_key "app_statuses", "generated_apps"
+  add_foreign_key "app_changes", "generated_apps", on_delete: :cascade
+  add_foreign_key "app_changes", "ingredients", on_delete: :cascade
+  add_foreign_key "app_generation_log_entries", "generated_apps", on_delete: :cascade
+  add_foreign_key "app_statuses", "generated_apps", on_delete: :cascade
+  add_foreign_key "commits", "users", column: "author_id"
   add_foreign_key "elements", "sub_groups"
+  add_foreign_key "generated_apps", "recipes"
   add_foreign_key "generated_apps", "users"
   add_foreign_key "groups", "pages"
+  add_foreign_key "ingredients", "users", column: "created_by_id"
+  add_foreign_key "recipe_ingredients", "ingredients"
+  add_foreign_key "recipe_ingredients", "recipes"
+  add_foreign_key "recipes", "users", column: "created_by_id"
   add_foreign_key "repositories", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

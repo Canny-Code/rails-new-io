@@ -2,20 +2,33 @@ require "test_helper"
 
 class CommandExecutionService
   class BufferTest < ActiveSupport::TestCase
-    test "updates log entry message without changing entry_type when not completed" do
-      generated_app = GeneratedApp.create!(
-        name: "test-app",
-        user: users(:john),
-        ruby_version: "3.2.0",
-        rails_version: "7.1.0"
-      )
+    def setup
+      @user = users(:john)
+      @recipe = recipes(:blog_recipe)
 
-      buffer = CommandExecutionService::Buffer.new(generated_app)
-      buffer.append("First message")
-      buffer.append("Second message")
+      # Stub GitRepo to avoid GitHub API calls
+      @git_repo = mock("GitRepo")
+      @git_repo.stubs(:commit_changes)
+      GitRepo.stubs(:new).returns(@git_repo)
+
+      @generated_app = GeneratedApp.create!(
+        name: "test-app",
+        user: @user,
+        recipe: @recipe,
+        ruby_version: "3.2.0",
+        rails_version: "7.1.0",
+        selected_gems: [],
+        configuration_options: {}
+      )
+      @buffer = Buffer.new(@generated_app)
+    end
+
+    test "updates log entry message without changing entry_type when not completed" do
+      @buffer.append("First message")
+      @buffer.append("Second message")
 
       # Force a flush without completing
-      buffer.flush
+      @buffer.flush
 
       log_entry = AppGeneration::LogEntry.last
       assert_equal "First message\nSecond message", log_entry.message
