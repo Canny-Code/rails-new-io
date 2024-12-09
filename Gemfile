@@ -40,7 +40,7 @@ group :development do
   gem "capybara"
   gem "database_cleaner-active_record"
   gem "selenium-webdriver", "~> 4.27.0"
-  gem "mocha", "~> 2.6.1"
+  gem "mocha", "~> 2.7.1"
 end
 
 group :development, :test do
