@@ -15,7 +15,7 @@ module DashboardHelper
       status: params[:status],
       search: params[:search]
     ),
-      class: "group inline-flex items-center px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
+      class: "group inline-flex items-center py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
       data: { turbo_frame: "generated_apps_list" }
     ) do
       concat name
