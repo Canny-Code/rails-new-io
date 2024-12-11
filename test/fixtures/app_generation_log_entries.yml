@@ -1,0 +1,26 @@
+blog_app_log_1:
+  generated_app_id: <%= ActiveRecord::FixtureSet.identify(:blog_app) %>
+  level: info
+  phase: pending
+  message: "Starting app generation"
+  entry_type: rails_output
+  created_at: <%= 2.days.ago %>
+  updated_at: <%= 2.days.ago %>
+
+blog_app_log_2:
+  generated_app_id: <%= ActiveRecord::FixtureSet.identify(:blog_app) %>
+  level: info
+  phase: generating
+  message: "Generating Rails application"
+  entry_type: rails_output
+  created_at: <%= 2.days.ago + 1.minute %>
+  updated_at: <%= 2.days.ago + 1.minute %>
+
+saas_app_log_1:
+  generated_app_id: <%= ActiveRecord::FixtureSet.identify(:saas_starter) %>
+  level: info
+  phase: pending
+  message: "Initializing SaaS application"
+  entry_type: rails_output
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>
