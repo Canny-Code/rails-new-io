@@ -55,8 +55,4 @@ class User < ApplicationRecord
   def notifications
     Noticed::Notification.where(recipient: self)
   end
-
-  def self.encrypt_token(token)
-    new(github_token: token).github_token_before_type_cast
-  end
 end

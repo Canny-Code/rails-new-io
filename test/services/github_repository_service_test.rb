@@ -173,4 +173,25 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       end
     end
   end
+
+  test "client initializes Octokit::Client with correct parameters" do
+    User.any_instance.stubs(:github_token).returns("fake-token")
+
+    mock_client = mock("client")
+    Octokit::Client.expects(:new).with(
+      access_token: "fake-token",
+      auto_paginate: true
+    ).returns(mock_client)
+
+    @service.send(:client)
+  end
+
+  test "client memoizes the instance" do
+    User.any_instance.stubs(:github_token).returns("fake-token")
+
+    first_client = @service.send(:client)
+    second_client = @service.send(:client)
+
+    assert_same first_client, second_client
+  end
 end
