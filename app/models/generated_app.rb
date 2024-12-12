@@ -37,6 +37,8 @@ class GeneratedApp < ApplicationRecord
   include GitBackedModel
   include HasGenerationLifecycle
 
+  attr_accessor :update_recipe
+
   broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
   broadcasts_to ->(generated_app) { [ :notification_badge, generated_app.user_id ] }
 
@@ -62,12 +64,21 @@ class GeneratedApp < ApplicationRecord
 
   def apply_ingredient!(ingredient, configuration = {})
     transaction do
-      app_changes.create!(
+      # Create recipe change first
+      recipe_change = recipe.recipe_changes.create!(
         ingredient: ingredient,
+        change_type: "add_ingredient",
+        change_data: { configuration: configuration }
+      )
+
+      # Create AppChange linked to the RecipeChange
+      app_changes.create!(
+        recipe_change: recipe_change,
         configuration: configuration
       )
 
-      recipe.add_ingredient!(ingredient) if update_recipe?
+      # Apply to recipe if update_recipe is true
+      recipe_change.apply! if update_recipe
     end
   end
 
