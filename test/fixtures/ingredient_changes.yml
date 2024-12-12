@@ -56,3 +56,30 @@ failed_auth_change:
   applied_at: <%= 3.days.ago %>
   success: false
   error_message: "Dependency conflict detected"
+
+template_change:
+  ingredient: rails_authentication
+  change_type: template
+  change_data:
+    template_content: "new template content"
+
+schema_change:
+  ingredient: rails_authentication
+  change_type: schema
+  change_data:
+    configures_with: { "new": "schema" }
+
+dependencies_change:
+  ingredient: rails_authentication
+  change_type: dependencies
+  change_data:
+    conflicts_with: ["conflict1"]
+    requires: ["require1"]
+
+applied_change:
+  ingredient: rails_authentication
+  change_type: template
+  change_data:
+    template_content: "already applied"
+  applied_at: <%= Time.current %>
+  success: true

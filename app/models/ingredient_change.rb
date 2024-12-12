@@ -32,22 +32,27 @@ class IngredientChange < ApplicationRecord
     return if applied_at.present?
 
     transaction do
-      case change_type
+      # Collect all changes in a hash
+      updates = case change_type
       when "template"
         ingredient.update!(template_content: change_data["template_content"])
+        {}
       when "schema"
         ingredient.update!(configures_with: change_data["configures_with"])
+        {}
       when "dependencies"
         ingredient.update!(
           conflicts_with: change_data["conflicts_with"],
           requires: change_data["requires"]
         )
+        {}
       end
 
-      update!(
+      # Single update with merged attributes
+      update!(updates.merge(
         applied_at: Time.current,
         success: true
-      )
+      ))
     end
   rescue => e
     update!(
