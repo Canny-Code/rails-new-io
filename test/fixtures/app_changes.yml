@@ -68,3 +68,36 @@ failed_auth:
   applied_at: <%= 2.days.ago %>
   success: false
   error_message: "Invalid configuration"
+
+# Update existing or add new app_changes fixtures
+add_auth_change:
+  generated_app: blog_app
+  recipe_change: add_ingredient_change
+  configuration: {}
+  error_message: null
+
+remove_auth_change:
+  generated_app: blog_app
+  recipe_change: remove_ingredient_change
+  configuration: {}
+  error_message: null
+
+reorder_change_app:
+  generated_app: blog_app
+  recipe_change: reorder_change
+  configuration: {}
+  error_message: null
+
+config_change_app:
+  generated_app: blog_app
+  recipe_change: config_change
+  configuration: {}
+  error_message: null
+
+applied_change_app:
+  generated_app: blog_app
+  recipe_change: applied_change
+  configuration: {}
+  applied_at: <%= Time.current %>
+  success: true
+  error_message: null
