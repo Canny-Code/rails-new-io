@@ -5,28 +5,35 @@ require "ostruct"
 class GithubRepositoryServiceTest < ActiveSupport::TestCase
   def setup
     @user = users(:john)
+    # Define github_token method to bypass encryption
     @user.define_singleton_method(:github_token) { "fake-token" }
 
-    @generated_app = generated_apps(:blog_app)
-    @generated_app.update!(user: @user)
-    @generated_app.create_app_status! # Ensure app_status exists for logger
+    @generated_app = generated_apps(:pending_app)
+    @app_status = @generated_app.app_status
+    @app_status.update!(
+      status: "pending",
+      status_history: [],
+      started_at: nil,
+      completed_at: nil,
+      error_message: nil
+    )
 
     @service = GithubRepositoryService.new(@generated_app)
-    @client = Minitest::Mock.new
     @repository_name = "test-repo"
   end
 
   test "creates a repository successfully" do
     response = OpenStruct.new(html_url: "https://github.com/#{@user.github_username}/#{@repository_name}")
 
-    Octokit::Client.stub :new, @client do
-      @client.expect :repository?, false, [ "#{@user.github_username}/#{@repository_name}" ]
-      @client.expect :create_repository, response, [ @repository_name, {
-        private: false,
-        auto_init: false,
-        description: "Repository created via railsnew.io"
-      } ]
+    mock_client = Minitest::Mock.new
+    mock_client.expect :repository?, false, [ "#{@user.github_username}/#{@repository_name}" ]
+    mock_client.expect :create_repository, response, [ @repository_name, {
+      private: false,
+      auto_init: false,
+      description: "Repository created via railsnew.io"
+    } ]
 
+    @service.stub :client, mock_client do
       assert_difference -> { @user.repositories.count }, 1 do
         assert_difference -> { AppGeneration::LogEntry.count }, 3 do
           result = @service.create_repository(@repository_name)
@@ -40,7 +47,7 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       assert_equal "Creating repository: #{@repository_name}", log_entries.second.message
     end
 
-    @client.verify
+    mock_client.verify
   end
 
   test "raises error when repository already exists" do
@@ -49,7 +56,7 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       true
     end
 
-    Octokit::Client.stub :new, mock_client do
+    @service.stub :client, mock_client do
       assert_difference -> { AppGeneration::LogEntry.count }, 1 do # One error log entry
         error = assert_raises(GithubRepositoryService::RepositoryExistsError) do
           @service.create_repository(@repository_name)
@@ -74,7 +81,7 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       OpenStruct.new(resets_at: Time.now)
     end
 
-    Octokit::Client.stub :new, mock_client do
+    @service.stub :client, mock_client do
       # We expect 5 log entries:
       # 1. Warning for first rate limit hit
       # 2. Warning for second rate limit hit
@@ -108,7 +115,7 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       raise Octokit::Error.new(response_headers: {})
     end
 
-    Octokit::Client.stub :new, mock_client do
+    @service.stub :client, mock_client do
       # We expect 4 log entries:
       # 1. Error for first attempt
       # 2. Error for first retry

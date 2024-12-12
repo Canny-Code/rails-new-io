@@ -25,11 +25,14 @@
 class Recipe < ApplicationRecord
   include GitBackedModel
 
+  class IncompatibleIngredientError < StandardError; end
+
   belongs_to :created_by, class_name: "User"
   has_many :generated_apps, dependent: :destroy
   has_many :recipe_ingredients, -> { order(position: :asc) }, dependent: :destroy
   has_many :ingredients, through: :recipe_ingredients
   has_many :commits, as: :versioned, dependent: :destroy
+  has_many :recipe_changes, dependent: :destroy
 
   validates :name, presence: true
   validates :status, inclusion: { in: %w[draft published archived] }

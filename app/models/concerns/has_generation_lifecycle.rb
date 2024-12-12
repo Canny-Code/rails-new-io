@@ -2,6 +2,7 @@ module HasGenerationLifecycle
   extend ActiveSupport::Concern
 
   included do
+    has_many :app_changes, dependent: :destroy
     has_one :app_status, dependent: :destroy
     has_many :log_entries, class_name: "AppGeneration::LogEntry", dependent: :destroy
 
@@ -36,9 +37,7 @@ module HasGenerationLifecycle
   end
 
   def push_to_github!
-    touch(:last_build_at)
     app_status.start_github_push!
-    logger.info("Starting GitHub push")
   end
 
   def start_ci!

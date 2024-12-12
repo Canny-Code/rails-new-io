@@ -80,6 +80,6 @@ completed_api_status:
   completed_at: <%= 2.hours.ago %>
 
 pending_status:
-  generated_app: blog_app
+  generated_app: pending_app
   status: pending
   status_history: []

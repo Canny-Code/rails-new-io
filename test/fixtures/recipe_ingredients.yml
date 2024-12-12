@@ -28,12 +28,15 @@ blog_auth:
   recipe: blog_recipe
   ingredient: rails_authentication
   position: 1
-  configuration: { user_model: true, confirmable: false }
-  applied_at: <%= 2.days.ago %>
+  configuration:
+    auth_type: devise
+  applied_at: null
 
-api_setup:
+api_setup_ingredient:
   recipe: api_recipe
   ingredient: api_setup
   position: 1
-  configuration: { versioning: true, documentation: true }
-  applied_at: <%= 2.days.ago %>
+  configuration:
+    versioning: true
+    documentation: true
+  applied_at: <%= 1.day.ago %>

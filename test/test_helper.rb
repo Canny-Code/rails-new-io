@@ -57,6 +57,10 @@ module ActiveSupport
 
     def setup
       DatabaseCleaner.start
+      # Create test app directories
+      %w[blog_app api_project saas_starter weather_api payment_api].each do |app|
+        FileUtils.mkdir_p(Rails.root.join("tmp", "test_apps", app))
+      end
     end
 
     def teardown
@@ -106,4 +110,59 @@ def silence_omniauth_logger
   yield
 ensure
   OmniAuth.config.logger = original_logger
+end
+
+module ActiveRecord
+  class FixtureSet
+    class << self
+      def create_fixtures_with_order(fixtures_directory, fixture_set_names, class_names = {}, config = ActiveRecord::Base)
+        # Define dependencies based on foreign keys
+        dependencies = {
+          "app_changes" => [ "ingredients", "generated_apps" ],
+          "app_statuses" => [ "generated_apps" ],
+          "recipe_ingredients" => [ "recipes", "ingredients" ],
+          "generated_apps" => [ "recipes", "users" ],
+          "recipes" => [ "users" ],
+          "ingredients" => [ "users" ],
+          "commits" => [ "users" ]
+        }
+
+        # Load fixtures in correct order
+        ordered_fixtures = []
+
+        # First load users (no dependencies)
+        ordered_fixtures << "users" if fixture_set_names.include?("users")
+
+        # Then load models that depend on users
+        %w[recipes ingredients commits].each do |model|
+          ordered_fixtures << model if fixture_set_names.include?(model)
+        end
+
+        # Then load recipe_ingredients (depends on recipes and ingredients)
+        ordered_fixtures << "recipe_ingredients" if fixture_set_names.include?("recipe_ingredients")
+
+        # Then load generated_apps (depends on recipes and users)
+        ordered_fixtures << "generated_apps" if fixture_set_names.include?("generated_apps")
+
+        # Finally load models that depend on generated_apps
+        %w[app_statuses app_changes].each do |model|
+          ordered_fixtures << model if fixture_set_names.include?(model)
+        end
+
+        # Add any remaining fixtures
+        remaining = fixture_set_names - ordered_fixtures
+        ordered_fixtures.concat(remaining)
+
+        # Sort fixture_set_names based on ordered_fixtures
+        sorted_names = fixture_set_names.sort_by do |name|
+          ordered_fixtures.index(name) || Float::INFINITY
+        end
+
+        create_fixtures_without_order(fixtures_directory, sorted_names, class_names, config)
+      end
+
+      alias_method :create_fixtures_without_order, :create_fixtures
+      alias_method :create_fixtures, :create_fixtures_with_order
+    end
+  end
 end

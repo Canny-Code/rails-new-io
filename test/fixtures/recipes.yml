@@ -25,14 +25,11 @@
 #  created_by_id  (created_by_id => users.id)
 #
 blog_recipe:
-  name: "Personal Blog Template"
-  description: "A blog template with authentication and markdown support"
-  cli_flags: "--database=postgresql --css=tailwind"
-  ruby_version: "3.2.2"
-  rails_version: "7.1.2"
-  status: "published"
-  head_commit_sha: "abc123def456"
-  created_by: jane
+  name: "Blog Recipe"
+  description: "A basic blog setup"
+  cli_flags: "--database=postgresql"
+  created_by: john
+  status: "draft"
 
 api_recipe:
   name: "API Starter"
@@ -43,3 +40,10 @@ api_recipe:
   status: "published"
   head_commit_sha: "def456abc789"
   created_by: jane
+
+minimal_recipe:
+  name: "Minimal Setup"
+  description: "Basic Rails setup with minimal dependencies"
+  cli_flags: "--minimal"
+  created_by: john
+  status: "published"

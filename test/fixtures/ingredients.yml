@@ -27,11 +27,12 @@
 #
 rails_authentication:
   name: "Rails Authentication"
-  description: "Adds Devise authentication with basic user model"
-  template_content: "# Add devise gem\ngem 'devise'\n# Generate devise setup\nrails generate devise:install"
-  conflicts_with: "custom_authentication"
-  requires: ""
-  configures_with: "{ user_model: true, confirmable: false }"
+  description: "Adds authentication to your Rails app"
+  template_content: "# Authentication template"
+  conflicts_with: []
+  requires: []
+  configures_with:
+    auth_type: ["devise", "rodauth"]
   created_by: john
   category: "authentication"
 
@@ -39,8 +40,10 @@ api_setup:
   name: "API Setup"
   description: "Sets up JSON API with CORS and serialization"
   template_content: "# Add API gems\ngem 'jsonapi-serializer'\ngem 'rack-cors'"
-  conflicts_with: ""
-  requires: ""
-  configures_with: "{ versioning: true, documentation: false }"
+  conflicts_with: []
+  requires: []
+  configures_with:
+    versioning: true
+    documentation: false
   created_by: jane
   category: "api"

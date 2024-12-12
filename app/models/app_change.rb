@@ -10,27 +10,27 @@
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  generated_app_id :integer          not null
-#  ingredient_id    :integer          not null
+#  recipe_change_id :integer
 #
 # Indexes
 #
 #  index_app_changes_on_generated_app_id  (generated_app_id)
-#  index_app_changes_on_ingredient_id     (ingredient_id)
+#  index_app_changes_on_recipe_change_id  (recipe_change_id)
 #
 # Foreign Keys
 #
 #  generated_app_id  (generated_app_id => generated_apps.id) ON DELETE => cascade
-#  ingredient_id     (ingredient_id => ingredients.id) ON DELETE => cascade
+#  recipe_change_id  (recipe_change_id => recipe_changes.id) ON DELETE => cascade
 #
 class AppChange < ApplicationRecord
   belongs_to :generated_app
-  belongs_to :ingredient
+  belongs_to :recipe_change
 
   validates :configuration, presence: true
 
   def to_git_format
     {
-      ingredient_name: ingredient.name,
+      recipe_change_type: recipe_change.change_type,
       configuration: configuration,
       applied_at: applied_at&.iso8601,
       success: success,
@@ -41,22 +41,38 @@ class AppChange < ApplicationRecord
   def apply!
     return if applied_at.present?
 
-    transaction do
-      begin
-        content = ingredient.configuration_for(configuration)
-        # Apply the template here
+    begin
+      transaction do
+        # Apply the recipe change to this specific app instance
+        template_path = Rails.root.join("tmp", "templates", id.to_s)
+        content = recipe_change.apply_to_app(generated_app, configuration)
+
+        # Write and apply the template
+        FileUtils.mkdir_p(File.dirname(template_path))
+        File.write(template_path, content)
+
+        pid = Process.spawn(
+          { "DISABLE_SPRING" => "true" },
+          "bin/rails app:template LOCATION=#{template_path}",
+          chdir: generated_app.source_path
+        )
+        _, status = Process.wait2(pid)
+
         update!(
           applied_at: Time.current,
-          success: true
+          success: status.success?,
+          error_message: status.success? ? nil : "Template application failed"
         )
-      rescue => e
-        update!(
-          applied_at: Time.current,
-          success: false,
-          error_message: e.message
-        )
-        raise
+      ensure
+        FileUtils.rm_f(template_path)
       end
+    rescue => e
+      update!(
+        applied_at: Time.current,
+        success: false,
+        error_message: e.message
+      )
+      raise e
     end
   end
 end

@@ -30,18 +30,18 @@ john:
   uid: "92839283"
   slug: john-doe
   github_username: johndoe
-  github_token: "test-github-token"
+  github_token: "fake-token"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
 jane:
   name: Jane Smith
-  email: jane@example.com
+  email: "jane@example.com"
   image: https://github.com/images/jane.jpg
   provider: github
   uid: '789012'
   slug: jane-smith
   github_username: jane_smith
-  github_token: "test-github-token"
+  github_token: "fake-token"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>

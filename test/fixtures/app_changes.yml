@@ -12,21 +12,21 @@
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  generated_app_id :integer          not null
-#  ingredient_id    :integer          not null
+#  recipe_change_id :integer
 #
 # Indexes
 #
 #  index_app_changes_on_generated_app_id  (generated_app_id)
-#  index_app_changes_on_ingredient_id     (ingredient_id)
+#  index_app_changes_on_recipe_change_id  (recipe_change_id)
 #
 # Foreign Keys
 #
 #  generated_app_id  (generated_app_id => generated_apps.id) ON DELETE => cascade
-#  ingredient_id     (ingredient_id => ingredients.id) ON DELETE => cascade
+#  recipe_change_id  (recipe_change_id => recipe_changes.id) ON DELETE => cascade
 #
 devise_setup:
   generated_app: blog_app
-  ingredient: rails_authentication
+  recipe_change: add_auth
   configuration: { user_model: true, confirmable: false }
   applied_at: <%= 1.day.ago %>
   success: true
@@ -34,8 +34,37 @@ devise_setup:
 
 api_setup:
   generated_app: api_project
-  ingredient: api_setup
+  recipe_change: add_api
   configuration: { versioning: true, documentation: true }
   applied_at: <%= 2.days.ago %>
   success: true
   error_message: null
+
+blog_auth_change:
+  generated_app: blog_app
+  recipe_change: add_auth
+  configuration:
+    auth_type: devise
+  success: false
+  applied_at: null
+  error_message: null
+
+# Successful change from recipe
+auth_addition:
+  generated_app: pending_app
+  recipe_change: add_auth
+  configuration:
+    user_model: User
+    oauth_providers: ['github']
+  applied_at: <%= 1.day.ago %>
+  success: true
+
+# Failed change
+failed_auth:
+  generated_app: pending_app
+  recipe_change: failed_config
+  configuration:
+    invalid_key: true
+  applied_at: <%= 2.days.ago %>
+  success: false
+  error_message: "Invalid configuration"

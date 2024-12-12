@@ -26,11 +26,12 @@ class AppStatus < ApplicationRecord
 
   belongs_to :generated_app, touch: true
 
+  validates :status, presence: true
+  validates :generated_app, presence: true, uniqueness: true
+
   after_update :broadcast_status_change, if: :saved_change_to_status?
   after_save :notify_status_change, if: :saved_change_to_status?
-
-  after_update :broadcast_status_change
-  after_save :notify_status_change, if: :saved_change_to_status?
+  after_save :update_generated_app_build_time, if: :saved_change_to_status?
 
   include AASM
 
@@ -154,5 +155,11 @@ class AppStatus < ApplicationRecord
       old_status: status_before_last_save,
       new_status: status
     ).deliver(generated_app.user)
+  end
+
+  private
+
+  def update_generated_app_build_time
+    generated_app.update_column(:last_build_at, Time.current)
   end
 end
