@@ -24,6 +24,7 @@
 #  created_by_id  (created_by_id => users.id)
 #
 class Ingredient < ApplicationRecord
+  class InvalidConfigurationError < StandardError; end
   include GitBackedModel
 
   belongs_to :created_by, class_name: "User"
@@ -57,16 +58,21 @@ class Ingredient < ApplicationRecord
           raise InvalidConfigurationError, "Invalid value for #{key}: #{value}. Must be one of: #{validator.join(', ')}"
         end
       when Hash
+        # Check required first
+        if validator[:required] && value.nil?
+          raise InvalidConfigurationError, "#{key} is required"
+        end
+
         next if value.nil? && !validator[:required]
+
         if validator[:values]
           unless validator[:values].include?(value)
             raise InvalidConfigurationError, "Invalid value for #{key}: #{value}. Must be one of: #{validator[:values].join(', ')}"
           end
-        end
-      else
-        next if value.nil? && !validator.required?
-        unless validator.call(value)
-          raise InvalidConfigurationError, "Invalid value for #{key}: #{value}"
+        elsif validator[:validate] == "positive_integer"
+          unless value.to_i.positive?
+            raise InvalidConfigurationError, "Invalid value for #{key}: #{value}. Must be a positive integer."
+          end
         end
       end
     end

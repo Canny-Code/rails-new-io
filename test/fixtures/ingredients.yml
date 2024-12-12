@@ -47,3 +47,16 @@ api_setup:
     documentation: false
   created_by: jane
   category: "api"
+
+basic:
+  name: "Basic Rails Setup"
+  description: "Basic Rails application setup with common configurations"
+  template_content: |
+    # Basic Rails setup
+    gem 'bootsnap'
+    gem 'puma'
+  configures_with: {}
+  conflicts_with: []
+  requires: []
+  created_by: john
+  category: "setup"
