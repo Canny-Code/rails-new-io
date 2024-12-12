@@ -1,30 +1,4 @@
-# Adding ingredient
-# == Schema Information
-#
-# Table name: recipe_changes
-#
-#  id            :integer          not null, primary key
-#  applied_at    :datetime
-#  change_type   :string           not null
-#  change_data   :json             not null
-#  description   :text
-#  error_message :text
-#  success       :boolean
-#  created_at    :datetime         not null
-#  updated_at    :datetime         not null
-#  ingredient_id :integer
-#  recipe_id     :integer          not null
-#
-# Indexes
-#
-#  index_recipe_changes_on_ingredient_id  (ingredient_id)
-#  index_recipe_changes_on_recipe_id      (recipe_id)
-#
-# Foreign Keys
-#
-#  ingredient_id  (ingredient_id => ingredients.id)
-#  recipe_id      (recipe_id => recipes.id) ON DELETE => cascade
-#
+# Basic recipe changes
 add_auth:
   recipe: blog_recipe
   ingredient: rails_authentication
@@ -36,35 +10,6 @@ add_auth:
   applied_at: <%= 1.day.ago %>
   success: true
 
-# Removing ingredient
-remove_auth:
-  recipe: blog_recipe
-  ingredient: rails_authentication
-  change_type: remove_ingredient
-  change_data: {}
-  applied_at: <%= 2.days.ago %>
-  success: true
-
-# Reordering ingredients
-reorder_blog:
-  recipe: blog_recipe
-  change_type: reorder_ingredients
-  change_data:
-    order: ['authentication', 'blog', 'api']
-  applied_at: <%= 3.days.ago %>
-  success: true
-
-# Failed change
-failed_config:
-  recipe: blog_recipe
-  change_type: update_configuration
-  change_data:
-    configuration:
-      invalid_key: true
-  applied_at: <%= 4.days.ago %>
-  success: false
-  error_message: "Invalid configuration"
-
 add_api:
   recipe: api_recipe
   ingredient: api_setup
@@ -74,4 +19,54 @@ add_api:
       versioning: true
       documentation: true
   applied_at: <%= 2.days.ago %>
+  success: true
+
+failed_config:
+  recipe: blog_recipe
+  change_type: update_configuration
+  change_data:
+    configuration:
+      invalid_key: true
+  applied_at: <%= 3.days.ago %>
+  success: false
+  error_message: "Invalid configuration"
+
+# Test changes
+add_ingredient_change:
+  recipe: blog_recipe
+  ingredient: rails_authentication
+  change_type: add_ingredient
+  change_data:
+    configuration:
+      user_model: User
+      oauth: true
+
+remove_ingredient_change:
+  recipe: blog_recipe
+  ingredient: rails_authentication
+  change_type: remove_ingredient
+  change_data:
+    ingredient_id: <%= ActiveRecord::FixtureSet.identify(:rails_authentication) %>
+
+reorder_change:
+  recipe: blog_recipe
+  change_type: reorder_ingredients
+  change_data:
+    order: [2, 1, 3]
+
+config_change:
+  recipe: blog_recipe
+  change_type: update_configuration
+  change_data:
+    configuration:
+      time_zone: "UTC"
+      locale: "en"
+
+applied_change:
+  recipe: blog_recipe
+  ingredient: rails_authentication
+  change_type: add_ingredient
+  change_data:
+    configuration: {}
+  applied_at: <%= Time.current %>
   success: true
