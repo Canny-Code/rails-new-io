@@ -38,19 +38,40 @@ class Ingredient < ApplicationRecord
   serialize :requires, coder: YAML
   serialize :configures_with, coder: YAML
 
-  def compatible_with?(other_ingredient)
-    !conflicts_with.include?(other_ingredient.name)
+  def compatible_with?(other)
+    !conflicts_with.include?(other.name)
   end
 
   def dependencies_satisfied?(recipe)
-    requires.all? { |req| recipe.ingredients.exists?(name: req) }
+    requires.all? { |dep| recipe.ingredients.any? { |i| i.name == dep } }
   end
 
-  def configuration_for(context = {})
-    template_content.dup.tap do |content|
-      configures_with.each do |ingredient_name, config_proc|
-        content.gsub!("{{#{ingredient_name}}}", config_proc.call(context))
+  def configuration_for(configuration)
+    # Validate configuration against configures_with schema
+    configures_with.each do |key, validator|
+      value = configuration[key.to_s]
+
+      case validator
+      when Array
+        unless validator.include?(value)
+          raise InvalidConfigurationError, "Invalid value for #{key}: #{value}. Must be one of: #{validator.join(', ')}"
+        end
+      when Hash
+        next if value.nil? && !validator[:required]
+        if validator[:values]
+          unless validator[:values].include?(value)
+            raise InvalidConfigurationError, "Invalid value for #{key}: #{value}. Must be one of: #{validator[:values].join(', ')}"
+          end
+        end
+      else
+        next if value.nil? && !validator.required?
+        unless validator.call(value)
+          raise InvalidConfigurationError, "Invalid value for #{key}: #{value}"
+        end
       end
     end
+
+    # Process template with configuration
+    ERB.new(template_content).result_with_hash(configuration.symbolize_keys)
   end
 end

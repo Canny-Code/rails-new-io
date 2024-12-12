@@ -23,7 +23,7 @@ class User < ApplicationRecord
   extend FriendlyId
   friendly_id :name, use: :slugged
 
-  encrypts :github_token, deterministic: true, downcase: false
+  encrypts :github_token
 
   has_many :repositories, dependent: :destroy
   has_many :generated_apps, dependent: :nullify
@@ -54,5 +54,9 @@ class User < ApplicationRecord
 
   def notifications
     Noticed::Notification.where(recipient: self)
+  end
+
+  def self.encrypt_token(token)
+    new(github_token: token).github_token_before_type_cast
   end
 end

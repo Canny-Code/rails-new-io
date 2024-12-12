@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_12_04_133653) do
+ActiveRecord::Schema[8.0].define(version: 2024_12_12_031732) do
   create_table "acidic_job_entries", force: :cascade do |t|
     t.integer "execution_id", null: false
     t.string "step", null: false
@@ -47,15 +47,15 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_04_133653) do
 
   create_table "app_changes", force: :cascade do |t|
     t.integer "generated_app_id", null: false
-    t.integer "ingredient_id", null: false
     t.json "configuration"
     t.datetime "applied_at"
     t.boolean "success"
     t.text "error_message"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "recipe_change_id"
     t.index ["generated_app_id"], name: "index_app_changes_on_generated_app_id"
-    t.index ["ingredient_id"], name: "index_app_changes_on_ingredient_id"
+    t.index ["recipe_change_id"], name: "index_app_changes_on_recipe_change_id"
   end
 
   create_table "app_generation_log_entries", force: :cascade do |t|
@@ -181,6 +181,19 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_04_133653) do
     t.index ["title"], name: "index_groups_on_title"
   end
 
+  create_table "ingredient_changes", force: :cascade do |t|
+    t.integer "ingredient_id", null: false
+    t.string "change_type", null: false
+    t.json "change_data", null: false
+    t.text "description"
+    t.datetime "applied_at"
+    t.boolean "success"
+    t.text "error_message"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ingredient_id"], name: "index_ingredient_changes_on_ingredient_id"
+  end
+
   create_table "ingredients", force: :cascade do |t|
     t.string "name", null: false
     t.text "description"
@@ -227,6 +240,21 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_04_133653) do
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_pages_on_slug", unique: true
     t.index ["title"], name: "index_pages_on_title"
+  end
+
+  create_table "recipe_changes", force: :cascade do |t|
+    t.integer "recipe_id", null: false
+    t.integer "ingredient_id"
+    t.string "change_type", null: false
+    t.json "change_data", null: false
+    t.text "description"
+    t.datetime "applied_at"
+    t.boolean "success"
+    t.text "error_message"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ingredient_id"], name: "index_recipe_changes_on_ingredient_id"
+    t.index ["recipe_id"], name: "index_recipe_changes_on_recipe_id"
   end
 
   create_table "recipe_ingredients", force: :cascade do |t|
@@ -415,7 +443,7 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_04_133653) do
   add_foreign_key "acidic_job_entries", "acidic_job_executions", column: "execution_id"
   add_foreign_key "acidic_job_values", "acidic_job_executions", column: "execution_id"
   add_foreign_key "app_changes", "generated_apps", on_delete: :cascade
-  add_foreign_key "app_changes", "ingredients", on_delete: :cascade
+  add_foreign_key "app_changes", "recipe_changes", on_delete: :cascade
   add_foreign_key "app_generation_log_entries", "generated_apps", on_delete: :cascade
   add_foreign_key "app_statuses", "generated_apps", on_delete: :cascade
   add_foreign_key "commits", "users", column: "author_id"
@@ -423,7 +451,10 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_04_133653) do
   add_foreign_key "generated_apps", "recipes"
   add_foreign_key "generated_apps", "users"
   add_foreign_key "groups", "pages"
+  add_foreign_key "ingredient_changes", "ingredients", on_delete: :cascade
   add_foreign_key "ingredients", "users", column: "created_by_id"
+  add_foreign_key "recipe_changes", "ingredients"
+  add_foreign_key "recipe_changes", "recipes", on_delete: :cascade
   add_foreign_key "recipe_ingredients", "ingredients"
   add_foreign_key "recipe_ingredients", "recipes"
   add_foreign_key "recipes", "users", column: "created_by_id"

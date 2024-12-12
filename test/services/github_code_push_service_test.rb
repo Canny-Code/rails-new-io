@@ -12,18 +12,24 @@ class GithubCodePushServiceTest < ActiveSupport::TestCase
     GitRepo.stubs(:new).returns(@git_repo)
 
     @generated_app = GeneratedApp.create!(
-      name: "test-app-#{SecureRandom.hex(4)}",
+      name: "test-app-123",
       user: @user,
       recipe: @recipe,
       ruby_version: "3.2.0",
       rails_version: "7.1.0",
       selected_gems: [],
-      configuration_options: {}
+      configuration_options: {},
+      source_path: @temp_dir,
+      github_repo_name: "test-app-123"
     )
-    @generated_app.create_app_status!
-    @generated_app.update!(source_path: @temp_dir)
-    @generated_app.create_github_repo!
-    @generated_app.generate!
+
+    # Replace existing app_status with our test one
+    @generated_app.app_status.destroy!
+    @app_status = @generated_app.create_app_status!(
+      status: "generating",
+      started_at: Time.current,
+      status_history: []
+    )
 
     @service = GithubCodePushService.new(@generated_app)
   end
@@ -77,22 +83,11 @@ class GithubCodePushServiceTest < ActiveSupport::TestCase
   end
 
   test "executes full process successfully" do
-    # Start fresh - create a new app without github_repo setup
-    @generated_app = GeneratedApp.create!(
-      name: "test-app-#{SecureRandom.hex(4)}",
-      user: @user,
-      recipe: @recipe,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
-      selected_gems: [],
-      configuration_options: {}
-    )
-    @generated_app.create_app_status!
+    # Use the existing app but update its attributes
     @generated_app.update!(
-      source_path: @temp_dir,
-      github_repo_name: @generated_app.name  # Set the repo name
+      github_repo_name: @generated_app.name  # Only set the repo name, let service set the URL
     )
-    @generated_app.app_status.update!(status: :generating)  # Set directly to generating state
+    @app_status.update!(status: :generating)
 
     # Set up the github token for the user
     @user.define_singleton_method(:github_token) { "fake-token" }
@@ -104,14 +99,8 @@ class GithubCodePushServiceTest < ActiveSupport::TestCase
     # Create a dummy file to commit
     File.write(File.join(app_dir, "README.md"), "# #{@generated_app.name}")
 
-    # Initialize git repo (since Rails would have done this)
+    # Initialize git repo
     Git.init(app_dir)
-
-    # Get the expected URL
-    expected_url = "https://github.com/#{@user.github_username}/#{@generated_app.name}"
-
-    # Create new service instance
-    service = GithubCodePushService.new(@generated_app)
 
     # Mock Git operations
     git_mock = mock("git")
@@ -125,7 +114,7 @@ class GithubCodePushServiceTest < ActiveSupport::TestCase
     git_mock.expects(:push).with("origin", "main")
 
     # Execute
-    service.execute
+    @service.execute
 
     # Transition through the remaining states
     @generated_app.start_ci!
@@ -133,6 +122,7 @@ class GithubCodePushServiceTest < ActiveSupport::TestCase
 
     # Final assertions
     @generated_app.reload
+    expected_url = "https://github.com/#{@user.github_username}/#{@generated_app.name}"
     assert_equal expected_url, @generated_app.github_repo_url
     assert @generated_app.app_status.completed?
   end

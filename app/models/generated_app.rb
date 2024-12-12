@@ -44,7 +44,6 @@ class GeneratedApp < ApplicationRecord
 
   belongs_to :user
   belongs_to :recipe
-  has_many :app_changes, dependent: :destroy
 
   validates :name, presence: true,
                   uniqueness: { scope: :user_id },

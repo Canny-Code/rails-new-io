@@ -3,13 +3,32 @@ require "ostruct"
 
 class CommandExecutionServiceTest < ActiveSupport::TestCase
   def setup
-    @generated_app = generated_apps(:blog_app)
-    @generated_app.create_app_status! # Ensure app_status exists for logger
+    @user = users(:john)
+    @recipe = recipes(:blog_recipe)
+    @temp_dir = Dir.mktmpdir
+
+    # Use an existing app and reset its status
+    @generated_app = generated_apps(:pending_app)
+    @app_status = @generated_app.app_status
+    @app_status.update!(
+      status: "generating",
+      status_history: [],
+      started_at: nil,
+      completed_at: nil,
+      error_message: nil
+    )
+
     @valid_commands = [
       "rails new #{@generated_app.name} -d postgres --css=tailwind --skip-bootsnap",
       "rails new #{@generated_app.name} --skip-action-mailbox --skip-jbuilder --asset-pipeline=propshaft --javascript=esbuild --css=tailwind --skip-spring"
     ]
+
+    # Initialize service with the first valid command
     @service = CommandExecutionService.new(@generated_app, @valid_commands.first)
+  end
+
+  def teardown
+    FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
   end
 
   test "executes valid rails new command" do

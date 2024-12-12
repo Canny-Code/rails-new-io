@@ -307,72 +307,79 @@ class GeneratedAppTest < ActiveSupport::TestCase
   end
 
   test "updates last_build_at on status changes" do
-    app = GeneratedApp.create!(
-      name: "test-app",
-      user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
-      recipe: @recipe,
-      selected_gems: [],
-      configuration_options: {}
-    )
+    freeze_time do
+      app = GeneratedApp.create!(
+        name: "test-app",
+        user: @user,
+        ruby_version: "3.2.0",
+        rails_version: "7.1.0",
+        recipe: @recipe,
+        selected_gems: [],
+        configuration_options: {}
+      )
 
-    # Initial state
-    assert app.app_status.pending?
-    assert_nil app.started_at
-    assert_nil app.completed_at
-    assert_nil app.error_message
+      # Initial state
+      assert app.app_status.pending?
+      assert_nil app.started_at
+      assert_nil app.completed_at
+      assert_nil app.error_message
 
-    # Create GitHub repo
-    assert_changes -> { app.reload.last_build_at } do
-      app.create_github_repo!
+      # Create GitHub repo
+      travel 1.second
+      assert_changes -> { app.reload.last_build_at } do
+        app.create_github_repo!
+      end
+      assert app.app_status.creating_github_repo?
+
+      # Start generation
+      travel 1.second
+      assert_changes -> { app.reload.last_build_at } do
+        app.generate!
+      end
+      assert app.generating?
+
+      # Push to GitHub
+      travel 1.second
+      assert_changes -> { app.reload.last_build_at } do
+        app.push_to_github!
+      end
+      assert app.app_status.pushing_to_github?
+
+      # Start CI
+      travel 1.second
+      assert_changes -> { app.reload.last_build_at } do
+        app.start_ci!
+      end
+      assert app.running_ci?
+
+      # Complete generation
+      travel 1.second
+      assert_changes -> { app.reload.last_build_at } do
+        app.mark_as_completed!
+      end
+      assert app.completed?
+
+      # Test failure path with a new app
+      app = GeneratedApp.create!(
+        name: "test-app-2",
+        user: @user,
+        ruby_version: "3.2.0",
+        rails_version: "7.1.0",
+        recipe: @recipe,
+        selected_gems: [],
+        configuration_options: {}
+      )
+      error_message = "Something went wrong"
+      app.mark_as_failed!(error_message)
+      assert app.app_status.failed?
+
+      assert_equal error_message, app.reload.app_status.reload.error_message
+
+      # Reset status
+      app.restart!
+      assert app.app_status.pending?
+      assert_nil app.error_message
     end
-    assert app.app_status.creating_github_repo?
-
-    # Start generation
-    assert_changes -> { app.reload.last_build_at } do
-      app.generate!
-    end
-    assert app.generating?
-
-    # Push to GitHub
-    assert_changes -> { app.reload.last_build_at } do
-      app.push_to_github!
-    end
-    assert app.app_status.pushing_to_github?
-
-    # Start CI
-    assert_changes -> { app.reload.last_build_at } do
-      app.start_ci!
-    end
-    assert app.running_ci?
-
-    # Complete generation
-    assert_changes -> { app.reload.last_build_at } do
-      app.mark_as_completed!
-    end
-    assert app.completed?
-
-    # Test failure path with a new app
-    app = GeneratedApp.create!(
-      name: "test-app-2",
-      user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
-      recipe: @recipe,
-      selected_gems: [],
-      configuration_options: {}
-    )
-    error_message = "Something went wrong"
-    app.mark_as_failed!(error_message)
-    assert app.app_status.failed?
-
-    assert_equal error_message, app.reload.app_status.reload.error_message
-
-    # Reset status
-    app.restart!
-    assert app.app_status.pending?
-    assert_nil app.error_message
   end
 
   test "follows complete lifecycle with github repo creation" do

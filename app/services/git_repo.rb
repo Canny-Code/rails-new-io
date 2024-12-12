@@ -1,9 +1,6 @@
 class GitRepo
   REPO_NAME = "rails-new-io-data"
-
-  def self.for_user(user)
-    new(user)
-  end
+  class GitSyncError < StandardError; end
 
   def initialize(user:, repo_name:)
     @user = user
@@ -30,12 +27,11 @@ class GitRepo
   private
 
   def repo_name
-    case Rails.env
-    when "development"
+    if Rails.env.development?
       "#{REPO_NAME}-dev"
-    when "test"
+    elsif Rails.env.test?
       "#{REPO_NAME}-test"
-    when "production"
+    elsif Rails.env.production?
       REPO_NAME
     else
       raise ArgumentError, "Unknown Rails environment: #{Rails.env}"
@@ -58,24 +54,21 @@ class GitRepo
     false
   end
 
-  def setup_repo_locally
-    if File.exist?(@repo_path)
-      FileUtils.rm_rf(@repo_path) # Clean up potentially incomplete repo
-    end
-
-    FileUtils.mkdir_p(@repo_path)
-    Git.clone(
-      "https://github.com/#{@user.github_username}/#{repo_name}",
-      repo_name,
-      path: File.dirname(@repo_path)
-    )
-    @git = Git.open(@repo_path)
-  end
-
   def create_local_repo
+    # Ensure parent directory exists first
+    FileUtils.mkdir_p(File.dirname(@repo_path))
+
+    # Remove existing repo if it exists
+    FileUtils.rm_rf(@repo_path) if File.exist?(@repo_path)
+
+    # Create fresh directory and initialize git
     FileUtils.mkdir_p(@repo_path)
-    Git.init(@repo_path)
-    @git = Git.open(@repo_path)
+    git = Git.init(@repo_path)
+
+    # Configure git to avoid template issues
+    git.config("init.templateDir", "")
+
+    @git = git
   end
 
   def create_github_repo
@@ -104,7 +97,7 @@ class GitRepo
     write_json(path, "current_state.json", {
       name: app.name,
       recipe_id: app.recipe_id,
-      configuration: app.configuration
+      configuration: app.configuration_options
     })
 
     write_json(path, "history.json", app.app_changes.map(&:to_git_format))
@@ -148,7 +141,7 @@ class GitRepo
 
   def push_to_remote
     git.push("origin", "main")
-  rescue => e
+  rescue Git::Error => e
     # Handle push conflicts
     Rails.logger.error "Git push failed: #{e.message}"
     raise GitSyncError, "Failed to sync changes to GitHub"
@@ -160,5 +153,17 @@ class GitRepo
 
   def github_client
     @github_client ||= Octokit::Client.new(access_token: @user.github_token)
+  end
+
+  def write_json(path, filename, data)
+    File.write(
+      File.join(path, filename),
+      JSON.pretty_generate(data)
+    )
+  end
+
+  def setup_remote
+    remote_url = "https://#{@user.github_token}@github.com/#{@user.github_username}/#{repo_name}.git"
+    git.add_remote("origin", remote_url)
   end
 end
