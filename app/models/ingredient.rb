@@ -39,8 +39,8 @@ class Ingredient < ApplicationRecord
   serialize :requires, coder: YAML
   serialize :configures_with, coder: YAML
 
-  def compatible_with?(other)
-    !conflicts_with.include?(other.name)
+  def compatible_with?(other_ingredient)
+    (conflicts_with & [ other_ingredient.name ]).empty?
   end
 
   def dependencies_satisfied?(recipe)

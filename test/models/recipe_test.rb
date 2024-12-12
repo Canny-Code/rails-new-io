@@ -96,4 +96,94 @@ class RecipeTest < ActiveSupport::TestCase
       @recipe.add_ingredient!(dependent, { "auth_type" => "other" })
     end
   end
+
+  test "removes ingredient and reorders positions" do
+    initial_count = @recipe.recipe_ingredients.count
+    @recipe.add_ingredient!(@ingredient, { "auth_type" => "devise" })
+    @recipe.expects(:commit!).with("Removed ingredient: #{@ingredient.name}").once
+
+    assert_difference("@recipe.recipe_ingredients.count", -1) do
+      @recipe.remove_ingredient!(@ingredient)
+    end
+
+    assert_equal initial_count, @recipe.recipe_ingredients.count
+  end
+
+  test "reorders ingredients and creates a commit" do
+    # First clear existing recipe ingredients to start fresh
+    @recipe.recipe_ingredients.destroy_all
+
+    # Add ingredients in initial order
+    ingredient2 = ingredients(:api_setup)
+    @recipe.add_ingredient!(@ingredient, { "auth_type" => "devise" })
+    @recipe.add_ingredient!(ingredient2, { "versioning" => true })
+
+    # Set up expectation for commit
+    @recipe.expects(:commit!).with("Reordered ingredients").once
+
+    # Reorder ingredients
+    new_order = [ ingredient2.id, @ingredient.id ]
+    @recipe.reorder_ingredients!(new_order)
+
+    # Verify new order
+    assert_equal new_order, @recipe.recipe_ingredients.order(:position).pluck(:ingredient_id)
+  end
+
+  test "ingredient compatibility check" do
+    # Test 1: Basic compatibility
+    compatible_ingredient = Ingredient.new(
+      name: "Compatible",
+      description: "A compatible ingredient",
+      template_content: "# Template",
+      conflicts_with: [],  # No conflicts
+      requires: [],        # No dependencies
+      configures_with: {},
+      created_by: @user
+    )
+    stub_git_operations(compatible_ingredient)
+    compatible_ingredient.save!
+
+    assert @recipe.send(:ingredient_compatible?, compatible_ingredient)
+
+    # Test 2: Dependency check
+    dependent = Ingredient.new(
+      name: "Dependent Auth",
+      description: "Auth requiring something",
+      template_content: "# Template",
+      conflicts_with: [],
+      requires: [ "some_other_ingredient" ],
+      configures_with: { "auth_type" => [ "other" ] },
+      created_by: @user
+    )
+    stub_git_operations(dependent)  # Stub git operations before save
+    dependent.save!
+
+    assert_not @recipe.send(:ingredient_compatible?, dependent)
+  end
+
+  test "next position calculation" do
+    # First clear existing recipe ingredients to start fresh
+    @recipe.recipe_ingredients.destroy_all
+
+    assert_equal 1, @recipe.send(:next_position)
+    @recipe.add_ingredient!(@ingredient, { "auth_type" => "devise" })
+    assert_equal 2, @recipe.send(:next_position)
+  end
+
+  test "reorder positions" do
+    # First clear existing recipe ingredients to start fresh
+    @recipe.recipe_ingredients.destroy_all
+
+    @recipe.add_ingredient!(@ingredient, { "auth_type" => "devise" })
+    ingredient2 = ingredients(:api_setup)
+    @recipe.add_ingredient!(ingredient2, { "versioning" => true })
+
+    # Set positions to temporary values first (using large numbers to avoid conflicts)
+    @recipe.recipe_ingredients.first.update_column(:position, 1000)
+    @recipe.recipe_ingredients.last.update_column(:position, 2000)
+
+    @recipe.send(:reorder_positions)
+
+    assert_equal [ 1, 2 ], @recipe.recipe_ingredients.order(:position).pluck(:position)
+  end
 end
