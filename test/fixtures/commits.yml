@@ -28,17 +28,17 @@
 blog_initial:
   sha: "abc123def456"
   message: "Initial blog setup with authentication"
-  state_snapshot: { "name": "personal-blog", "gems": ["devise"] }
+  state_snapshot: { "name": "personal-blog" }
   parent_sha: null
   author: jane
   versioned: blog_app
   versioned_type: "GeneratedApp"
 
-api_initial:
+blog_second:
   sha: "def456abc789"
   message: "Initial API setup with CORS"
-  state_snapshot: { "name": "inventory-api", "gems": ["jsonapi-serializer"] }
-  parent_sha: null
+  state_snapshot: { "name": "inventory-api" }
+  parent_sha: abc123def456
   author: jane
-  versioned: api_project
+  versioned: blog_app
   versioned_type: "GeneratedApp"
