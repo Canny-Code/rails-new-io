@@ -34,8 +34,11 @@
 #  user_id    (user_id => users.id)
 #
 require "test_helper"
+require_relative "../support/git_test_helper"
 
 class GeneratedAppTest < ActiveSupport::TestCase
+  include GitTestHelper
+
   def setup
     @user = users(:john)
     @recipe = recipes(:blog_recipe)
@@ -548,6 +551,48 @@ class GeneratedAppTest < ActiveSupport::TestCase
       app.mark_as_failed!(error_message)
       assert app.app_status.failed?
       assert_equal error_message, app.error_message
+    end
+  end
+
+  test "apply_ingredient! adds ingredient to app and recipe" do
+    app = generated_apps(:blog_app)
+    ingredient = ingredients(:rails_authentication)
+    configuration = { "auth_type" => "devise" }
+
+    # Stub git operations for both app and recipe
+    stub_git_operations(app)
+    stub_git_operations(app.recipe)
+
+    app.update_recipe = true
+
+    assert_difference "AppChange.count" do
+      assert_difference "RecipeIngredient.count" do
+        app.apply_ingredient!(ingredient, configuration)
+      end
+    end
+
+    app_change = app.app_changes.last
+    assert_equal ingredient, app_change.recipe_change.ingredient
+    assert_equal configuration, app_change.configuration
+
+    recipe_ingredient = app.recipe.recipe_ingredients.last
+    assert_equal ingredient, recipe_ingredient.ingredient
+  end
+
+  test "apply_ingredient! without recipe update" do
+    app = generated_apps(:blog_app)
+    ingredient = ingredients(:rails_authentication)
+    configuration = { "auth_type" => "devise" }
+
+    # Stub git operations for app
+    stub_git_operations(app)
+
+    app.update_recipe = false
+
+    assert_difference "AppChange.count" do
+      assert_no_difference "RecipeIngredient.count" do
+        app.apply_ingredient!(ingredient, configuration)
+      end
     end
   end
 end

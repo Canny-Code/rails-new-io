@@ -1,6 +1,7 @@
 class GitRepo
   REPO_NAME = "rails-new-io-data"
-  class GitSyncError < StandardError; end
+  class Error < StandardError; end
+  class GitSyncError < Error; end
 
   def initialize(user:, repo_name:)
     @user = user
