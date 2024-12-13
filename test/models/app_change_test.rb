@@ -23,6 +23,7 @@
 #  recipe_change_id  (recipe_change_id => recipe_changes.id) ON DELETE => cascade
 #
 require "test_helper"
+require "ostruct"
 
 class AppChangeTest < ActiveSupport::TestCase
   setup do
@@ -46,19 +47,13 @@ class AppChangeTest < ActiveSupport::TestCase
     File.expects(:write).with(template_path, "# Template content")
     FileUtils.expects(:rm_f).with(template_path)
 
-    # Mock the system call
-    pid = 12345
-    Process.expects(:spawn).with(
-      { "DISABLE_SPRING" => "true" },
-      "bin/rails app:template LOCATION=#{template_path}",
-      chdir: @generated_app.source_path
-    ).returns(pid)
+    # Mock CommandExecutionService
+    mock_execution = mock
+    mock_execution.expects(:execute)
+    CommandExecutionService.expects(:new).
+      with(@generated_app, "bin/rails app:template LOCATION=#{template_path}").
+      returns(mock_execution)
 
-    status = mock("status")
-    status.stubs(:success?).returns(true)
-    Process.expects(:wait2).with(pid).returns([ nil, status ])
-
-    # Execute and verify
     @app_change.apply!
 
     assert @app_change.success?
@@ -73,27 +68,22 @@ class AppChangeTest < ActiveSupport::TestCase
 
     # Mock the file operations
     template_path = Rails.root.join("tmp", "templates", @app_change.id.to_s)
-    FileUtils.stubs(:mkdir_p)  # Change to stubs
+    FileUtils.stubs(:mkdir_p)
     File.expects(:write).with(template_path, "# Bad template")
-    FileUtils.expects(:rm_f).with(template_path)  # Expect cleanup
+    FileUtils.expects(:rm_f).with(template_path)
 
-    # Mock the system call to fail
-    Process.expects(:spawn).with(
-      { "DISABLE_SPRING" => "true" },
-      "bin/rails app:template LOCATION=#{template_path}",
-      chdir: @generated_app.source_path
-    ).returns(123)
+    # Mock CommandExecutionService with failure
+    mock_execution = mock
+    mock_execution.expects(:execute).raises(RuntimeError.new("Template application failed"))
+    CommandExecutionService.expects(:new).
+      with(@generated_app, "bin/rails app:template LOCATION=#{template_path}").
+      returns(mock_execution)
 
-    status = mock("status")
-    status.stubs(:success?).returns(false)
-    Process.expects(:wait2).returns([ nil, status ])
-
-    # Execute and verify
     @app_change.apply!
 
     assert_not @app_change.success?
     assert_not_nil @app_change.applied_at
-    assert_not_nil @app_change.error_message
+    assert_equal "Template application failed", @app_change.error_message
   end
 
   test "cleans up template file after application" do
@@ -107,18 +97,17 @@ class AppChangeTest < ActiveSupport::TestCase
     File.expects(:write).with(template_path, "# Template content")
     FileUtils.expects(:rm_f).with(template_path)  # Always expect cleanup
 
-    # Mock the system call
-    Process.expects(:spawn).with(
-      { "DISABLE_SPRING" => "true" },
-      "bin/rails app:template LOCATION=#{template_path}",
-      chdir: @generated_app.source_path
-    ).returns(123)
-
-    status = mock("status")
-    status.stubs(:success?).returns(true)
-    Process.expects(:wait2).returns([ nil, status ])
+    # Mock CommandExecutionService
+    mock_execution = mock
+    mock_execution.expects(:execute)
+    CommandExecutionService.expects(:new).
+      with(@generated_app, "bin/rails app:template LOCATION=#{template_path}").
+      returns(mock_execution)
 
     @app_change.apply!
+
+    assert @app_change.success?
+    assert_not_nil @app_change.applied_at
   end
 
   test "handles errors during application" do
@@ -147,6 +136,41 @@ class AppChangeTest < ActiveSupport::TestCase
       assert_not_nil @app_change.applied_at
       assert_equal Time.current.to_i, @app_change.applied_at.to_i  # Compare timestamps as integers
       assert_equal error_message, @app_change.error_message
+    end
+  end
+
+  test "skips application if already applied" do
+    freeze_time do
+      applied_time = 1.hour.ago
+      @app_change.update!(applied_at: applied_time, success: true)
+
+      # Verify that none of the application logic is called
+      @recipe_change.expects(:apply_to_app).never
+      FileUtils.expects(:mkdir_p).never
+      File.expects(:write).never
+
+      @app_change.apply!
+
+      # Verify nothing changed
+      @app_change.reload
+      assert_equal applied_time.to_i, @app_change.applied_at.to_i
+      assert @app_change.success?
+    end
+  end
+
+  private
+
+  def mock_popen3(stdout, stderr, success: true, pid: 12345)
+    lambda do |env, command, **options, &block|
+      mock_stdin = StringIO.new
+      mock_stdout = StringIO.new(stdout)
+      mock_stderr = StringIO.new(stderr)
+      mock_wait_thread = OpenStruct.new(
+        pid: pid,
+        value: OpenStruct.new(success?: success)
+      )
+
+      block.call(mock_stdin, mock_stdout, mock_stderr, mock_wait_thread)
     end
   end
 end

@@ -104,7 +104,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       error = assert_raises(CommandExecutionService::InvalidCommandError) do
         CommandExecutionService.new(@generated_app, "rm -rf /")
       end
-      assert_equal "Command must start with 'rails new'", error.message
+      assert_equal "Command must start with one of: rails new, bin/rails app:template", error.message
     end
 
     log_entries = @generated_app.log_entries.order(created_at: :desc).limit(2)
@@ -118,9 +118,9 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
   test "validates command format" do
     invalid_commands = {
       "rails new; rm -rf /" => [ "Command contains invalid characters", "Command injection attempt detected" ],
-      "rails new --invalid-flag" => [ "Invalid command format", "Invalid command format" ],
-      "rails generate model User" => [ "Command must start with 'rails new'", "Invalid command prefix" ],
-      "rails new" => [ "Invalid command format", "Invalid command format" ]
+      "rails new --invalid-flag" => [ "Invalid rails new command format", "Invalid rails new command format" ],
+      "rails generate model User" => [ "Command must start with one of: rails new, bin/rails app:template", "Invalid command prefix" ],
+      "rails new" => [ "Invalid rails new command format", "Invalid rails new command format" ]
     }
 
     invalid_commands.each do |cmd, (expected_message, expected_log)|
@@ -272,6 +272,61 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       )
 
       block.call(mock_stdin, mock_stdout, mock_stderr, mock_wait_thread)
+    end
+  end
+
+  test "handles cleanup when process doesn't exist" do
+    output = "Sample output"
+    error = "Sample error"
+    pid = 12345
+
+    Process.stub :kill, ->(*) { raise Errno::ESRCH } do
+      Open3.stub :popen3, mock_popen3(output, error, success: true, pid: pid) do
+        assert_nothing_raised do
+          @service.execute
+        end
+      end
+    end
+  end
+
+  test "executes valid template command" do
+    template_command = "bin/rails app:template LOCATION=lib/templates/blog.rb"
+    service = CommandExecutionService.new(@generated_app, template_command)
+    output = "Template applied successfully"
+
+    Open3.stub :popen3, mock_popen3(output, "", success: true) do
+      assert_difference -> { @generated_app.log_entries.count }, 7 do
+        service.execute
+      end
+
+      log_entries = @generated_app.log_entries.recent_first
+      assert_equal "Rails app generation process finished successfully", log_entries.first.message
+    end
+  end
+
+  test "validates template command format" do
+    invalid_template_commands = {
+      "bin/rails app:template" => "Invalid template command format",  # Missing LOCATION
+      "bin/rails app:template LOCATION=" => "Invalid template command format",  # Empty LOCATION
+      "bin/rails app:template LOCATION=;rm -rf /" => "Command contains invalid characters",  # Injection attempt
+      "bin/rails app:template LOCATION=../../etc/passwd" => "Invalid template command format",  # Path traversal attempt
+      "bin/rails app:template LOCATION=templates/bad.rb" => "Invalid template command format"  # Not in lib/templates
+    }
+
+    invalid_template_commands.each do |cmd, expected_error|
+      assert_difference -> { AppGeneration::LogEntry.count }, 2 do
+        error = assert_raises(CommandExecutionService::InvalidCommandError) do
+          CommandExecutionService.new(@generated_app, cmd)
+        end
+        assert_equal expected_error, error.message
+
+        log_entries = @generated_app.log_entries.order(created_at: :desc).limit(2)
+        assert log_entries[0].error?
+        assert_equal expected_error == "Command contains invalid characters" ?
+          "Command injection attempt detected" :
+          "Invalid template command format",
+          log_entries[0].message
+      end
     end
   end
 end

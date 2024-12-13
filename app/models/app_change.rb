@@ -43,26 +43,29 @@ class AppChange < ApplicationRecord
 
     begin
       transaction do
-        # Apply the recipe change to this specific app instance
         template_path = Rails.root.join("tmp", "templates", id.to_s)
         content = recipe_change.apply_to_app(generated_app, configuration)
 
-        # Write and apply the template
         FileUtils.mkdir_p(File.dirname(template_path))
         File.write(template_path, content)
 
-        pid = Process.spawn(
-          { "DISABLE_SPRING" => "true" },
-          "bin/rails app:template LOCATION=#{template_path}",
-          chdir: generated_app.source_path
-        )
-        _, status = Process.wait2(pid)
+        command = "bin/rails app:template LOCATION=#{template_path}"
+        execution = CommandExecutionService.new(generated_app, command)
 
-        update!(
-          applied_at: Time.current,
-          success: status.success?,
-          error_message: status.success? ? nil : "Template application failed"
-        )
+        begin
+          execution.execute
+          update!(
+            applied_at: Time.current,
+            success: true,
+            error_message: nil
+          )
+        rescue RuntimeError => e
+          update!(
+            applied_at: Time.current,
+            success: false,
+            error_message: e.message
+          )
+        end
       ensure
         FileUtils.rm_f(template_path)
       end
