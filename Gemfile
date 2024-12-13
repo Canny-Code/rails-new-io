@@ -41,6 +41,7 @@ group :development do
   gem "database_cleaner-active_record"
   gem "selenium-webdriver", "~> 4.27.0"
   gem "mocha", "~> 2.7.1"
+  gem "rails-erd", "~> 1.7.2"
 end
 
 group :development, :test do

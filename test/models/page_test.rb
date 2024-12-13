@@ -23,11 +23,12 @@ class PageTest < ActiveSupport::TestCase
     @essentials_group = @page.groups.find_by!(title: "Essentials")
 
     @relational_dbs = @databases_group.sub_groups.find_by!(title: "Relational Databases")
+    @default_dbs = @databases_group.sub_groups.find_by!(title: "Default")
     @dev_env_default = @dev_env_group.sub_groups.find_by!(title: "Default")
     @essentials_default = @essentials_group.sub_groups.find_by!(title: "Default")
 
     @skip_git = @dev_env_default.elements.find_by!(label: "Skip Git")
-    @sqlite3 = @relational_dbs.elements.find_by!(label: "SQLite3")
+    @sqlite3 = @default_dbs.elements.find_by!(label: "SQLite3")
     @app_name = @essentials_default.elements.find_by!(label: "App Name")
   end
 
@@ -37,17 +38,17 @@ class PageTest < ActiveSupport::TestCase
   end
 
   test "groups have all associated sub_groups" do
-    assert_equal [ "Relational Databases", "Document Databases", "Key-Value Stores" ].sort, @databases_group.sub_groups.pluck(:title).sort
+    assert_equal [ "Default", "Relational Databases", "Document Databases", "Key-Value Stores" ].sort, @databases_group.sub_groups.pluck(:title).sort
     assert_equal [ "Default" ], @dev_env_group.sub_groups.pluck(:title)
     assert_equal [ "Default" ], @essentials_group.sub_groups.pluck(:title)
   end
 
   test "sub_groups have all associated elements" do
-    expected_relational_dbs_elements = [ "SQLite3", "MySQL", "Trilogy", "PostgreSQL", "MariaDB (MySQL)", "MariaDB (Trilogy)" ]
+    expected_default_dbs_elements = [ "SQLite3", "MySQL", "Trilogy", "PostgreSQL", "MariaDB (MySQL)", "MariaDB (Trilogy)" ]
     expected_dev_env_elements = [ "Skip Git", "Skip Docker", "Skip Action Mailer" ]
     expected_essentials_elements = [ "App Name" ]
 
-    assert_equal expected_relational_dbs_elements.sort, @relational_dbs.elements.pluck(:label).sort
+    assert_equal expected_default_dbs_elements.sort, @default_dbs.elements.pluck(:label).sort
     assert_equal expected_dev_env_elements.sort, @dev_env_default.elements.pluck(:label).sort
     assert_equal expected_essentials_elements.sort, @essentials_default.elements.pluck(:label).sort
   end

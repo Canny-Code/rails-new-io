@@ -32,6 +32,10 @@ key_value_dbs:
   title: Key-Value Stores
   group: databases
 
+databases_default:
+  title: Default
+  group: databases
+
 dev_env_default:
   title: Default
   group: dev_env
