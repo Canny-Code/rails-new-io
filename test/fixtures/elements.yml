@@ -45,35 +45,51 @@ skip_action_mailer:
 
 database_sqlite3:
   label: SQLite3
-  sub_group: relational_dbs
+  sub_group: databases_default
   variant: database_sqlite3 (Element::RadioButton)
-
-database_mysql:
-  label: MySQL
-  sub_group: relational_dbs
-  variant: database_mysql (Element::RadioButton)
-
-database_trilogy:
-  label: Trilogy
-  sub_group: relational_dbs
-  variant: database_trilogy (Element::RadioButton)
+  description: Use SQLite3 as your database
+  image_path: SQLite.svg
+  position: 0
 
 database_postgresql:
   label: PostgreSQL
-  description: Use PostgreSQL as your database
-  sub_group: relational_dbs
+  sub_group: databases_default
   variant: database_postgresql (Element::RadioButton)
-  position: 0
+  description: Use PostgreSQL as your database
+  image_path: Postgres.svg
+  position: 1
+
+database_mysql:
+  label: MySQL
+  sub_group: databases_default
+  variant: database_mysql (Element::RadioButton)
+  description: Use MySQL as your database
+  image_path: MySQL.svg
+  position: 2
+
+database_trilogy:
+  label: Trilogy
+  sub_group: databases_default
+  variant: database_trilogy (Element::RadioButton)
+  description: Use Trilogy as your database
+  image_path: Trilogy.svg
+  position: 3
 
 database_mariadb_mysql:
   label: MariaDB (MySQL)
-  sub_group: relational_dbs
+  sub_group: databases_default
   variant: database_mariadb_mysql (Element::RadioButton)
+  description: Use MariaDB (MySQL) as your database
+  image_path: Mariadb.svg
+  position: 4
 
 database_mariadb_trilogy:
   label: MariaDB (Trilogy)
-  sub_group: relational_dbs
+  sub_group: databases_default
   variant: database_mariadb_trilogy (Element::RadioButton)
+  description: Fuck your database
+  image_path: Mariadb.svg
+  position: 5
 
 app_name:
   label: App Name

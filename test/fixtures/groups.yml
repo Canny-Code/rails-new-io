@@ -25,6 +25,7 @@
 databases:
   title: Databases
   page: basic_setup
+  behavior_type: database_choice
 
 dev_env:
   title: Development Environment

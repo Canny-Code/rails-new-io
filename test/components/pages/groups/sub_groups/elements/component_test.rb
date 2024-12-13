@@ -1,4 +1,5 @@
 require "test_helper"
+require "mocha/minitest"
 
 module Pages
   module Groups
@@ -8,6 +9,7 @@ module Pages
           include Phlex::Testing::ViewHelper
           include ActionView::Helpers::AssetTagHelper
           include Rails.application.routes.url_helpers
+          include Mocha::API
 
           def default_url_options
             { host: "example.com" }
@@ -16,6 +18,10 @@ module Pages
           test "renders radio button element" do
             element = elements(:database_postgresql)
             component = Component.new(element: element)
+
+            Pages::Groups::SubGroups::Elements::RadioButton::Component.any_instance
+              .stubs(:image_tag)
+              .returns("image_tag_stub")
 
             html = render component
 

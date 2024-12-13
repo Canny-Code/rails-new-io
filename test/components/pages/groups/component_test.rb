@@ -11,8 +11,11 @@ module Pages
       end
 
       test "renders database choice group with correct stimulus attributes" do
-        @databases_group.update!(behavior_type: "database_choice")
         component = Component.new(group: @databases_group)
+
+        Pages::Groups::SubGroups::Elements::RadioButton::Component.any_instance
+        .stubs(:image_tag)
+        .returns("image_tag_stub")
 
         html = render(component)
 
