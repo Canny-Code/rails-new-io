@@ -2,7 +2,16 @@ require "open3"
 require "timeout"
 
 class CommandExecutionService
-  ALLOWED_COMMANDS = [ "rails new" ].freeze
+  ALLOWED_COMMANDS = [
+    "rails new",
+    "bin/rails app:template"
+  ].freeze
+
+  TEMPLATE_COMMAND_PATTERN = %r{\A
+    bin/rails\s+app:template\s+
+    LOCATION=(?:lib/templates/[a-zA-Z0-9_\-/.]+\.rb)
+  \z}x
+
   COMMAND_PATTERN = /\A
   rails\s+new\s+                    # Command start
   [a-zA-Z]                         # App name must start with a letter
@@ -64,9 +73,10 @@ class CommandExecutionService
   def validate_command!
     @logger.info("Validating command: #{@command}")
 
-    unless @command.start_with?(*ALLOWED_COMMANDS)
+    command_type = ALLOWED_COMMANDS.find { |cmd| @command.start_with?(cmd) }
+    unless command_type
       @logger.error("Invalid command prefix", { command: @command })
-      raise InvalidCommandError, "Command must start with 'rails new'"
+      raise InvalidCommandError, "Command must start with one of: #{ALLOWED_COMMANDS.join(', ')}"
     end
 
     # Check for command injection attempts
@@ -75,30 +85,26 @@ class CommandExecutionService
       raise InvalidCommandError, "Command contains invalid characters"
     end
 
-    # Validate overall command structure
-    unless @command.match?(COMMAND_PATTERN)
-      @logger.error("Invalid command format", { command: @command })
-      raise InvalidCommandError, "Invalid command format"
-    end
-
-    # Extract and validate app name
-    app_name = @command.split[2] # rails[0] new[1] app_name[2] ...
-    unless app_name == @generated_app.name
-      @logger.error("Invalid app name", {
-        command: @command,
-        expected: @generated_app.name,
-        actual: app_name
-      })
-      raise InvalidCommandError, "App name in command must match GeneratedApp name"
+    # Validate based on command type
+    case command_type
+    when "rails new"
+      validate_rails_new_command
+    when "bin/rails app:template"
+      validate_template_command
     end
 
     @logger.info("Command validation successful", { command: @command })
   end
 
   def setup_environment
-    @temp_dir = Dir.mktmpdir
-    @logger.info("Created temporary directory", { path: @temp_dir })
-    @generated_app.update(source_path: @temp_dir)
+    if @command.start_with?("rails new")
+      @temp_dir = Dir.mktmpdir
+      @logger.info("Created temporary directory", { path: @temp_dir })
+      @generated_app.update(source_path: @temp_dir)
+    else
+      @temp_dir = @generated_app.source_path
+      @logger.info("Using existing app directory", { path: @temp_dir })
+    end
   end
 
   def run_isolated_process
@@ -180,5 +186,29 @@ class CommandExecutionService
       directory: @temp_dir,
       env: env
     })
+  end
+
+  def validate_rails_new_command
+    unless @command.match?(COMMAND_PATTERN)
+      @logger.error("Invalid rails new command format", { command: @command })
+      raise InvalidCommandError, "Invalid rails new command format"
+    end
+
+    app_name = @command.split[2]
+    unless app_name == @generated_app.name
+      @logger.error("Invalid app name", {
+        command: @command,
+        expected: @generated_app.name,
+        actual: app_name
+      })
+      raise InvalidCommandError, "App name in command must match GeneratedApp name"
+    end
+  end
+
+  def validate_template_command
+    unless @command.match?(TEMPLATE_COMMAND_PATTERN)
+      @logger.error("Invalid template command format", { command: @command })
+      raise InvalidCommandError, "Invalid template command format"
+    end
   end
 end
