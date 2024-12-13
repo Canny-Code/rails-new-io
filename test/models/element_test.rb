@@ -43,4 +43,19 @@ class ElementTest < ActiveSupport::TestCase
     element = Element.new(variant: Element::RadioButton.new)
     assert element.displayed?
   end
+
+  test "sets command_line_value before saving" do
+    element = elements(:database_trilogy)
+
+    element.save
+
+    assert_equal "trilogy", element.command_line_value
+  end
+
+  test "updates command_line_value when label changes" do
+    element = elements(:database_trilogy)
+    element.reload.update!(label: "CockroachDB")
+
+    assert_equal "cockroachdb", element.command_line_value
+  end
 end
