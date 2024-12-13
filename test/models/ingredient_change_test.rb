@@ -1,3 +1,26 @@
+# == Schema Information
+#
+# Table name: ingredient_changes
+#
+#  id            :integer          not null, primary key
+#  applied_at    :datetime
+#  change_data   :json             not null
+#  change_type   :string           not null
+#  description   :text
+#  error_message :text
+#  success       :boolean
+#  created_at    :datetime         not null
+#  updated_at    :datetime         not null
+#  ingredient_id :integer          not null
+#
+# Indexes
+#
+#  index_ingredient_changes_on_ingredient_id  (ingredient_id)
+#
+# Foreign Keys
+#
+#  ingredient_id  (ingredient_id => ingredients.id) ON DELETE => cascade
+#
 require "test_helper"
 
 class IngredientChangeTest < ActiveSupport::TestCase
