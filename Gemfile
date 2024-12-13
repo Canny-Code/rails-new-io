@@ -8,7 +8,7 @@ gem "bootsnap", require: false
 gem "faraday-retry", "~> 2.2.1"
 gem "friendly_id", "~> 5.5.1"
 gem "git", "~> 2.3.3"
-gem "kamal", "~> 2.3.0", require: false
+gem "kamal", "~> 2.4.0", require: false
 gem "thruster", "~> 0.1.9", require: false
 gem "mission_control-jobs", "~> 1.0.1"
 gem "noticed", "~> 2.4.3"
@@ -20,8 +20,8 @@ gem "pagy", "~> 9.3.3"
 gem "phlex-rails", "~> 1.2.2"
 gem "propshaft", "~> 1.1.0"
 gem "puma", ">= 6.5.0"
-gem "sentry-ruby"
-gem "sentry-rails"
+gem "sentry-ruby", "~> 5.22.0"
+gem "sentry-rails", "~> 5.22.0"
 gem "stackprof"
 gem "solid_cache", "~> 1.0.6"
 gem "solid_cable", "~> 3.0.4"

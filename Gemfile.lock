@@ -192,7 +192,7 @@ GEM
     json (2.7.2)
     jwt (2.9.3)
       base64
-    kamal (2.3.0)
+    kamal (2.4.0)
       activesupport (>= 7.0)
       base64 (~> 0.2)
       bcrypt_pbkdf (~> 1.0)
@@ -321,7 +321,7 @@ GEM
     omniauth-rails_csrf_protection (1.0.2)
       actionpack (>= 4.2)
       omniauth (~> 2.0)
-    ostruct (0.6.0)
+    ostruct (0.6.1)
     overcommit (0.64.0)
       childprocess (>= 0.6.3, < 6)
       iniparse (~> 1.4)
@@ -448,10 +448,10 @@ GEM
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 3.0)
       websocket (~> 1.0)
-    sentry-rails (5.21.0)
+    sentry-rails (5.22.0)
       railties (>= 5.0)
-      sentry-ruby (~> 5.21.0)
-    sentry-ruby (5.21.0)
+      sentry-ruby (~> 5.22.0)
+    sentry-ruby (5.22.0)
       bigdecimal
       concurrent-ruby (~> 1.0, >= 1.0.2)
     simplecov (0.22.0)
@@ -569,7 +569,7 @@ DEPENDENCIES
   faraday-retry (~> 2.2.1)
   friendly_id (~> 5.5.1)
   git (~> 2.3.3)
-  kamal (~> 2.3.0)
+  kamal (~> 2.4.0)
   litestream (~> 0.12.0)
   minio (~> 0.4.0)
   mission_control-jobs (~> 1.0.1)
@@ -587,8 +587,8 @@ DEPENDENCIES
   rails-erd (~> 1.7.2)
   rubocop-rails-omakase
   selenium-webdriver (~> 4.27.0)
-  sentry-rails
-  sentry-ruby
+  sentry-rails (~> 5.22.0)
+  sentry-ruby (~> 5.22.0)
   simplecov
   simplecov-tailwindcss
   solid_cable (~> 3.0.4)
