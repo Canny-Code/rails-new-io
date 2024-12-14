@@ -4,20 +4,21 @@
     <div class="relative h-full max-w-screen-xl mx-auto"></div>
   </div>
   <div id="app-name-input" class="flex justify-center items-center bg-deep-azure-zeta pt-10 pb-10">
-    <div class="mr-10 md:mr-0">
-      <label for="app-name">
-        <span class="px-5 my-3 text-gray-500">Enter the name of your awesome app!</span>
+    <div class="flex flex-col items-center w-full max-w-md">
+      <label for="app-name" class="w-full text-center mb-2">
+        <span class="text-gray-500">Enter the name of your awesome app!</span>
       </label>
-      <div data-controller="text-field-change" data-text-field-change-generated-output-outlet="#app-name-output">
+      <div data-controller="text-field-change" data-text-field-change-generated-output-outlet="#app-name-output" class="w-full max-w-sm px-5">
         <input id="app-name"
                data-text-field-change-target="input"
                name="app-name"
                data-action="keyup->text-field-change#update"
-        data-default-value="my_app"
-        autocomplete="off"
-        placeholder="my_app"
-        class="appearance-none w-full px-5 py-3 border-2 border-gray-300 text-base leading-6 mx-5 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-lg">
-      </input>
+               data-default-value="my_app"
+               autocomplete="off"
+               placeholder="my_app"
+               class="appearance-none w-full px-5 py-3 border-2 border-gray-300 text-base leading-6 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out">
+        </input>
+      </div>
     </div>
   </div>
 </div>
@@ -46,12 +47,7 @@
     </div>
     <a href="#"
      id="verify-my-setup-link"
-     class="block bg-deep-azure-gamma
-           md:rounded-lg
-           min-w-full sm:min-w-full md:min-w-0
-           text-left sm:text-left md:text-center
-           ml-0 md:mr-5
-           px-6 text-gray-100 shadow-2xl whitespace-no-wrap py-3">
+     class="block bg-[rgb(59,159,172)] md:rounded-lg min-w-full sm:min-w-full md:min-w-0 text-left sm:text-left md:text-center ml-0 px-6 text-white shadow-2xl whitespace-no-wrap py-3 hover:bg-[rgb(71,171,184)] transition-colors duration-150" >
       🏆️ Generate My App
     </a>
   </div>
