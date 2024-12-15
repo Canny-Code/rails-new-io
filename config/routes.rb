@@ -27,9 +27,7 @@ Rails.application.routes.draw do
     resources :log_entries, only: [ :index ]
   end
 
-  resources :users, only: [ :show ], path: "" do
-    resources :repositories, only: [ :new, :create, :show, :index ]
-  end
+  resources :users, only: [ :show ], path: ""
 
   resources :pages, only: :show
 

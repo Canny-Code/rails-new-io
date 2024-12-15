@@ -29,10 +29,6 @@ class GithubRepositoryService
 
       response = client.create_repository(name, options)
 
-      @user.repositories.create!(
-        name: name,
-        github_url: response.html_url
-      )
       @generated_app.update!(
         github_repo_name: name,
         github_repo_url: response.html_url

@@ -92,8 +92,4 @@ class GeneratedApp < ApplicationRecord
       locals: { generated_app: self }
     )
   end
-
-  def repo_name
-    name  # Use the app's name as the repo name
-  end
 end

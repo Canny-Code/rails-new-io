@@ -150,4 +150,28 @@ class GitRepoTest < ActiveSupport::TestCase
 
     @repo.send(:create_github_repo)
   end
+
+  test "initializes new git repo when .git directory doesn't exist" do
+    # Stub File.exist? to return false for .git directory
+    File.stubs(:exist?).returns(true) # default stub
+    File.stubs(:exist?).with(File.join(@repo_path, ".git")).returns(false)
+
+    # Set up expectations for create_local_repo
+    FileUtils.expects(:mkdir_p).with(File.dirname(@repo_path))
+    FileUtils.expects(:rm_rf).with(@repo_path)
+    FileUtils.expects(:mkdir_p).with(@repo_path)
+
+    # Expect Git.init to be called and return our mock git object
+    Git.expects(:init).with(@repo_path).returns(@git)
+
+    # Expect git config calls
+    @git.expects(:config).with("init.templateDir", "")
+    @git.expects(:config).with("init.defaultBranch", "main")
+
+    # Call the git method
+    result = @repo.send(:git)
+
+    # Verify the result
+    assert_equal @git, result
+  end
 end

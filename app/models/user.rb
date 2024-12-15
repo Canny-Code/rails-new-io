@@ -25,7 +25,6 @@ class User < ApplicationRecord
 
   encrypts :github_token
 
-  has_many :repositories, dependent: :destroy
   has_many :generated_apps, dependent: :nullify
   has_many :notifications, as: :recipient,
                           dependent: :destroy,

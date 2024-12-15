@@ -158,6 +158,18 @@ class AppChangeTest < ActiveSupport::TestCase
     end
   end
 
+  test "to_git_format includes recipe change type" do
+    app_change = app_changes(:blog_auth_change)  # Use existing fixture
+
+    git_format = app_change.to_git_format
+
+    assert_equal app_change.recipe_change.change_type, git_format[:recipe_change_type]
+    assert_equal app_change.configuration, git_format[:configuration]
+    assert_nil git_format[:applied_at], "Expected applied_at to be nil for unapplied change"
+    assert_equal false, git_format[:success], "Expected success to be false for unapplied change"
+    assert_nil git_format[:error_message], "Expected error_message to be nil for unapplied change"
+  end
+
   private
 
   def mock_popen3(stdout, stderr, success: true, pid: 12345)

@@ -32,21 +32,17 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       description: "Repository created via railsnew.io"
     } ]
 
-    @service.stub :client, mock_client do
-      assert_difference -> { @user.repositories.count }, 1 do
-        assert_difference -> { AppGeneration::LogEntry.count }, 3 do
-          result = @service.create_repository(@repository_name)
-          assert_equal response.html_url, result.html_url
-        end
-      end
+    Octokit::Client.stub :new, mock_client do
+      response = @service.create_repository(@repository_name)
+      assert_equal "https://github.com/#{@user.github_username}/#{@repository_name}", response.html_url
 
-      # Verify log entries
-      log_entries = @generated_app.log_entries.recent_first
-      assert_equal "GitHub repo #{@repository_name} created successfully", log_entries.first.message
-      assert_equal "Creating repository: #{@repository_name}", log_entries.second.message
+      # Verify GeneratedApp was updated
+      @generated_app.reload
+      assert_equal @repository_name, @generated_app.github_repo_name
+      assert_equal response.html_url, @generated_app.github_repo_url
     end
 
-    mock_client.verify
+    assert_mock mock_client
   end
 
   test "raises error when repository already exists" do

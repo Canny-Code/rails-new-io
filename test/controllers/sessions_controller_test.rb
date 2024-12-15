@@ -135,7 +135,6 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
     Recipe.delete_all                     # Then recipes
     Ingredient.delete_all                 # Then ingredients
     Noticed::Notification.delete_all      # Then notifications
-    Repository.delete_all                 # Then repositories
     User.delete_all                       # Finally users
 
     silence_omniauth_logger do

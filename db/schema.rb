@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_12_12_031732) do
+ActiveRecord::Schema[8.0].define(version: 2024_12_15_164138) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -292,17 +292,6 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_12_031732) do
     t.index ["created_by_id"], name: "index_recipes_on_created_by_id"
   end
 
-  create_table "repositories", force: :cascade do |t|
-    t.string "name", null: false
-    t.string "github_url", null: false
-    t.integer "user_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["github_url"], name: "index_repositories_on_github_url", unique: true
-    t.index ["name"], name: "index_repositories_on_name"
-    t.index ["user_id"], name: "index_repositories_on_user_id"
-  end
-
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
     t.integer "job_id", null: false
     t.string "queue_name", null: false
@@ -466,7 +455,6 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_12_031732) do
   add_foreign_key "recipe_ingredients", "ingredients"
   add_foreign_key "recipe_ingredients", "recipes"
   add_foreign_key "recipes", "users", column: "created_by_id"
-  add_foreign_key "repositories", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
