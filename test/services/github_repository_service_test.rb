@@ -5,8 +5,7 @@ require "ostruct"
 class GithubRepositoryServiceTest < ActiveSupport::TestCase
   def setup
     @user = users(:john)
-    # Define github_token method to bypass encryption
-    @user.define_singleton_method(:github_token) { "fake-token" }
+    stub_github_token(@user)
 
     @generated_app = generated_apps(:pending_app)
     @app_status = @generated_app.app_status

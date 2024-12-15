@@ -16,14 +16,14 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "check_name returns true for valid repository name" do
+  test "repo_exists? returns false for valid (non-existent) repository name" do
     validator = mock
-    validator.expects(:valid?).returns(true)
+    validator.expects(:repo_exists?).returns(false)
     GithubRepositoryNameValidator.expects(:new)
       .with("test-repo", @user.github_username)
       .returns(validator)
 
-    get check_repository_name_path, params: { name: "test-repo" }
+    get check_github_name_path, params: { name: "test-repo" }
 
     assert_response :success
     assert_equal({ "available" => true }, JSON.parse(response.body))

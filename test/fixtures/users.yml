@@ -23,25 +23,25 @@
 #
 
 john:
-  name: John Doe
-  email: john@example.com
+  name: "John Doe"
+  email: "john@example.com"
   image: https://github.com/images/john.jpg
-  provider: github
-  uid: "92839283"
+  provider: "github"
+  uid: "123456"
   slug: john-doe
-  github_username: johndoe
+  github_username: "johndoe"
   github_token: "fake-token"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
 jane:
-  name: Jane Smith
+  name: "Jane Smith"
   email: "jane@example.com"
   image: https://github.com/images/jane.jpg
-  provider: github
-  uid: '789012'
+  provider: "github"
+  uid: "789012"
   slug: jane-smith
-  github_username: jane_smith
+  github_username: "jane_smith"
   github_token: "fake-token"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>

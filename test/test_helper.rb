@@ -28,6 +28,7 @@ require "mocha/minitest"
 require "minitest/mock"
 require "database_cleaner/active_record"
 require "phlex/testing/view_helper"
+require "support/github_token_helper"
 
 ActiveRecord::Encryption.configure(
   primary_key: "test" * 4,
@@ -69,6 +70,7 @@ module ActiveSupport
 
     set_fixture_class noticed_notifications: AppStatusChangeNotifier::Notification
     set_fixture_class noticed_events: AppStatusChangeNotifier
+    include GithubTokenHelper
   end
 end
 

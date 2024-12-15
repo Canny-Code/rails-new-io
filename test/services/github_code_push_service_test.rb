@@ -159,7 +159,7 @@ class GithubCodePushServiceTest < ActiveSupport::TestCase
   test "push_code raises GitError when git operations fail" do
     @generated_app = generated_apps(:saas_starter)
     @user = @generated_app.user
-    @user.define_singleton_method(:github_token) { "fake-token" }
+    stub_github_token(@user)
 
     # Create directory structure but don't init git
     app_dir = File.join(@temp_dir, @generated_app.name)
