@@ -186,4 +186,29 @@ class RecipeTest < ActiveSupport::TestCase
 
     assert_equal [ 1, 2 ], @recipe.recipe_ingredients.order(:position).pluck(:position)
   end
+
+  test "find_or_create_by_cli_flags! finds existing recipe" do
+    existing = recipes(:api_recipe)
+    recipe = Recipe.find_or_create_by_cli_flags!(existing.cli_flags, @user)
+
+    assert_equal existing, recipe
+  end
+
+  test "find_or_create_by_cli_flags! creates new recipe when none exists" do
+    cli_flags = "--api --minimal"
+
+    Recipe.any_instance.stubs(:commit_changes).returns(true)
+    Recipe.any_instance.stubs(:initial_git_commit).returns(true)
+    GitRepo.any_instance.stubs(:commit_changes).returns(true)
+    GitRepo.any_instance.stubs(:write_model).returns(true)
+
+    assert_difference "Recipe.count", 1 do
+      recipe = Recipe.find_or_create_by_cli_flags!(cli_flags, @user)
+
+      assert_equal cli_flags, recipe.cli_flags
+      assert_equal "Rails App with #{cli_flags}", recipe.name
+      assert_equal "published", recipe.status
+      assert_equal @user, recipe.created_by
+    end
+  end
 end

@@ -73,19 +73,16 @@ class Recipe < ApplicationRecord
   def self.find_or_create_by_cli_flags!(cli_flags, user)
     transaction do
       recipe = where(cli_flags: cli_flags, status: "published").first
+      return recipe if recipe
 
-      unless recipe
-        recipe = create!(
-          name: "Rails App with #{cli_flags}",
-          cli_flags: cli_flags,
-          status: "published",
-          created_by: user,
-          ruby_version: RailsNewConfig.ruby_version_for_new_apps,
-          rails_version: RailsNewConfig.rails_version_for_new_apps
-        )
-      end
-
-      recipe
+      create!(
+        name: "Rails App with #{cli_flags}",
+        cli_flags: cli_flags,
+        status: "published",
+        created_by: user,
+        ruby_version: RailsNewConfig.ruby_version_for_new_apps,
+        rails_version: RailsNewConfig.rails_version_for_new_apps
+      )
     end
   end
 
