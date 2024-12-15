@@ -28,10 +28,8 @@ class GithubRepositoryNameValidator
   def available?
     client = Octokit::Client.new
     begin
-      client.repository("#{owner}/#{name}")
-      false # Repository exists
-    rescue Octokit::NotFound
-      true # Repository is available
+      exists = client.repository?("#{owner}/#{name}")
+      !exists # Return true if repo doesn't exist
     rescue Octokit::Error => e
       Rails.logger.error("GitHub API error: #{e.message}")
       raise e

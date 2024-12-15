@@ -7,7 +7,7 @@ class GithubRepositoryNameValidatorTest < ActiveSupport::TestCase
 
   def test_available_repository_name
     client = Minitest::Mock.new
-    client.expect(:repository, nil) { raise Octokit::NotFound }
+    client.expect(:repository?, false, [ "#{@owner}/valid-repo-name" ])
 
     Octokit::Client.stub(:new, client) do
       validator = GithubRepositoryNameValidator.new("valid-repo-name", @owner)
@@ -42,7 +42,7 @@ class GithubRepositoryNameValidatorTest < ActiveSupport::TestCase
 
   def test_invalid_when_repository_exists
     client = Minitest::Mock.new
-    client.expect(:repository, true, [ "#{@owner}/existing-repo" ])
+    client.expect(:repository?, true, [ "#{@owner}/existing-repo" ])
 
     Octokit::Client.stub(:new, client) do
       validator = GithubRepositoryNameValidator.new("existing-repo", @owner)

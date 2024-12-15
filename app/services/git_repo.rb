@@ -10,6 +10,7 @@ class GitRepo
 
   def commit_changes(message:, author:)
     if File.exist?(repo_path)
+      raise GitSyncError, "Remote repository does not exist" unless remote_repo_exists?
       git.fetch
       git.reset_hard("origin/main")
     else
