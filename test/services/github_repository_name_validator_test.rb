@@ -56,4 +56,37 @@ class GithubRepositoryNameValidatorTest < ActiveSupport::TestCase
     validator = GithubRepositoryNameValidator.new(nil, @owner)
     assert_not validator.repo_exists?
   end
+
+  def test_handles_github_api_errors
+    error = Octokit::Error.new(
+      method: :get,
+      url: "https://api.github.com/repos/#{@owner}/test-repo",
+      status: 401,
+      response_headers: {},
+      body: { message: "Bad credentials" }
+    )
+
+    # Set up logger mock
+    mock_logger = mock("logger")
+    mock_logger.expects(:error).with(
+      "GitHub API error: GET https://api.github.com/repos/#{@owner}/test-repo: 401 - Bad credentials"
+    )
+    Rails.stubs(:logger).returns(mock_logger)
+
+    # Set up client mock to raise error
+    client = Minitest::Mock.new
+    client.expect(:repository?, nil) { raise error }
+
+    Octokit::Client.stub(:new, client) do
+      validator = GithubRepositoryNameValidator.new("test-repo", @owner)
+
+      error = assert_raises(Octokit::Error) do
+        validator.repo_exists?
+      end
+
+      assert_equal "GET https://api.github.com/repos/#{@owner}/test-repo: 401 - Bad credentials", error.message
+    end
+
+    assert_mock client
+  end
 end
