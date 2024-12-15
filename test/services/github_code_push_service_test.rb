@@ -3,6 +3,7 @@ require "test_helper"
 class GithubCodePushServiceTest < ActiveSupport::TestCase
   def setup
     @user = users(:john)
+    @user.stubs(:github_token).returns("fake-token")
     @recipe = recipes(:blog_recipe)
     @temp_dir = Dir.mktmpdir
 
@@ -159,7 +160,7 @@ class GithubCodePushServiceTest < ActiveSupport::TestCase
   test "push_code raises GitError when git operations fail" do
     @generated_app = generated_apps(:saas_starter)
     @user = @generated_app.user
-    stub_github_token(@user)
+    @user.stubs(:github_token).returns("fake-token")
 
     # Create directory structure but don't init git
     app_dir = File.join(@temp_dir, @generated_app.name)

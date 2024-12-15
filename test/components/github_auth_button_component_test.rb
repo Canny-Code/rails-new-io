@@ -13,12 +13,7 @@ class GithubAuthButton::ComponentTest < PhlexComponentTestCase
   end
 
   test "renders logout button when user is logged in" do
-    user = User.create!(
-      name: "Test User",
-      provider: "github",
-      uid: "123456",
-      github_username: "testuser"
-    )
+    user = users(:john)
 
     Current.stub(:user, user) do
       component = GithubAuthButton::Component.new

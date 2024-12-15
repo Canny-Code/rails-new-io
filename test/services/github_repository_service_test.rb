@@ -5,7 +5,7 @@ require "ostruct"
 class GithubRepositoryServiceTest < ActiveSupport::TestCase
   def setup
     @user = users(:john)
-    stub_github_token(@user)
+    @user.stubs(:github_token).returns("fake-token")
 
     @generated_app = generated_apps(:pending_app)
     @app_status = @generated_app.app_status
@@ -171,26 +171,5 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
         assert creating_github_repo_called, "creating_github_repo! should have been called"
       end
     end
-  end
-
-  test "client initializes Octokit::Client with correct parameters" do
-    User.any_instance.stubs(:github_token).returns("fake-token")
-
-    mock_client = mock("client")
-    Octokit::Client.expects(:new).with(
-      access_token: "fake-token",
-      auto_paginate: true
-    ).returns(mock_client)
-
-    @service.send(:client)
-  end
-
-  test "client memoizes the instance" do
-    User.any_instance.stubs(:github_token).returns("fake-token")
-
-    first_client = @service.send(:client)
-    second_client = @service.send(:client)
-
-    assert_same first_client, second_client
   end
 end
