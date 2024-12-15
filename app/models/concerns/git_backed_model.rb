@@ -26,9 +26,8 @@ module GitBackedModel
   end
 
   def repo
-    @repo ||= GitRepo.new(
+    @repo ||= DataRepository.new(
       user: commit_author,
-      repo_name: repo_name
     )
   end
 

@@ -15,7 +15,7 @@ class EmptyState::Component < ApplicationComponent
 
           div(class: "mt-6 mb-8") do
             link_to(
-              new_user_repository_path(@user),
+              page_path("basic-setup"),
               class: "inline-flex items-center rounded-md bg-[#ac3b61] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#e935a3] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ac3b61]"
             ) do
               svg(class: "-ml-0.5 mr-1.5 size-5", viewbox: "0 0 20 20", fill: "currentColor", aria_hidden: "true", data_slot: "icon") do |s|

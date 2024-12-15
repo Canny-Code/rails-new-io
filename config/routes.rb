@@ -22,7 +22,7 @@ Rails.application.routes.draw do
 
   resources :notifications, only: [ :index, :update ]
 
-  resources :generated_apps, only: [ :show ] do
+  resources :generated_apps, only: [ :show, :create ] do
     resources :generation_attempts, only: [ :create ]
     resources :log_entries, only: [ :index ]
   end
@@ -40,5 +40,5 @@ Rails.application.routes.draw do
   root to: "static#home"
 
   # named routes
-  get "/repositories/check_name", to: "repositories#check_name", as: :check_repository_name
+  get "/github/check_name", to: "github#check_name", as: :check_github_name
 end

@@ -5,19 +5,19 @@ class GithubRepositoryNameValidatorTest < ActiveSupport::TestCase
     @owner = "test-owner"
   end
 
-  def test_valid_repository_name
+  def test_available_repository_name
     client = Minitest::Mock.new
     client.expect(:repository, nil) { raise Octokit::NotFound }
 
     Octokit::Client.stub(:new, client) do
       validator = GithubRepositoryNameValidator.new("valid-repo-name", @owner)
-      assert validator.valid?
+      assert_not validator.repo_exists?
     end
   end
 
   def test_invalid_ending_with_hyphen
     validator = GithubRepositoryNameValidator.new("invalid-", @owner)
-    assert_not validator.valid?
+    assert validator.repo_exists?
   end
 
   def test_invalid_starting_with_hyphen

@@ -30,7 +30,7 @@ class AppGenerationJob < ApplicationJob
 
   def generate_rails_app
     @generated_app.generate!
-    command = build_rails_command
+    command = "rails new #{@generated_app.name} #{@generated_app.recipe.cli_flags}"
     CommandExecutionService.new(@generated_app, command).execute
   end
 
@@ -48,9 +48,5 @@ class AppGenerationJob < ApplicationJob
 
   def complete_generation
     @generated_app.mark_as_completed!
-  end
-
-  def build_rails_command
-    "rails new #{@generated_app.name} --skip-action-mailbox --skip-jbuilder --asset-pipeline=propshaft --javascript=esbuild --css=tailwind --skip-spring"
   end
 end

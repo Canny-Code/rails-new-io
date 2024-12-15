@@ -69,6 +69,26 @@ class Recipe < ApplicationRecord
     end
   end
 
+  # Class method to find or create a recipe with given CLI flags
+  def self.find_or_create_by_cli_flags!(cli_flags, user)
+    transaction do
+      recipe = where(cli_flags: cli_flags, status: "published").first
+
+      unless recipe
+        recipe = create!(
+          name: "Rails App with #{cli_flags}",
+          cli_flags: cli_flags,
+          status: "published",
+          created_by: user,
+          ruby_version: RailsNewConfig.ruby_version_for_new_apps,
+          rails_version: RailsNewConfig.rails_version_for_new_apps
+        )
+      end
+
+      recipe
+    end
+  end
+
   private
 
   def ingredient_compatible?(new_ingredient)

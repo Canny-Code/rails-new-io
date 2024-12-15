@@ -1,32 +1,47 @@
-<div class="relative overflow-hidden">
-  <!-- TODO check if we need this -->
-  <div class="hidden sm:block sm:absolute sm:inset-y-0 sm:h-full sm:w-full pointer-events-none">
-    <div class="relative h-full max-w-screen-xl mx-auto"></div>
-  </div>
-  <div id="app-name-input" class="flex justify-center items-center bg-deep-azure-zeta pt-10 pb-10">
-    <div class="mr-10 md:mr-0">
-      <label for="app-name">
-        <span class="px-5 my-3 text-gray-500">Enter the name of your awesome app!</span>
-      </label>
-      <div data-controller="text-field-change" data-text-field-change-generated-output-outlet="#app-name-output">
-        <input id="app-name"
-               data-text-field-change-target="input"
-               name="app-name"
-               data-action="keyup->text-field-change#update"
-        data-default-value="my_app"
-        autocomplete="off"
-        placeholder="my_app"
-        class="appearance-none w-full px-5 py-3 border-2 border-gray-300 text-base leading-6 mx-5 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-lg">
-      </input>
+<div data-controller="github-name-validator"
+     data-github-name-validator-check-url-value="<%= check_github_name_path %>"
+     data-github-name-validator-debounce-value="500">
+  <div class="relative overflow-hidden">
+    <!-- TODO check if we need this -->
+    <div class="hidden sm:block sm:absolute sm:inset-y-0 sm:h-full sm:w-full pointer-events-none">
+      <div class="relative h-full max-w-screen-xl mx-auto"></div>
+    </div>
+    <div id="app-name-input" class="flex justify-center items-center bg-deep-azure-zeta pt-10 pb-10">
+      <div class="mr-10 md:mr-0">
+        <label for="app-name">
+          <span class="px-5 my-3 text-gray-500">Enter the name of your awesome app!</span>
+        </label>
+        <div data-controller="app-name-preview"
+             data-app-name-preview-generated-output-outlet="#app-name-output">
+          <input id="app-name"
+                 data-app-name-preview-target="input"
+                 data-github-name-validator-target="input"
+                 name="app-name"
+                 data-action="input->app-name-preview#update"
+                 autocomplete="off"
+                 placeholder="Enter app name"
+                 class="appearance-none w-full px-5 py-3 border-2 border-gray-300 text-base leading-6 mx-5 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-lg">
+        </input>
+        <div class="text-sm mx-5">
+          <div data-github-name-validator-target="message" class="hidden"></div>
+          <div data-github-name-validator-target="spinner" class="hidden flex justify-center">
+            <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
-</div>
-<div id="rails-new-command-generator-holder" data-controller="clipboard" class="flex-col bg-deep-azure-zeta pt-3 z-50">
+<div id="rails-new-command-generator-holder"
+       data-controller="clipboard"
+       class="flex-col bg-deep-azure-zeta pt-3 z-50">
   <div id="rails-new-output-container"
-  class="text-gray-200 max-w-6xl mt-3 sm:mt-3 md:mt-3 lg:mt-4 xl:mt-4 h-auto sm:h-auto md:h-20 lg:h-20 xl:h-auto mb-6 mx-auto flex items-center">
+    class="text-gray-200 max-w-6xl mt-3 sm:mt-3 md:mt-3 lg:mt-4 xl:mt-4 h-auto sm:h-auto md:h-20 lg:h-20 xl:h-auto mb-6 mx-auto flex items-center">
     <p id="rails-new-output-text" data-target="clipboard.source"
-    class="font-mono text-left px-5 sm:px-5 md:px-8 lg:px-10 xl:px-12 text-xs md:text-sm lg:text-sm xl:text-sm break-normal">
+      class="font-mono text-left px-5 sm:px-5 md:px-8 lg:px-10 xl:px-12 text-xs md:text-sm lg:text-sm xl:text-sm break-normal">
       <code>rails new </code>
       <code data-controller="generated-output" id="app-name-output">my_app</code>
       <code id="api-flag"></code>
@@ -36,25 +51,43 @@
     </p>
   </div>
   <div
-  class="sm:flex-wrap md:flex items-center justify-center divide-y sm:divide-y-2 md:divide-y-0 divide-gray-400 bg-deep-azure-zeta sm:pb-0 md:pb-8">
-    <a id="copy-to-clipboard"
-     data-action="click->clipboard#copy"
-      class="block bg-ruby md:rounded-lg ml-0 md:mr-5 px-6 text-gray-50 shadow-2xl whitespace-no-wrap py-3">📋️ Copy to Clipboard</a>
-    <div id="copied-to-clipboard-notice"
-       class="hidden bg-apple md:rounded-lg ml-0 md:mr-5 px-6 text-gray-100 shadow-2xl whitespace-no-wrap py-3">
-      📋️ Copied to Clipboard!
+    class="bg-deep-azure-zeta sm:pb-0 md:pb-8">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-center gap-4">
+      <a id="copy-to-clipboard"
+           data-action="click->clipboard#copy"
+        class="flex-none inline-flex h-12 items-center bg-ruby rounded-lg px-6 text-gray-50 shadow-2xl">
+        📋️ Copy to Clipboard
+      </a>
+      <div id="copied-to-clipboard-notice"
+           class="hidden flex-none inline-flex h-12 items-center bg-apple rounded-lg px-6 text-gray-100 shadow-2xl">
+        📋️ Copied to Clipboard!
+      </div>
+      <%= form_tag generated_apps_path, method: :post, class: "inline",
+            data: {
+              controller: "form-values",
+              action: "generated-output:valueChanged@window->form-values#updateFromDisplay"
+            } do %>
+        <%= hidden_field_tag :app_name, nil,
+              data: {
+                form_values_target: "appName"
+              } %>
+        <%= hidden_field_tag :api_flag, nil,
+              data: { form_values_target: "apiFlag" } %>
+        <%= hidden_field_tag :database_choice, nil,
+              data: { form_values_target: "databaseChoice" } %>
+        <%= hidden_field_tag :rails_flags, nil,
+              data: { form_values_target: "railsFlags" } %>
+        <%= button_tag type: "submit",
+            id: "verify-my-setup-link",
+            data: { github_name_validator_target: "submitButton" },
+            disabled: "disabled",
+            class: "flex-none inline-flex h-12 items-center bg-deep-azure-gamma rounded-lg px-6 text-gray-100 shadow-2xl opacity-50 cursor-not-allowed" do %>
+          🏆️ Generate My App
+        <% end %>
+      <% end %>
     </div>
-    <a href="#"
-     id="verify-my-setup-link"
-     class="block bg-deep-azure-gamma
-           md:rounded-lg
-           min-w-full sm:min-w-full md:min-w-0
-           text-left sm:text-left md:text-center
-           ml-0 md:mr-5
-           px-6 text-gray-100 shadow-2xl whitespace-no-wrap py-3">
-      🏆️ Generate My App
-    </a>
   </div>
 </div>
 <%= render Pages::Groups::Component.new(group: @page.groups.first) %>
 <%= render Pages::Groups::Component.new(group: @page.groups.last) %>
+</div>

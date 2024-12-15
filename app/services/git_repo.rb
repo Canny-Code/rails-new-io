@@ -1,5 +1,4 @@
 class GitRepo
-  REPO_NAME = "rails-new-io-data"
   class Error < StandardError; end
   class GitSyncError < Error; end
 
@@ -7,153 +6,88 @@ class GitRepo
     @user = user
     @repo_path = Rails.root.join("tmp", "git_repos", user.id.to_s, repo_name)
     @repo_name = repo_name
-    ensure_repo_exists
   end
 
-  def write_model(model)
-    ensure_fresh_repo
-
-    case model
-    when GeneratedApp
-      write_generated_app(model)
-    when Ingredient
-      write_ingredient(model)
-    when Recipe
-      write_recipe(model)
-    end
-
-    push_to_remote
-  end
-
-  private
-
-  def repo_name
-    if Rails.env.development?
-      "#{REPO_NAME}-dev"
-    elsif Rails.env.test?
-      "#{REPO_NAME}-test"
-    elsif Rails.env.production?
-      REPO_NAME
+  def commit_changes(message:, author:)
+    if File.exist?(repo_path)
+      git.fetch
+      git.reset_hard("origin/main")
     else
-      raise ArgumentError, "Unknown Rails environment: #{Rails.env}"
+      if remote_repo_exists?
+        Git.clone("https://#{user.github_token}@github.com/#{user.github_username}/#{repo_name}.git",
+                  repo_name,
+                  path: File.dirname(repo_path))
+      else
+        create_local_repo
+      end
     end
-  end
 
-  def ensure_repo_exists
-    return if remote_repo_exists?
+    ensure_committable_state
 
-    create_local_repo
-    create_github_repo
+    git.config("user.name", author.name || author.github_username)
+    git.config("user.email", author.email || "#{author.github_username}@users.noreply.github.com")
+
+    git.add(all: true)
+
+    git.commit(message)
+
+    ensure_github_repo_exists
+
     setup_remote
-    create_initial_structure
+
+    current_branch = git.branch.name
+
+    git.push("origin", current_branch)
   end
 
-  def remote_repo_exists?
-    github_client.repository?("#{@user.github_username}/#{repo_name}")
-  rescue Octokit::Error => e
-    Rails.logger.error("Failed to check GitHub repository: #{e.message}")
-    false
+  protected
+
+  attr_reader :user, :repo_path, :repo_name
+
+  def git
+    @git ||= begin
+      if File.exist?(File.join(@repo_path, ".git"))
+        Git.open(@repo_path)
+      else
+        create_local_repo
+        @git
+      end
+    end
   end
 
   def create_local_repo
-    # Ensure parent directory exists first
     FileUtils.mkdir_p(File.dirname(@repo_path))
-
-    # Remove existing repo if it exists
     FileUtils.rm_rf(@repo_path) if File.exist?(@repo_path)
-
-    # Create fresh directory and initialize git
     FileUtils.mkdir_p(@repo_path)
-    git = Git.init(@repo_path)
 
-    # Configure git to avoid template issues
-    git.config("init.templateDir", "")
+    @git = Git.init(@repo_path)
 
-    @git = git
+    @git.config("init.templateDir", "")
+    @git.config("init.defaultBranch", "main")
+  end
+
+  def remote_repo_exists?
+    github_client.repository?("#{user.github_username}/#{repo_name}")
+  rescue Octokit::Error => e
+    Rails.logger.error("Failed to check GitHub repository: #{e.message}")
+    false
   end
 
   def create_github_repo
     github_client.create_repository(
       repo_name,
       private: false,
-      description: "Data repository for rails-new.io"
+      description: repository_description
     )
   end
 
-  def create_initial_structure
-    %w[generated_apps ingredients recipes].each do |dir|
-      FileUtils.mkdir_p(File.join(@repo_path, dir))
-    end
-
-    File.write(File.join(@repo_path, "README.md"), readme_content)
-
-    git.add(all: true)
-    git.commit("Initial commit")
-  end
-
-  def write_generated_app(app)
-    path = File.join(@repo_path, "generated_apps", app.id.to_s)
-    FileUtils.mkdir_p(path)
-
-    write_json(path, "current_state.json", {
-      name: app.name,
-      recipe_id: app.recipe_id,
-      configuration: app.configuration_options
-    })
-
-    write_json(path, "history.json", app.app_changes.map(&:to_git_format))
-  end
-
-  def write_ingredient(ingredient)
-    path = File.join(@repo_path, "ingredients", ingredient.name.parameterize)
-    FileUtils.mkdir_p(path)
-
-    File.write(File.join(path, "template.rb"), ingredient.template_content)
-    write_json(path, "metadata.json", {
-      name: ingredient.name,
-      description: ingredient.description,
-      conflicts_with: ingredient.conflicts_with,
-      requires: ingredient.requires,
-      configures_with: ingredient.configures_with
-    })
-  end
-
-  def write_recipe(recipe)
-    path = File.join(@repo_path, "recipes", recipe.id.to_s)
-    FileUtils.mkdir_p(path)
-
-    write_json(path, "manifest.json", {
-      name: recipe.name,
-      cli_flags: recipe.cli_flags,
-      ruby_version: recipe.ruby_version,
-      rails_version: recipe.rails_version
-    })
-
-    write_json(path, "ingredients.json",
-      recipe.recipe_ingredients.order(:position).map(&:to_git_format)
-    )
-  end
-
-  def ensure_fresh_repo
-    git.fetch
-    git.reset_hard("origin/main")
-    git.pull
-  end
-
-  def push_to_remote
-    git.push("origin", "main")
-  rescue Git::Error => e
-    # Handle push conflicts
-    Rails.logger.error "Git push failed: #{e.message}"
-    raise GitSyncError, "Failed to sync changes to GitHub"
-  end
-
-  def git
-    @git ||= Git.open(@repo_path)
+  def setup_remote
+    remote_url = "https://#{user.github_token}@github.com/#{user.github_username}/#{repo_name}.git"
+    git.add_remote("origin", remote_url)
   end
 
   def github_client
-    @github_client ||= Octokit::Client.new(access_token: @user.github_token)
+    @_github_client ||= Octokit::Client.new(access_token: user.github_token)
   end
 
   def write_json(path, filename, data)
@@ -163,8 +97,27 @@ class GitRepo
     )
   end
 
-  def setup_remote
-    remote_url = "https://#{@user.github_token}@github.com/#{@user.github_username}/#{repo_name}.git"
-    git.add_remote("origin", remote_url)
+  def ensure_committable_state
+    puts "\n=== Ensuring committable state ==="
+    puts "Before writing: #{Dir.glob("#{repo_path}/*").inspect}"
+    File.write(File.join(repo_path, "README.md"), default_readme_content)
+    puts "After writing: #{Dir.glob("#{repo_path}/*").inspect}"
+    puts "README.md content:"
+    puts File.read(File.join(repo_path, "README.md"))
+  end
+
+  def default_readme_content
+    "# Repository\nCreated via railsnew.io"
+  end
+
+  private
+
+  def repository_description
+    "Repository created via railsnew.io"
+  end
+
+  def ensure_github_repo_exists
+    return if remote_repo_exists?
+    create_github_repo
   end
 end
