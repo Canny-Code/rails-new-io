@@ -3,7 +3,6 @@ require "test_helper"
 class GitRepoCloneTest < ActiveSupport::TestCase
   setup do
     @user = users(:jane)
-    stub_github_token(@user)
     @user.stubs(:name).returns("Jane Smith")
     @user.stubs(:email).returns("jane@example.com")
 
@@ -28,12 +27,9 @@ class GitRepoCloneTest < ActiveSupport::TestCase
   end
 
   test "clones repository when remote exists but no local copy" do
-    puts "\n=== Test Setup ==="
     File.stubs(:exist?).with(@repo_path).returns(false)
     @mock_client.stubs(:repository?).returns(true)
-    puts "Stubbed basic checks"
 
-    puts "\n=== Setting up cloned git mock ==="
     branch_mock = mock("branch")
     branch_mock.stubs(:name).returns("main")
 
@@ -44,19 +40,14 @@ class GitRepoCloneTest < ActiveSupport::TestCase
     cloned_git.expects(:add).with(all: true)
     cloned_git.expects(:commit).with("Test commit")
     cloned_git.expects(:push).with("origin", "main")
-    puts "Set up cloned git expectations"
 
-    puts "\n=== Setting up Git operations ==="
     Git.expects(:clone).with(
       "https://fake-token@github.com/#{@user.github_username}/#{@repo_name}.git",
       @repo_name,
       path: File.dirname(@repo_path)
     )
     Git.expects(:open).with(@repo_path).returns(cloned_git)
-    puts "Set up Git clone and open expectations"
 
-    puts "\n=== Executing Test ==="
     @repo.commit_changes(message: "Test commit", author: @user)
-    puts "Test execution completed"
   end
 end

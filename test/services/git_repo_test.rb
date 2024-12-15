@@ -3,7 +3,6 @@ require "test_helper"
 class GitRepoTest < ActiveSupport::TestCase
   setup do
     @user = users(:jane)
-    stub_github_token(@user)
     @user.stubs(:name).returns("Jane Smith")
     @user.stubs(:email).returns("jane@example.com")
 
@@ -48,12 +47,9 @@ class GitRepoTest < ActiveSupport::TestCase
   end
 
   test "commits changes to existing local repository" do
-    puts "\n=== Test Setup ==="
     File.stubs(:exist?).with(@repo_path).returns(true)
     File.stubs(:exist?).with(File.join(@repo_path, ".git")).returns(true)
-    puts "Stubbed File.exist? for repo path and .git directory"
 
-    puts "\n=== Git Expectations ==="
     @git.expects(:fetch)
     @git.expects(:reset_hard).with("origin/main")
     @git.expects(:config).with("user.name", "Jane Smith")
@@ -61,35 +57,23 @@ class GitRepoTest < ActiveSupport::TestCase
     @git.expects(:add).with(all: true)
     @git.expects(:commit).with("Test commit")
     @git.expects(:push).with("origin", "main")
-    puts "Set up Git mock expectations"
 
-    puts "\n=== GitHub API Expectations ==="
-    puts "User github_username: #{@user.github_username.inspect}"
-    puts "Repo name: #{@repo_name.inspect}"
     @mock_client.expects(:repository?).with("#{@user.github_username}/#{@repo_name}").returns(true)
-    puts "Set up GitHub API mock expectations"
 
-    puts "\n=== Executing Test ==="
     @repo.commit_changes(message: "Test commit", author: @user)
-    puts "Test execution completed"
   end
 
   test "creates new local repository when no repository exists" do
-    puts "\n=== Test Setup ==="
     File.stubs(:exist?).with(@repo_path).returns(false)
     File.stubs(:exist?).with(File.join(@repo_path, ".git")).returns(false)
-    puts "Stubbed File.exist? checks"
 
-    puts "\n=== GitHub API Expectations ==="
     @mock_client.expects(:repository?).with("#{@user.github_username}/#{@repo_name}").returns(false).twice
     @mock_client.expects(:create_repository).with(
       @repo_name,
       private: false,
       description: "Repository created via railsnew.io"
     ).returns(true)
-    puts "Set up GitHub API expectations"
 
-    puts "\n=== Git Expectations ==="
     @git.expects(:config).with("init.templateDir", "")
     @git.expects(:config).with("init.defaultBranch", "main")
     @git.expects(:config).with("user.name", "Jane Smith")
@@ -98,19 +82,12 @@ class GitRepoTest < ActiveSupport::TestCase
     @git.expects(:commit).with("Test commit")
     @git.expects(:add_remote).with("origin", "https://fake-token@github.com/#{@user.github_username}/#{@repo_name}.git")
     @git.expects(:push).with("origin", "main")
-    puts "Set up Git expectations"
 
-    puts "\n=== FileUtils Expectations ==="
-    puts "Parent dir path: #{File.dirname(@repo_path)}"
-    puts "Repo path: #{@repo_path}"
     FileUtils.expects(:mkdir_p).with(File.dirname(@repo_path))
-    FileUtils.stubs(:rm_rf).with(@repo_path)  # Allow any number of calls
+    FileUtils.stubs(:rm_rf).with(@repo_path)
     FileUtils.expects(:mkdir_p).with(@repo_path)
-    puts "Set up FileUtils expectations"
 
-    puts "\n=== Executing Test ==="
     @repo.commit_changes(message: "Test commit", author: @user)
-    puts "Test execution completed"
   end
 
   test "handles GitHub API errors when checking repository existence" do
