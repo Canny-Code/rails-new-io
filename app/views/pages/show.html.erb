@@ -52,5 +52,40 @@
     </a>
   </div>
 </div>
-<%= render Pages::Groups::Component.new(group: @page.groups.first) %>
-<%= render Pages::Groups::Component.new(group: @page.groups.last) %>
+
+<div data-controller="tabs">
+  <div class="bg-deep-azure-zeta">
+    <div class="max-w-7xl mx-auto">
+      <div>
+        <div>
+          <nav class="-mb-px flex space-x-1 md:space-x-2" aria-label="Tabs">
+            <a id="main-tab"
+               data-tabs-target="tab" 
+               data-action="click->tabs#change"
+               href="#"
+               class="tab tab-active"
+            >
+              <span class='text-sm md:text-lg'>🍽️ Basic Stuff</span>
+            </a>
+            <a id="railsbytes-tab"
+               data-tabs-target="tab" 
+               data-action="click->tabs#change"
+               href="#"
+               class="tab tab-inactive"
+            >
+              <span class='text-sm md:text-lg'>🍩 RailsBytes</span>
+            </a>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="main-tab-panel" data-tabs-target="panel">
+    <%= render Pages::Groups::Component.new(group: @page.groups.first) %>
+  </div>
+  
+  <div id="railsbytes-tab-panel" data-tabs-target="panel" hidden>
+    <%= render Pages::Groups::Component.new(group: @page.groups.last) %>
+  </div>
+</div>

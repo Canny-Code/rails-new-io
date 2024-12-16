@@ -72,4 +72,28 @@
     background-color: rgba(255, 255, 255, 0.639);
     z-index: 10;
   }
+
+  .tab {
+    @apply whitespace-nowrap py-2 px-4 font-medium;
+  }
+
+  .tab-active {
+    @apply bg-white 
+           text-gray-700 
+           border-2
+           border-white 
+           rounded-t-lg 
+           border-b-0 
+           relative 
+           top-[2px];
+  }
+
+  .tab-inactive {
+    @apply text-gray-400 
+           border-b-2
+           border-transparent
+           hover:text-gray-200 
+           hover:border-b-2
+           hover:border-b-ruby;
+  }
 }
