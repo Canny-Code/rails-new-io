@@ -451,7 +451,7 @@ GEM
     sentry-rails (5.22.0)
       railties (>= 5.0)
       sentry-ruby (~> 5.22.0)
-    sentry-ruby (5.22.0)
+    sentry-ruby (5.22.1)
       bigdecimal
       concurrent-ruby (~> 1.0, >= 1.0.2)
     simplecov (0.22.0)
@@ -588,7 +588,7 @@ DEPENDENCIES
   rubocop-rails-omakase
   selenium-webdriver (~> 4.27.0)
   sentry-rails (~> 5.22.0)
-  sentry-ruby (~> 5.22.0)
+  sentry-ruby (~> 5.22.1)
   simplecov
   simplecov-tailwindcss
   solid_cable (~> 3.0.4)
