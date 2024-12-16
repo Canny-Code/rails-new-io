@@ -107,4 +107,8 @@ class DataRepository < GitRepo
   def repository_description
     "Data repository for rails-new.io"
   end
+
+  def write_json(path, filename, content)
+    File.write(File.join(path, filename), content.to_json)
+  end
 end

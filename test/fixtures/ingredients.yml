@@ -49,14 +49,14 @@ api_setup:
   category: "api"
 
 basic:
-  name: "Basic Rails Setup"
-  description: "Basic Rails application setup with common configurations"
-  template_content: |
-    # Basic Rails setup
-    gem 'bootsnap'
-    gem 'puma'
-  configures_with: {}
+  name: "Basic Rails"
+  description: "A basic Rails setup"
+  template_content: "# Basic Rails template"
   conflicts_with: []
   requires: []
+  configures_with:
+    database:
+      - postgresql
+      - mysql
   created_by: john
   category: "setup"
