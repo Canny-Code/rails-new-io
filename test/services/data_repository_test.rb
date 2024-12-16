@@ -140,6 +140,37 @@ class DataRepositoryTest < ActiveSupport::TestCase
     assert_raises(GitRepo::GitSyncError) { @repo.write_model(recipe) }
   end
 
+  def test_ensure_committable_state_creates_required_structure
+    path = @repo.send(:repo_path)
+
+    # Expect directory creation for each required directory
+    %w[generated_apps ingredients recipes].each do |dir|
+      dir_path = File.join(path, dir)
+      FileUtils.expects(:mkdir_p).with(dir_path)
+      FileUtils.expects(:touch).with(File.join(dir_path, ".keep"))
+    end
+
+    # Expect README.md creation
+    readme_path = File.join(path, "README.md")
+    File.expects(:write).with(readme_path, "# Data Repository\nThis repository contains data for rails-new.io")
+
+    @repo.send(:ensure_committable_state)
+  end
+
+  def test_ensure_fresh_repo_syncs_with_remote
+    sequence = sequence("git_sync")
+
+    @git_mock.expects(:fetch).in_sequence(sequence)
+    @git_mock.expects(:reset_hard).with("origin/main").in_sequence(sequence)
+    @git_mock.expects(:pull).in_sequence(sequence)
+
+    @repo.send(:ensure_fresh_repo)
+  end
+
+  def test_repository_description_is_specific_to_data_repo
+    assert_equal "Data repository for rails-new.io", @repo.send(:repository_description)
+  end
+
   private
 
   def stub_filesystem_operations
