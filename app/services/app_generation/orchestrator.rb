@@ -11,18 +11,18 @@ module AppGeneration
       AppGenerationJob.perform_later(@generated_app.id)
 
       true
+    rescue AppGeneration::InvalidStateError
+      raise
     rescue StandardError => e
       @logger.error("Failed to start app generation", { error: e.message })
-      @generated_app.fail!(e.message)
+      @generated_app.mark_as_failed!(e.message)
       false
     end
 
     private
 
     def validate_initial_state!
-      unless @generated_app.pending?
-        raise InvalidStateError, "App must be in pending state to start generation"
-      end
+      raise AppGeneration::InvalidStateError, "App must be in pending state to start generation" unless @generated_app.pending?
     end
   end
 end

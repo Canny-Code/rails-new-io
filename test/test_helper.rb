@@ -16,7 +16,7 @@ unless skip_coverage?
     add_group "Jobs", "app/jobs"
     add_group "Mailers", "app/mailers"
 
-    track_files "{app/models,app/controllers,app/helpers}/**/*.rb"
+    track_files "{app/models,app/controllers,app/helpers,app/jobs}/**/*.rb"
   end
 end
 
