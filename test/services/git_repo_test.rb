@@ -50,17 +50,46 @@ class GitRepoTest < ActiveSupport::TestCase
     File.stubs(:exist?).with(@repo_path).returns(true)
     File.stubs(:exist?).with(File.join(@repo_path, ".git")).returns(true)
 
-    @git.expects(:fetch)
-    @git.expects(:reset_hard).with("origin/main")
-    @git.expects(:config).with("user.name", "Jane Smith")
-    @git.expects(:config).with("user.email", "jane@example.com")
-    @git.expects(:add).with(all: true)
-    @git.expects(:commit).with("Test commit")
-    @git.expects(:push).with("origin", "main")
+    # Create a mock status object
+    status_mock = mock("status")
+    status_mock.stubs(:changed).returns({ "file1" => "modified" })
+    status_mock.stubs(:added).returns({})
+    status_mock.stubs(:deleted).returns({})
+    @git.stubs(:status).returns(status_mock)
+
+    # Mock branches collection
+    remote_branch = mock("remote_branch")
+    remote_branch.stubs(:name).returns("origin/main")
+    branches_collection = mock("branches_collection")
+    branches_collection.stubs(:remote).returns([ remote_branch ])
+    @git.stubs(:branches).returns(branches_collection)
+
+    # Mock the current branch
+    current_branch_mock = mock("current_branch")
+    current_branch_mock.stubs(:name).returns("main")
+    @git.stubs(:branch).returns(current_branch_mock)
+
+    # Track the operations performed
+    operations = []
+    @git.expects(:fetch).tap { operations << :fetch }
+    @git.expects(:reset_hard).with("origin/main").tap { operations << :reset }
+    @git.expects(:config).with("user.name", "Jane Smith").tap { operations << :config_name }
+    @git.expects(:config).with("user.email", "jane@example.com").tap { operations << :config_email }
+    @git.expects(:add).with(all: true).tap { operations << :add }
+    @git.expects(:commit).with("Test commit").tap { operations << :commit }
+    @git.expects(:push).with("origin", "main").tap { operations << :push }
 
     @mock_client.expects(:repository?).with("#{@user.github_username}/#{@repo_name}").returns(true)
 
     @repo.commit_changes(message: "Test commit", author: @user)
+
+    # Assert all operations were performed in the correct order
+    expected_operations = [ :fetch, :reset, :config_name, :config_email, :add, :commit, :push ]
+    assert_equal expected_operations, operations, "Git operations were not performed in the expected order"
+
+    # Assert repository state
+    assert File.exist?(@repo_path), "Repository directory does not exist"
+    assert File.exist?(File.join(@repo_path, ".git")), "Git directory does not exist"
   end
 
   test "creates new local repository when no repository exists" do
