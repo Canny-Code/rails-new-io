@@ -93,30 +93,74 @@ class GitRepoTest < ActiveSupport::TestCase
   end
 
   test "creates new local repository when no repository exists" do
+    git_operations = []
+
+    # Clear any existing stubs from setup
+    File.unstub(:exist?)
+
+    # Set up file existence checks
+    File.stubs(:exist?).returns(false)  # Default to false for all paths
     File.stubs(:exist?).with(@repo_path).returns(false)
     File.stubs(:exist?).with(File.join(@repo_path, ".git")).returns(false)
 
-    @mock_client.expects(:repository?).with("#{@user.github_username}/#{@repo_name}").returns(false).twice
-    @mock_client.expects(:create_repository).with(
-      @repo_name,
-      private: false,
-      description: "Repository created via railsnew.io"
-    ).returns(true)
+    # Mock git branches and status (for later use)
+    remote_branch = mock("remote_branch")
+    remote_branch.stubs(:name).returns("origin/main")
+    branches_collection = mock("branches_collection")
+    branches_collection.stubs(:remote).returns([ remote_branch ])
+    @git.stubs(:branches).returns(branches_collection)
 
-    @git.expects(:config).with("init.templateDir", "")
-    @git.expects(:config).with("init.defaultBranch", "main")
-    @git.expects(:config).with("user.name", "Jane Smith")
-    @git.expects(:config).with("user.email", "jane@example.com")
-    @git.expects(:add).with(all: true)
-    @git.expects(:commit).with("Test commit")
-    @git.expects(:add_remote).with("origin", "https://fake-token@github.com/#{@user.github_username}/#{@repo_name}.git")
-    @git.expects(:push).with("origin", "main")
+    status_mock = mock("status")
+    status_mock.stubs(:changed).returns({ "file1" => "modified" })
+    status_mock.stubs(:added).returns({})
+    status_mock.stubs(:deleted).returns({})
+    @git.stubs(:status).returns(status_mock)
 
-    FileUtils.expects(:mkdir_p).with(File.dirname(@repo_path))
-    FileUtils.stubs(:rm_rf).with(@repo_path)
-    FileUtils.expects(:mkdir_p).with(@repo_path)
+    current_branch_mock = mock("current_branch")
+    current_branch_mock.stubs(:name).returns("main")
+    @git.stubs(:branch).returns(current_branch_mock)
+
+    # Set up GitHub API expectations
+    # We expect two checks for remote_repo_exists? - both should return false initially
+    @mock_client.stubs(:repository?)
+                .with("#{@user.github_username}/#{@repo_name}")
+                .returns(false)
+                .then.returns(false)
+                .then.returns(true)  # After creation
+
+    @mock_client.expects(:create_repository)
+                .with(@repo_name, private: false, description: "Repository created via railsnew.io")
+                .returns(true)
+
+    # Track git operations
+    @git.expects(:config).with("init.templateDir", "").tap { |_| git_operations << "config_template" }
+    @git.expects(:config).with("init.defaultBranch", "main").tap { |_| git_operations << "config_branch" }
+    @git.expects(:config).with("user.name", "Jane Smith").tap { |_| git_operations << "config_name" }
+    @git.expects(:config).with("user.email", "jane@example.com").tap { |_| git_operations << "config_email" }
+    @git.expects(:add).with(all: true).tap { |_| git_operations << "add" }
+    @git.expects(:commit).with("Test commit").tap { |_| git_operations << "commit" }
+    @git.expects(:add_remote).with(
+      "origin",
+      "https://fake-token@github.com/#{@user.github_username}/#{@repo_name}.git"
+    ).tap { |_| git_operations << "add_remote" }
+    @git.expects(:push).with("origin", "main").tap { |_| git_operations << "push" }
+
+
 
     @repo.commit_changes(message: "Test commit", author: @user)
+
+    # Assert operations happened in correct order
+    expected_operations = [
+      "config_template",
+      "config_branch",
+      "config_name",
+      "config_email",
+      "add",
+      "commit",
+      "add_remote",
+      "push"
+    ]
+    assert_equal expected_operations, git_operations, "Git operations were not performed in the expected order"
   end
 
   test "handles GitHub API errors when checking repository existence" do
@@ -145,17 +189,42 @@ class GitRepoTest < ActiveSupport::TestCase
     File.stubs(:exist?).with(@repo_path).returns(true)
     File.stubs(:exist?).with(File.join(@repo_path, ".git")).returns(true)
 
-    @git.expects(:fetch)
-    @git.expects(:reset_hard).with("origin/main")
-    @git.expects(:config).with("user.name", @user.github_username)
-    @git.expects(:config).with("user.email", "#{@user.github_username}@users.noreply.github.com")
-    @git.expects(:add).with(all: true)
-    @git.expects(:commit).with("Test commit")
-    @git.expects(:push).with("origin", "main")
+    # Mock git branches and status
+    remote_branch = mock("remote_branch")
+    remote_branch.stubs(:name).returns("origin/main")
+    branches_collection = mock("branches_collection")
+    branches_collection.stubs(:remote).returns([ remote_branch ])
+    @git.stubs(:branches).returns(branches_collection)
+
+    # Mock git status
+    status_mock = mock("status")
+    status_mock.stubs(:changed).returns({ "file1" => "modified" })
+    status_mock.stubs(:added).returns({})
+    status_mock.stubs(:deleted).returns({})
+    @git.stubs(:status).returns(status_mock)
+
+    # Mock current branch
+    current_branch_mock = mock("current_branch")
+    current_branch_mock.stubs(:name).returns("main")
+    @git.stubs(:branch).returns(current_branch_mock)
+
+    # Track operations
+    operations = []
+    @git.expects(:fetch).tap { operations << :fetch }
+    @git.expects(:reset_hard).with("origin/main").tap { operations << :reset }
+    @git.expects(:config).with("user.name", @user.github_username).tap { operations << :config_name }
+    @git.expects(:config).with("user.email", "#{@user.github_username}@users.noreply.github.com").tap { operations << :config_email }
+    @git.expects(:add).with(all: true).tap { operations << :add }
+    @git.expects(:commit).with("Test commit").tap { operations << :commit }
+    @git.expects(:push).with("origin", "main").tap { operations << :push }
 
     @mock_client.expects(:repository?).returns(true)
 
     @repo.commit_changes(message: "Test commit", author: @user)
+
+    # Assert operations happened in correct order
+    expected_operations = [ :fetch, :reset, :config_name, :config_email, :add, :commit, :push ]
+    assert_equal expected_operations, operations, "Git operations were not performed in the expected order"
   end
 
   test "ensures committable state by creating README.md" do
