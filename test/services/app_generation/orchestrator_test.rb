@@ -17,7 +17,7 @@ module AppGeneration
 
       job = SolidQueue::Job.last
       assert_equal "AppGenerationJob", job.class_name
-      assert_equal [@generated_app.id], job.arguments["arguments"]
+      assert_equal [ @generated_app.id ], job.arguments["arguments"]
     end
 
     test "validates app must be in pending state" do

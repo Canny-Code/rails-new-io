@@ -12,7 +12,9 @@ class GitRepo
     if File.exist?(repo_path)
       raise GitSyncError, "Remote repository does not exist" unless remote_repo_exists?
       git.fetch
-      git.reset_hard("origin/main")
+      if remote_branch_exists?("main")
+        git.reset_hard("origin/main")
+      end
     else
       if remote_repo_exists?
         Git.clone(
@@ -34,10 +36,13 @@ class GitRepo
     git.config("user.email", author.email || "#{author.github_username}@users.noreply.github.com")
 
     git.add(all: true)
-    git.commit(message)
 
-    current_branch = git.branch.name
-    git.push("origin", current_branch)
+    # Only commit if there are changes
+    if git.status.changed.any? || git.status.added.any? || git.status.deleted.any?
+      git.commit(message)
+      current_branch = git.branch.name
+      git.push("origin", current_branch)
+    end
   end
 
   protected
@@ -107,5 +112,9 @@ class GitRepo
   def ensure_github_repo_exists
     return if remote_repo_exists?
     create_github_repo
+  end
+
+  def remote_branch_exists?(branch_name)
+    git.branches.remote.map(&:name).include?("origin/#{branch_name}")
   end
 end

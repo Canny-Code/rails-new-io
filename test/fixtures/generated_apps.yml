@@ -78,7 +78,7 @@ saas_starter:
     database: "postgresql"
     css: "tailwind"
     testing: "minitest"
-  source_path: <%= Rails.root.join("tmp", "test_apps", "saas_starter") %>
+  source_path: <%= Rails.root.join("tmp", "test_saas_starter") %>
   github_repo_url: "https://github.com/johndoe/saas-starter"
   github_repo_name: "saas-starter"
   is_public: false

@@ -34,10 +34,10 @@ class DataRepository < GitRepo
     push_to_remote
   end
 
-  private
+  protected
 
   def ensure_committable_state
-    %w[generated_apps ingredients recipes].each do |dir|
+    %w[ingredients recipes].each do |dir|
       FileUtils.mkdir_p(File.join(repo_path, dir))
       FileUtils.touch(File.join(repo_path, dir, ".keep"))
     end
@@ -45,17 +45,10 @@ class DataRepository < GitRepo
   end
 
   def write_generated_app(app)
-    path = File.join(repo_path, "generated_apps", app.id.to_s)
-    FileUtils.mkdir_p(path)
-
-    write_json(path, "current_state.json", {
-      name: app.name,
-      recipe_id: app.recipe_id,
-      configuration: app.configuration_options
-    })
-
-    write_json(path, "history.json", app.app_changes.map(&:to_git_format))
+    raise NotImplementedError, "Generated apps are stored in their own repositories"
   end
+
+  private
 
   def write_ingredient(ingredient)
     path = File.join(repo_path, "ingredients", ingredient.name.parameterize)
@@ -89,8 +82,22 @@ class DataRepository < GitRepo
 
   def ensure_fresh_repo
     git.fetch
-    git.reset_hard("origin/main")
-    git.pull
+    git.reset_hard("origin/main") if remote_branch_exists?("main")
+    git.pull if remote_branch_exists?("main")
+
+    # Check if directories exist in repo
+    dirs_exist = %w[ingredients recipes].all? do |dir|
+      File.directory?(File.join(repo_path, dir))
+    end
+
+    unless dirs_exist
+      ensure_committable_state
+      git.add(all: true)
+      if git.status.changed.any? || git.status.added.any?
+        git.commit("Initialize repository structure")
+        git.push("origin", "main")
+      end
+    end
   end
 
   def push_to_remote
