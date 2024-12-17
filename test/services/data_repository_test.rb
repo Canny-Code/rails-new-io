@@ -48,28 +48,6 @@ class DataRepositoryTest < ActiveSupport::TestCase
   end
 
   # Instance method tests
-  def test_writes_generated_app_correctly
-    app = generated_apps(:blog_app)
-    expected_path = File.join(@repo.send(:repo_path), "generated_apps", app.id.to_s, "current_state.json")
-    expected_content = {
-      name: app.name,
-      recipe_id: app.recipe_id,
-      configuration: app.configuration_options
-    }.to_json
-
-    File.expects(:write).with(expected_path, expected_content)
-
-    # Also expect the history.json write
-    history_path = File.join(@repo.send(:repo_path), "generated_apps", app.id.to_s, "history.json")
-    File.expects(:write).with(history_path, app.app_changes.map(&:to_git_format).to_json)
-
-    FileUtils.stubs(:mkdir_p)
-    @repo.stubs(:ensure_fresh_repo)
-    @repo.stubs(:push_to_remote)
-
-    @repo.write_model(app)
-  end
-
   def test_writes_ingredient_correctly
     ingredient = ingredients(:rails_authentication)
     base_path = File.join(@repo.send(:repo_path), "ingredients", ingredient.name.parameterize)
@@ -122,6 +100,43 @@ class DataRepositoryTest < ActiveSupport::TestCase
     @repo.write_model(recipe)
   end
 
+  def test_raises_error_when_trying_to_write_generated_app
+    app = generated_apps(:blog_app)
+
+    # Mock git branches and status
+    remote_branch = mock("remote_branch")
+    remote_branch.stubs(:name).returns("origin/main")
+    branches_collection = mock("branches_collection")
+    branches_collection.stubs(:remote).returns([ remote_branch ])
+    @git_mock.stubs(:branches).returns(branches_collection)
+
+    # Mock git status
+    status_mock = mock("status")
+    status_mock.stubs(:changed).returns({})
+    status_mock.stubs(:added).returns({})
+    status_mock.stubs(:deleted).returns({})
+    @git_mock.stubs(:status).returns(status_mock)
+
+    # Mock current branch
+    current_branch_mock = mock("current_branch")
+    current_branch_mock.stubs(:name).returns("main")
+    @git_mock.stubs(:branch).returns(current_branch_mock)
+
+    # Mock git operations that happen in ensure_fresh_repo
+    @git_mock.stubs(:add).with(all: true)
+    @git_mock.stubs(:commit).with("Initialize repository structure")
+
+    # Stub filesystem operations
+    FileUtils.stubs(:mkdir_p)
+    FileUtils.stubs(:touch)
+    File.stubs(:directory?).returns(false)  # This triggers ensure_committable_state
+    File.stubs(:write)
+
+    assert_raises(NotImplementedError, "Generated apps are stored in their own repositories") do
+      @repo.write_model(app)
+    end
+  end
+
   def test_handles_git_push_error
     recipe = recipes(:blog_recipe)
     base_path = File.join(@repo.send(:repo_path), "recipes", recipe.id.to_s)
@@ -144,7 +159,7 @@ class DataRepositoryTest < ActiveSupport::TestCase
     path = @repo.send(:repo_path)
 
     # Expect directory creation for each required directory
-    %w[generated_apps ingredients recipes].each do |dir|
+    %w[ingredients recipes].each do |dir|
       dir_path = File.join(path, dir)
       FileUtils.expects(:mkdir_p).with(dir_path)
       FileUtils.expects(:touch).with(File.join(dir_path, ".keep"))
@@ -160,15 +175,106 @@ class DataRepositoryTest < ActiveSupport::TestCase
   def test_ensure_fresh_repo_syncs_with_remote
     sequence = sequence("git_sync")
 
+    # Mock git branches and status
+    remote_branch = mock("remote_branch")
+    remote_branch.stubs(:name).returns("origin/main")
+    branches_collection = mock("branches_collection")
+    branches_collection.stubs(:remote).returns([ remote_branch ])
+    @git_mock.stubs(:branches).returns(branches_collection)
+
+    # Mock git status
+    status_mock = mock("status")
+    status_mock.stubs(:changed).returns({})
+    status_mock.stubs(:added).returns({})
+    status_mock.stubs(:deleted).returns({})
+    @git_mock.stubs(:status).returns(status_mock)
+
+    # Mock current branch
+    current_branch_mock = mock("current_branch")
+    current_branch_mock.stubs(:name).returns("main")
+    @git_mock.stubs(:branch).returns(current_branch_mock)
+
+    # Set up sequence of operations
     @git_mock.expects(:fetch).in_sequence(sequence)
     @git_mock.expects(:reset_hard).with("origin/main").in_sequence(sequence)
     @git_mock.expects(:pull).in_sequence(sequence)
+
+    # Mock directory check to avoid initialization
+    File.stubs(:directory?).returns(true)
 
     @repo.send(:ensure_fresh_repo)
   end
 
   def test_repository_description_is_specific_to_data_repo
     assert_equal "Data repository for rails-new.io", @repo.send(:repository_description)
+  end
+
+  def test_ensure_fresh_repo_commits_and_pushes_when_changes_exist
+    # Mock git branches and status
+    remote_branch = mock("remote_branch")
+    remote_branch.stubs(:name).returns("origin/main")
+    branches_collection = mock("branches_collection")
+    branches_collection.stubs(:remote).returns([ remote_branch ])
+    @git_mock.stubs(:branches).returns(branches_collection)
+
+    # Mock git status to indicate changes
+    status_mock = mock("status")
+    status_mock.stubs(:changed).returns({ "file1" => "modified" })  # Has changes
+    status_mock.stubs(:added).returns({})
+    status_mock.stubs(:deleted).returns({})
+    @git_mock.stubs(:status).returns(status_mock)
+
+    # Mock current branch
+    current_branch_mock = mock("current_branch")
+    current_branch_mock.stubs(:name).returns("main")
+    @git_mock.stubs(:branch).returns(current_branch_mock)
+
+    # Mock filesystem operations
+    FileUtils.stubs(:mkdir_p).returns(true)  # Return true for all mkdir_p calls
+    FileUtils.stubs(:touch).returns(true)    # Return true for all touch calls
+    File.stubs(:directory?).returns(false)   # Trigger initialization
+    File.stubs(:write).returns(true)         # Allow README.md creation
+
+    # Expect git operations
+    @git_mock.expects(:add).with(all: true)
+    @git_mock.expects(:commit).with("Initialize repository structure")
+    @git_mock.expects(:push).with("origin", "main")
+
+    @repo.send(:ensure_fresh_repo)
+  end
+
+  def test_ensure_fresh_repo_skips_commit_when_no_changes
+    # Mock git branches and status
+    remote_branch = mock("remote_branch")
+    remote_branch.stubs(:name).returns("origin/main")
+    branches_collection = mock("branches_collection")
+    branches_collection.stubs(:remote).returns([ remote_branch ])
+    @git_mock.stubs(:branches).returns(branches_collection)
+
+    # Mock git status to indicate no changes
+    status_mock = mock("status")
+    status_mock.stubs(:changed).returns({})  # No changes
+    status_mock.stubs(:added).returns({})    # No additions
+    status_mock.stubs(:deleted).returns({})
+    @git_mock.stubs(:status).returns(status_mock)
+
+    # Mock current branch
+    current_branch_mock = mock("current_branch")
+    current_branch_mock.stubs(:name).returns("main")
+    @git_mock.stubs(:branch).returns(current_branch_mock)
+
+    # Mock filesystem operations
+    FileUtils.stubs(:mkdir_p).returns(true)  # Return true for all mkdir_p calls
+    FileUtils.stubs(:touch).returns(true)    # Return true for all touch calls
+    File.stubs(:directory?).returns(false)   # Trigger initialization
+    File.stubs(:write).returns(true)         # Allow README.md creation
+
+    # Expect git operations
+    @git_mock.expects(:add).with(all: true)  # add is still called
+    @git_mock.expects(:commit).never         # but commit should never happen
+    @git_mock.expects(:push).never           # and push should never happen
+
+    @repo.send(:ensure_fresh_repo)
   end
 
   private
