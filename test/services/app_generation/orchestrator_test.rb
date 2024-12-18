@@ -27,7 +27,7 @@ module AppGeneration
       assert_equal "generating", @generated_app.status
       assert_not @generated_app.pending?
 
-      error = assert_raises(AppGeneration::InvalidStateError) do
+      error = assert_raises(AppGeneration::Errors::InvalidStateError) do
         @orchestrator.call
       end
 
