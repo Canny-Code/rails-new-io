@@ -1,3 +1,5 @@
 module AppGeneration
-  class InvalidStateError < StandardError; end
+  module Errors
+    class InvalidStateError < StandardError; end
+  end
 end
