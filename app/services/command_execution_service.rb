@@ -125,13 +125,31 @@ class CommandExecutionService
       @pid = wait_thr&.pid
       @logger.info("Rails app generation process started", { pid: @pid })
 
+      # Auto-accept all prompts
+      stdin_thread = Thread.new do
+        loop do
+          stdin.puts "Y"
+          sleep 0.1
+        end
+      rescue IOError
+        # Stream closed
+      end
+
       stdout_thread = Thread.new do
         stdout.each_line do |line|
           buffer.append(line.strip)
         end
       end
 
-      stdout_thread.join
+      stderr_thread = Thread.new do
+        stderr.each_line do |line|
+          buffer.append(line.strip)
+        end
+      end
+
+      [stdout_thread, stderr_thread].each(&:join)
+      stdin_thread.kill # Clean up stdin thread
+
       buffer.complete!
 
       exit_status = wait_thr&.value
