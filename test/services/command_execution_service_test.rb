@@ -36,9 +36,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     error = "Sample error"
 
     @valid_commands.each do |command|
-      # Store the current count to only delete new entries
       initial_count = @generated_app.log_entries.count
-
       service = CommandExecutionService.new(@generated_app, command)
 
       Open3.stub :popen3, mock_popen3(output, error, success: true) do
@@ -55,21 +53,17 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
           "Preparing to execute command",
           "System environment details",
           "Environment variables for command execution",
-          "Sample output"
+          "Initializing Rails application generation...\nSample output"
         ]
 
         expected_messages.each_with_index do |message, index|
           assert_equal message, log_entries[index].message, "Log entry #{index} doesn't match for command: #{command}"
         end
 
-        # Verify the final buffer content
         buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
-        assert_equal "Sample output", buffer_entry.message
-
-        # Verify specific log levels
+        assert_equal "Initializing Rails application generation...\nSample output", buffer_entry.message
         assert log_entries.all?(&:info?)
 
-        # Clean up only the entries from this iteration
         @generated_app.log_entries.where("id > ?", @generated_app.log_entries.limit(initial_count).pluck(:id).last).destroy_all
       end
     end
@@ -166,15 +160,14 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
       assert_equal "Rails app generation process finished successfully", log_entries[0].message
       assert_equal "Rails app generation process started", log_entries[1].message
-      assert_equal "Sample output", log_entries[2].message
+      assert_equal "Initializing Rails application generation...\nSample output", log_entries[2].message
       assert_equal "Environment variables for command execution", log_entries[3].message
       assert_equal "System environment details", log_entries[4].message
       assert_equal "Preparing to execute command", log_entries[5].message
       assert_equal "Created temporary directory", log_entries[6].message
 
-      # Fix: Look for the log entry with stdout stream
       buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
-      assert_equal "Sample output", buffer_entry.message
+      assert_equal "Initializing Rails application generation...\nSample output", buffer_entry.message
     end
   end
 
@@ -189,10 +182,9 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
       log_entries = @generated_app.log_entries.recent_first
 
-      # Verify the sequence of logs
       expected_messages = [
         "Command failed",
-        "No output",  # From Buffer's default message
+        "Initializing Rails application generation...",
         "Rails app generation process started",
         "Environment variables for command execution",
         "System environment details",
@@ -203,14 +195,12 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       ]
 
       expected_messages.each do |message|
-        assert log_entries.any? { |entry| entry.message.include?(message) },
-          "Expected to find log entry containing '#{message}'"
+        assert log_entries.any? { |entry| entry.message.include?(message) }
       end
 
-      # Verify error details
       error_log = log_entries.find { |entry| entry.message == "Command failed" }
       assert error_log.error?
-      assert_equal "No output", error_log.metadata["output"]
+      assert_equal "Initializing Rails application generation...", error_log.metadata["output"]
       assert error_log.metadata["status"]
     end
   end

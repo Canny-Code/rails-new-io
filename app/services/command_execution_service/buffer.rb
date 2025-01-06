@@ -9,13 +9,15 @@ class CommandExecutionService
       @log_entry = create_initial_log_entry
       @last_flush = Time.current
       @completed = false
+      Rails.logger.debug "%%%%% Buffer initialized with log entry #{@log_entry.id}"
     end
 
     def append(message)
       should_flush = false
 
       synchronize do
-        @output << message.gsub("\n", "<br>")
+        Rails.logger.debug "%%%%% Buffer append: Adding message of length #{message.length}"
+        @output << message
         should_flush = should_flush?
       end
 
@@ -23,33 +25,38 @@ class CommandExecutionService
     end
 
     def complete!
+      Rails.logger.debug "%%%%% Buffer complete! called"
       @completed = true
       flush
     end
 
     def flush
-      message = nil
-
       synchronize do
-        message = @output.join("\n")
-        message = "No output" if message.blank?
-      end
+        return if @output.empty?
 
-      if @completed
-        @log_entry.update!(message: message, entry_type: nil)
-      else
-        @log_entry.update!(message: message)
-      end
+        Rails.logger.debug "%%%%% Buffer flush: Current entry: #{@log_entry&.id}, buffer size: #{@output.length}"
 
-      synchronize do
+        if @log_entry.nil?
+          @log_entry = create_initial_log_entry
+          Rails.logger.debug "%%%%% Created new log entry: #{@log_entry.id}"
+        end
+
+        new_content = @output.join("\n")
+        message = @log_entry.message.present? ? "#{@log_entry.message}\n#{new_content}" : new_content
+        Rails.logger.debug "%%%%% Updating log entry #{@log_entry.id} with message length: #{message.length}"
+
+        @log_entry.update!(
+          message: message,
+          phase: @generated_app.status
+        )
+
+        @output.clear
         @last_flush = Time.current
       end
     end
 
-    def join(separator = "\n")
-      synchronize do
-        @output.join(separator)
-      end
+    def message
+      @log_entry&.message
     end
 
     private
@@ -70,7 +77,8 @@ class CommandExecutionService
     end
 
     def should_flush?
-      Time.current - @last_flush >= FLUSH_INTERVAL
+      # Flush if enough time has passed OR if buffer is getting large
+      Time.current - @last_flush >= FLUSH_INTERVAL || @output.length >= 20
     end
   end
 end

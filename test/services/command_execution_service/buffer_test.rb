@@ -31,7 +31,13 @@ class CommandExecutionService
       @buffer.flush
 
       log_entry = AppGeneration::LogEntry.last
-      assert_equal "First message\nSecond message", log_entry.message
+      expected_message = [
+        "Initializing Rails application generation...",
+        "First message",
+        "Second message"
+      ].join("\n")
+
+      assert_equal expected_message, log_entry.message
       assert_equal "rails_output", log_entry.entry_type
     end
   end

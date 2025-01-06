@@ -113,10 +113,13 @@ class CommandExecutionService
 
     env = {
       "BUNDLE_GEMFILE" => nil,
+      "BUNDLE_PATH" => File.join(@temp_dir, "vendor/bundle"),
+      "BUNDLE_APP_CONFIG" => File.join(@temp_dir, ".bundle"),
       "RAILS_ENV" => "development",
       "NODE_ENV" => "development",
       "PATH" => ENV["PATH"]
     }
+
     log_environment_variables_for_command_execution(env)
 
     buffer = Buffer.new(@generated_app)
@@ -125,35 +128,17 @@ class CommandExecutionService
       @pid = wait_thr&.pid
       @logger.info("Rails app generation process started", { pid: @pid })
 
-      # Auto-accept all prompts
-      stdin_thread = Thread.new do
-        loop do
-          stdin.puts "Y"
-          sleep 0.1
-        end
-      rescue IOError
-        # Stream closed
-      end
-
       stdout_thread = Thread.new do
         stdout.each_line do |line|
           buffer.append(line.strip)
         end
       end
 
-      stderr_thread = Thread.new do
-        stderr.each_line do |line|
-          buffer.append(line.strip)
-        end
-      end
-
-      [stdout_thread, stderr_thread].each(&:join)
-      stdin_thread.kill # Clean up stdin thread
+      stdout_thread.join
 
       buffer.complete!
-
       exit_status = wait_thr&.value
-      output = buffer.join("\n").presence || "No output"
+      output = buffer.message || "No output"
 
       if exit_status&.success?
         @logger.info("Rails app generation process finished successfully", {

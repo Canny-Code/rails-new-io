@@ -1,4 +1,6 @@
 class AppStatusChangeNotifier < Noticed::Event
+  include Rails.application.routes.url_helpers
+
   deliver_by :action_cable do |config|
     config.channel = "Noticed::NotificationChannel"
     config.stream = -> { recipient }
