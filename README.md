@@ -4,7 +4,6 @@
 
 MISSION_CONTROL_USERNAME=your_mission_control_username
 MISSION_CONTROL_PASSWORD=your_mission_control_password
-RAILS_MASTER_KEY=your_development_key
 
 start minio with:
 
