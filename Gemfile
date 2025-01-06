@@ -9,7 +9,7 @@ gem "faraday-retry", "~> 2.2.1"
 gem "friendly_id", "~> 5.5.1"
 gem "git", "~> 2.3.3"
 gem "kamal", "~> 2.4.0", require: false
-gem "thruster", "~> 0.1.9", require: false
+gem "thruster", "~> 0.1.10", require: false
 gem "mission_control-jobs", "~> 1.0.1"
 gem "noticed", "~> 2.5.0"
 gem "litestream", "~> 0.12.0"
@@ -25,8 +25,8 @@ gem "sentry-rails", "~> 5.22.1"
 gem "stackprof"
 gem "solid_cache", "~> 1.0.6"
 gem "solid_cable", "~> 3.0.5"
-gem "solid_queue", "~> 1.1.0"
-gem "sqlite3", "~> 2.4.1"
+gem "solid_queue", "~> 1.1.2"
+gem "sqlite3", "~> 2.5.0"
 gem "stimulus-rails"
 gem "turbo-rails", "~> 2.0.11"
 gem "vite_rails", "~> 3.0.19"
@@ -45,7 +45,7 @@ group :development do
 end
 
 group :development, :test do
-  gem "brakeman", "~> 6.2.2", require: false
+  gem "brakeman", "~> 7.0.0", require: false
   gem "debug", platforms: %i[ mri ], require: "debug/prelude"
   gem "rubocop-rails-omakase", require: false
   gem "amazing_print", "~> 1.6"
