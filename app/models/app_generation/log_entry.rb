@@ -29,10 +29,6 @@ module AppGeneration
 
     self.table_name = "app_generation_log_entries"
 
-    def rails_output?
-      entry_type == "rails_output"
-    end
-
     after_commit -> {
       Rails.logger.debug "%%%%% LogEntry Create callback: #{id}"
       stream_name = "#{generated_app.to_gid}:app_generation_log_entries"
