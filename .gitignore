@@ -63,3 +63,4 @@ llm
 .yarn/build-state.yml
 .yarn/unplugged
 .pnp.*
+lib/scripts/*.txt
