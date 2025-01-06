@@ -134,13 +134,13 @@ GEM
       database_cleaner-core (~> 2.0.0)
     database_cleaner-core (2.0.1)
     date (3.4.1)
-    debug (1.9.2)
+    debug (1.10.0)
       irb (~> 1.10)
       reline (>= 0.3.8)
     docile (1.4.1)
-    dotenv (3.1.4)
-    dotenv-rails (3.1.4)
-      dotenv (= 3.1.4)
+    dotenv (3.1.7)
+    dotenv-rails (3.1.7)
+      dotenv (= 3.1.7)
       railties (>= 6.1)
     drb (2.2.1)
     dry-cli (1.2.0)
@@ -562,8 +562,8 @@ DEPENDENCIES
   brakeman (~> 7.0.0)
   capybara
   database_cleaner-active_record
-  debug
-  dotenv-rails
+  debug (~> 1.10.0)
+  dotenv-rails (~> 3.1.7)
   erb_lint
   faker
   faraday-retry (~> 2.2.1)
