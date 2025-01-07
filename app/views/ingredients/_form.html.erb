@@ -1,0 +1,149 @@
+<%= form_with(model: ingredient, class: "space-y-8 divide-y divide-gray-200",
+    data: {
+      controller: "autosave",
+      autosave_target: "form"
+    }) do |f| %>
+  <% if ingredient.errors.any? %>
+    <div class="rounded-md bg-red-50 p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">
+            <%= pluralize(ingredient.errors.count, "error") %> prohibited this ingredient from being saved:
+          </h3>
+          <div class="mt-2 text-sm text-red-700">
+            <ul class="list-disc pl-5 space-y-1">
+              <% ingredient.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+  <div class="space-y-8 divide-y divide-gray-200">
+    <div class="pt-8">
+      <div>
+        <h3 class="text-lg font-medium leading-6 text-gray-900">Basic Information</h3>
+        <p class="mt-1 text-sm text-gray-500">This information will be used to identify and describe your ingredient.</p>
+      </div>
+      <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+        <div class="sm:col-span-4">
+          <%= f.label :name, class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1">
+            <%= f.text_field :name,
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm #{'border-red-300' if ingredient.errors[:name].any?}",
+                data: {
+                  autosave_target: "field",
+                  action: "input->autosave#fieldChanged"
+                } %>
+            <% if ingredient.errors[:name].any? %>
+              <p class="mt-2 text-sm text-red-600"><%= ingredient.errors[:name].join(", ") %></p>
+            <% end %>
+          </div>
+        </div>
+        <div class="sm:col-span-4">
+          <%= f.label :category, class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1">
+            <%= f.text_field :category,
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
+                data: {
+                  autosave_target: "field",
+                  action: "input->autosave#fieldChanged"
+                } %>
+          </div>
+        </div>
+        <div class="sm:col-span-6">
+          <%= f.label :description, class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1">
+            <%= f.text_area :description, rows: 3,
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
+                data: {
+                  autosave_target: "field",
+                  action: "input->autosave#fieldChanged"
+                } %>
+          </div>
+          <p class="mt-2 text-sm text-gray-500">Write a few sentences about what this ingredient does.</p>
+        </div>
+      </div>
+    </div>
+    <div class="pt-8">
+      <div>
+        <h3 class="text-lg font-medium leading-6 text-gray-900">Template Content</h3>
+        <p class="mt-1 text-sm text-gray-500">The actual Ruby code that will be used in the recipe.</p>
+      </div>
+      <div class="mt-6">
+        <%= f.label :template_content, class: "sr-only" %>
+        <%= f.text_area :template_content, rows: 10,
+            class: "block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 #{'border-red-300' if ingredient.errors[:template_content].any?}",
+            data: {
+              controller: "codemirror",
+              codemirror_mode_value: "ruby",
+              autosave_target: "field",
+              action: "input->autosave#fieldChanged"
+            } %>
+        <% if ingredient.errors[:template_content].any? %>
+          <p class="mt-2 text-sm text-red-600"><%= ingredient.errors[:template_content].join(", ") %></p>
+        <% end %>
+      </div>
+    </div>
+    <div class="pt-8">
+      <div>
+        <h3 class="text-lg font-medium leading-6 text-gray-900">Dependencies</h3>
+        <p class="mt-1 text-sm text-gray-500">Configure how this ingredient interacts with others.</p>
+      </div>
+      <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+        <div class="sm:col-span-6">
+          <%= f.label :conflicts_with, "Conflicts With", class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1">
+            <%= f.text_area :conflicts_with, rows: 3,
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
+                placeholder: "Enter ingredient names (one per line)",
+                data: {
+                  autosave_target: "field",
+                  action: "input->autosave#fieldChanged"
+                } %>
+          </div>
+          <p class="mt-2 text-sm text-gray-500">List of ingredients that cannot be used together with this one.</p>
+        </div>
+        <div class="sm:col-span-6">
+          <%= f.label :requires, class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1">
+            <%= f.text_area :requires, rows: 3,
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
+                placeholder: "Enter ingredient names (one per line)",
+                data: {
+                  autosave_target: "field",
+                  action: "input->autosave#fieldChanged"
+                } %>
+          </div>
+          <p class="mt-2 text-sm text-gray-500">List of ingredients that must be present for this one to work.</p>
+        </div>
+        <div class="sm:col-span-6">
+          <%= f.label :configures_with, "Configuration Schema", class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1">
+            <%= f.text_area :configures_with, rows: 5,
+                class: "block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+                placeholder: "Enter YAML configuration schema",
+                data: {
+                  autosave_target: "field",
+                  action: "input->autosave#fieldChanged"
+                } %>
+          </div>
+          <p class="mt-2 text-sm text-gray-500">YAML schema defining the configuration options for this ingredient.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pt-5">
+    <div class="flex justify-end">
+      <%= link_to "Cancel", ingredients_path, class: "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+      <%= f.submit class: "ml-3 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+    </div>
+  </div>
+<% end %>

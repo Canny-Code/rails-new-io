@@ -37,11 +37,15 @@ group :development do
   gem "better_html", require: false
   gem "erb_lint", require: false
   gem "overcommit", require: false
+  gem "rails-erd", "~> 1.7.2"
+end
+
+group :test do
   gem "capybara"
+  gem "capybara-lockstep", "~> 2.2.2"
   gem "database_cleaner-active_record"
   gem "selenium-webdriver", "~> 4.27.0"
   gem "mocha", "~> 2.7.1"
-  gem "rails-erd", "~> 1.7.2"
 end
 
 group :development, :test do

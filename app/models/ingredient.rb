@@ -16,8 +16,8 @@
 #
 # Indexes
 #
-#  index_ingredients_on_created_by_id  (created_by_id)
-#  index_ingredients_on_name           (name) UNIQUE
+#  index_ingredients_on_created_by_id           (created_by_id)
+#  index_ingredients_on_name_and_created_by_id  (name,created_by_id) UNIQUE
 #
 # Foreign Keys
 #
@@ -28,11 +28,11 @@ class Ingredient < ApplicationRecord
   include GitBackedModel
 
   belongs_to :created_by, class_name: "User"
-  has_many :recipe_ingredients, dependent: :destroy
+  has_many :recipe_ingredients, dependent: :delete_all
   has_many :recipes, through: :recipe_ingredients
-  has_many :app_changes, dependent: :destroy
+  has_many :recipe_changes, dependent: :delete_all
 
-  validates :name, presence: true, uniqueness: true
+  validates :name, presence: true, uniqueness: { scope: :created_by_id }
   validates :template_content, presence: true
 
   serialize :conflicts_with, coder: YAML
