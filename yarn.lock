@@ -1017,7 +1017,7 @@ __metadata:
     "@tailwindcss/typography": "npm:^0.5.13"
     "@vitejs/plugin-react": "npm:^4.3.4"
     autoprefixer: "npm:^10.4.19"
-    codemirror: "npm:5"
+    codemirror: "npm:5.65.18"
     esbuild: "npm:^0.23.0"
     postcss: "npm:^8.4.38"
     tailwindcss: "npm:^3.4.4"
@@ -1160,7 +1160,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"codemirror@npm:5":
+"codemirror@npm:5.65.18":
   version: 5.65.18
   resolution: "codemirror@npm:5.65.18"
   checksum: 10c0/806e00c7081f9a5ba6bc59205d0cf5ada273bc977da9967d04a78e94e27cdfbd41a10409fcf74eea4b12eebe1972e05120771780729a8bc04eef14b1ed20ac98
