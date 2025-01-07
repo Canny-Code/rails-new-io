@@ -1,0 +1,82 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="md:flex md:items-center md:justify-between">
+    <div class="min-w-0 flex-1">
+      <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight"><%= @ingredient.name %></h2>
+      <% if @ingredient.category.present? %>
+        <p class="mt-2 text-sm text-gray-500">Category: <%= @ingredient.category %></p>
+      <% end %>
+    </div>
+    <div class="mt-4 flex md:mt-0 md:ml-4 space-x-2">
+      <%= link_to "Back to ingredients", ingredients_path, class: "inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+      <%= link_to "Edit ingredient", edit_ingredient_path(@ingredient), class: "inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+      <%= link_to "Delete ingredient", ingredient_path(@ingredient),
+          data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this ingredient?" },
+          class: "inline-flex items-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2" %>
+    </div>
+  </div>
+  <div class="mt-8 space-y-8 divide-y divide-gray-200">
+    <% if @ingredient.description.present? %>
+      <div class="pt-8">
+        <h3 class="text-lg font-medium leading-6 text-gray-900">Description</h3>
+        <div class="mt-2 prose prose-sm max-w-none text-gray-500">
+          <%= simple_format @ingredient.description %>
+        </div>
+      </div>
+    <% end %>
+    <div class="pt-8">
+      <h3 class="text-lg font-medium leading-6 text-gray-900">Template Content</h3>
+      <div class="mt-2">
+        <div class="font-mono text-sm border rounded-md"
+            data-controller="codemirror"
+            data-codemirror-mode-value="ruby"
+            data-codemirror-readonly-value="true">
+          <%= @ingredient.template_content %>
+        </div>
+      </div>
+    </div>
+    <div class="pt-8">
+      <h3 class="text-lg font-medium leading-6 text-gray-900">Dependencies</h3>
+      <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
+        <div>
+          <h4 class="text-sm font-medium text-gray-900">Conflicts With</h4>
+          <% if @ingredient.conflicts_with.present? %>
+            <ul class="mt-2 text-sm text-gray-500 list-disc list-inside">
+              <% Array(@ingredient.conflicts_with).each do |conflict| %>
+                <li><%= conflict %></li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="mt-2 text-sm text-gray-500">No conflicts specified</p>
+          <% end %>
+        </div>
+        <div>
+          <h4 class="text-sm font-medium text-gray-900">Requires</h4>
+          <% if @ingredient.requires.present? %>
+            <ul class="mt-2 text-sm text-gray-500 list-disc list-inside">
+              <% Array(@ingredient.requires).each do |requirement| %>
+                <li><%= requirement %></li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="mt-2 text-sm text-gray-500">No requirements specified</p>
+          <% end %>
+        </div>
+        <div>
+          <h4 class="text-sm font-medium text-gray-900">Configuration Schema</h4>
+          <% if @ingredient.configures_with.present? %>
+            <div class="mt-2">
+              <div class="font-mono text-sm border rounded-md"
+                  data-controller="codemirror"
+                  data-codemirror-mode-value="yaml"
+                  data-codemirror-readonly-value="true">
+                <%= @ingredient.configures_with.to_yaml %>
+              </div>
+            </div>
+          <% else %>
+            <p class="mt-2 text-sm text-gray-500">No configuration schema specified</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

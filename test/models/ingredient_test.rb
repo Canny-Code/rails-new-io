@@ -16,8 +16,8 @@
 #
 # Indexes
 #
-#  index_ingredients_on_created_by_id  (created_by_id)
-#  index_ingredients_on_name           (name) UNIQUE
+#  index_ingredients_on_created_by_id           (created_by_id)
+#  index_ingredients_on_name_and_created_by_id  (name,created_by_id) UNIQUE
 #
 # Foreign Keys
 #
@@ -62,11 +62,6 @@ class IngredientTest < ActiveSupport::TestCase
   test "has many recipes" do
     assert_respond_to @ingredient, :recipes
     assert_kind_of ActiveRecord::Associations::CollectionProxy, @ingredient.recipes
-  end
-
-  test "has many app_changes" do
-    assert_respond_to @ingredient, :app_changes
-    assert_kind_of ActiveRecord::Associations::CollectionProxy, @ingredient.app_changes
   end
 
   test "serializes conflicts_with" do

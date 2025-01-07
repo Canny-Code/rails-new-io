@@ -27,6 +27,8 @@ Rails.application.routes.draw do
     resources :log_entries, only: [ :index ]
   end
 
+  resources :ingredients
+
   resources :users, only: [ :show ], path: ""
 
   resources :pages, only: :show

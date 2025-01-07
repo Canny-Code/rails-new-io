@@ -214,7 +214,7 @@ ActiveRecord::Schema[8.0].define(version: 2024_12_15_164138) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_ingredients_on_created_by_id"
-    t.index ["name"], name: "index_ingredients_on_name", unique: true
+    t.index ["name", "created_by_id"], name: "index_ingredients_on_name_and_created_by_id", unique: true
   end
 
   create_table "noticed_events", force: :cascade do |t|
