@@ -29,15 +29,15 @@ Rails.application.routes.draw do
 
   resources :ingredients
 
-  resources :users, only: [ :show ], path: ""
-
   resources :pages, only: :show
 
-  constraints lambda { |request| request.session[:user_id].present? } do
+  constraints(->(request) { request.session[:user_id].present? }) do
     root to: "dashboard#show", as: :authenticated_root
   end
 
   root to: "static#home"
+
+  resources :users, only: [ :show ], path: ""
 
   # named routes
   get "/github/check_name", to: "github#check_name", as: :check_github_name
