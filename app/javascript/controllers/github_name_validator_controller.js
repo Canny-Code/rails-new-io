@@ -24,6 +24,10 @@ export default class extends Controller {
   }
 
   async validate(event) {
+    if (!this.hasInputTarget || !this.hasMessageTarget || !this.hasSpinnerTarget || !this.hasSubmitButtonTarget) {
+      return
+    }
+
     const name = event?.detail?.value || ''
     if (!name) {
       this.hideMessage()
