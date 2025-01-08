@@ -8,8 +8,6 @@ module Pages
 
     def view_template
       div(class: "max-w-4xl mx-auto py-8 space-y-8") do
-        h1(class: "text-2xl font-bold mb-6") { page.title }
-
         div(class: "space-y-8") do
           @page.groups.each do |group|
             render Pages::Groups::Component.new(group: group)
