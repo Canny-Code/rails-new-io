@@ -18,3 +18,7 @@
 basic_setup:
   title: "Basic Setup"
   slug: "basic-setup"
+
+custom_ingredients:
+  title: "Your Custom Ingredients"
+  slug: "your-custom-ingredients"

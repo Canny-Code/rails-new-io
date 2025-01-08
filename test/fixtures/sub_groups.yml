@@ -40,6 +40,6 @@ dev_env_default:
   title: Default
   group: dev_env
 
-essentials_default:
+your_custom_ingredients_default:
   title: Default
-  group: essentials
+  group: your_custom_ingredients

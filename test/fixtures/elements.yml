@@ -93,5 +93,5 @@ database_mariadb_trilogy:
 
 app_name:
   label: App Name
-  sub_group: essentials_default
+  sub_group: your_custom_ingredients_default
   variant: app_name (Element::TextField)
