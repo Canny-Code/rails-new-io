@@ -20,6 +20,7 @@ class IngredientsController < ApplicationController
     @ingredient = current_user.ingredients.build(ingredient_params)
 
     if @ingredient.save
+      IngredientUiCreator.call(@ingredient)
       redirect_to @ingredient, notice: "Ingredient was successfully created."
     else
       render :new, status: :unprocessable_entity

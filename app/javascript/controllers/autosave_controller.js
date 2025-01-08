@@ -22,6 +22,12 @@ export default class extends Controller {
 
   save() {
     const form = this.formTarget
+
+    //future-proof for ULIDs
+    if (!form.action.match(/\/ingredients\/[A-Za-z0-9-_]+$/) || form.method.toUpperCase() === 'GET') {
+      return
+    }
+
     const formData = new FormData(form)
 
     fetch(form.action, {

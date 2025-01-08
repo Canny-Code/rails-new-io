@@ -35,6 +35,8 @@ class Ingredient < ApplicationRecord
   validates :name, presence: true, uniqueness: { scope: :created_by_id }
   validates :template_content, presence: true
 
+  before_destroy :cleanup_ui_elements
+
   serialize :conflicts_with, coder: YAML
   serialize :requires, coder: YAML
   serialize :configures_with, coder: YAML
@@ -79,5 +81,11 @@ class Ingredient < ApplicationRecord
 
     # Process template with configuration
     ERB.new(template_content).result_with_hash(configuration.symbolize_keys)
+  end
+
+  private
+
+  def cleanup_ui_elements
+    IngredientUiDestroyer.call(self)
   end
 end
