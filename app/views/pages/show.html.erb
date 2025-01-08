@@ -19,9 +19,9 @@
                  data-github-name-validator-target="input"
                  name="app-name"
                  data-action="input->app-name-preview#update"
-                 autocomplete="off"
-                 placeholder="Enter app name"
-                 class="appearance-none w-full px-5 py-3 border-2 border-gray-300 text-base leading-6 mx-5 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-lg">
+          autocomplete="off"
+          placeholder="Enter app name"
+          class="appearance-none w-full px-5 py-3 border-2 border-gray-300 text-base leading-6 mx-5 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-lg">
         </input>
         <div class="text-sm mx-5">
           <div data-github-name-validator-target="message" class="hidden"></div>
@@ -59,63 +59,55 @@
        class="hidden bg-apple md:rounded-lg ml-0 md:mr-5 px-6 text-gray-100 shadow-2xl whitespace-no-wrap py-3">
       📋️ Copied to Clipboard!
     </div>
-      <%= form_tag generated_apps_path, method: :post, class: "inline",
+    <%= form_tag generated_apps_path, method: :post, class: "inline",
             data: {
               controller: "form-values",
               action: "generated-output:valueChanged@window->form-values#updateFromDisplay"
             } do %>
-        <%= hidden_field_tag :app_name, nil,
+      <%= hidden_field_tag :app_name, nil,
               data: {
                 form_values_target: "appName"
               } %>
-        <%= hidden_field_tag :api_flag, nil,
+      <%= hidden_field_tag :api_flag, nil,
               data: { form_values_target: "apiFlag" } %>
-        <%= hidden_field_tag :database_choice, nil,
+      <%= hidden_field_tag :database_choice, nil,
               data: { form_values_target: "databaseChoice" } %>
-        <%= hidden_field_tag :rails_flags, nil,
+      <%= hidden_field_tag :rails_flags, nil,
               data: { form_values_target: "railsFlags" } %>
-        <%= button_tag type: "submit",
+      <%= button_tag type: "submit",
             id: "verify-my-setup-link",
             data: { github_name_validator_target: "submitButton" },
             disabled: "disabled",
             class: "flex-none inline-flex h-12 items-center bg-deep-azure-gamma rounded-lg px-6 text-gray-100 shadow-2xl opacity-50 cursor-not-allowed" do %>
-          🏆️ Generate My App
-        <% end %>
+        🏆️ Generate My App
       <% end %>
+    <% end %>
   </div>
 </div>
-
 <div data-controller="tabs">
   <div class="bg-deep-azure-zeta">
     <div class="max-w-7xl mx-auto">
       <div>
         <div>
           <nav class="-mb-px flex space-x-1 md:space-x-2" aria-label="Tabs">
-            <a id="main-tab"
-               data-tabs-target="tab"
-               data-action="click->tabs#change"
-               href="#"
-               class="tab tab-active">
-              <span class='text-sm md:text-lg'>🍽️ Basic Stuff</span>
-            </a>
-            <a id="railsbytes-tab"
-               data-tabs-target="tab"
-               data-action="click->tabs#change"
-               href="#"
-               class="tab tab-inactive">
-              <span class='text-sm md:text-lg'>🍩 RailsBytes</span>
-            </a>
+            <% Page.all.each do |page| %>
+              <%= link_to page_path(page),
+                  id: "#{page.slug}-tab",
+                  data: {
+                    tabs_target: "tab",
+                    action: "click->tabs#change"
+                  },
+                  class: "tab #{page == @page ? 'tab-active' : 'tab-inactive'}" do %>
+                <span class='text-sm md:text-lg'><%= page.title %></span>
+              <% end %>
+            <% end %>
           </nav>
         </div>
       </div>
     </div>
   </div>
-
-  <div id="main-tab-panel" data-tabs-target="panel">
-    <%= render Pages::Groups::Component.new(group: @page.groups.first) %>
-  </div>
-
-  <div id="railsbytes-tab-panel" data-tabs-target="panel" hidden>
-    <%= render Pages::Groups::Component.new(group: @page.groups.last) %>
+  <%# Page content %>
+  <div id="page-content" data-tabs-target="panel">
+    <%= render Pages::Component.new(page: @page) %>
   </div>
 </div>
