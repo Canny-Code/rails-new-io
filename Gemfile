@@ -35,7 +35,7 @@ group :development do
   gem "aasm-diagram", "~> 0.1.3"
   gem "annotaterb"
   gem "better_html", require: false
-  gem "erb_lint", require: false
+  gem "erb_lint", "~> 0.8.0", require: false
   gem "overcommit", require: false
   gem "rails-erd", "~> 1.7.2"
 end
@@ -52,7 +52,7 @@ group :development, :test do
   gem "brakeman", "~> 7.0.0", require: false
   gem "debug", "~> 1.10.0", platforms: %i[ mri ], require: "debug/prelude"
   gem "rubocop-rails-omakase", require: false
-  gem "amazing_print", "~> 1.6"
+  gem "amazing_print", "~> 1.7.2"
   gem "minio", "~> 0.4.0"
   gem "dotenv-rails", "~> 3.1.7"
   gem "simplecov", require: false
