@@ -1,47 +1,41 @@
 import { Controller } from "@hotwired/stimulus"
+import { visit } from "@hotwired/turbo"
 
 export default class extends Controller {
   static targets = ["tab", "panel"]
 
   connect() {
     console.log("Tabs controller connected!")
-    this.showTab(this.tabTargets[0])
+    // Only show the first tab if no tab is active
+    if (!this.tabTargets.find(tab => tab.classList.contains("tab-active"))) {
+      this.showTab(this.tabTargets[0])
+    }
   }
 
   change(event) {
     event.preventDefault()
-    console.log("Click event triggered")
-    console.log("Current classes:", event.currentTarget.classList.toString())
-    this.showTab(event.currentTarget)
-  }
+    const selectedTab = event.currentTarget
 
-  showTab(selectedTab) {
-    console.log("showTab called with:", selectedTab.id)
-    console.log("Classes before change:", selectedTab.classList.toString())
-    
-    const activeTab = this.tabTargets.find(tab => 
-      tab.classList.contains("tab-active")
-    )
-
-    if (activeTab === selectedTab) {
-      console.log("Same tab clicked, returning")
-      return 
+    // Don't do anything if clicking the active tab
+    if (selectedTab.classList.contains("tab-active")) {
+      return
     }
 
-    if (activeTab) {
-      console.log("Deactivating current tab:", activeTab.id)
-      activeTab.classList.remove("tab-active")
-      activeTab.classList.add("tab-inactive")
-      
-      const activePanelId = activeTab.id.replace('-tab', '-tab-panel')
-      document.getElementById(activePanelId).hidden = true
-    }
+    // Update tab classes
+    this.tabTargets.forEach(tab => {
+      if (tab === selectedTab) {
+        tab.classList.remove("tab-inactive")
+        tab.classList.add("tab-active")
+      } else {
+        tab.classList.remove("tab-active")
+        tab.classList.add("tab-inactive")
+      }
+    })
 
-    console.log("Activating new tab:", selectedTab.id)
-    selectedTab.classList.remove("tab-inactive")
-    selectedTab.classList.add("tab-active")
-    
-    const selectedPanelId = selectedTab.id.replace('-tab', '-tab-panel')
-    document.getElementById(selectedPanelId).hidden = false
+    // Navigate to the new page using Turbo
+    const pageUrl = selectedTab.getAttribute("href")
+    if (pageUrl && pageUrl !== "#") {
+      visit(pageUrl)
+    }
   }
-} 
+}
