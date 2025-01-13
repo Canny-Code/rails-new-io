@@ -3,6 +3,7 @@
 # Table name: pages
 #
 #  id         :integer          not null, primary key
+#  position   :integer          default(0), not null
 #  slug       :string           not null
 #  title      :string           not null
 #  created_at :datetime         not null
@@ -10,8 +11,9 @@
 #
 # Indexes
 #
-#  index_pages_on_slug   (slug) UNIQUE
-#  index_pages_on_title  (title)
+#  index_pages_on_position  (position)
+#  index_pages_on_slug      (slug) UNIQUE
+#  index_pages_on_title     (title)
 #
 require "test_helper"
 
@@ -80,5 +82,29 @@ class PageTest < ActiveSupport::TestCase
     @basic_setup_page.slug = ""
     assert_not @basic_setup_page.valid?
     assert_includes @basic_setup_page.errors[:slug], "can't be blank"
+  end
+
+  test "position must be present" do
+    @basic_setup_page.position = nil
+    assert_not @basic_setup_page.valid?
+    assert_includes @basic_setup_page.errors[:position], "can't be blank"
+  end
+
+  test "position must be a non-negative integer" do
+    @basic_setup_page.position = -1
+    assert_not @basic_setup_page.valid?
+    assert_includes @basic_setup_page.errors[:position], "must be greater than or equal to 0"
+
+    @basic_setup_page.position = 1.5
+    assert_not @basic_setup_page.valid?
+    assert_includes @basic_setup_page.errors[:position], "must be an integer"
+  end
+
+  test "pages are ordered by position" do
+    first_page = Page.create!(title: "First Page", position: 0)
+    third_page = Page.create!(title: "Third Page", position: 2)
+    second_page = Page.create!(title: "Second Page", position: 1)
+
+    assert_equal [ first_page, second_page, third_page ], Page.all.to_a
   end
 end

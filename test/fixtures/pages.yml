@@ -5,6 +5,7 @@
 # Table name: pages
 #
 #  id         :integer          not null, primary key
+#  position   :integer          default(0), not null
 #  slug       :string           not null
 #  title      :string           not null
 #  created_at :datetime         not null
@@ -12,13 +13,17 @@
 #
 # Indexes
 #
-#  index_pages_on_slug   (slug) UNIQUE
-#  index_pages_on_title  (title)
+#  index_pages_on_position  (position)
+#  index_pages_on_slug      (slug) UNIQUE
+#  index_pages_on_title     (title)
 #
+
 basic_setup:
   title: "Basic Setup"
   slug: "basic-setup"
+  position: 0
 
 custom_ingredients:
   title: "Your Custom Ingredients"
   slug: "your-custom-ingredients"
+  position: 1

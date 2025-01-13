@@ -3,6 +3,7 @@
 # Table name: pages
 #
 #  id         :integer          not null, primary key
+#  position   :integer          default(0), not null
 #  slug       :string           not null
 #  title      :string           not null
 #  created_at :datetime         not null
@@ -10,8 +11,9 @@
 #
 # Indexes
 #
-#  index_pages_on_slug   (slug) UNIQUE
-#  index_pages_on_title  (title)
+#  index_pages_on_position  (position)
+#  index_pages_on_slug      (slug) UNIQUE
+#  index_pages_on_title     (title)
 #
 class Page < ApplicationRecord
   extend FriendlyId
@@ -21,7 +23,10 @@ class Page < ApplicationRecord
 
   validates :title, presence: true, uniqueness: true
   validates :slug, uniqueness: true
+  validates :position, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :slug_present
+
+  default_scope { order(position: :asc) }
 
   private
 
