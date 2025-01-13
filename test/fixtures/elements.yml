@@ -90,8 +90,3 @@ database_mariadb_trilogy:
   description: Fuck your database
   image_path: Mariadb.svg
   position: 5
-
-app_name:
-  label: App Name
-  sub_group: your_custom_ingredients_default
-  variant: app_name (Element::TextField)

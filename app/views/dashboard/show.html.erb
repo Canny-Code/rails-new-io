@@ -63,6 +63,13 @@
       <% end %>
     </div>
   <% else %>
-    <%= render EmptyState::Component.new(user: current_user) %>
+    <%= render EmptyState::Component.new(
+      user: current_user,
+      title: "No apps yet",
+      description: "Get started by creating your first app.",
+      button_text: "Generate new app",
+      button_path: setup_recipes_path(slug: "basic-setup"),
+      emoji: "🚀"
+    ) %>
   <% end %>
 </div>

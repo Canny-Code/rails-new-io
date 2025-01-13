@@ -39,7 +39,3 @@ databases_default:
 dev_env_default:
   title: Default
   group: dev_env
-
-your_custom_ingredients_default:
-  title: Default
-  group: your_custom_ingredients
