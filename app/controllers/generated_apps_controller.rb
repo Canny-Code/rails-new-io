@@ -4,22 +4,18 @@ class GeneratedAppsController < ApplicationController
     @generated_app = GeneratedApp.find(params[:id])
   end
 
-  def create
-    cli_flags = [
-      params[:api_flag],
-      params[:database_choice],
-      params[:rails_flags]
-    ].compact.join(" ")
+  def new
+    @recipes = Recipe.where(created_by: current_user, status: "published").order(created_at: :desc)
+  end
 
-    recipe = Recipe.find_or_create_by_cli_flags!(cli_flags, current_user)
+  def create
+    recipe = Recipe.where(created_by: current_user).find(params[:generated_app][:recipe_id])
 
     @generated_app = current_user.generated_apps.create!(
       name: params[:app_name],
       recipe: recipe,
       ruby_version: recipe.ruby_version,
-      rails_version: recipe.rails_version,
-      selected_gems: [], # We'll handle this later with ingredients
-      configuration_options: {} # We'll handle this later with ingredients
+      rails_version: recipe.rails_version
     )
 
     AppGeneration::Orchestrator.new(@generated_app).call

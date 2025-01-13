@@ -1,5 +1,4 @@
 Rails.application.routes.draw do
-  get "pages/show"
   get "up", to: "rails/health#show", as: :rails_health_check
 
   mount MissionControl::Jobs::Engine, at: "/jobs"
@@ -22,7 +21,9 @@ Rails.application.routes.draw do
 
   resources :notifications, only: [ :index, :update ]
 
-  resources :generated_apps, only: [ :show, :create ] do
+  resources :recipes, only: [ :index, :show, :create, :update, :destroy ]
+
+  resources :generated_apps, only: [ :new, :show, :create ] do
     resources :generation_attempts, only: [ :create ]
     resources :log_entries, only: [ :index ]
   end
