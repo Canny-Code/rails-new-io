@@ -14,6 +14,22 @@ class GeneratedAppsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "new shows only current user's published recipes" do
+    get new_generated_app_path
+    assert_response :success
+
+    response_body = response.body
+
+    # Should include current user's published recipes
+    assert_match recipes(:api_recipe).name, response_body
+    assert_match recipes(:basic_recipe).name, response_body
+
+    # Should not include draft recipes
+    assert_no_match recipes(:blog_recipe).name, response_body
+    # Should not include other user's recipes
+    assert_no_match recipes(:minimal_recipe).name, response_body
+  end
+
   test "requires authentication" do
     sign_out(@user)
     post generated_apps_path, params: { app_name: "test-app" }
@@ -23,28 +39,24 @@ class GeneratedAppsControllerTest < ActionDispatch::IntegrationTest
 
   test "creates app with valid parameters" do
     app_name = "my-test-app"
-    api_flag = "--api"
-    database = "--database=mysql"
+    recipe = recipes(:basic_recipe)
 
-    Recipe.any_instance.stubs(:commit_changes).returns(true)
-    Recipe.any_instance.stubs(:initial_git_commit).returns(true)
     GeneratedApp.any_instance.stubs(:commit_changes).returns(true)
     GeneratedApp.any_instance.stubs(:initial_git_commit).returns(true)
 
     assert_difference "GeneratedApp.count" do
-      assert_difference "Recipe.count" do
-        post generated_apps_path, params: {
-          app_name: app_name,
-          api_flag: api_flag,
-          database_choice: database
-        }
-      end
+      post generated_apps_path, params: {
+        generated_app: {
+          recipe_id: recipe.id
+        },
+        app_name: app_name
+      }
     end
 
     app = GeneratedApp.last
     assert_equal app_name, app.name
     assert_equal @user, app.user
-    assert_equal "#{api_flag} #{database}", app.recipe.cli_flags
+    assert_equal recipe, app.recipe
 
     assert_redirected_to generated_app_log_entries_path(app)
   end
@@ -58,9 +70,10 @@ class GeneratedAppsControllerTest < ActionDispatch::IntegrationTest
     assert_difference "GeneratedApp.count" do
       assert_no_difference "Recipe.count" do
         post generated_apps_path, params: {
-          app_name: "new-api",
-          api_flag: "--api",
-          database_choice: "--database=postgresql"
+          generated_app: {
+            recipe_id: recipe.id
+          },
+          app_name: "new-api"
         }
       end
     end
@@ -70,17 +83,18 @@ class GeneratedAppsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "starts app generation after creation" do
-    Recipe.any_instance.stubs(:commit_changes).returns(true)
-    Recipe.any_instance.stubs(:initial_git_commit).returns(true)
+    recipe = recipes(:basic_recipe)
+
     GeneratedApp.any_instance.stubs(:commit_changes).returns(true)
     GeneratedApp.any_instance.stubs(:initial_git_commit).returns(true)
 
     AppGeneration::Orchestrator.any_instance.expects(:call)
 
     post generated_apps_path, params: {
-      app_name: "test-app",
-      api_flag: "--api",
-      database_choice: "--database=mysql"
+      generated_app: {
+        recipe_id: recipe.id
+      },
+      app_name: "test-app"
     }
   end
 end

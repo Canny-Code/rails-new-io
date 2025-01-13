@@ -1,0 +1,78 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="md:flex md:items-center md:justify-between">
+    <div class="flex-1 min-w-0">
+      <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">Generate New App</h2>
+    </div>
+  </div>
+  <div class="mt-8">
+    <div data-controller="github-name-validator"
+         data-github-name-validator-check-url-value="<%= check_github_name_path %>"
+         data-github-name-validator-debounce-value="500">
+      <%= form_tag generated_apps_path, method: :post, class: "space-y-8 divide-y divide-gray-200" do %>
+        <div class="space-y-6 sm:space-y-5">
+          <div class="relative overflow-hidden">
+            <!-- TODO check if we need this -->
+            <div class="hidden sm:block sm:absolute sm:inset-y-0 sm:h-full sm:w-full pointer-events-none">
+              <div class="relative h-full max-w-screen-xl mx-auto"></div>
+            </div>
+            <div id="app-name-input" class="flex justify-center items-center bg-deep-azure-zeta pt-10 pb-10">
+              <div class="flex flex-col items-center w-full max-w-md">
+                <label for="app-name" class="w-full text-center mb-2">
+                  <span class="px-5 my-3 text-gray-500">Enter the name of your awesome app!</span>
+                </label>
+                <input id="app-name"
+                 data-github-name-validator-target="input"
+                 name="app_name"
+                 data-action="input->github-name-validator#validate"
+                autocomplete="off"
+                placeholder="Enter app name"
+                class="appearance-none w-full px-5 py-3 border-2 border-gray-300 text-base leading-6 mx-5 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-lg">
+              </input>
+              <div class="text-sm mx-5">
+                <div data-github-name-validator-target="message" class="hidden"></div>
+                <div data-github-name-validator-target="spinner" class="hidden flex justify-center">
+                  <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
+        <label class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+          Select Recipe
+        </label>
+        <div class="mt-1 sm:mt-0 sm:col-span-2">
+          <div class="max-w-lg space-y-4">
+            <%= collection_radio_buttons :generated_app, :recipe_id, @recipes, :id, :name do |b| %>
+              <div class="relative flex items-start">
+                <div class="flex items-center h-5">
+                  <%= b.radio_button class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" %>
+                </div>
+                <div class="ml-3 text-sm">
+                  <%= b.label class: "font-medium text-gray-700" %>
+                  <p class="text-gray-500"><%= b.object.description %></p>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+      <div class="pt-5">
+        <div class="flex justify-end">
+          <%= link_to "Cancel", root_path, class: "bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+          <%= button_tag type: "submit",
+                  data: { github_name_validator_target: "submitButton" },
+                  disabled: true,
+                  class: "ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed" do %>
+            Generate App
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+</div>

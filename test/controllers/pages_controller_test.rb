@@ -1,14 +1,19 @@
 require "test_helper"
 
-class PagesControllerTest < ActionDispatch::IntegrationTest
+class PagesControllerTest < ActionController::TestCase
   def setup
-    @page = pages(:custom_ingredients)
+    @page = pages(:basic_setup)
   end
 
-  test "should include all nested associations" do
-    get page_path(@page)
+  test "renders page content successfully" do
+    get :show, params: { id: @page }
     assert_response :success
+    assert_select "h3", "Databases"
+  end
 
-    assert_includes response.body, "TODO: Implement Text Field"
+  test "finds page by slug" do
+    get :show, params: { id: "basic-setup" }
+    assert_response :success
+    assert_select "h3", "Databases"
   end
 end

@@ -26,6 +26,7 @@ class User < ApplicationRecord
   encrypts :github_token
 
   has_many :generated_apps, dependent: :nullify
+  has_many :recipes, foreign_key: :created_by_id, dependent: :destroy
   has_many :notifications, as: :recipient,
                           dependent: :destroy,
                           class_name: "Noticed::Notification"

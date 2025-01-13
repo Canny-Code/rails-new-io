@@ -36,7 +36,6 @@ class Recipe < ApplicationRecord
 
   validates :name, presence: true
   validates :status, inclusion: { in: %w[draft published archived] }
-  validates :cli_flags, presence: true
 
   def add_ingredient!(ingredient, configuration = {})
     transaction do
@@ -69,21 +68,10 @@ class Recipe < ApplicationRecord
     end
   end
 
-  # Class method to find or create a recipe with given CLI flags
-  def self.find_or_create_by_cli_flags!(cli_flags, user)
-    transaction do
-      recipe = where(cli_flags: cli_flags, status: "published").first
-      return recipe if recipe
-
-      create!(
-        name: "Rails App with #{cli_flags}",
-        cli_flags: cli_flags,
-        status: "published",
-        created_by: user,
-        ruby_version: RailsNewConfig.ruby_version_for_new_apps,
-        rails_version: RailsNewConfig.rails_version_for_new_apps
-      )
-    end
+  def self.find_duplicate(cli_flags)
+    # For now, we only check cli_flags. In the future, when we implement
+    # ingredients, we should also check for matching ingredients
+    where(cli_flags: cli_flags).first
   end
 
   private

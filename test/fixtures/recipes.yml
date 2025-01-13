@@ -47,3 +47,13 @@ minimal_recipe:
   cli_flags: "--minimal"
   created_by: john
   status: "published"
+
+basic_recipe:
+  name: "Basic Rails App"
+  description: "A basic Rails application setup"
+  cli_flags: "--api --database=mysql"
+  ruby_version: "3.2.0"
+  rails_version: "7.1.0"
+  status: "published"
+  created_by: jane
+  head_commit_sha: "abc123"

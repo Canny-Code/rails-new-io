@@ -12,15 +12,6 @@ export default class extends Controller {
   initialize() {
     this.validate = this.debounce(this.validate.bind(this), this.debounceValue)
     this.disableSubmit()
-    this.boundValidate = this.validate.bind(this)
-  }
-
-  connect() {
-    document.addEventListener("app-name-preview:appNameChanged", this.boundValidate)
-  }
-
-  disconnect() {
-    document.removeEventListener("app-name-preview:appNameChanged", this.boundValidate)
   }
 
   async validate(event) {
@@ -28,7 +19,7 @@ export default class extends Controller {
       return
     }
 
-    const name = event?.detail?.value || ''
+    const name = this.inputTarget.value.trim()
     if (!name) {
       this.hideMessage()
       this.disableSubmit()
