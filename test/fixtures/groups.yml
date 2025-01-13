@@ -30,3 +30,8 @@ databases:
 dev_env:
   title: Development Environment
   page: basic_setup
+
+custom_ingredients:
+  title: Your Custom Ingredients
+  page: custom_ingredients
+  behavior_type: custom_ingredients

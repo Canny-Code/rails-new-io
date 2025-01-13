@@ -40,12 +40,31 @@ module Pages
           end
 
           test "renders text field element" do
-            element = elements(:app_name)
-            component = Component.new(element: element)
+            element = Minitest::Mock.new
+            element.expect :variant_type, "Element::TextField"
+            element.expect :label, "App Name"
+            element.expect :label, "App Name"
+            element.expect :description, "Your application name"
 
+            # Create a component that will be rendered
+            text_field_component = Class.new(ApplicationComponent) do
+              def view_template
+                div do
+                  input type: "text", value: "App Name"
+                end
+              end
+            end.new
+
+            # Stub the component class to return our test component
+            Pages::Groups::SubGroups::Elements::TextField::Component.stubs(:new)
+              .with(label: "App Name", description: "Your application name", name: "App Name")
+              .returns(text_field_component)
+
+            component = Component.new(element: element)
             html = render component
 
-            assert_includes html, "TODO: Implement Text Field"
+            assert_includes html, "input type=\"text\""
+            assert_includes html, "App Name"
           end
 
           test "raises error for unknown element type" do
