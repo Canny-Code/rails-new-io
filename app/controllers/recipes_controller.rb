@@ -1,6 +1,6 @@
 class RecipesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_recipe, only: [ :show, :update, :destroy ]
+  before_action :set_recipe, only: [ :show, :destroy ]
 
   def index
     @recipes = current_user.recipes.where(status: "published").order(created_at: :desc)
