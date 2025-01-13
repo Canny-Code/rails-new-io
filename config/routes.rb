@@ -21,7 +21,7 @@ Rails.application.routes.draw do
 
   resources :notifications, only: [ :index, :update ]
 
-  resources :recipes, only: [ :index, :show, :create, :update, :destroy ]
+  resources :recipes, only: [ :index, :show, :create, :destroy ]
 
   resources :generated_apps, only: [ :new, :show, :create ] do
     resources :generation_attempts, only: [ :create ]
