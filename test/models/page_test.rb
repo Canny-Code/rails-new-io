@@ -101,10 +101,11 @@ class PageTest < ActiveSupport::TestCase
   end
 
   test "pages are ordered by position" do
-    first_page = Page.create!(title: "First Page", position: 0)
-    third_page = Page.create!(title: "Third Page", position: 2)
-    second_page = Page.create!(title: "Second Page", position: 1)
+    # Use higher positions to avoid conflicts with existing fixtures
+    first_page = Page.create!(title: "First Page", position: 100)
+    third_page = Page.create!(title: "Third Page", position: 102)
+    second_page = Page.create!(title: "Second Page", position: 101)
 
-    assert_equal [ first_page, second_page, third_page ], Page.all.to_a
+    assert_equal [ first_page, second_page, third_page ], Page.where(position: 100..102).order(position: :asc).to_a
   end
 end

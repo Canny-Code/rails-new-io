@@ -11,7 +11,7 @@ class RecipesController < ApplicationController
 
   def create
     unless recipe_params[:name].present?
-      redirect_to setup_recipes_path(slug: "basic-setup"), status: :unprocessable_entity
+      redirect_to setup_recipes_path(slug: "basic-setup"), alert: "A recipe with these settings already exists", status: :unprocessable_entity
       return
     end
 
@@ -54,7 +54,7 @@ class RecipesController < ApplicationController
   end
 
   def recipe_params
-    params.permit(
+    params.require(:recipe).permit(
       :id,
       :api_flag,
       :database_choice,

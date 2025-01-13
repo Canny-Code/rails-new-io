@@ -62,12 +62,14 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
   test "create makes new recipe with all parameters" do
     assert_difference("Recipe.count") do
       post recipes_path, params: {
-        name: "My API App",
-        description: "A cool API app",
-        status: "draft",
-        api_flag: "--api",
-        database_choice: "--database=postgresql",
-        rails_flags: "--skip-test"
+        recipe: {
+          name: "My API App",
+          description: "A cool API app",
+          status: "draft",
+          api_flag: "--api",
+          database_choice: "--database=postgresql",
+          rails_flags: "--skip-test"
+        }
       }
     end
 
@@ -83,9 +85,11 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
   test "create uses published as default status" do
     assert_difference("Recipe.count") do
       post recipes_path, params: {
-        name: "My API App",
-        description: "A cool API app",
-        api_flag: "--api"
+        recipe: {
+          name: "My API App",
+          description: "A cool API app",
+          api_flag: "--api"
+        }
       }
     end
 
@@ -97,12 +101,14 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
 
     assert_no_difference("Recipe.count") do
       post recipes_path, params: {
-        name: "Different Name",
-        description: "Different description",
-        status: "draft", # different status
-        api_flag: "--api",
-        database_choice: "--database=mysql",
-        rails_flags: nil
+        recipe: {
+          name: "Different Name",
+          description: "Different description",
+          status: "draft", # different status
+          api_flag: "--api",
+          database_choice: "--database=mysql",
+          rails_flags: nil
+        }
       }
     end
 
@@ -113,12 +119,14 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
   test "create handles missing CLI flags gracefully" do
     assert_difference("Recipe.count") do
       post recipes_path, params: {
-        name: "Basic App",
-        description: "A basic Rails app",
-        status: "published",
-        api_flag: nil,
-        database_choice: nil,
-        rails_flags: nil
+        recipe: {
+          name: "Basic App",
+          description: "A basic Rails app",
+          status: "published",
+          api_flag: nil,
+          database_choice: nil,
+          rails_flags: nil
+        }
       }
     end
 
@@ -133,8 +141,10 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
   test "create with missing name renders new" do
     assert_no_difference("Recipe.count") do
       post recipes_path, params: {
-        description: "A description",
-        api_flag: "--api"
+        recipe: {
+          description: "A description",
+          api_flag: "--api"
+        }
       }
     end
 
@@ -144,10 +154,12 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
   test "create with invalid status fails validation" do
     assert_no_difference("Recipe.count") do
       post recipes_path, params: {
-        name: "My App",
-        description: "A description",
-        status: "invalid_status",
-        api_flag: "--api"
+        recipe: {
+          name: "My App",
+          description: "A description",
+          status: "invalid_status",
+          api_flag: "--api"
+        }
       }
     end
 
@@ -157,8 +169,10 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
   test "create with invalid params renders new" do
     assert_no_difference("Recipe.count") do
       post recipes_path, params: {
-        name: "", # name is required
-        api_flag: "--api"
+        recipe: {
+          name: "", # name is required
+          api_flag: "--api"
+        }
       }
     end
 

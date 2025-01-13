@@ -18,14 +18,44 @@
               controller: "form-values",
               action: "generated-output:valueChanged@window->form-values#updateFromDisplay"
             } do %>
-      <%= hidden_field_tag :api_flag, nil,
+      <%= hidden_field_tag "recipe[api_flag]", nil,
               data: { form_values_target: "apiFlag" } %>
-      <%= hidden_field_tag :database_choice, nil,
+      <%= hidden_field_tag "recipe[database_choice]", nil,
               data: { form_values_target: "databaseChoice" } %>
-      <%= hidden_field_tag :rails_flags, nil,
+      <%= hidden_field_tag "recipe[rails_flags]", nil,
               data: { form_values_target: "railsFlags" } %>
+      <div class="space-y-4 max-w-lg mx-auto">
+        <div>
+          <%= label_tag "recipe[name]", "Recipe Name", class: "block text-sm font-medium text-gray-100" %>
+          <div class="mt-1">
+            <%= text_field_tag "recipe[name]", nil,
+                class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md",
+                placeholder: "My Rails App Recipe",
+                required: true %>
+          </div>
+        </div>
+        <div>
+          <%= label_tag "recipe[description]", "Description", class: "block text-sm font-medium text-gray-100" %>
+          <div class="mt-1">
+            <%= text_area_tag "recipe[description]", nil,
+                class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md",
+                rows: 3,
+                placeholder: "Describe what this recipe does..." %>
+          </div>
+        </div>
+        <div class="relative flex items-start">
+          <div class="flex items-center h-5">
+            <%= check_box_tag "recipe[status]", "published", true,
+                class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded" %>
+          </div>
+          <div class="ml-3 text-sm">
+            <%= label_tag "recipe[status]", "Published", class: "font-medium text-gray-100" %>
+            <p class="text-gray-300">Make this recipe available for use</p>
+          </div>
+        </div>
+      </div>
       <%= button_tag type: "submit",
-            class: "flex-none inline-flex h-12 items-center bg-deep-azure-gamma rounded-lg px-6 text-gray-100 shadow-2xl" do %>
+            class: "mt-6 flex-none inline-flex h-12 items-center bg-deep-azure-gamma rounded-lg px-6 text-gray-100 shadow-2xl" do %>
         Create Recipe
       <% end %>
     <% end %>
