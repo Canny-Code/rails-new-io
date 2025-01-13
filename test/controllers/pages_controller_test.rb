@@ -6,13 +6,13 @@ class PagesControllerTest < ActionController::TestCase
   end
 
   test "renders page content successfully" do
-    get :show, params: { id: @page }
+    get :show, params: { slug: @page.slug }
     assert_response :success
     assert_select "h3", "Databases"
   end
 
   test "finds page by slug" do
-    get :show, params: { id: "basic-setup" }
+    get :show, params: { slug: "basic-setup" }
     assert_response :success
     assert_select "h3", "Databases"
   end

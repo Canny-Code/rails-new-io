@@ -6,6 +6,6 @@ class PagesController < ApplicationController
           elements: [ :variant ]
         }
       }
-    ).friendly.find(params[:id] || params[:slug])
+    ).friendly.find(params[:slug])
   end
 end

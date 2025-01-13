@@ -39,13 +39,13 @@
         <div>
           <nav class="-mb-px flex space-x-1 md:space-x-2" aria-label="Tabs">
             <% Page.all.each do |page| %>
-              <%= link_to page_path(page),
+              <%= link_to setup_recipes_path(slug: page.slug),
                   id: "#{page.slug}-tab",
                   data: {
                     tabs_target: "tab",
                     action: "click->tabs#change",
                     page_slug: page.slug,
-                    page_url: page_path(page)
+                    page_url: setup_recipes_path(slug: page.slug)
                   },
                   class: "tab #{page == @page ? 'tab-active' : 'tab-inactive'}" do %>
                 <%= page.title %>

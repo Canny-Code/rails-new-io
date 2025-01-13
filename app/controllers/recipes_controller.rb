@@ -11,7 +11,7 @@ class RecipesController < ApplicationController
 
   def create
     unless recipe_params[:name].present?
-      redirect_to page_path("basic-setup"), status: :unprocessable_entity
+      redirect_to setup_recipes_path(slug: "basic-setup"), status: :unprocessable_entity
       return
     end
 
@@ -38,7 +38,7 @@ class RecipesController < ApplicationController
     if @recipe.save
       redirect_to @recipe, notice: "Recipe was successfully created."
     else
-      redirect_to page_path("basic-setup"), status: :unprocessable_entity
+      redirect_to setup_recipes_path(slug: "basic-setup"), status: :unprocessable_entity
     end
   end
 

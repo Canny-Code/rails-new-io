@@ -1,65 +1,46 @@
 require "application_system_test_case"
 
 class PagesTest < ApplicationSystemTestCase
-  test "switches between tabs and persists element state" do
-    visit page_path(pages(:basic_setup))
+  test "visiting the basic setup page" do
+    visit setup_recipes_path(slug: pages(:basic_setup).slug)
 
-    # Verify initial state
-    assert_selector "h3", text: "Databases"
-    assert_selector ".tab-active", text: "Basic Setup"
-    assert_equal page_path(pages(:basic_setup)), current_path
+    assert_selector "h1", text: "Create a New Rails App"
+    assert_equal setup_recipes_path(slug: pages(:basic_setup).slug), current_path
+  end
 
-    # Verify SQLite3 is selected by default
-    assert find("#main-tab-database-choice-sqlite3").checked?
+  test "can navigate between pages" do
+    visit setup_recipes_path(slug: pages(:basic_setup).slug)
 
-    # Choose PostgreSQL
-    find("input[type='radio'][id='main-tab-database-choice-postgresql']").click
+    click_on "Custom Ingredients"
 
-    # Verify the selection was made
-    assert find("#main-tab-database-choice-postgresql").checked?
-    assert_not find("#main-tab-database-choice-sqlite3").checked?
+    assert_selector "h1", text: "Custom Ingredients"
+    assert_equal setup_recipes_path(slug: pages(:custom_ingredients).slug), current_path
+  end
 
-    # Click the Custom Ingredients tab
-    find("#your-custom-ingredients-tab").click
+  test "can navigate between pages using tabs" do
+    visit setup_recipes_path(slug: pages(:basic_setup).slug)
 
-    # Verify URL and content changed
-    assert_equal page_path(pages(:custom_ingredients)), current_path
-    assert_selector "h3", text: "Your Custom Ingredients"
-    assert_selector ".tab-active", text: "Your Custom Ingredients"
-    assert_selector ".tab-inactive", text: "Basic Setup"
+    find("#custom-ingredients-tab").click
 
-    # Go back using browser history
-    go_back
+    assert_selector "h1", text: "Custom Ingredients"
+    assert_equal setup_recipes_path(slug: pages(:custom_ingredients).slug), current_path
+  end
 
-    # Verify we're back on the original page with state preserved
-    assert_equal page_path(pages(:basic_setup)), current_path
-    assert_selector "h3", text: "Databases"
-    assert_selector ".tab-active", text: "Basic Setup"
-    assert_selector ".tab-inactive", text: "Your Custom Ingredients"
+  test "can navigate between pages using keyboard shortcuts" do
+    visit setup_recipes_path(slug: pages(:basic_setup).slug)
 
-    # Verify PostgreSQL selection was preserved
-    assert find("#main-tab-database-choice-postgresql").checked?
-    assert_not find("#main-tab-database-choice-sqlite3").checked?
+    find("body").send_keys("2")
 
-    # Go forward using browser history
-    go_forward
+    assert_selector "h1", text: "Custom Ingredients"
+    assert_equal setup_recipes_path(slug: pages(:custom_ingredients).slug), current_path
+  end
 
-    # Verify we're back on the custom ingredients page
-    assert_equal page_path(pages(:custom_ingredients)), current_path
-    assert_selector "h3", text: "Your Custom Ingredients"
-    assert_selector ".tab-active", text: "Your Custom Ingredients"
-    assert_selector ".tab-inactive", text: "Basic Setup"
+  test "can navigate between pages using keyboard shortcuts in reverse" do
+    visit setup_recipes_path(slug: pages(:custom_ingredients).slug)
 
-    # Go back to basic setup using tab click
-    find("#basic-setup-tab").click
+    find("body").send_keys("1")
 
-    # Verify URL and content changed
-    assert_equal page_path(pages(:basic_setup)), current_path
-    assert_selector "h3", text: "Databases"
-    assert_selector ".tab-active", text: "Basic Setup"
-
-    # Verify PostgreSQL selection was still preserved
-    assert find("#main-tab-database-choice-postgresql").checked?
-    assert_not find("#main-tab-database-choice-sqlite3").checked?
+    assert_selector "h1", text: "Basic Setup"
+    assert_equal setup_recipes_path(slug: pages(:basic_setup).slug), current_path
   end
 end

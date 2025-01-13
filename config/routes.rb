@@ -21,7 +21,11 @@ Rails.application.routes.draw do
 
   resources :notifications, only: [ :index, :update ]
 
-  resources :recipes, only: [ :index, :show, :create, :destroy ]
+  resources :recipes, only: [ :index, :show, :create, :destroy ] do
+    collection do
+      get "new/:slug", to: "pages#show", as: :setup
+    end
+  end
 
   resources :generated_apps, only: [ :new, :show, :create ] do
     resources :generation_attempts, only: [ :create ]
@@ -29,8 +33,6 @@ Rails.application.routes.draw do
   end
 
   resources :ingredients
-
-  resources :pages, only: :show
 
   constraints(->(request) { request.session[:user_id].present? }) do
     root to: "dashboard#show", as: :authenticated_root
