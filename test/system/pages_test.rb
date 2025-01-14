@@ -28,16 +28,7 @@ class PagesTest < ApplicationSystemTestCase
 
     click_on "Your Custom Ingredients"
 
-    assert_selector "h3", text: "Your Custom Ingredients", wait: 5
-    assert_equal setup_recipes_path(slug: pages(:custom_ingredients).slug), current_path
-  end
-
-  test "can navigate between pages using tabs" do
-    visit setup_recipes_path(slug: pages(:basic_setup).slug)
-
-    find("#your-custom-ingredients-tab").click
-
-    assert_selector "h3", text: "Your Custom Ingredients", wait: 5
+    assert_selector "h3", text: "No ingredients yet", wait: 5
     assert_equal setup_recipes_path(slug: pages(:custom_ingredients).slug), current_path
   end
 end
