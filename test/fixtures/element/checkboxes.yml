@@ -21,4 +21,4 @@ skip_docker:
 
 skip_action_mailer:
   default: false
-  checked: true
+  checked: false

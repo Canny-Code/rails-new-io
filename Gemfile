@@ -11,7 +11,7 @@ gem "git", "~> 2.3.3"
 gem "kamal", "~> 2.4.0", require: false
 gem "thruster", "~> 0.1.10", require: false
 gem "mission_control-jobs", "~> 1.0.1"
-gem "noticed", "~> 2.5.0"
+gem "noticed", "~> 2.5.1"
 gem "litestream", "~> 0.12.0"
 gem "octokit", "~> 9.2.0"
 gem "omniauth-github", github: "omniauth/omniauth-github", branch: "master"

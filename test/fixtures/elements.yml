@@ -90,6 +90,6 @@ database_mariadb_trilogy:
   label: MariaDB (Trilogy)
   sub_group: databases_default
   variant: database_mariadb_trilogy (Element::RadioButton)
-  description: Fuck your database
+  description: Use MariaDB (Trilogy) as your database
   image_path: Mariadb.svg
   position: 5
