@@ -32,16 +32,19 @@ skip_git:
   label: Skip Git
   sub_group: dev_env_default
   variant: skip_git (Element::Checkbox)
+  command_line_value: "--skip-git"
 
 skip_docker:
   label: Skip Docker
   sub_group: dev_env_default
   variant: skip_docker (Element::Checkbox)
+  command_line_value: "--skip-docker"
 
 skip_action_mailer:
   label: Skip Action Mailer
   sub_group: dev_env_default
   variant: skip_action_mailer (Element::Checkbox)
+  command_line_value: "--skip-action-mailer"
 
 database_sqlite3:
   label: SQLite3

@@ -20,12 +20,14 @@ module Pages
             end
 
             def view_template
-              li(data_controller: "rails-flag", class: "menu-card-row text-ruby") do
+              li(data_controller: "check-box",
+                 data: {
+                   "check-box-generated-output-outlet": "#rails-flags"
+                 },
+                 class: "menu-card-row text-ruby") do
                 whitespace
                 label(
-                  class: "flex items-center px-4 py-4 sm:px-6",
-                  data_target: "rails-flag.name",
-                  data_command_output: @command_line_value
+                  class: "flex items-center px-4 py-4 sm:px-6"
                 ) do
                   div(class: "min-w-0 flex-1 flex items-center") do
                     div(class: "min-w-0 flex-1 px-4 md:grid md:gap-4") do
@@ -48,7 +50,7 @@ module Pages
                   div do
                     input(
                       type: "checkbox",
-                      id: "main-tab-mains-#{@label.downcase}",
+                      id: "main-tab-mains-#{@label.downcase.gsub(' ', '-')}",
                       data: {
                         display_when: @display_when,
                         command_output: @command_line_value,

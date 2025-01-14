@@ -29,6 +29,7 @@ SQLite
 Turbo
 Stimulus
 TailwindCSS
+Phlex (!NOT viewcomponent!)
 esbuild
 
 Utilize the integrated docs in the cursor custom docs for reference when needed.

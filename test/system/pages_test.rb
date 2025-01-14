@@ -14,6 +14,8 @@ class PagesTest < ApplicationSystemTestCase
         nickname: @user.github_username
       }
     )
+    visit root_path
+    click_on "Get in"
   end
 
   test "visiting the basic setup page" do

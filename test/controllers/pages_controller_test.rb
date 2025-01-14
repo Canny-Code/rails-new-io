@@ -1,18 +1,13 @@
 require "test_helper"
 
-class PagesControllerTest < ActionController::TestCase
+class PagesControllerTest < ActionDispatch::IntegrationTest
   def setup
     @page = pages(:basic_setup)
+    sign_in users(:jane)
   end
 
   test "renders page content successfully" do
-    get :show, params: { slug: @page.slug }
-    assert_response :success
-    assert_select "h3", "Databases"
-  end
-
-  test "finds page by slug" do
-    get :show, params: { slug: "basic-setup" }
+    get setup_recipes_path(slug: "basic-setup")
     assert_response :success
     assert_select "h3", "Databases"
   end

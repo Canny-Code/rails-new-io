@@ -33,7 +33,7 @@ module CommandLineValueGenerator
       .gsub(/[\s._]/, "-")
       .gsub(/^\./, "")                    # Remove leading dot if present
 
-    "--skip-#{kebab_term}"
+    "--skip-#{kebab_term}".sub("skip-skip", "skip")
   end
 
   def generate_database_choice_command_line_value
