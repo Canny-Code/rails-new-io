@@ -40,13 +40,23 @@
           </div>
         </div>
       </div>
-      <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
-        <label class="block text-lg font-medium text-gray-700 sm:mt-px sm:pt-2">
-          Select Recipe - TODO: small font underneath: make your own or use a predefined
-        </label>
-        <div class="mt-4 flex md:mt-0 md:ml-4">
-          <%= link_to "New Recipe", setup_recipes_path(slug: "basic-setup"), class: "ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+
+      <div class="border-b border-gray-200 bg-white px-4 py-5 sm:px-6">
+        <div class="-ml-4 -mt-4 flex flex-wrap items-center justify-between sm:flex-nowrap">
+          <div class="ml-4 mt-4">
+            <h3 class="text-base font-semibold text-gray-900">Select Recipe</h3>
+            <p class="mt-1 text-sm text-gray-500">Choose from our pre-cooked meals or craft your own recipe from scratch</p>
+          </div>
+          <div class="ml-4 mt-4 shrink-0">
+            <%= render Buttons::Primary::Component.new(
+              text: "New Recipe",
+              path: setup_recipes_path(slug: "basic-setup")
+            ) %>
+          </div>
         </div>
+      </div>
+
+      <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
         <div class="mt-1 sm:mt-0 sm:col-span-2">
           <div class="max-w-lg space-y-4">
             <%= collection_radio_buttons :generated_app, :recipe_id, @recipes, :id, :name do |b| %>

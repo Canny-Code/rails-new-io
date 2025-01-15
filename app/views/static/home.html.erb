@@ -12,13 +12,11 @@
                 Turn your perfect Rails setup into a reusable recipe. Because your future self called – they're tired of copy-pasting configs and playing CLI flag bingo.
               </p>
               <div class="mt-10 flex">
-                <div>
-                  <a href="#cta-box"
-                      class="inline-flex justify-center items-center px-6 py-3 mr-6 text-lg border-2 border-[#ac3b61] rounded-lg bg-[#ac3b61] text-white font-semibold hover:bg-[#e935a3] transition-colors scroll-smooth"
-                      onclick="document.getElementById('cta-box').scrollIntoView({ behavior: 'smooth', block: 'start' }); return false;">
-                    Count Me In, Chef 🧑‍🍳
-                  </a>
-                </div>
+                <%= render Buttons::Primary::Component.new(
+                  text: "Count Me In, Chef 🧑‍🍳",
+                  path: "#cta-box",
+                  icon: false
+                ) %>
                 <%= render GithubAuthButton::Component.new %>
               </div>
             </div>
