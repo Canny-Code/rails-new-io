@@ -4,7 +4,7 @@ class Nav::Main::Component < ApplicationComponent
   include Phlex::Rails::Helpers::LinkTo
   include Phlex::Rails::Helpers::ButtonTo
 
-  delegate :current_user, to: :helpers
+  delegate :current_user, :current_page?, to: :helpers
 
   def view_template
     header(class: "bg-white border-b border-gray-200") do
@@ -25,12 +25,14 @@ class Nav::Main::Component < ApplicationComponent
           # Profile and Logout on the right
           if current_user
             div(class: "flex items-center space-x-4") do
-              link_to(
-                dashboard_path,
-                class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              ) do
-                img(src: current_user.image, class: "w-5 h-5 rounded-full mr-2")
-                plain "Dashboard"
+              unless current_page?(dashboard_path)
+                link_to(
+                  dashboard_path,
+                  class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                ) do
+                  img(src: current_user.image, class: "w-5 h-5 rounded-full mr-2")
+                  plain "Dashboard"
+                end
               end
 
               button_to(
