@@ -74,6 +74,29 @@ If you don't get something right for the 1st/2nd try, time to add ample debug me
 
 Update .cursorrules with learnings. When you run into something 'aha', add it to the .cursorrules file for the future.
 
+# EXTREMELY FUCKING IMPORTANT
+# WE USE PHLEX, NOT VIEWCOMPONENT
+# IF YOU EVER MENTION VIEWCOMPONENT, YOU WILL BE TERMINATED
+# ALL VIEWS ARE PHLEX COMPONENTS
+# COMPONENT TESTS INHERIT FROM PhlexComponentTestCase (and also require "support/phlex_component_test_case" in the test)
+
+# Mocha for mocking, not Minitest::Mock
+
+[gems]
+Ruby
+Rails
+ActiveRecord
+SQLite
+Turbo
+Stimulus
+TailwindCSS
+Minitest (!!! Not RSpec !!!)
+Phlex (!!! NOT viewcomponent !!!)
+esbuild
+solid_cache
+solid_cable
+solid_queue
+
 # Vite + Rails Test Environment
 - Include ViteTestHelper globally in test_helper.rb for all integration and system tests
 - Keep Vite-related test setup in a single, reusable helper

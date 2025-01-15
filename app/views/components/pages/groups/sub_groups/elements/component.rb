@@ -38,12 +38,12 @@ module Pages
                   **group_stimulus_attributes
                 }
               )
-            when "Element::TextField"
-              render Pages::Groups::SubGroups::Elements::TextField::Component.new(
-                label: element.label,
-                description: element.description,
-                name: element.label,
-              )
+            # when "Element::TextField"
+            #   render Pages::Groups::SubGroups::Elements::TextField::Component.new(
+            #     label: element.label,
+            #     description: element.description,
+            #     name: element.label,
+            #   )
             else
               raise "Unknown element variant_type: #{element.variant_type}"
             end
