@@ -21,13 +21,24 @@ unless skip_coverage?
 end
 
 ENV["RAILS_ENV"] ||= "test"
-# require "vite_rails" # let's see if we need this
 require_relative "../config/environment"
 require "rails/test_help"
 require "mocha/minitest"
 require "minitest/mock"
 require "database_cleaner/active_record"
 require "phlex/testing/view_helper"
+require_relative "support/vite_test_helper"
+
+# Ensure Vite's test environment is properly set
+ENV["VITE_RUBY_TEST"] = "true"
+
+class ActionDispatch::IntegrationTest
+  include ViteTestHelper
+end
+
+class ActionDispatch::SystemTest
+  include ViteTestHelper
+end
 
 ActiveRecord::Encryption.configure(
   primary_key: "test" * 4,

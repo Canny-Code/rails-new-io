@@ -73,3 +73,21 @@ If you don't get something right for the 1st/2nd try, time to add ample debug me
 !!! EXTRMELY IMPORTANT !!!
 
 Update .cursorrules with learnings. When you run into something 'aha', add it to the .cursorrules file for the future.
+
+# Vite + Rails Test Environment
+- Include ViteTestHelper globally in test_helper.rb for all integration and system tests
+- Keep Vite-related test setup in a single, reusable helper
+- The helper automatically ensures assets are built when needed
+- Test Setup Hooks:
+  - Integration tests: Use class-level setup hook (`base.setup :method_name`)
+  - System tests: Override instance `before_setup` method and call super
+  ```ruby
+  # Integration tests
+  base.setup :my_setup_method  # Class-level hook
+
+  # System tests
+  def before_setup  # Instance method override
+    my_setup_method
+    super
+  end
+  ```
