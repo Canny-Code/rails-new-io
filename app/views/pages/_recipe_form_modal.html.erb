@@ -1,0 +1,62 @@
+<%# Modal Backdrop %>
+<div data-modal-target="modal"
+     data-action="click->modal#clickOutside"
+  class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 overflow-y-auto h-full w-full z-50">
+  <%# Modal Content %>
+  <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-deep-azure-zeta">
+    <div class="mt-3">
+      <h3 class="text-lg leading-6 font-medium text-gray-100 mb-6">Save Your Recipe</h3>
+      <%= form_tag recipes_path, method: :post, class: "space-y-4",
+              data: {
+                controller: "form-values",
+                action: "generated-output:valueChanged@window->form-values#updateFromDisplay"
+              } do %>
+        <%= hidden_field_tag "recipe[api_flag]", nil,
+                data: { form_values_target: "apiFlag" } %>
+        <%= hidden_field_tag "recipe[database_choice]", nil,
+                data: { form_values_target: "databaseChoice" } %>
+        <%= hidden_field_tag "recipe[rails_flags]", nil,
+                data: { form_values_target: "railsFlags" } %>
+        <div>
+          <%= label_tag "recipe[name]", "Recipe Name", class: "block text-sm font-medium text-gray-100" %>
+          <div class="mt-1">
+            <%= text_field_tag "recipe[name]", nil,
+                class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md",
+                placeholder: "My Rails App Recipe",
+                required: true %>
+          </div>
+        </div>
+        <div>
+          <%= label_tag "recipe[description]", "Description", class: "block text-sm font-medium text-gray-100" %>
+          <div class="mt-1">
+            <%= text_area_tag "recipe[description]", nil,
+                class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md",
+                rows: 3,
+                placeholder: "Describe what this recipe does..." %>
+          </div>
+        </div>
+        <div class="relative flex items-start">
+          <div class="flex items-center h-5">
+            <%= check_box_tag "recipe[status]", "published", true,
+                class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded" %>
+          </div>
+          <div class="ml-3 text-sm">
+            <%= label_tag "recipe[status]", "Published", class: "font-medium text-gray-100" %>
+            <p class="text-gray-300">Make this recipe available for use</p>
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end space-x-3">
+          <button type="button"
+                  data-action="click->modal#close"
+            class="inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-100 bg-deep-azure-gamma border border-transparent rounded-md hover:bg-deep-azure-epsilon focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
+            Cancel
+          </button>
+          <%= button_tag type: "submit",
+                class: "inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500" do %>
+            Create Recipe
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

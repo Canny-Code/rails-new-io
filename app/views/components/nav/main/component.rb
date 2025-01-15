@@ -26,11 +26,11 @@ class Nav::Main::Component < ApplicationComponent
           if current_user
             div(class: "flex items-center space-x-4") do
               link_to(
-                user_path(current_user),
+                dashboard_path,
                 class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               ) do
                 img(src: current_user.image, class: "w-5 h-5 rounded-full mr-2")
-                plain "My Profile"
+                plain "Dashboard"
               end
 
               button_to(

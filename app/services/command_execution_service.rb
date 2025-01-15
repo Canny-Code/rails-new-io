@@ -15,9 +15,10 @@ class CommandExecutionService
   COMMAND_PATTERN = /\A
   rails\s+new\s+                    # Command start
   [a-zA-Z]                         # App name must start with a letter
-  [a-zA-Z0-9_-]*\s+               # Rest of app name can have letters, numbers, underscores, hyphens
+  [a-zA-Z0-9_-]*                  # Rest of app name can have letters, numbers, underscores, hyphens
   (?!generate|destroy|server)       # Negative lookahead for other rails commands
   (?:
+    \s+
     (?:
       # Single character options with possible values
       -[rndGMOCATJBjc]\s+[\w\/.=-]+\s*|
@@ -41,7 +42,7 @@ class CommandExecutionService
       )
       \s*
     )*
-  )
+  )?
   \z/x
 
   VALID_OPTIONS = /\A--?[a-z][\w-]*\z/  # Must start with letter after dash(es)

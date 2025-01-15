@@ -5,7 +5,13 @@ class GeneratedAppsController < ApplicationController
   end
 
   def new
-    @recipes = Recipe.where(created_by: current_user, status: "published").order(created_at: :desc)
+    user_recipes = Recipe.where(created_by: current_user, status: "published")
+    template_recipes = Recipe.where(
+      created_by: User.find_by(github_username: "trinitytakei"),
+      name: [ "omakase", "api only" ],
+      status: "published"
+    )
+    @recipes = (user_recipes + template_recipes).sort_by(&:created_at).reverse
   end
 
   def create
