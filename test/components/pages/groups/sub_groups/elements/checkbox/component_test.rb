@@ -27,6 +27,15 @@ module Pages
               assert_equal "--skip-git", checkbox["value"]
             end
 
+            def test_renders_checkbox_with_custom_outlet
+              params = build_params(data: { "check-box-generated-output-outlet" => "#custom_ingredients" })
+              result = Component.new(**params).render_in(view_context)
+              doc = Nokogiri::HTML.fragment(result)
+
+              li_element = doc.css("li").first
+              assert_equal "#custom_ingredients", li_element["data-check-box-generated-output-outlet"]
+            end
+
             def test_renders_checkbox_with_custom_data_attributes
               custom_data = { "action" => "click->some-controller#action" }
               params = build_params(data: custom_data)

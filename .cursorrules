@@ -91,3 +91,10 @@ Update .cursorrules with learnings. When you run into something 'aha', add it to
     super
   end
   ```
+
+# Vite Test Environment Troubleshooting
+- If tests fail with "can't find entrypoints" error:
+  1. Remove old manifest: `rm -rf public/vite-test/.vite`
+  2. Rebuild assets: `RAILS_ENV=test bin/vite build`
+- Empty manifest usually means stale/cached assets
+- Always force rebuild if asset-related test errors occur

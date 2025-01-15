@@ -34,7 +34,8 @@ module Pages
                 command_line_value: element.command_line_value,
                 display_when: element.variant.display_when,
                 data: {
-                  action: "change->check-box#update"
+                  action: "change->check-box#update",
+                  **group_stimulus_attributes
                 }
               )
             when "Element::TextField"
@@ -51,6 +52,17 @@ module Pages
           private
 
           attr_reader :element
+
+          def group_stimulus_attributes
+            element.sub_group.group.stimulus_attributes.transform_keys do |key|
+              case key
+              when "controller"
+                "action"
+              else
+                key
+              end
+            end
+          end
         end
       end
     end

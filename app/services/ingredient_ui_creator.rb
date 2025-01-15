@@ -21,7 +21,7 @@ class IngredientUiCreator
   attr_reader :ingredient
 
   def find_or_create_group(page)
-    page.groups.find_or_create_by!(title: ingredient.category)
+    page.groups.find_or_create_by!(title: ingredient.category, behavior_type: "custom_ingredient_checkbox")
   end
 
   def find_or_create_sub_group(group)

@@ -4,6 +4,8 @@ module CommandLineValueGenerator
   def generate_command_line_value
     if sub_group.group.behavior_type == "database_choice"
       generate_database_choice_command_line_value
+    elsif sub_group.group.behavior_type == "custom_ingredient_checkbox"
+      label
     else
       generate_generic_checkbox_command_line_value
     end

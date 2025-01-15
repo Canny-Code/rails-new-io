@@ -11,37 +11,42 @@ class CommandLineValueGeneratorTest < ActiveSupport::TestCase
     end
   end
 
-  setup do
-    @group = Minitest::Mock.new
-    @sub_group = Minitest::Mock.new
+  class StubGroup
+    attr_reader :behavior_type
+
+    def initialize(behavior_type)
+      @behavior_type = behavior_type
+    end
+  end
+
+  class StubSubGroup
+    attr_reader :group
+
+    def initialize(behavior_type)
+      @group = StubGroup.new(behavior_type)
+    end
   end
 
   test "generates command line value for database choice" do
-    @group.expect :behavior_type, "database_choice"
-    @sub_group.expect :group, @group
-
-    instance = DummyClass.new(label: "PostgreSQL", sub_group: @sub_group)
+    instance = DummyClass.new(
+      label: "PostgreSQL",
+      sub_group: StubSubGroup.new("database_choice")
+    )
     assert_equal "postgresql", instance.generate_command_line_value
   end
 
   test "generates command line value for generic checkbox" do
-    @group.expect :behavior_type, "generic_checkbox"
-    @sub_group.expect :group, @group
-
     instance = DummyClass.new(
       label: "Add Something",
-      sub_group: @sub_group
+      sub_group: StubSubGroup.new("generic_checkbox")
     )
     assert_equal "--skip-something", instance.generate_command_line_value
   end
 
   test "generates command line value for other behavior type" do
-    @group.expect :behavior_type, "other"
-    @sub_group.expect :group, @group
-
     instance = DummyClass.new(
       label: "Add something?",
-      sub_group: @sub_group
+      sub_group: StubSubGroup.new("other")
     )
     assert_equal "--skip-something", instance.generate_command_line_value
   end

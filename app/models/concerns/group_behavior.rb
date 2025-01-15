@@ -18,6 +18,11 @@ module GroupBehavior
         controller: "check-box",
         "check-box-generated-output-outlet": "#rails-flags"
       }
+    when "custom_ingredient_checkbox"
+      {
+        controller: "check-box",
+        "check-box-generated-output-outlet": "#custom_ingredients"
+      }
     else
       {}
     end
