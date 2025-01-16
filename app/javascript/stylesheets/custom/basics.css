@@ -1,31 +1,44 @@
 @layer base {
-    .pagy {
+  .pagy {
     @apply flex space-x-1 font-semibold text-sm text-gray-500;
+
     a:not(.gap) {
       @apply block rounded-lg px-3 py-1 bg-gray-200;
+
       &:hover {
         @apply bg-gray-300;
       }
-      &:not([href]) { /* disabled links */
+
+      &:not([href]) {
+        /* disabled links */
         @apply text-gray-300 bg-gray-100 cursor-default;
       }
+
       &.current {
         @apply text-white bg-gray-400;
       }
     }
+
     label {
       @apply inline-block whitespace-nowrap bg-gray-200 rounded-lg px-3 py-0.5;
+
       input {
         @apply bg-gray-100 border-none rounded-md;
       }
     }
   }
+
   pre {
-    white-space: pre-wrap;       /* css-3 */
-    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
-    white-space: -pre-wrap;      /* Opera 4-6 */
-    white-space: -o-pre-wrap;    /* Opera 7 */
-    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    white-space: pre-wrap;
+    /* css-3 */
+    white-space: -moz-pre-wrap;
+    /* Mozilla, since 1999 */
+    white-space: -pre-wrap;
+    /* Opera 4-6 */
+    white-space: -o-pre-wrap;
+    /* Opera 7 */
+    word-wrap: break-word;
+    /* Internet Explorer 5.5+ */
   }
 
   body {
@@ -78,22 +91,10 @@
   }
 
   .tab-active {
-    @apply bg-white 
-           text-gray-700 
-           border-2
-           border-white 
-           rounded-t-lg 
-           border-b-0 
-           relative 
-           top-[2px];
+    @apply bg-white text-gray-700 border-2 border-white rounded-t-lg border-b-0 relative top-[2px];
   }
 
   .tab-inactive {
-    @apply text-gray-400 
-           border-b-2
-           border-transparent
-           hover:text-gray-200 
-           hover:border-b-2
-           hover:border-b-ruby;
+    @apply text-white border-2 border-transparent rounded-t-lg border-b-0 relative hover:bg-[#ac3b61] hover:border-[#ac3b61] transform transition-transform duration-200 hover:scale-[1.02];
   }
 }
