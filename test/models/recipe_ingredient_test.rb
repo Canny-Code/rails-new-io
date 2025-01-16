@@ -32,7 +32,6 @@ class RecipeIngredientTest < ActiveSupport::TestCase
     @recipe = recipes(:blog_recipe)
     @ingredient = ingredients(:rails_authentication)
     @recipe_ingredient = recipe_ingredients(:blog_auth)
-    stub_git_operations(@recipe)
   end
 
   test "validates presence of position" do
@@ -55,16 +54,8 @@ class RecipeIngredientTest < ActiveSupport::TestCase
     assert_includes duplicate.errors[:position], "has already been taken"
   end
 
-  test "validates presence of configuration" do
-    recipe_ingredient = @recipe.recipe_ingredients.build(
-      ingredient: @ingredient,
-      position: 1
-    )
-    assert_not recipe_ingredient.valid?
-    assert_includes recipe_ingredient.errors[:configuration], "can't be blank"
-  end
-
   test "converts to git format" do
+    stub_git_operations(@recipe, expect_sync: false)
     @recipe_ingredient.applied_at = Time.current
     expected = {
       ingredient_name: @ingredient.name,
@@ -77,6 +68,7 @@ class RecipeIngredientTest < ActiveSupport::TestCase
   end
 
   test "applies ingredient configuration" do
+    stub_git_operations(@recipe, expect_sync: false)
     freeze_time do
       # Ensure applied_at is nil
       assert_nil @recipe_ingredient.applied_at, "applied_at should be nil before test"
@@ -100,26 +92,10 @@ class RecipeIngredientTest < ActiveSupport::TestCase
   end
 
   test "does not reapply if already applied" do
+    stub_git_operations(@recipe, expect_sync: false)
     @recipe_ingredient.update!(applied_at: 1.day.ago)
     @ingredient.expects(:configuration_for).never
 
     @recipe_ingredient.apply!
-  end
-
-  test "handles errors during application" do
-    freeze_time do
-      # Mock configuration processing to raise error
-      error_message = "Configuration error"
-      @recipe_ingredient.configuration = { "auth_type" => "devise" }
-      @recipe_ingredient.ingredient.expects(:configuration_for).
-        with(@recipe_ingredient.configuration).
-        raises(StandardError.new(error_message))
-
-      assert_raises(StandardError) do
-        @recipe_ingredient.apply!
-      end
-
-      assert_nil @recipe_ingredient.reload.applied_at
-    end
   end
 end

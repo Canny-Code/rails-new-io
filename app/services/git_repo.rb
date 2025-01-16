@@ -40,8 +40,7 @@ class GitRepo
     # Only commit if there are changes
     if git.status.changed.any? || git.status.added.any? || git.status.deleted.any?
       git.commit(message)
-      current_branch = git.branch.name
-      git.push("origin", current_branch)
+      git.push("origin", "main")
     end
   end
 
@@ -69,6 +68,12 @@ class GitRepo
 
     @git.config("init.templateDir", "")
     @git.config("init.defaultBranch", "main")
+
+    # Create initial commit on main branch
+    File.write(File.join(@repo_path, "README.md"), default_readme_content)
+    @git.add(all: true)
+    @git.commit("Initial commit")
+    @git.branch("main") # Branch is automatically checked out in a new repo
   end
 
   def remote_repo_exists?

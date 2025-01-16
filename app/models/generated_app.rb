@@ -34,7 +34,6 @@
 #  user_id    (user_id => users.id)
 #
 class GeneratedApp < ApplicationRecord
-  include GitBackedModel
   include HasGenerationLifecycle
 
   attr_accessor :update_recipe

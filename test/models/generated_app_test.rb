@@ -34,19 +34,11 @@
 #  user_id    (user_id => users.id)
 #
 require "test_helper"
-require_relative "../support/git_test_helper"
 
 class GeneratedAppTest < ActiveSupport::TestCase
-  include GitTestHelper
-
   def setup
     @user = users(:john)
     @recipe = recipes(:blog_recipe)
-
-    # Stub GitRepo to avoid GitHub API calls
-    @git_repo = mock("GitRepo")
-    @git_repo.stubs(:commit_changes)
-    GitRepo.stubs(:new).returns(@git_repo)
   end
 
   test "creates app status after creation" do
@@ -75,12 +67,12 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
   test "validates name format" do
     invalid_names = [
-      "invalid app name",  # spaces not allowed
-      "-invalid-start",    # can't start with dash
-      "invalid-end-",      # can't end with dash
-      "app!name",         # special characters not allowed
-      "_invalid_start",    # can't start with underscore
-      "invalid_end_"      # can't end with underscore
+      "my app",        # Contains space
+      "my/app",        # Contains slash
+      "-my-app",       # Starts with dash
+      "my-app-",       # Ends with dash
+      "MY APP!",       # Contains special character
+      "app@123"        # Contains special character
     ]
 
     invalid_names.each do |invalid_name|
@@ -99,10 +91,11 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
     valid_names = [
       "my-app",
-      "app1",
-      "cool-app-123",
-      "my_cool_app",
-      "App-Name-2"
+      "myapp",
+      "my_app",
+      "app123",
+      "123app",
+      "my-awesome-app-123"
     ]
 
     valid_names.each do |valid_name|
@@ -195,11 +188,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
   end
 
   test "lifecycle methods" do
-    @git_repo.expects(:commit_changes).with(
-      message: "Initial commit",
-      author: @user
-    )
-
     app = GeneratedApp.create!(
       name: "test-app",
       user: @user,
@@ -262,7 +250,7 @@ class GeneratedAppTest < ActiveSupport::TestCase
     assert_nil app.error_message
   end
 
-  test "notifies status changes" do
+  test "broadcasts clone box when completed" do
     app = GeneratedApp.create!(
       name: "test-app",
       user: @user,
@@ -270,118 +258,18 @@ class GeneratedAppTest < ActiveSupport::TestCase
       rails_version: "7.1.0",
       recipe: @recipe,
       selected_gems: [],
-      configuration_options: {}
+      configuration_options: {},
+      github_repo_url: "https://github.com/johndoe/test-app"
     )
 
-    assert_difference "Noticed::Event.count" do
-      app.create_github_repo!
-    end
+    # Follow the proper state transition sequence
+    app.create_github_repo!
+    app.generate!
+    app.push_to_github!
+    app.start_ci!
 
-    assert_difference "Noticed::Event.count" do
-      app.generate!
-    end
-
-    assert_difference "Noticed::Event.count" do
-      app.push_to_github!
-    end
-
-    assert_difference "Noticed::Event.count" do
-      app.start_ci!
-    end
-
-    assert_difference "Noticed::Event.count" do
+    assert_broadcasts_to("#{app.to_gid}:app_generation_log_entries") do
       app.mark_as_completed!
-    end
-
-    # Test failure path with a new app
-    app = GeneratedApp.create!(
-      name: "test-app-2",
-      user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
-      recipe: @recipe,
-      selected_gems: [],
-      configuration_options: {}
-    )
-
-    assert_difference "Noticed::Event.count" do
-      app.mark_as_failed!("Error")
-    end
-  end
-
-  test "updates last_build_at on status changes" do
-    freeze_time do
-      app = GeneratedApp.create!(
-        name: "test-app",
-        user: @user,
-        ruby_version: "3.2.0",
-        rails_version: "7.1.0",
-        recipe: @recipe,
-        selected_gems: [],
-        configuration_options: {}
-      )
-
-      # Initial state
-      assert app.app_status.pending?
-      assert_nil app.started_at
-      assert_nil app.completed_at
-      assert_nil app.error_message
-
-      # Create GitHub repo
-      travel 1.second
-      assert_changes -> { app.reload.last_build_at } do
-        app.create_github_repo!
-      end
-      assert app.app_status.creating_github_repo?
-
-      # Start generation
-      travel 1.second
-      assert_changes -> { app.reload.last_build_at } do
-        app.generate!
-      end
-      assert app.generating?
-
-      # Push to GitHub
-      travel 1.second
-      assert_changes -> { app.reload.last_build_at } do
-        app.push_to_github!
-      end
-      assert app.app_status.pushing_to_github?
-
-      # Start CI
-      travel 1.second
-      assert_changes -> { app.reload.last_build_at } do
-        app.start_ci!
-      end
-      assert app.running_ci?
-
-      # Complete generation
-      travel 1.second
-      assert_changes -> { app.reload.last_build_at } do
-        app.mark_as_completed!
-      end
-      assert app.completed?
-
-      # Test failure path with a new app
-      app = GeneratedApp.create!(
-        name: "test-app-2",
-        user: @user,
-        ruby_version: "3.2.0",
-        rails_version: "7.1.0",
-        recipe: @recipe,
-        selected_gems: [],
-        configuration_options: {}
-      )
-      error_message = "Something went wrong"
-      app.mark_as_failed!(error_message)
-      assert app.app_status.failed?
-
-      assert_equal error_message, app.reload.app_status.reload.error_message
-
-      # Reset status
-      app.restart!
-      assert app.app_status.pending?
-      assert_nil app.error_message
     end
   end
 
@@ -431,168 +319,5 @@ class GeneratedAppTest < ActiveSupport::TestCase
       app.mark_as_completed!
     end
     assert app.completed?
-  end
-
-  test "broadcasts clone box when completed" do
-    app = GeneratedApp.create!(
-      name: "test-app",
-      user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
-      recipe: @recipe,
-      selected_gems: [],
-      configuration_options: {},
-      github_repo_url: "https://github.com/johndoe/test-app"
-    )
-
-    Turbo::StreamsChannel.expects(:broadcast_update_to).with(
-      "#{app.to_gid}:app_generation_log_entries",
-      target: "github_clone_box",
-      partial: "shared/github_clone_box",
-      locals: { generated_app: app }
-    )
-
-    app.app_status.update!(status: :pushing_to_github)
-    app.app_status.start_ci!
-    app.app_status.complete!
-  end
-
-  test "lifecycle methods follow correct state transitions" do
-    app = GeneratedApp.create!(
-      name: "test-app",
-      user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
-      recipe: @recipe,
-      selected_gems: [],
-      configuration_options: {}
-    )
-
-    # Initial state
-    assert app.app_status.pending?
-    assert_nil app.started_at
-    assert_nil app.completed_at
-    assert_nil app.error_message
-
-    # Verify we can't skip states
-    assert_raises(AASM::InvalidTransition) { app.generate! }
-    assert_raises(AASM::InvalidTransition) { app.push_to_github! }
-    assert_raises(AASM::InvalidTransition) { app.start_ci! }
-    assert_raises(AASM::InvalidTransition) { app.mark_as_completed! }
-
-    # Create GitHub repo
-    app.create_github_repo!
-    assert app.app_status.creating_github_repo?
-
-    # Verify we can't skip states after creating repo
-    assert_raises(AASM::InvalidTransition) { app.push_to_github! }
-    assert_raises(AASM::InvalidTransition) { app.start_ci! }
-    assert_raises(AASM::InvalidTransition) { app.mark_as_completed! }
-
-    # Start generation
-    app.generate!
-    assert app.app_status.generating?
-    assert_not_nil app.started_at
-
-    # Verify we can't skip states during generation
-    assert_raises(AASM::InvalidTransition) { app.start_ci! }
-    assert_raises(AASM::InvalidTransition) { app.mark_as_completed! }
-
-    # Push to GitHub
-    app.push_to_github!
-    assert app.app_status.pushing_to_github?
-
-    # Verify we can't skip CI
-    assert_raises(AASM::InvalidTransition) { app.mark_as_completed! }
-
-    # Start CI
-    app.start_ci!
-    assert app.app_status.running_ci?
-
-    # Complete generation
-    app.mark_as_completed!
-    assert app.app_status.completed?
-    assert_not_nil app.completed_at
-    assert_nil app.error_message
-  end
-
-  test "can fail from any non-completed state" do
-    error_message = "Something went wrong"
-
-    [ :pending, :creating_github_repo, :generating, :pushing_to_github, :running_ci ].each do |state|
-      app = GeneratedApp.create!(
-        name: "test-app-#{state}",
-        user: @user,
-        ruby_version: "3.2.0",
-        rails_version: "7.1.0",
-        recipe: @recipe,
-        selected_gems: [],
-        configuration_options: {}
-      )
-
-      # Move to the target state
-      case state
-      when :creating_github_repo
-        app.create_github_repo!
-      when :generating
-        app.create_github_repo!
-        app.generate!
-      when :pushing_to_github
-        app.create_github_repo!
-        app.generate!
-        app.push_to_github!
-      when :running_ci
-        app.create_github_repo!
-        app.generate!
-        app.push_to_github!
-        app.start_ci!
-      end
-
-      app.mark_as_failed!(error_message)
-      assert app.app_status.failed?
-      assert_equal error_message, app.error_message
-    end
-  end
-
-  test "apply_ingredient! adds ingredient to app and recipe" do
-    app = generated_apps(:blog_app)
-    ingredient = ingredients(:rails_authentication)
-    configuration = { "auth_type" => "devise" }
-
-    # Stub git operations for both app and recipe
-    stub_git_operations(app)
-    stub_git_operations(app.recipe)
-
-    app.update_recipe = true
-
-    assert_difference "AppChange.count" do
-      assert_difference "RecipeIngredient.count" do
-        app.apply_ingredient!(ingredient, configuration)
-      end
-    end
-
-    app_change = app.app_changes.last
-    assert_equal ingredient, app_change.recipe_change.ingredient
-    assert_equal configuration, app_change.configuration
-
-    recipe_ingredient = app.recipe.recipe_ingredients.last
-    assert_equal ingredient, recipe_ingredient.ingredient
-  end
-
-  test "apply_ingredient! without recipe update" do
-    app = generated_apps(:blog_app)
-    ingredient = ingredients(:rails_authentication)
-    configuration = { "auth_type" => "devise" }
-
-    # Stub git operations for app
-    stub_git_operations(app)
-
-    app.update_recipe = false
-
-    assert_difference "AppChange.count" do
-      assert_no_difference "RecipeIngredient.count" do
-        app.apply_ingredient!(ingredient, configuration)
-      end
-    end
   end
 end

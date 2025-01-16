@@ -9,6 +9,7 @@ module GitBackedModel
   private
 
   def initial_git_commit
+    repo.write_model(self)
     repo.commit_changes(
       message: "Initial commit",
       author: commit_author
@@ -19,8 +20,8 @@ module GitBackedModel
     return unless should_sync_to_git?
 
     repo.write_model(self)
-    repo.commit!(
-      "Update #{model_name} #{identifier}: #{change_description}",
+    repo.commit_changes(
+      message: "Update #{model_name} #{identifier}: #{change_description}",
       author: updated_by
     )
   end

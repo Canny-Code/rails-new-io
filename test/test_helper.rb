@@ -181,13 +181,17 @@ end
 def assert_broadcasts_to(stream_name)
   broadcasts = []
   ActiveSupport::Notifications.subscribe("broadcast.action_cable") do |*args|
-    broadcasts << args.last
+    event = args.last
+    broadcasts << event
   end
 
   yield
 
-  assert broadcasts.any? { |b| b[:streams].include?(stream_name) },
-    "Expected broadcast to #{stream_name}, but none received"
+  assert broadcasts.any? { |b|
+    b[:streams]&.include?(stream_name) ||
+    b[:stream] == stream_name ||
+    b[:broadcasting] == stream_name
+  }, "Expected broadcast to #{stream_name}, but none received"
 ensure
   ActiveSupport::Notifications.unsubscribe("broadcast.action_cable")
 end

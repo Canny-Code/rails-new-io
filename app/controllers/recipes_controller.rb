@@ -36,6 +36,26 @@ class RecipesController < ApplicationController
     )
 
     if @recipe.save
+      if recipe_params[:custom_ingredients].present?
+        puts "\nProcessing custom ingredients:"
+        puts "Custom ingredients param: #{recipe_params[:custom_ingredients].inspect}"
+
+        ingredient_names = recipe_params[:custom_ingredients].split(/[,;]/).map(&:strip)
+        puts "Ingredient names: #{ingredient_names.inspect}"
+
+        ingredient_names.each do |name|
+          puts "\nLooking for ingredient: #{name}"
+          ingredient = Ingredient.find_by(name: name)
+          puts "Found ingredient: #{ingredient.inspect}"
+
+          if ingredient
+            puts "Adding ingredient to recipe..."
+            @recipe.add_ingredient!(ingredient)
+            puts "Added ingredient successfully"
+          end
+        end
+      end
+
       redirect_to @recipe, notice: "Recipe was successfully created."
     else
       redirect_to setup_recipes_path(slug: "basic-setup"), status: :unprocessable_entity
@@ -61,7 +81,8 @@ class RecipesController < ApplicationController
       :rails_flags,
       :name,
       :description,
-      :status
+      :status,
+      :custom_ingredients
     )
   end
 end

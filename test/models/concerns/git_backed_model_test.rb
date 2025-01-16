@@ -65,8 +65,8 @@ class GitBackedModelTest < ActiveSupport::TestCase
     @model.content = "new content"
 
     @repo.expects(:write_model).with(@model)
-    @repo.expects(:commit!).with(
-      "Update DummyModel 123: Updated content",
+    @repo.expects(:commit_changes).with(
+      message: "Update DummyModel 123: Updated content",
       author: users(:jane)
     )
 

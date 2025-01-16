@@ -13,6 +13,9 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     GitRepo.any_instance.stubs(:push_changes).returns(true)
     GitRepo.any_instance.stubs(:create_branch).returns(true)
     GitRepo.any_instance.stubs(:switch_branch).returns(true)
+    GitRepo.any_instance.stubs(:sync_to_git).returns(true)
+    Recipe.any_instance.stubs(:sync_to_git).returns(true)
+    Recipe.any_instance.stubs(:head_commit_sha).returns("abc123")
   end
 
   test "index shows only current user's published recipes" do
@@ -203,5 +206,83 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
   test "destroy prevents deleting other user's recipes" do
     delete recipe_path(@other_users_recipe)
     assert_response :not_found
+  end
+
+  test "create with custom ingredients adds them to recipe" do
+    ingredient = ingredients(:rails_authentication)
+    puts "\nBefore creation:"
+    puts "Ingredient: #{ingredient.inspect}"
+    puts "Initial RecipeIngredient count: #{RecipeIngredient.count}"
+
+    assert_difference("Recipe.count") do
+      assert_difference("RecipeIngredient.count") do
+        post recipes_path, params: {
+          recipe: {
+            name: "Auth Recipe",
+            description: "Recipe with authentication",
+            api_flag: "--api",
+            custom_ingredients: ingredient.name
+          }
+        }
+        puts "\nAfter creation:"
+        puts "Response status: #{response.status}"
+        puts "Flash: #{flash.inspect}"
+        puts "Recipe: #{Recipe.last.inspect}"
+        puts "Recipe ingredients: #{Recipe.last.recipe_ingredients.inspect}"
+        puts "Final RecipeIngredient count: #{RecipeIngredient.count}"
+      end
+    end
+
+    recipe = Recipe.last
+    assert_equal "Auth Recipe", recipe.name
+    assert_includes recipe.ingredients, ingredient
+    assert_redirected_to recipe_path(recipe)
+  end
+
+  test "create with multiple custom ingredients adds all of them" do
+    auth = ingredients(:rails_authentication)
+    basic = ingredients(:basic)
+
+    assert_difference("Recipe.count") do
+      assert_difference("RecipeIngredient.count", 2) do
+        post recipes_path, params: {
+          recipe: {
+            name: "Multi-ingredient Recipe",
+            description: "Recipe with multiple ingredients",
+            api_flag: "--api",
+            custom_ingredients: "#{auth.name}, #{basic.name}"
+          }
+        }
+      end
+    end
+
+    recipe = Recipe.last
+    assert_equal "Multi-ingredient Recipe", recipe.name
+    assert_includes recipe.ingredients, auth
+    assert_includes recipe.ingredients, basic
+    assert_redirected_to recipe_path(recipe)
+  end
+
+  test "create with non-existent custom ingredients ignores them" do
+    auth = ingredients(:rails_authentication)
+
+    assert_difference("Recipe.count") do
+      assert_difference("RecipeIngredient.count", 1) do
+        post recipes_path, params: {
+          recipe: {
+            name: "Mixed Recipe",
+            description: "Recipe with mix of real and fake ingredients",
+            api_flag: "--api",
+            custom_ingredients: "#{auth.name}, non_existent_ingredient"
+          }
+        }
+      end
+    end
+
+    recipe = Recipe.last
+    assert_equal "Mixed Recipe", recipe.name
+    assert_includes recipe.ingredients, auth
+    assert_equal 1, recipe.ingredients.count
+    assert_redirected_to recipe_path(recipe)
   end
 end

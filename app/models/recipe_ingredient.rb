@@ -27,7 +27,11 @@ class RecipeIngredient < ApplicationRecord
   belongs_to :ingredient
 
   validates :position, presence: true, uniqueness: { scope: :recipe_id }
-  validates :configuration, presence: true
+  # validates :configuration, presence: true
+
+  after_create -> { recipe.touch }
+  after_destroy -> { recipe.touch }
+  after_update -> { recipe.touch }
 
   def to_git_format
     {

@@ -30,8 +30,6 @@ class DataRepository < GitRepo
     when Recipe
       write_recipe(model)
     end
-
-    push_to_remote
   end
 
   protected
@@ -54,36 +52,66 @@ class DataRepository < GitRepo
     path = File.join(repo_path, "ingredients", ingredient.name.parameterize)
     FileUtils.mkdir_p(path)
 
-    File.write(File.join(path, "template.rb"), ingredient.template_content)
     write_json(path, "metadata.json", {
       name: ingredient.name,
+      category: ingredient.category,
       description: ingredient.description,
-      conflicts_with: ingredient.conflicts_with,
+      configures_with: ingredient.configures_with,
       requires: ingredient.requires,
-      configures_with: ingredient.configures_with
+      conflicts_with: ingredient.conflicts_with,
+      created_at: ingredient.created_at.iso8601,
+      updated_at: ingredient.updated_at.iso8601
     })
+
+    File.write(File.join(path, "template.rb"), ingredient.template_content)
   end
 
   def write_recipe(recipe)
-    path = File.join(repo_path, "recipes", recipe.id.to_s)
+    path = File.join(repo_path, "recipes", recipe.name)
     FileUtils.mkdir_p(path)
 
-    write_json(path, "manifest.json", {
+    write_json(path, "metadata.json", {
       name: recipe.name,
+      description: recipe.description,
       cli_flags: recipe.cli_flags,
-      ruby_version: recipe.ruby_version,
-      rails_version: recipe.rails_version
+      created_at: recipe.created_at.iso8601,
+      updated_at: recipe.updated_at.iso8601
     })
 
-    write_json(path, "ingredients.json",
-      recipe.recipe_ingredients.order(:position).map(&:to_git_format)
-    )
+    write_json(path, "ingredients.json", recipe.recipe_ingredients.map { |ri|
+      {
+        name: ri.ingredient.name,
+        position: ri.position,
+        configuration: ri.configuration
+      }
+    })
   end
 
   def ensure_fresh_repo
-    git.fetch
-    git.reset_hard("origin/main") if remote_branch_exists?("main")
-    git.pull if remote_branch_exists?("main")
+    # If repo doesn't exist locally, clone it or create it
+    unless File.exist?(repo_path)
+      if remote_repo_exists?
+        Git.clone(
+          "https://#{user.github_token}@github.com/#{user.github_username}/#{repo_name}.git",
+          repo_name,
+          path: File.dirname(repo_path)
+        )
+        @git = Git.open(repo_path)
+      else
+        create_local_repo
+        ensure_github_repo_exists
+        setup_remote
+        push_to_remote
+      end
+    end
+
+    # If repo exists and remote exists, fetch latest changes
+    if remote_repo_exists?
+      git.fetch
+      if remote_branch_exists?("main")
+        git.reset_hard("origin/main")
+      end
+    end
 
     # Check if directories exist in repo
     dirs_exist = %w[ingredients recipes].all? do |dir|
@@ -95,7 +123,7 @@ class DataRepository < GitRepo
       git.add(all: true)
       if git.status.changed.any? || git.status.added.any?
         git.commit("Initialize repository structure")
-        git.push("origin", "main")
+        push_to_remote if remote_repo_exists?
       end
     end
   end
