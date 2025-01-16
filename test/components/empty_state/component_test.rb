@@ -70,11 +70,11 @@ class EmptyState::ComponentTest < PhlexComponentTestCase
 
     doc = Nokogiri::HTML.fragment(result)
     link = doc.css("a").first
-    assert_includes link["class"], "hover:bg-[#e935a3]"
+    assert_includes link["class"], "hover:bg-[#993351]"
     assert_includes link["class"], "focus-visible:outline"
     assert_includes link["class"], "focus-visible:outline-2"
     assert_includes link["class"], "focus-visible:outline-offset-2"
-    assert_includes link["class"], "focus-visible:outline-[#ac3b61]"
+    assert_includes link["class"], "focus-visible:outline-[#993351]"
   end
 
   private
