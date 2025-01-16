@@ -1,7 +1,7 @@
 <%= turbo_stream_from [ :generated_app, current_user.id ] %>
 <%= turbo_stream_from [ :notification_badge, current_user.id ] %>
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-  <div class="flex justify-between items-center bg-white rounded-t-lg border-t border-l border-r border-gray-200 p-8 mt-8">
+  <div class="flex justify-between items-center bg-white rounded-lg border-t border-l border-r border-gray-200 p-8 mt-8">
     <div class="">
       <h1 class="text-2xl font-semibold text-gray-900">
         Welcome <%= current_user.github_username %>!
