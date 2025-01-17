@@ -210,9 +210,6 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
 
   test "create with custom ingredients adds them to recipe" do
     ingredient = ingredients(:rails_authentication)
-    puts "\nBefore creation:"
-    puts "Ingredient: #{ingredient.inspect}"
-    puts "Initial RecipeIngredient count: #{RecipeIngredient.count}"
 
     assert_difference("Recipe.count") do
       assert_difference("RecipeIngredient.count") do
@@ -224,12 +221,6 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
             custom_ingredients: ingredient.name
           }
         }
-        puts "\nAfter creation:"
-        puts "Response status: #{response.status}"
-        puts "Flash: #{flash.inspect}"
-        puts "Recipe: #{Recipe.last.inspect}"
-        puts "Recipe ingredients: #{Recipe.last.recipe_ingredients.inspect}"
-        puts "Final RecipeIngredient count: #{RecipeIngredient.count}"
       end
     end
 

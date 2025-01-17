@@ -38,33 +38,24 @@ class Recipe < ApplicationRecord
   validates :status, inclusion: { in: %w[draft published archived] }
 
   def add_ingredient!(ingredient, configuration = {})
-    puts "\nAdding ingredient:"
-    puts "Ingredient: #{ingredient.inspect}"
-    puts "Configuration: #{configuration.inspect}"
-
     transaction do
       raise IncompatibleIngredientError unless ingredient_compatible?(ingredient)
 
-      puts "Creating recipe_ingredient..."
-      ri = recipe_ingredients.create!(
+      recipe_ingredients.create!(
         ingredient: ingredient,
         position: next_position,
         configuration: configuration
       )
-      puts "Created recipe_ingredient: #{ri.inspect}"
-
-      touch  # Force an update to trigger sync_to_git
     end
-    sync_to_git  # Call sync_to_git after the transaction
+    sync_to_git
   end
 
   def remove_ingredient!(ingredient)
     transaction do
       recipe_ingredients.find_by!(ingredient: ingredient).destroy
       reorder_positions
-      touch  # Force an update to trigger sync_to_git
     end
-    sync_to_git  # Call sync_to_git after the transaction
+    sync_to_git
   end
 
   def reorder_ingredients!(new_order)
@@ -72,9 +63,8 @@ class Recipe < ApplicationRecord
       recipe_ingredients.each do |ri|
         ri.update!(position: new_order.index(ri.ingredient_id))
       end
-      touch  # Force an update to trigger sync_to_git
     end
-    sync_to_git  # Call sync_to_git after the transaction
+    sync_to_git
   end
 
   def self.find_duplicate(cli_flags)

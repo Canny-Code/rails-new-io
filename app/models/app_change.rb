@@ -26,8 +26,6 @@ class AppChange < ApplicationRecord
   belongs_to :generated_app
   belongs_to :recipe_change
 
-  validates :configuration, presence: true
-
   def to_git_format
     {
       recipe_change_type: recipe_change.change_type,

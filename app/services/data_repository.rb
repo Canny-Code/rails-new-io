@@ -19,6 +19,10 @@ class DataRepository < GitRepo
     super(user: user, repo_name: self.class.name_for_environment)
   end
 
+  def template_path(ingredient)
+    File.join(repo_path, "ingredients", ingredient.name.parameterize, "template.rb")
+  end
+
   def write_model(model)
     ensure_fresh_repo
 

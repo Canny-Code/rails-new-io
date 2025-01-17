@@ -29,9 +29,8 @@ class AppGenerationJob < ApplicationJob
   end
 
   def generate_rails_app
-    @generated_app.generate!
-    command = "rails new #{@generated_app.name} #{@generated_app.recipe.cli_flags}"
-    CommandExecutionService.new(@generated_app, command).execute
+    @logger.info("Starting Rails app generation")
+    AppGeneration::Orchestrator.new(@generated_app).perform_generation
   end
 
   def push_to_github

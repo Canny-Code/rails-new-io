@@ -62,7 +62,16 @@ class GeneratedApp < ApplicationRecord
   validates :recipe, presence: true
 
   def apply_ingredient!(ingredient, configuration = {})
+    # Get logger instance
+    logger = AppGeneration::Logger.new(self)
+
     transaction do
+      logger.info("Applying ingredient...", {
+        ingredient: ingredient.name,
+        source_path: source_path,
+        pwd: Dir.pwd
+      })
+
       # Create recipe change first
       recipe_change = recipe.recipe_changes.create!(
         ingredient: ingredient,
@@ -77,8 +86,51 @@ class GeneratedApp < ApplicationRecord
       )
 
       # Apply to recipe if update_recipe is true
-      recipe_change.apply! if update_recipe
+      if update_recipe
+        logger.info("Applying recipe change")
+        recipe_change.apply!
+      end
+
+      template_path = DataRepository.new(user: user).template_path(ingredient)
+
+      require "rails/generators"
+      require "rails/generators/rails/app/app_generator"
+
+      app_directory = File.join(source_path, name)
+
+      Dir.chdir(app_directory) do
+        ENV["BUNDLE_GEMFILE"] = File.join(Dir.pwd, "Gemfile")
+
+        Rails.application.config.generators.templates += [ File.dirname(template_path) ]
+
+        generator = Rails::Generators::AppGenerator.new(
+          [ "." ],
+          template: template_path,
+          force: true,
+          quiet: false,
+          pretend: false,
+          skip_bundle: true,
+          **configuration.symbolize_keys
+        )
+
+        generator.apply(template_path)
+      end
     end
+  rescue StandardError => e
+    logger.error("Failed to apply ingredient", {
+      error: e.message,
+      backtrace: e.backtrace.first(20),
+      pwd: Dir.pwd
+    })
+    raise
+  end
+
+  def command
+    "rails new #{name} #{recipe.cli_flags}"
+  end
+
+  def ingredients
+    recipe.recipe_ingredients.includes(:ingredient).map(&:ingredient)
   end
 
   private
