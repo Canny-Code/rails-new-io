@@ -14,30 +14,31 @@
         </div>
       </div>
 
-      <!-- Terminal Content -->
-      <div id="rails-new-output-container"
-           style="background-color: #30353A;"
-           class="p-6 font-mono">
-        <p id="rails-new-output-text"
-           class="text-gray-800 text-sm leading-relaxed flex items-start">
-          <span class="text-green-600 mr-2">$</span>
-          <code class="text-gray-400">rails new my-app </code>
-          <code id="api-flag"></code>
-          <code data-controller="generated-output" id="database-choice" class="text-white ml-2"></code>
-          <code data-controller="generated-output" id="rails-flags" class="text-white ml-2"></code>
-          <div data-controller="generated-output" id="custom_ingredients" class="text-white ml-2"></div>
-        </p>
+        <!-- Terminal Content -->
+        <div id="rails-new-output-container"
+             style="background-color: #30353A;"
+             class="p-6 font-mono">
+          <p id="rails-new-output-text"
+             class="text-gray-800 text-sm leading-relaxed flex items-start">
+            <span class="text-green-600 mr-2">$</span>
+            <code class="text-gray-400">rails new my-app </code>
+            <code id="api-flag"></code>
+            <code data-controller="generated-output" id="database-choice" class="text-white ml-2"></code>
+            <code data-controller="generated-output" id="rails-flags" class="text-white ml-2"></code>
+            <div data-controller="generated-output" id="custom_ingredients" class="text-white ml-2"></div>
+          </p>
+        </div>
       </div>
-    </div>
 
-    <div class="mt-10 sm:flex-wrap md:flex items-center justify-center">
-      <button type="button"
-              data-action="click->modal#open"
-              class="relative z-[60] flex-none inline-flex h-12 items-center bg-deep-azure-gamma rounded-lg px-6 text-gray-100 shadow-2xl hover:bg-deep-azure-epsilon">
-        Done Tweaking
-      </button>
+      <div class="mt-10 sm:flex-wrap md:flex items-center justify-center">
+        <button type="button"
+                data-action="click->modal#open"
+                class="inline-flex items-center rounded-md bg-[#ac3b61] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#993351] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#993351">
+          Done Tweaking
+        </button>
+      </div>
+      <%= render "recipe_form_modal" %>
     </div>
-    <%= render "recipe_form_modal" %>
   </div>
 </div>
 
