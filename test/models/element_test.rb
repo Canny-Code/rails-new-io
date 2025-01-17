@@ -58,4 +58,36 @@ class ElementTest < ActiveSupport::TestCase
 
     assert_equal "cockroachdb", element.command_line_value
   end
+
+  test "validates uniqueness of label within group" do
+    page = pages(:custom_ingredients)
+    group = page.groups.create!(title: "Test Group")
+    sub_group1 = group.sub_groups.create!(title: "Sub Group 1")
+    sub_group2 = group.sub_groups.create!(title: "Sub Group 2")
+
+    checkbox1 = Element::RailsFlagCheckbox.create!(
+      checked: false,
+      display_when: "checked"
+    )
+    element1 = sub_group1.elements.create!(
+      label: "Test Element",
+      description: "Test Description",
+      position: 0,
+      variant: checkbox1
+    )
+
+    checkbox2 = Element::RailsFlagCheckbox.create!(
+      checked: false,
+      display_when: "checked"
+    )
+    element2 = sub_group2.elements.build(
+      label: "Test Element", # Same label as element1
+      description: "Another Description",
+      position: 0,
+      variant: checkbox2
+    )
+
+    assert_not element2.valid?
+    assert_includes element2.errors[:label], "must be unique within the group"
+  end
 end

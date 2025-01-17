@@ -24,8 +24,8 @@ module Pages
                   action: "change->radio-button-choice#update"
                 }
               )
-            when "Element::Checkbox"
-              render Pages::Groups::SubGroups::Elements::Checkbox::Component.new(
+            when "Element::RailsFlagCheckbox"
+              render Pages::Groups::SubGroups::Elements::RailsFlagCheckbox::Component.new(
                 label: element.label,
                 description: element.description,
                 image_path: element.image_path,
@@ -34,16 +34,10 @@ module Pages
                 command_line_value: element.command_line_value,
                 display_when: element.variant.display_when,
                 data: {
-                  action: "change->check-box#update",
+                  action: "change->rails-flag-checkbox#update",
                   **group_stimulus_attributes
                 }
               )
-            # when "Element::TextField"
-            #   render Pages::Groups::SubGroups::Elements::TextField::Component.new(
-            #     label: element.label,
-            #     description: element.description,
-            #     name: element.label,
-            #   )
             else
               raise "Unknown element variant_type: #{element.variant_type}"
             end

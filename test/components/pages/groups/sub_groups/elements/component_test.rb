@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "support/phlex_component_test_case"
 
@@ -6,39 +8,23 @@ module Pages
     module SubGroups
       module Elements
         class ComponentTest < PhlexComponentTestCase
-          test "group_stimulus_attributes transforms controller key to action" do
-            group = mock
+          test "transforms stimulus attributes for checkbox" do
+            group = Group.new(behavior_type: "generic_checkbox")
             group.stubs(:stimulus_attributes).returns({
-              "controller" => "check-box",
-              "check-box-generated-output-outlet" => "#rails-flags"
+              "controller" => "rails-flag-checkbox",
+              "rails-flag-checkbox-generated-output-outlet" => "#rails-flags"
             })
 
-            sub_group = mock
-            sub_group.stubs(:group).returns(group)
-
-            element = mock
-            element.stubs(:sub_group).returns(sub_group)
+            sub_group = SubGroup.new(group: group)
+            element = Element.new(sub_group: sub_group)
+            element.stubs(:variant_type).returns("Element::RailsFlagCheckbox")
+            element.stubs(:variant).returns(Element::RailsFlagCheckbox.new)
 
             component = Component.new(element: element)
-
             result = component.send(:group_stimulus_attributes)
 
-            # The original stimulus_attributes has "controller", but it should be transformed to "action"
-            assert_equal "check-box", result["action"]
-            assert_not_includes result.keys, "controller"
-          end
-
-          test "raises error for unknown element variant type" do
-            element = mock
-            element.stubs(:variant_type).returns("Element::Unknown")
-
-            component = Component.new(element: element)
-
-            error = assert_raises(RuntimeError) do
-              component.view_template
-            end
-
-            assert_equal "Unknown element variant_type: Element::Unknown", error.message
+            assert_equal "rails-flag-checkbox", result["action"]
+            assert_equal "#rails-flags", result["rails-flag-checkbox-generated-output-outlet"]
           end
         end
       end

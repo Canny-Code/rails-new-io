@@ -28,22 +28,29 @@
 #
 #  sub_group_id  (sub_group_id => sub_groups.id)
 #
-skip_git:
+
+skip_git_element:
   label: Skip Git
+  description: Skip Git files
+  position: 0
   sub_group: dev_env_default
-  variant: skip_git (Element::Checkbox)
+  variant: skip_git (Element::RailsFlagCheckbox)
   command_line_value: "--skip-git"
 
-skip_docker:
+skip_docker_element:
   label: Skip Docker
+  description: Skip Docker files
+  position: 1
   sub_group: dev_env_default
-  variant: skip_docker (Element::Checkbox)
+  variant: skip_docker (Element::RailsFlagCheckbox)
   command_line_value: "--skip-docker"
 
-skip_action_mailer:
+skip_action_mailer_element:
   label: Skip Action Mailer
+  description: Skip Action Mailer files
+  position: 2
   sub_group: dev_env_default
-  variant: skip_action_mailer (Element::Checkbox)
+  variant: skip_action_mailer (Element::RailsFlagCheckbox)
   command_line_value: "--skip-action-mailer"
 
 database_sqlite3:

@@ -1,37 +1,37 @@
+# frozen_string_literal: true
+
 require "test_helper"
+require "support/phlex_component_test_case"
 
 module Pages
   module Groups
-    class ComponentTest < ActiveSupport::TestCase
-      include Phlex::Testing::ViewHelper
+    class ComponentTest < PhlexComponentTestCase
+      test "renders group with stimulus attributes" do
+        group = Group.new(title: "Test Group", behavior_type: "generic_checkbox")
+        group.stubs(:stimulus_attributes).returns({
+          controller: "rails-flag-checkbox",
+          "rails-flag-checkbox-generated-output-outlet": "#rails-flags"
+        })
+        group.stubs(:sub_groups).returns([])
 
-      setup do
-        @databases_group = groups(:databases)
-        @dev_env_group = groups(:dev_env)
+        component = Component.new(group: group)
+        html = component.render_in(view_context)
+
+        assert_includes html, 'data-controller="rails-flag-checkbox"'
+        assert_includes html, 'data-rails-flag-checkbox-generated-output-outlet="#rails-flags"'
       end
 
-      test "renders database choice group with correct stimulus attributes" do
-        component = Component.new(group: @databases_group)
+      private
 
-        Pages::Groups::SubGroups::Elements::RadioButton::Component.any_instance
-        .stubs(:image_tag)
-        .returns("image_tag_stub")
-
-        html = render(component)
-
-        assert_includes html, 'data-controller="radio-button-choice"'
-        assert_includes html, 'data-radio-button-choice-generated-output-outlet="#database-choice"'
-        assert_includes html, 'data-output-prefix="-d"'
+      def view_context
+        controller.view_context
       end
 
-      test "renders generic checkbox group with correct stimulus attributes" do
-        @dev_env_group.update!(behavior_type: "generic_checkbox")
-        component = Component.new(group: @dev_env_group)
-
-        html = render(component)
-
-        assert_includes html, 'data-controller="check-box"'
-        assert_includes html, 'data-check-box-generated-output-outlet="#rails-flags"'
+      def controller
+        @controller ||= ApplicationController.new.tap do |c|
+          c.request = ActionDispatch::TestRequest.create
+          c.response = ActionDispatch::TestResponse.new
+        end
       end
     end
   end

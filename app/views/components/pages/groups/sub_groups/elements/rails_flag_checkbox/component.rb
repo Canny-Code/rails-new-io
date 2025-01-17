@@ -4,7 +4,7 @@ module Pages
   module Groups
     module SubGroups
       module Elements
-        module Checkbox
+        module RailsFlagCheckbox
           class Component < ApplicationComponent
             include Phlex::Rails::Helpers::ImageTag
 
@@ -19,13 +19,13 @@ module Pages
               @display_when = display_when
 
               # Extract the outlet from data if present, defaulting to #rails-flags
-              @outlet = @data.delete("check-box-generated-output-outlet") || "#rails-flags"
+              @outlet = @data.delete("rails-flag-checkbox-generated-output-outlet") || "#rails-flags"
             end
 
             def view_template
-              li(data_controller: "check-box",
+              li(data_controller: "rails-flag-checkbox",
                  data: {
-                   "check-box-generated-output-outlet": @outlet,
+                   "rails-flag-checkbox-generated-output-outlet": @outlet,
                    **@data.except("action")
                  },
                  class: "menu-card-row text-ruby") do

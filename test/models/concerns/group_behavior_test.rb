@@ -1,44 +1,47 @@
+# frozen_string_literal: true
+
 require "test_helper"
 
 class GroupBehaviorTest < ActiveSupport::TestCase
-  class DummyClass < ApplicationRecord
-    include GroupBehavior
-    self.table_name = "groups"
+  test "returns stimulus attributes for generic_checkbox" do
+    group = Group.new(behavior_type: "generic_checkbox")
+
+    result = group.stimulus_attributes
+
+    assert_equal "rails-flag-checkbox", result[:controller]
+    assert_equal "#rails-flags", result[:"rails-flag-checkbox-generated-output-outlet"]
+
+    assert_equal(
+      {
+        controller: "rails-flag-checkbox",
+        "rails-flag-checkbox-generated-output-outlet": "#rails-flags"
+      },
+      result
+    )
   end
 
-  test "stimulus_attributes returns correct attributes for generic_checkbox" do
-    instance = DummyClass.new
-    instance.behavior_type = "generic_checkbox"
+  test "returns stimulus attributes for custom_ingredient_checkbox" do
+    group = Group.new(behavior_type: "custom_ingredient_checkbox")
 
-    result = instance.stimulus_attributes
+    result = group.stimulus_attributes
 
-    # Test each key individually to ensure coverage
-    assert_equal "check-box", result[:controller]
-    assert_equal "#rails-flags", result[:"check-box-generated-output-outlet"]
+    assert_equal "rails-flag-checkbox", result[:controller]
+    assert_equal "#custom_ingredients", result[:"rails-flag-checkbox-generated-output-outlet"]
 
-    # Also test the complete hash
-    expected = {
-      controller: "check-box",
-      "check-box-generated-output-outlet": "#rails-flags"
-    }
-    assert_equal expected, result
+    assert_equal(
+      {
+        controller: "rails-flag-checkbox",
+        "rails-flag-checkbox-generated-output-outlet": "#custom_ingredients"
+      },
+      result
+    )
   end
 
-  test "stimulus_attributes returns correct attributes for custom_ingredient_checkbox" do
-    instance = DummyClass.new
-    instance.behavior_type = "custom_ingredient_checkbox"
+  test "returns empty hash for unknown behavior_type" do
+    group = Group.new(behavior_type: "unknown")
 
-    result = instance.stimulus_attributes
+    result = group.stimulus_attributes
 
-    # Test each key individually to ensure coverage
-    assert_equal "check-box", result[:controller]
-    assert_equal "#custom_ingredients", result[:"check-box-generated-output-outlet"]
-
-    # Also test the complete hash
-    expected = {
-      controller: "check-box",
-      "check-box-generated-output-outlet": "#custom_ingredients"
-    }
-    assert_equal expected, result
+    assert_equal({}, result)
   end
 end

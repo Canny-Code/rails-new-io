@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module GroupBehavior
   extend ActiveSupport::Concern
 
@@ -15,13 +17,13 @@ module GroupBehavior
       }
     when "generic_checkbox"
       {
-        controller: "check-box",
-        "check-box-generated-output-outlet": "#rails-flags"
+        controller: "rails-flag-checkbox",
+        "rails-flag-checkbox-generated-output-outlet": "#rails-flags"
       }
     when "custom_ingredient_checkbox"
       {
-        controller: "check-box",
-        "check-box-generated-output-outlet": "#custom_ingredients"
+        controller: "rails-flag-checkbox",
+        "rails-flag-checkbox-generated-output-outlet": "#custom_ingredients"
       }
     else
       {}

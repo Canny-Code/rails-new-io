@@ -32,15 +32,17 @@ class Element < ApplicationRecord
   before_save :set_command_line_value
 
   delegated_type :variant, types: %w[
-    Element::Checkbox
+    Element::RailsFlagCheckbox
     Element::RadioButton
     Element::TextField
     Element::Unclassified
-  ]
+  ], dependent: :destroy
 
   belongs_to :sub_group
+  has_one :group, through: :sub_group
 
   validates :label, presence: true, uniqueness: { scope: :sub_group_id }
+  validate :unique_label_within_group
 
   def self.null
     new(variant: Element::Null.new)
@@ -58,5 +60,18 @@ class Element < ApplicationRecord
 
   def set_command_line_value
     self.command_line_value = generate_command_line_value
+  end
+
+  def unique_label_within_group
+    return unless group
+
+    duplicate = group.sub_groups.joins(:elements)
+                    .where.not(elements: { id: id })
+                    .where(elements: { label: label })
+                    .exists?
+
+    if duplicate
+      errors.add(:label, "must be unique within the group")
+    end
   end
 end

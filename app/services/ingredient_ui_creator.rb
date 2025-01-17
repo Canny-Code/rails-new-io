@@ -35,7 +35,7 @@ class IngredientUiCreator
       label: ingredient.name,
       description: ingredient.description,
       position: last_position + 1,
-      variant: Element::Checkbox.create!(
+      variant: Element::RailsFlagCheckbox.create!(
         checked: false,
         display_when: "checked"
       )

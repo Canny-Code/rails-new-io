@@ -52,5 +52,130 @@ module AppGeneration
       assert @generated_app.reload.failed?
       assert_equal error_message, @generated_app.app_status.error_message
     end
+
+    test "successfully performs app generation" do
+      # Mock command execution
+      command_service = mock("command_service")
+      command_service.expects(:execute).once
+      CommandExecutionService.expects(:new).with(@generated_app, @generated_app.command).returns(command_service)
+
+      # Mock ingredient application
+      ingredient = ingredients(:rails_authentication)
+      @generated_app.stubs(:ingredients).returns([ ingredient ])
+
+      # Mock template path verification
+      data_repository = mock("data_repository")
+      template_path = Rails.root.join("test/fixtures/templates/test.rb").to_s
+      data_repository.stubs(:template_path).returns(template_path)
+      DataRepository.stubs(:new).with(user: @generated_app.user).returns(data_repository)
+      File.stubs(:exist?).with(template_path).returns(true)
+
+      # Expect the app to be marked as generating and ingredients to be applied
+      @generated_app.expects(:generate!).once
+      @generated_app.expects(:apply_ingredient!).with(ingredient).once
+
+      # Expect proper logging
+      sequence = sequence("generation_logging")
+      AppGeneration::Logger.any_instance.expects(:info).with("Starting app generation").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("Executing Rails new command").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("Applying ingredients").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("Finished applying ingredient", { ingredient: ingredient.name }).in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("App generation completed successfully").in_sequence(sequence)
+
+      @orchestrator.perform_generation
+    end
+
+    test "handles missing template files during generation" do
+      # Mock command execution
+      command_service = mock("command_service")
+      command_service.expects(:execute).once
+      CommandExecutionService.expects(:new).with(@generated_app, @generated_app.command).returns(command_service)
+
+      # Mock ingredient setup
+      ingredient = ingredients(:rails_authentication)
+      @generated_app.stubs(:ingredients).returns([ ingredient ])
+
+      # Mock template path verification to fail
+      data_repository = mock("data_repository")
+      template_path = "/nonexistent/path/template.rb"
+      data_repository.stubs(:template_path).returns(template_path)
+      DataRepository.stubs(:new).with(user: @generated_app.user).returns(data_repository)
+      File.stubs(:exist?).with(template_path).returns(false)
+
+      # Expect proper state transitions and error handling
+      @generated_app.expects(:generate!).once
+      @generated_app.expects(:mark_as_failed!).with("Template file not found: #{template_path}")
+
+      # Expect proper logging
+      sequence = sequence("error_logging")
+      AppGeneration::Logger.any_instance.expects(:info).with("Starting app generation").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("Executing Rails new command").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("Applying ingredients").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:error).with("Template file not found", { path: template_path }).in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:error).with("App generation failed", { error: "Template file not found: #{template_path}" }).in_sequence(sequence)
+
+      assert_raises(StandardError) do
+        @orchestrator.perform_generation
+      end
+    end
+
+    test "handles errors during rails new command" do
+      error_message = "Rails new command failed"
+
+      # Mock command execution to fail
+      command_service = mock("command_service")
+      command_service.expects(:execute).raises(StandardError.new(error_message))
+      CommandExecutionService.expects(:new).with(@generated_app, @generated_app.command).returns(command_service)
+
+      # Expect proper state transitions and error handling
+      @generated_app.expects(:generate!).once
+      @generated_app.expects(:mark_as_failed!).with(error_message)
+
+      # Expect proper logging
+      sequence = sequence("error_logging")
+      AppGeneration::Logger.any_instance.expects(:info).with("Starting app generation").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("Executing Rails new command").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:error).with("App generation failed", { error: error_message }).in_sequence(sequence)
+
+      assert_raises(StandardError) do
+        @orchestrator.perform_generation
+      end
+    end
+
+    test "handles errors during ingredient application" do
+      error_message = "Failed to apply ingredient"
+
+      # Mock command execution
+      command_service = mock("command_service")
+      command_service.expects(:execute).once
+      CommandExecutionService.expects(:new).with(@generated_app, @generated_app.command).returns(command_service)
+
+      # Mock ingredient setup
+      ingredient = ingredients(:rails_authentication)
+      @generated_app.stubs(:ingredients).returns([ ingredient ])
+
+      # Mock template path verification
+      data_repository = mock("data_repository")
+      template_path = Rails.root.join("test/fixtures/templates/test.rb").to_s
+      data_repository.stubs(:template_path).returns(template_path)
+      DataRepository.stubs(:new).with(user: @generated_app.user).returns(data_repository)
+      File.stubs(:exist?).with(template_path).returns(true)
+
+      # Mock ingredient application to fail
+      @generated_app.expects(:generate!).once
+      @generated_app.expects(:apply_ingredient!).with(ingredient).raises(StandardError.new(error_message))
+      @generated_app.expects(:mark_as_failed!).with(error_message)
+
+      # Expect proper logging
+      sequence = sequence("error_logging")
+      AppGeneration::Logger.any_instance.expects(:info).with("Starting app generation").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("Executing Rails new command").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("Applying ingredients").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:error).with("App generation failed", { error: error_message }).in_sequence(sequence)
+
+      assert_raises(StandardError) do
+        @orchestrator.perform_generation
+      end
+    end
   end
 end

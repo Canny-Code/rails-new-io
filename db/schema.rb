@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_01_13_195446) do
+ActiveRecord::Schema[8.0].define(version: 2025_01_17_135204) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -108,19 +108,19 @@ ActiveRecord::Schema[8.0].define(version: 2025_01_13_195446) do
     t.index ["versioned_type", "versioned_id"], name: "index_commits_on_versioned"
   end
 
-  create_table "element_checkboxes", force: :cascade do |t|
-    t.boolean "default"
-    t.boolean "checked"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "display_when", default: "checked"
-  end
-
   create_table "element_radio_buttons", force: :cascade do |t|
     t.boolean "default"
     t.string "selected_option"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "element_rails_flag_checkboxes", force: :cascade do |t|
+    t.boolean "default"
+    t.boolean "checked"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "display_when", default: "checked"
   end
 
   create_table "element_text_fields", force: :cascade do |t|

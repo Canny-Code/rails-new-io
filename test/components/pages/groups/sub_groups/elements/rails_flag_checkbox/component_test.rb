@@ -7,7 +7,7 @@ module Pages
   module Groups
     module SubGroups
       module Elements
-        module Checkbox
+        module RailsFlagCheckbox
           class ComponentTest < PhlexComponentTestCase
             def test_renders_checkbox_with_stimulus_controller
               component = Component.new(**build_params)
@@ -16,8 +16,8 @@ module Pages
 
               # Test Stimulus setup
               li_element = doc.css("li").first
-              assert_equal "check-box", li_element["data-controller"]
-              assert_equal "#rails-flags", li_element["data-check-box-generated-output-outlet"]
+              assert_equal "rails-flag-checkbox", li_element["data-controller"]
+              assert_equal "#rails-flags", li_element["data-rails-flag-checkbox-generated-output-outlet"]
 
               # Test checkbox attributes
               checkbox = doc.css("input[type='checkbox']").first
@@ -28,12 +28,12 @@ module Pages
             end
 
             def test_renders_checkbox_with_custom_outlet
-              params = build_params(data: { "check-box-generated-output-outlet" => "#custom_ingredients" })
+              params = build_params(data: { "rails-flag-checkbox-generated-output-outlet" => "#custom_ingredients" })
               result = Component.new(**params).render_in(view_context)
               doc = Nokogiri::HTML.fragment(result)
 
               li_element = doc.css("li").first
-              assert_equal "#custom_ingredients", li_element["data-check-box-generated-output-outlet"]
+              assert_equal "#custom_ingredients", li_element["data-rails-flag-checkbox-generated-output-outlet"]
             end
 
             def test_renders_checkbox_with_custom_data_attributes

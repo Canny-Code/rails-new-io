@@ -1,6 +1,6 @@
 # == Schema Information
 #
-# Table name: element_checkboxes
+# Table name: element_rails_flag_checkboxes
 #
 #  id           :integer          not null, primary key
 #  checked      :boolean
@@ -24,21 +24,20 @@
 # Examples:
 #
 # A checkbox for "--no-test"
-# Element::Checkbox.create!(
+# Element::RailsFlagCheckbox.create!(
 #   default: true,           # Starts checked
 #   display_when: "unchecked", # Only outputs when unchecked
 #   # When unchecked, it would output "--no-test"
 # )
 
 # # A checkbox for "--debug"
-# Element::Checkbox.create!(
+# Element::RailsFlagCheckbox.create!(
 #   default: false,          # Starts unchecked
 #   display_when: "checked", # Only outputs when checked
 #   # When checked, it would output "--debug"
 # )
 
-
-class Element::Checkbox < ApplicationRecord
+class Element::RailsFlagCheckbox < ApplicationRecord
   has_one :element, as: :variant
 
   def displayed?

@@ -1,8 +1,6 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 # == Schema Information
 #
-# Table name: element_checkboxes
+# Table name: element_rails_flag_checkboxes
 #
 #  id           :integer          not null, primary key
 #  checked      :boolean
@@ -11,14 +9,21 @@
 #  created_at   :datetime         not null
 #  updated_at   :datetime         not null
 #
+
 skip_git:
-  default: false
   checked: false
+  default: false
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
 
 skip_docker:
-  default: true
   checked: false
+  default: false
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
 
 skip_action_mailer:
-  default: false
   checked: false
+  default: false
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

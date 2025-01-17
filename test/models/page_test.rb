@@ -51,8 +51,11 @@ class PageTest < ActiveSupport::TestCase
   end
 
   test "elements have correct variant types" do
-    assert_equal "Element::Checkbox", @skip_git.variant_type
-    assert_equal "Element::RadioButton", @sqlite3.variant_type
+    @skip_git = elements(:skip_git_element)
+    @database_sqlite3 = elements(:database_sqlite3)
+
+    assert_equal "Element::RailsFlagCheckbox", @skip_git.variant_type
+    assert_equal "Element::RadioButton", @database_sqlite3.variant_type
   end
 
   test "title must be present" do

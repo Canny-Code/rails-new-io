@@ -23,13 +23,13 @@ class IngredientUiDestroyer
       element.destroy
 
       # If this was the last element in the sub_group, delete the sub_group
-      if sub_group.elements.empty?
+      if sub_group.elements.reload.empty?
         sub_group.destroy
-      end
 
-      # If this was the last sub_group in the group, delete the group
-      if group.sub_groups.empty?
-        group.destroy
+        # If this was the last sub_group in the group, delete the group
+        if group.sub_groups.reload.empty?
+          group.destroy
+        end
       end
     end
   end

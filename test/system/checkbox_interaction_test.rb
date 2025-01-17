@@ -26,23 +26,20 @@ class CheckboxInteractionTest < ApplicationSystemTestCase
     assert_current_path setup_recipes_path(slug: pages(:basic_setup).slug)
     assert_selector ".menu-card-row"
 
-    page.all("input[type='checkbox'][data-display-when='checked']").each do |checkbox|
-      checkbox.click if checkbox.checked?
+    # Uncheck any checked checkboxes that display when checked
+    all("input[type='checkbox'][data-display-when='checked']").each do |checkbox|
+      uncheck(checkbox[:id]) if checkbox.checked?
     end
-
-    checkbox = find("input[type='checkbox'][id='main-tab-mains-skip-git']")
 
     assert_selector "#rails-flags", visible: :all
     assert_no_text "--skip-git"
     assert_no_text "--skip-docker"
     assert_no_text "--skip-action-mailer"
 
-    checkbox.click
-
+    check "main-tab-mains-skip-git"
     assert_text "--skip-git"
 
-    checkbox.click
-
+    uncheck "main-tab-mains-skip-git"
     assert_no_text "--skip-git"
   end
 end

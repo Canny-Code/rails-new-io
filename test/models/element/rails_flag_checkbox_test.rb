@@ -1,6 +1,6 @@
 # == Schema Information
 #
-# Table name: element_checkboxes
+# Table name: element_rails_flag_checkboxes
 #
 #  id           :integer          not null, primary key
 #  checked      :boolean
@@ -11,9 +11,9 @@
 #
 require "test_helper"
 
-class Element::CheckboxTest < ActiveSupport::TestCase
+class Element::RailsFlagCheckboxTest < ActiveSupport::TestCase
   setup do
-    @checkbox = Element::Checkbox.new
+    @checkbox = Element::RailsFlagCheckbox.new
   end
 
   test "checkbox is displayed" do

@@ -36,8 +36,6 @@
 class GeneratedApp < ApplicationRecord
   include HasGenerationLifecycle
 
-  attr_accessor :update_recipe
-
   broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
   broadcasts_to ->(generated_app) { [ :notification_badge, generated_app.user_id ] }
 
@@ -84,12 +82,6 @@ class GeneratedApp < ApplicationRecord
         recipe_change: recipe_change,
         configuration: configuration
       )
-
-      # Apply to recipe if update_recipe is true
-      if update_recipe
-        logger.info("Applying recipe change")
-        recipe_change.apply!
-      end
 
       template_path = DataRepository.new(user: user).template_path(ingredient)
 
