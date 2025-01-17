@@ -26,6 +26,20 @@ module Pages
             assert_equal "rails-flag-checkbox", result["action"]
             assert_equal "#rails-flags", result["rails-flag-checkbox-generated-output-outlet"]
           end
+
+          test "raises error for unknown element variant type" do
+            sub_group = SubGroup.new
+            element = Element.new(sub_group: sub_group)
+            element.stubs(:variant_type).returns("Element::UnknownType")
+
+            component = Component.new(element: element)
+
+            error = assert_raises(RuntimeError) do
+              component.view_template
+            end
+
+            assert_equal "Unknown element variant_type: Element::UnknownType", error.message
+          end
         end
       end
     end

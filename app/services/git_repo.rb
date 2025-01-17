@@ -12,14 +12,7 @@ class GitRepo
     if File.exist?(repo_path)
       ensure_github_repo_exists
       git.fetch
-      if remote_branch_exists?("main")
-        git.reset_hard("origin/main")
-      else
-        # Ensure we're on main branch
-        unless git.branches.local.map(&:name).include?("main")
-          git.branch("main").checkout
-        end
-      end
+      git.reset_hard("origin/main")
     else
       if remote_repo_exists?
         Git.clone(

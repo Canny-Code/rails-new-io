@@ -352,6 +352,12 @@ class DataRepositoryTest < ActiveSupport::TestCase
     @repo.send(:ensure_fresh_repo)
   end
 
+  def test_template_path_returns_correct_path
+    ingredient = ingredients(:rails_authentication)
+    expected_path = File.join(@repo.send(:repo_path), "ingredients", ingredient.name.parameterize, "template.rb")
+    assert_equal expected_path, @repo.template_path(ingredient)
+  end
+
   private
 
   def stub_filesystem_operations
