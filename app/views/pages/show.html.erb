@@ -25,8 +25,20 @@
             <code id="api-flag"></code>
             <code data-controller="generated-output" id="database-choice" class="text-white ml-2"></code>
             <code data-controller="generated-output" id="rails-flags" class="text-white ml-2"></code>
-            <div data-controller="generated-output" id="custom_ingredients" class="text-white ml-2"></div>
           </p>
+        </div>
+      </div>
+
+      <!-- Ingredients Container TODO make this appear only if there are custom ingredients-->
+      <div class="mt-4 flex flex-wrap gap-2 justify-start w-full max-w-4xl mx-auto">
+        <div >
+          <h3 class="text-sm font-medium text-white mb-2">Custom Ingredients</h3>
+          <div class="flex flex-wrap gap-2 justify-start">
+            <div class="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-[#dfe8f0] text-gray-800 shadow-sm border border-[#30353A]/20">
+              <span class="mr-1.5"><%= %w[🥗 🥘 🥙 🌮 🌯 🥪 🍕 🥨 🥯 🥖 🧀 🥩 🥓 🍗 🍖 🌭 🍔 🍟 🥫 🍝 🥣 🥪 🥨 🍳 🥚 🧇 🥞 🧈 🍞 🥐 🥨 🥯 🥖 🧀].sample %></span>
+              <div data-controller="generated-output" id="custom_ingredients"></div>
+            </div>
+          </div>
         </div>
       </div>
 
