@@ -177,5 +177,56 @@ module AppGeneration
         @orchestrator.perform_generation
       end
     end
+
+    test "performs generation with actual ingredients" do
+      # Mock command execution
+      command_service = mock("command_service")
+      command_service.expects(:execute).once
+      CommandExecutionService.expects(:new).with(@generated_app, @generated_app.command).returns(command_service)
+
+      # Mock template path verification
+      data_repository = mock("data_repository")
+      template_path = Rails.root.join("test/fixtures/templates/test.rb").to_s
+      data_repository.stubs(:template_path).returns(template_path)
+      DataRepository.stubs(:new).with(user: @generated_app.user).returns(data_repository)
+      File.stubs(:exist?).with(template_path).returns(true)
+
+      # Clean up any existing ingredients
+      @generated_app.recipe.recipe_ingredients.destroy_all
+
+      # Add ingredients to the recipe
+      ingredient1 = ingredients(:rails_authentication)
+      ingredient2 = ingredients(:api_setup)
+      @generated_app.recipe.add_ingredient!(ingredient1)
+      @generated_app.recipe.add_ingredient!(ingredient2)
+
+      # Verify ingredients are added in correct order
+      assert_equal [ ingredient1.id, ingredient2.id ], @generated_app.recipe.ingredients.order(:position).pluck(:id)
+
+      # Unstub ingredients to use actual implementation
+      @generated_app.unstub(:ingredients)
+
+      # Expect the app to be marked as generating and ingredients to be applied
+      @generated_app.expects(:generate!).once
+      @generated_app.expects(:apply_ingredient!).with(ingredient1).once.returns(true)
+      @generated_app.expects(:apply_ingredient!).with(ingredient2).once.returns(true)
+
+      # Expect proper logging
+      sequence = sequence("generation_logging")
+      AppGeneration::Logger.any_instance.expects(:info).with("Starting app generation").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("Executing Rails new command").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("Applying ingredients").in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("Finished applying ingredient", { ingredient: ingredient1.name }).in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("Finished applying ingredient", { ingredient: ingredient2.name }).in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:info).with("App generation completed successfully").in_sequence(sequence)
+
+      # Perform generation
+      @orchestrator.perform_generation
+
+      # Verify final state
+      assert_equal 2, @generated_app.recipe.recipe_ingredients.count
+      assert_equal ingredient1.id, @generated_app.recipe.recipe_ingredients.first.ingredient_id
+      assert_equal ingredient2.id, @generated_app.recipe.recipe_ingredients.last.ingredient_id
+    end
   end
 end
