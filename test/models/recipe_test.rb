@@ -192,4 +192,157 @@ class RecipeTest < ActiveSupport::TestCase
 
     assert_equal [ 1, 2 ], @recipe.recipe_ingredients.order(:position).pluck(:position)
   end
+
+  test "find_duplicate returns nil when no recipes with matching cli_flags exist" do
+    recipe = recipes(:blog_recipe)
+    recipe.update!(cli_flags: "--api")
+    assert_nil Recipe.find_duplicate("--some-flag-that-does-not-exist")
+  end
+
+  test "find_duplicate returns nil when recipes have same cli_flags but different ingredients" do
+    ingredient1 = ingredients(:rails_authentication)
+    ingredient2 = ingredients(:api_setup)
+
+    recipe1 = recipes(:blog_recipe)
+    recipe1.update!(cli_flags: "--api")
+    recipe1.recipe_ingredients.destroy_all  # Clear existing ingredients first
+    recipe1.add_ingredient!(ingredient1)
+
+    recipe2 = recipes(:minimal_recipe)
+    recipe2.update!(cli_flags: "--api")
+    recipe2.recipe_ingredients.destroy_all  # Clear existing ingredients first
+    recipe2.add_ingredient!(ingredient2)
+
+    puts "\nRecipe 1 ingredients: #{recipe1.ingredient_ids.sort}"
+    puts "Recipe 2 ingredients: #{recipe2.ingredient_ids.sort}"
+    puts "SQL: #{Recipe.where(cli_flags: "--api").to_sql}"
+
+    result = Recipe.find_duplicate("--api")
+    puts "Result: #{result&.id}"
+    puts "Result ingredients: #{result&.ingredient_ids&.sort}"
+
+    assert_nil result
+  end
+
+  test "find_duplicate returns nil when recipes have same cli_flags and some common ingredients" do
+    ingredient1 = ingredients(:rails_authentication)
+    ingredient2 = ingredients(:api_setup)
+    ingredient3 = ingredients(:basic)
+
+    recipe1 = recipes(:blog_recipe)
+    recipe1.update!(cli_flags: "--api")
+    recipe1.recipe_ingredients.destroy_all
+    recipe1.add_ingredient!(ingredient1)
+    recipe1.add_ingredient!(ingredient2)
+
+    recipe2 = recipes(:minimal_recipe)
+    recipe2.update!(cli_flags: "--api")
+    recipe2.recipe_ingredients.destroy_all
+    recipe2.add_ingredient!(ingredient1)
+    recipe2.add_ingredient!(ingredient3)
+
+    assert_nil Recipe.find_duplicate("--api")
+  end
+
+  test "find_duplicate returns recipe when exact match exists" do
+    ingredient1 = ingredients(:rails_authentication)
+    ingredient2 = ingredients(:api_setup)
+
+    recipe1 = recipes(:blog_recipe)
+    recipe1.update!(cli_flags: "--api")
+    recipe1.recipe_ingredients.destroy_all  # Clear existing ingredients
+    recipe1.add_ingredient!(ingredient1)
+    recipe1.add_ingredient!(ingredient2)
+
+    recipe2 = recipes(:minimal_recipe)
+    recipe2.update!(cli_flags: "--api")
+    recipe2.recipe_ingredients.destroy_all  # Clear existing ingredients
+    recipe2.add_ingredient!(ingredient1)
+    recipe2.add_ingredient!(ingredient2)
+
+    puts "\nRecipe 1 id: #{recipe1.id}, ingredients: #{recipe1.ingredient_ids.sort}"
+    puts "Recipe 2 id: #{recipe2.id}, ingredients: #{recipe2.ingredient_ids.sort}"
+
+    result = Recipe.find_duplicate("--api")
+    puts "Result: #{result&.id}"
+    puts "Result ingredients: #{result&.ingredient_ids&.sort}"
+
+    assert_equal recipe1, Recipe.find_duplicate("--api")
+  end
+
+  test "find_duplicate matches ingredients regardless of their order" do
+    ingredient1 = ingredients(:rails_authentication)
+    ingredient2 = ingredients(:api_setup)
+
+    recipe1 = recipes(:blog_recipe)
+    recipe1.update!(cli_flags: "--api")
+    recipe1.recipe_ingredients.destroy_all  # Clear existing ingredients
+    recipe1.add_ingredient!(ingredient1)
+    recipe1.add_ingredient!(ingredient2)
+
+    recipe2 = recipes(:minimal_recipe)
+    recipe2.update!(cli_flags: "--api")
+    recipe2.recipe_ingredients.destroy_all  # Clear existing ingredients
+    recipe2.add_ingredient!(ingredient2)
+    recipe2.add_ingredient!(ingredient1)
+
+    puts "\nRecipe 1 id: #{recipe1.id}, ingredients: #{recipe1.ingredient_ids.sort}"
+    puts "Recipe 2 id: #{recipe2.id}, ingredients: #{recipe2.ingredient_ids.sort}"
+
+    result = Recipe.find_duplicate("--api")
+    puts "Result: #{result&.id}"
+    puts "Result ingredients: #{result&.ingredient_ids&.sort}"
+
+    assert_equal recipe1, Recipe.find_duplicate("--api")
+  end
+
+  test "find_duplicate returns nil when recipes have same ingredients but different cli_flags" do
+    ingredient1 = ingredients(:rails_authentication)
+    ingredient2 = ingredients(:api_setup)
+
+    recipe1 = recipes(:blog_recipe)
+    recipe1.update!(cli_flags: "--api")
+    recipe1.add_ingredient!(ingredient1)
+    recipe1.add_ingredient!(ingredient2)
+
+    recipe2 = recipes(:minimal_recipe)
+    recipe2.update!(cli_flags: "--minimal")
+    recipe2.add_ingredient!(ingredient1)
+    recipe2.add_ingredient!(ingredient2)
+
+    assert_nil Recipe.find_duplicate("--api")
+  end
+
+  test "find_duplicate works with recipes that have no ingredients" do
+    recipe1 = recipes(:blog_recipe)
+    recipe1.update!(cli_flags: "--api")
+    recipe1.recipe_ingredients.destroy_all
+
+    recipe2 = recipes(:minimal_recipe)
+    recipe2.update!(cli_flags: "--api")
+    recipe2.recipe_ingredients.destroy_all
+
+    assert_equal recipe1, Recipe.find_duplicate("--api")
+  end
+
+  test "find_duplicate returns existing recipe when both have no ingredients but same flags" do
+    # Create first recipe with no ingredients
+    recipe1 = recipes(:blog_recipe)
+    recipe1.update!(cli_flags: "--api")
+    recipe1.recipe_ingredients.destroy_all
+
+    # Create second recipe with no ingredients
+    recipe2 = recipes(:minimal_recipe)
+    recipe2.update!(cli_flags: "--api")
+    recipe2.recipe_ingredients.destroy_all
+
+    puts "\nRecipe 1 id: #{recipe1.id}, flags: #{recipe1.cli_flags}, ingredients: #{recipe1.ingredient_ids}"
+    puts "Recipe 2 id: #{recipe2.id}, flags: #{recipe2.cli_flags}, ingredients: #{recipe2.ingredient_ids}"
+
+    result = Recipe.find_duplicate("--api")
+    puts "Result: #{result&.id}"
+
+    # Should find recipe1 as the duplicate since it has same flags and no ingredients
+    assert_equal recipe1, result
+  end
 end

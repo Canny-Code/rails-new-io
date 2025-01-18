@@ -101,18 +101,41 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
 
   test "create prevents duplicate recipes with same CLI flags" do
     existing_recipe = recipes(:basic_recipe) # has "--api --database=mysql"
+    puts "\nExisting recipe:"
+    puts "  id: #{existing_recipe.id}"
+    puts "  flags: #{existing_recipe.cli_flags.inspect}"
+    puts "  ingredients: #{existing_recipe.ingredient_ids}"
+
+    puts "\nAll recipes before create:"
+    Recipe.all.each do |r|
+      puts "  id: #{r.id}, flags: #{r.cli_flags.inspect}, ingredients: #{r.ingredient_ids}"
+    end
 
     assert_no_difference("Recipe.count") do
+      # The controller will join these with spaces
+      cli_flags = [ "--api", "--database=mysql" ].join(" ")
+      puts "\nTrying to create recipe with flags: #{cli_flags.inspect}"
+
       post recipes_path, params: {
         recipe: {
           name: "Different Name",
           description: "Different description",
-          status: "draft", # different status
+          status: "draft",
           api_flag: "--api",
           database_choice: "--database=mysql",
           rails_flags: nil
         }
       }
+
+      puts "\nResponse:"
+      puts "  status: #{response.status}"
+      puts "  location: #{response.location}"
+      puts "  flash: #{flash.inspect}"
+
+      puts "\nAll recipes after create:"
+      Recipe.all.each do |r|
+        puts "  id: #{r.id}, flags: #{r.cli_flags.inspect}, ingredients: #{r.ingredient_ids}"
+      end
     end
 
     assert_redirected_to recipe_path(existing_recipe)

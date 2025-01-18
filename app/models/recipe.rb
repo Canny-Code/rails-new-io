@@ -68,9 +68,45 @@ class Recipe < ApplicationRecord
   end
 
   def self.find_duplicate(cli_flags)
-    # For now, we only check cli_flags. In the future, when we implement
-    # ingredients, we should also check for matching ingredients
-    where(cli_flags: cli_flags).first
+    # A recipe is a duplicate if it has:
+    # 1. The same cli_flags AND
+    # 2. The same ingredients (or both have no ingredients)
+    sql = <<~SQL
+      WITH recipe_ingredients_grouped AS (
+        SELECT recipe_id,
+               COUNT(*) as ingredient_count,
+               GROUP_CONCAT(ingredient_id ORDER BY ingredient_id) as ingredient_list
+        FROM recipe_ingredients
+        GROUP BY recipe_id
+      )
+      SELECT r.*
+      FROM recipes r
+      LEFT JOIN recipe_ingredients_grouped rig ON rig.recipe_id = r.id
+      WHERE r.cli_flags = ?
+      AND (
+        -- Either both recipes have no ingredients
+        COALESCE(rig.ingredient_count, 0) = 0
+        -- OR both recipes have the same ingredients
+        OR EXISTS (
+          SELECT 1
+          FROM recipes r2
+          LEFT JOIN recipe_ingredients_grouped rig2 ON rig2.recipe_id = r2.id
+          WHERE r2.cli_flags = r.cli_flags
+          AND r2.id != r.id
+          AND COALESCE(rig.ingredient_count, 0) > 0
+          AND COALESCE(rig2.ingredient_count, 0) > 0
+          AND COALESCE(rig.ingredient_list, '') = COALESCE(rig2.ingredient_list, '')
+        )
+      )
+      ORDER BY r.id
+      LIMIT 1
+    SQL
+
+    puts "\nFinding duplicate for flags: #{cli_flags.inspect}"
+    puts "SQL: #{sanitize_sql([ sql, cli_flags ])}"
+    result = find_by_sql([ sql, cli_flags ]).first
+    puts "Result: #{result&.id}"
+    result
   end
 
   private
