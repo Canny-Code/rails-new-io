@@ -22,8 +22,8 @@ module GroupBehavior
       }
     when "custom_ingredient_checkbox"
       {
-        controller: "rails-flag-checkbox",
-        "rails-flag-checkbox-generated-output-outlet": "#custom_ingredients"
+        controller: "custom-ingredient-checkbox",
+        "custom-ingredient-checkbox-generated-output-outlet": "#custom_ingredients"
       }
     else
       {}

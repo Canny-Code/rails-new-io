@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_01_17_135204) do
+ActiveRecord::Schema[8.0].define(version: 2025_01_18_084535) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -106,6 +106,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_01_17_135204) do
     t.index ["author_id"], name: "index_commits_on_author_id"
     t.index ["sha"], name: "index_commits_on_sha", unique: true
     t.index ["versioned_type", "versioned_id"], name: "index_commits_on_versioned"
+  end
+
+  create_table "element_custom_ingredient_checkboxes", force: :cascade do |t|
+    t.boolean "checked"
+    t.boolean "default"
+    t.integer "ingredient_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ingredient_id"], name: "index_element_custom_ingredient_checkboxes_on_ingredient_id"
   end
 
   create_table "element_radio_buttons", force: :cascade do |t|
@@ -446,6 +455,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_01_17_135204) do
   add_foreign_key "app_generation_log_entries", "generated_apps", on_delete: :cascade
   add_foreign_key "app_statuses", "generated_apps", on_delete: :cascade
   add_foreign_key "commits", "users", column: "author_id"
+  add_foreign_key "element_custom_ingredient_checkboxes", "ingredients"
   add_foreign_key "elements", "sub_groups"
   add_foreign_key "generated_apps", "recipes"
   add_foreign_key "generated_apps", "users"

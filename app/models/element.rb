@@ -33,6 +33,7 @@ class Element < ApplicationRecord
 
   delegated_type :variant, types: %w[
     Element::RailsFlagCheckbox
+    Element::CustomIngredientCheckbox
     Element::RadioButton
     Element::TextField
     Element::Unclassified

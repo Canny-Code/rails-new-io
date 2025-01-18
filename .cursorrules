@@ -43,24 +43,6 @@ You also use the latest versions of Tailwind, Stimulus, Hotwire and Turbo.
 - If you think there's a more optimal solution, or the currently proposed/existing solution is fishy, say so, and suggest an alternative
 - Conduct a final review to confirm the code is complete and meets all requirements. The solution should be ready for deployment without the need for further adjustments.
 
-[gems]
-
-Ruby
-Rails
-ActiveRecord
-SQLite
-Turbo
-Stimulus
-TailwindCSS
-Minitest (!!! Not RSpec !!!)
-Phlex (!!! NOT viewcomponent !!!)
-esbuild
-solid_cache
-solid_cable
-solid_queue
-
-Utilize the integrated docs in the cursor custom docs for reference when needed.
-
 [debugging]
 
 If you don't get something right for the 1st/2nd try, time to add ample debug messages (rather than re-trying it for the 3rd/4th... time). Sprinkle puts / conole.log statements generously, so that I can feed back the output to you and resolve the issue efficiently and quickly, rather than taking further shots.
@@ -121,3 +103,6 @@ solid_queue
   2. Rebuild assets: `RAILS_ENV=test bin/vite build`
 - Empty manifest usually means stale/cached assets
 - Always force rebuild if asset-related test errors occur
+
+# resetting the dev database
+DISABLE_DATABASE_ENVIRONMENT_CHECK=1 RAILS_ENV=development rails db:drop db:create db:migrate db:seed

@@ -38,6 +38,19 @@ module Pages
                   **group_stimulus_attributes
                 }
               )
+            when "Element::CustomIngredientCheckbox"
+              render Pages::Groups::SubGroups::Elements::CustomIngredientCheckbox::Component.new(
+                label: element.label,
+                description: element.description,
+                image_path: element.image_path,
+                name: "#{element.sub_group.group.title}",
+                checked: element.variant.checked,
+                command_line_value: element.label,
+                ingredient_id: element.variant.ingredient.id,
+                data: {
+                  **group_stimulus_attributes
+                }
+              )
             else
               raise "Unknown element variant_type: #{element.variant_type}"
             end

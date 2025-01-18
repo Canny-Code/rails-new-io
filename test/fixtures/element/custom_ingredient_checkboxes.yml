@@ -1,0 +1,30 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# == Schema Information
+#
+# Table name: element_custom_ingredient_checkboxes
+#
+#  id            :integer          not null, primary key
+#  checked       :boolean
+#  default       :boolean
+#  created_at    :datetime         not null
+#  updated_at    :datetime         not null
+#  ingredient_id :integer          not null
+#
+# Indexes
+#
+#  index_element_custom_ingredient_checkboxes_on_ingredient_id  (ingredient_id)
+#
+# Foreign Keys
+#
+#  ingredient_id  (ingredient_id => ingredients.id)
+#
+one:
+  checked: false
+  default: false
+  ingredient: rails_authentication
+
+two:
+  checked: false
+  default: false
+  ingredient: basic

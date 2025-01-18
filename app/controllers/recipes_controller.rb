@@ -36,12 +36,9 @@ class RecipesController < ApplicationController
     )
 
     if @recipe.save
-      if recipe_params[:custom_ingredients].present?
-        ingredient_names = recipe_params[:custom_ingredients].split(/[,;]/).map(&:strip)
-
-        ingredient_names.each do |name|
-          ingredient = Ingredient.find_by(name: name)
-
+      if recipe_params[:ingredient_ids].present?
+        recipe_params[:ingredient_ids].each do |ingredient_id|
+          ingredient = Ingredient.find_by(id: ingredient_id)
           @recipe.add_ingredient!(ingredient) if ingredient
         end
       end
@@ -72,7 +69,7 @@ class RecipesController < ApplicationController
       :name,
       :description,
       :status,
-      :custom_ingredients
+      ingredient_ids: []
     )
   end
 end
