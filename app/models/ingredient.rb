@@ -37,6 +37,7 @@ class Ingredient < ApplicationRecord
   validates :template_content, presence: true
 
   before_destroy :cleanup_ui_elements
+  after_update :update_ui_elements, if: :ui_relevant_attributes_changed?
 
   serialize :conflicts_with, coder: YAML
   serialize :requires, coder: YAML
@@ -88,5 +89,13 @@ class Ingredient < ApplicationRecord
 
   def cleanup_ui_elements
     IngredientUiDestroyer.call(self)
+  end
+
+  def update_ui_elements
+    IngredientUiUpdater.call(self)
+  end
+
+  def ui_relevant_attributes_changed?
+    saved_changes.keys.any? { |attr| %w[name description category].include?(attr) }
   end
 end
