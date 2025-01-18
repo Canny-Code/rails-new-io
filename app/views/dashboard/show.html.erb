@@ -72,4 +72,8 @@
       emoji: "🚀"
     ) %>
   <% end %>
+  <div class="flex justify-end gap-4 mt-8">
+    <%= link_to "My Ingredients", ingredients_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500", data: { turbo_frame: "_top" } %>
+    <%= link_to "My Recipes", recipes_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500", data: { turbo_frame: "_top" } %>
+  </div>
 </div>
