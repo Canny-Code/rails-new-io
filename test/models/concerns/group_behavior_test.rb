@@ -25,13 +25,13 @@ class GroupBehaviorTest < ActiveSupport::TestCase
 
     result = group.stimulus_attributes
 
-    assert_equal "rails-flag-checkbox", result[:controller]
-    assert_equal "#custom_ingredients", result[:"rails-flag-checkbox-generated-output-outlet"]
+    assert_equal "custom-ingredient-checkbox", result[:controller]
+    assert_equal "#custom_ingredients", result[:"custom-ingredient-checkbox-generated-output-outlet"]
 
     assert_equal(
       {
-        controller: "rails-flag-checkbox",
-        "rails-flag-checkbox-generated-output-outlet": "#custom_ingredients"
+        controller: "custom-ingredient-checkbox",
+        "custom-ingredient-checkbox-generated-output-outlet": "#custom_ingredients"
       },
       result
     )

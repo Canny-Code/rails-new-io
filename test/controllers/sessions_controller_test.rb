@@ -130,6 +130,7 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
     GeneratedApp.delete_all               # Then generated apps
     RecipeIngredient.delete_all          # Then recipe ingredients
     Recipe.delete_all                     # Then recipes
+    Element::CustomIngredientCheckbox.delete_all  # Then custom ingredient checkboxes
     Ingredient.delete_all                 # Then ingredients
     Noticed::Notification.delete_all      # Then notifications
     User.delete_all                       # Finally users

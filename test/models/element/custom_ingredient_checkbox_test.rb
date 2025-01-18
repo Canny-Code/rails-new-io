@@ -20,7 +20,8 @@
 require "test_helper"
 
 class Element::CustomIngredientCheckboxTest < ActiveSupport::TestCase
-  # test "the truth" do
-  #   assert true
-  # end
+  test "checkbox is always displayed" do
+    checkbox = Element::CustomIngredientCheckbox.new
+    assert checkbox.displayed?
+  end
 end

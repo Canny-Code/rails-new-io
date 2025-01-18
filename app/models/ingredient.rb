@@ -31,6 +31,7 @@ class Ingredient < ApplicationRecord
   has_many :recipe_ingredients, dependent: :delete_all
   has_many :recipes, through: :recipe_ingredients
   has_many :recipe_changes, dependent: :delete_all
+  has_many :custom_ingredient_checkboxes, class_name: "Element::CustomIngredientCheckbox", dependent: :destroy
 
   validates :name, presence: true, uniqueness: { scope: :created_by_id }
   validates :template_content, presence: true

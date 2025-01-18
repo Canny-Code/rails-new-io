@@ -218,7 +218,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
             name: "Auth Recipe",
             description: "Recipe with authentication",
             api_flag: "--api",
-            custom_ingredients: ingredient.name
+            ingredient_ids: [ ingredient.id ]
           }
         }
       end
@@ -241,7 +241,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
             name: "Multi-ingredient Recipe",
             description: "Recipe with multiple ingredients",
             api_flag: "--api",
-            custom_ingredients: "#{auth.name}, #{basic.name}"
+            ingredient_ids: [ auth.id, basic.id ]
           }
         }
       end
@@ -264,7 +264,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
             name: "Mixed Recipe",
             description: "Recipe with mix of real and fake ingredients",
             api_flag: "--api",
-            custom_ingredients: "#{auth.name}, non_existent_ingredient"
+            ingredient_ids: [ auth.id, 999999 ]
           }
         }
       end
