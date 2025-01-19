@@ -84,9 +84,7 @@ class Recipe < ApplicationRecord
       LEFT JOIN recipe_ingredients_grouped rig ON rig.recipe_id = r.id
       WHERE r.cli_flags = ?
       AND (
-        -- Either both recipes have no ingredients
         COALESCE(rig.ingredient_count, 0) = 0
-        -- OR both recipes have the same ingredients
         OR EXISTS (
           SELECT 1
           FROM recipes r2
@@ -102,11 +100,7 @@ class Recipe < ApplicationRecord
       LIMIT 1
     SQL
 
-    puts "\nFinding duplicate for flags: #{cli_flags.inspect}"
-    puts "SQL: #{sanitize_sql([ sql, cli_flags ])}"
-    result = find_by_sql([ sql, cli_flags ]).first
-    puts "Result: #{result&.id}"
-    result
+    find_by_sql([ sql, cli_flags ]).first
   end
 
   private

@@ -213,15 +213,7 @@ class RecipeTest < ActiveSupport::TestCase
     recipe2.recipe_ingredients.destroy_all  # Clear existing ingredients first
     recipe2.add_ingredient!(ingredient2)
 
-    puts "\nRecipe 1 ingredients: #{recipe1.ingredient_ids.sort}"
-    puts "Recipe 2 ingredients: #{recipe2.ingredient_ids.sort}"
-    puts "SQL: #{Recipe.where(cli_flags: "--api").to_sql}"
-
-    result = Recipe.find_duplicate("--api")
-    puts "Result: #{result&.id}"
-    puts "Result ingredients: #{result&.ingredient_ids&.sort}"
-
-    assert_nil result
+    assert_nil Recipe.find_duplicate("--api")
   end
 
   test "find_duplicate returns nil when recipes have same cli_flags and some common ingredients" do
@@ -260,13 +252,6 @@ class RecipeTest < ActiveSupport::TestCase
     recipe2.add_ingredient!(ingredient1)
     recipe2.add_ingredient!(ingredient2)
 
-    puts "\nRecipe 1 id: #{recipe1.id}, ingredients: #{recipe1.ingredient_ids.sort}"
-    puts "Recipe 2 id: #{recipe2.id}, ingredients: #{recipe2.ingredient_ids.sort}"
-
-    result = Recipe.find_duplicate("--api")
-    puts "Result: #{result&.id}"
-    puts "Result ingredients: #{result&.ingredient_ids&.sort}"
-
     assert_equal recipe1, Recipe.find_duplicate("--api")
   end
 
@@ -285,13 +270,6 @@ class RecipeTest < ActiveSupport::TestCase
     recipe2.recipe_ingredients.destroy_all  # Clear existing ingredients
     recipe2.add_ingredient!(ingredient2)
     recipe2.add_ingredient!(ingredient1)
-
-    puts "\nRecipe 1 id: #{recipe1.id}, ingredients: #{recipe1.ingredient_ids.sort}"
-    puts "Recipe 2 id: #{recipe2.id}, ingredients: #{recipe2.ingredient_ids.sort}"
-
-    result = Recipe.find_duplicate("--api")
-    puts "Result: #{result&.id}"
-    puts "Result ingredients: #{result&.ingredient_ids&.sort}"
 
     assert_equal recipe1, Recipe.find_duplicate("--api")
   end
@@ -336,13 +314,6 @@ class RecipeTest < ActiveSupport::TestCase
     recipe2.update!(cli_flags: "--api")
     recipe2.recipe_ingredients.destroy_all
 
-    puts "\nRecipe 1 id: #{recipe1.id}, flags: #{recipe1.cli_flags}, ingredients: #{recipe1.ingredient_ids}"
-    puts "Recipe 2 id: #{recipe2.id}, flags: #{recipe2.cli_flags}, ingredients: #{recipe2.ingredient_ids}"
-
-    result = Recipe.find_duplicate("--api")
-    puts "Result: #{result&.id}"
-
-    # Should find recipe1 as the duplicate since it has same flags and no ingredients
-    assert_equal recipe1, result
+    assert_equal recipe1, Recipe.find_duplicate("--api")
   end
 end
