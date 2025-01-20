@@ -44,7 +44,7 @@ group :test do
   gem "capybara"
   gem "capybara-lockstep", "~> 2.2.2"
   gem "database_cleaner-active_record"
-  gem "selenium-webdriver", "~> 4.27.0"
+  gem "selenium-webdriver", "~> 4.28.0"
   gem "mocha", "~> 2.7.1"
 end
 
