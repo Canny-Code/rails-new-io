@@ -47,7 +47,13 @@ export default class extends Controller {
 
   toggleHeadingVisibility() {
     if (this.headingElement) {
-      this.headingElement.style.display = this.pillsContainer.children.length > 0 ? 'block' : 'none'
+      if (this.pillsContainer.children.length > 0) {
+        this.headingElement.classList.remove('max-h-0', 'opacity-0')
+        this.headingElement.classList.add('max-h-24', 'opacity-100')
+      } else {
+        this.headingElement.classList.remove('max-h-24', 'opacity-100')
+        this.headingElement.classList.add('max-h-0', 'opacity-0')
+      }
     }
   }
 
