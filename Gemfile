@@ -35,7 +35,7 @@ group :development do
   gem "aasm-diagram", "~> 0.1.3"
   gem "annotaterb"
   gem "better_html", require: false
-  gem "erb_lint", "~> 0.8.0", require: false
+  gem "erb_lint", "~> 0.9.0", require: false
   gem "overcommit", require: false
   gem "rails-erd", "~> 1.7.2"
 end
