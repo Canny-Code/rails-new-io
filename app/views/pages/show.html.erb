@@ -29,9 +29,11 @@
     </div>
     <!-- Ingredients Container TODO make this appear only if there are custom ingredients-->
     <div class="mt-4 flex flex-wrap gap-2 justify-start w-full max-w-4xl mx-auto">
-      <div>
-        <h3 class="text-sm font-medium text-white mb-2">Custom Ingredients</h3>
-        <div class="flex flex-wrap gap-2 justify-start" data-controller="custom-ingredients" id="custom-ingredients-container">
+      <div data-controller="custom-ingredients">
+        <div data-custom-ingredients-target="heading">
+          <h3 class="text-sm font-medium text-white mb-2">Custom Ingredients</h3>
+        </div>
+        <div class="flex flex-wrap gap-2 justify-start" id="custom-ingredients-container">
         </div>
       </div>
     </div>

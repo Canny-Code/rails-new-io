@@ -12,8 +12,10 @@ export default class extends Controller {
     this.groupElement = this.element.closest('ul')
     if (!this.groupElement) return
     this.pillsContainer = document.getElementById('custom-ingredients-container')
+    this.headingElement = document.querySelector('[data-custom-ingredients-target="heading"]')
     this.selectedIngredients = new Set()
     this.update()
+    this.toggleHeadingVisibility()
   }
 
   update(event) {
@@ -34,10 +36,18 @@ export default class extends Controller {
       this.removeHiddenInput(ingredientId)
     }
 
+    this.toggleHeadingVisibility()
+
     // Update command line output
     const outputElement = document.getElementById('custom_ingredients')
     if (outputElement) {
       outputElement.textContent = Array.from(this.selectedIngredients).join(" ")
+    }
+  }
+
+  toggleHeadingVisibility() {
+    if (this.headingElement) {
+      this.headingElement.style.display = this.pillsContainer.children.length > 0 ? 'block' : 'none'
     }
   }
 
