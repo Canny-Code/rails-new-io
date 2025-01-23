@@ -1,6 +1,5 @@
 require "test_helper"
 require "minitest/mock"
-require "ostruct"
 
 class GithubRepositoryServiceTest < ActiveSupport::TestCase
   def setup
@@ -22,27 +21,25 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "creates a repository successfully" do
-    response = OpenStruct.new(html_url: "https://github.com/#{@user.github_username}/#{@repository_name}")
+    response = Data.define(:html_url).new(html_url: "https://github.com/#{@user.github_username}/#{@repository_name}")
 
-    mock_client = Minitest::Mock.new
-    mock_client.expect :repository?, false, [ "#{@user.github_username}/#{@repository_name}" ]
-    mock_client.expect :create_repository, response, [ @repository_name, {
+    mock_client = mock("octokit_client")
+    mock_client.expects(:repository?).with("#{@user.github_username}/#{@repository_name}").returns(false)
+    mock_client.expects(:create_repository).with(@repository_name, {
       private: false,
       auto_init: false,
       description: "Repository created via railsnew.io"
-    } ]
+    }).returns(response)
 
-    Octokit::Client.stub :new, mock_client do
-      response = @service.create_repository(@repository_name)
-      assert_equal "https://github.com/#{@user.github_username}/#{@repository_name}", response.html_url
+    Octokit::Client.stubs(:new).returns(mock_client)
 
-      # Verify GeneratedApp was updated
-      @generated_app.reload
-      assert_equal @repository_name, @generated_app.github_repo_name
-      assert_equal response.html_url, @generated_app.github_repo_url
-    end
+    response = @service.create_repository(repo_name: @repository_name)
+    assert_equal "https://github.com/#{@user.github_username}/#{@repository_name}", response.html_url
 
-    assert_mock mock_client
+    # Verify GeneratedApp was updated
+    @generated_app.reload
+    assert_equal @repository_name, @generated_app.github_repo_name
+    assert_equal response.html_url, @generated_app.github_repo_url
   end
 
   test "raises error when repository already exists" do
@@ -54,7 +51,7 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
     @service.stub :client, mock_client do
       assert_difference -> { AppGeneration::LogEntry.count }, 1 do # One error log entry
         error = assert_raises(GithubRepositoryService::RepositoryExistsError) do
-          @service.create_repository(@repository_name)
+          @service.create_repository(repo_name: @repository_name)
         end
 
         assert_equal "Repository 'test-repo' already exists", error.message
@@ -73,7 +70,7 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       raise Octokit::TooManyRequests.new(response_headers: {})
     end
     def mock_client.rate_limit
-      OpenStruct.new(resets_at: Time.now)
+      Data.define(:resets_at).new(resets_at: Time.now)
     end
 
     @service.stub :client, mock_client do
@@ -85,7 +82,7 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       # 5. Final error after max retries
       assert_difference -> { AppGeneration::LogEntry.count }, 5 do
         error = assert_raises(GithubRepositoryService::ApiError) do
-          @service.create_repository(@repository_name)
+          @service.create_repository(repo_name: @repository_name)
         end
 
         assert_match /Rate limit exceeded/, error.message
@@ -118,7 +115,7 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       # 4. Final error after max retries
       assert_difference -> { AppGeneration::LogEntry.count }, 4 do
         error = assert_raises(GithubRepositoryService::ApiError) do
-          @service.create_repository(@repository_name)
+          @service.create_repository(repo_name: @repository_name)
         end
 
         assert_match /GitHub API error/, error.message
@@ -137,10 +134,8 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "repository_exists? returns false when client raises StandardError" do
-    client_mock = Minitest::Mock.new
-    client_mock.expect :repository?, nil do
-      raise StandardError, "Random error"
-    end
+    client_mock = mock("octokit_client")
+    client_mock.expects(:repository?).raises(StandardError.new("Random error"))
 
     @service.stub :client, client_mock do
       assert_equal false, @service.send(:repository_exists?, "test-repo")
@@ -158,12 +153,16 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
 
     # Stub external calls
     service.stub(:repository_exists?, false) do
-      mock_client = Minitest::Mock.new
-      mock_response = Struct.new(:html_url).new("https://github.com/user/repo")
-      mock_client.expect(:create_repository, mock_response, [ "test-repo", Hash ])
+      mock_client = mock("octokit_client")
+      mock_response = Data.define(:html_url).new(html_url: "https://github.com/user/repo")
+      mock_client.expects(:create_repository).with("test-repo", {
+        private: false,
+        auto_init: false,
+        description: "Repository created via railsnew.io"
+      }).returns(mock_response)
 
       service.stub(:client, mock_client) do
-        service.create_repository("test-repo")
+        service.create_repository(repo_name: "test-repo")
         assert creating_github_repo_called, "creating_github_repo! should have been called"
       end
     end
