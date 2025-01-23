@@ -8,9 +8,6 @@ module GitTestHelper
   GitRepo = Data.define(:html_url)
 
   def setup_github_mocks(recipe = nil)
-    @user.stubs(:github_token).returns("fake-token")
-    @user.stubs(:github_username).returns("test-user")
-
     # Initialize Octokit client mock
     @mock_client = mock("octokit_client")
     Octokit::Client.stubs(:new).returns(@mock_client)
@@ -32,30 +29,22 @@ module GitTestHelper
     @new_commit_mock = mock("new_commit")
     @new_commit_mock.stubs(:sha).returns("new_sha")
 
-    # Mock repository response
-    @repo_mock = GitRepo.new(html_url: "https://github.com/test-user/#{@repo_name}")
-
     # If recipe is provided, stub its git operations
-    recipe&.stubs(:sync_to_git).returns(true)
+    recipe.stubs(:sync_to_git).returns(true) if recipe
   end
 
   def expect_github_operations(create_repo: false, expect_git_operations: false, raise_error: false)
-    repo_full_name = "#{@user.github_username}/#{@repo_name}"
+    repo_name = @repo_name || "test-repo"
+    repo_full_name = "#{@user.github_username}/#{repo_name}"
 
     if create_repo
       @mock_client.expects(:repository?).with(repo_full_name).returns(false)
       @mock_client.expects(:create_repository).with(
-        @repo_name,
+        repo_name,
         private: false,
         auto_init: false,
         description: "Repository created via railsnew.io"
-      ).returns(@repo_mock)
-    else
-      if raise_error
-        @mock_client.expects(:repository?).with(repo_full_name).returns(true).at_least_once
-      else
-        @mock_client.expects(:repository?).with(repo_full_name).returns(true)
-      end
+      ).returns(GitRepo.new(html_url: "https://github.com/#{@user.github_username}/#{repo_name}"))
     end
 
     if expect_git_operations

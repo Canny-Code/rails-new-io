@@ -111,8 +111,8 @@ class GithubRepositoryService
 
       retry if (retries += 1) <= @max_retries
       raise ApiError, "GitHub API error: #{e.message}"
- ##   rescue StandardError => e
- ##     raise Error, "Unexpected error: #{e.message}"
+    rescue StandardError => e
+      raise Error, "Unexpected error: #{e.message}"
     end
   end
 end
