@@ -1,8 +1,8 @@
-require "ostruct"
-
 module GitTestHelper
   GitRef = Data.define(:object)
   GitObject = Data.define(:sha)
+  GitCommitTree = Data.define(:sha)
+  GitCommitData = Data.define(:tree)
   GitCommit = Data.define(:commit)
   GitTree = Data.define(:sha)
   GitRepo = Data.define(:html_url)
@@ -20,7 +20,11 @@ module GitTestHelper
     @ref_mock.stubs(:object).returns(GitObject.new(sha: "old_sha"))
 
     @commit_mock = mock("commit")
-    @commit_mock.stubs(:commit).returns(GitCommit.new(commit: GitTree.new(sha: "tree_sha")))
+    @commit_mock.stubs(:commit).returns(
+      GitCommitData.new(
+        tree: GitCommitTree.new(sha: "tree_sha")
+      )
+    )
 
     @tree_mock = mock("tree")
     @tree_mock.stubs(:sha).returns("new_tree_sha")
@@ -33,8 +37,10 @@ module GitTestHelper
   end
 
   def expect_github_operations(create_repo: false, expect_git_operations: false, raise_error: false)
+    repo_full_name = "#{@user.github_username}/#{@repo_name}"
+
     if create_repo
-      @mock_client.expects(:repository?).returns(false)
+      @mock_client.expects(:repository?).with(repo_full_name).returns(false)
       @mock_client.expects(:create_repository).with(
         @repo_name,
         private: false,
@@ -43,9 +49,9 @@ module GitTestHelper
       ).returns(@repo_mock)
     else
       if raise_error
-        @mock_client.expects(:repository?).returns(true).at_least_once
+        @mock_client.expects(:repository?).with(repo_full_name).returns(true).at_least_once
       else
-        @mock_client.expects(:repository?).returns(true)
+        @mock_client.expects(:repository?).with(repo_full_name).returns(true)
       end
     end
 

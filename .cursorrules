@@ -60,6 +60,7 @@ Be very careful and think twice before adding callbacks. If possible, call the c
 [Ruby]
 
 - use Data rather than OpenStruct
+- 
 
 [mood]
 

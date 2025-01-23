@@ -2,20 +2,14 @@ require "test_helper"
 
 class RecipesControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @user = users(:jane)
-    @other_user = users(:john)
-    @recipe = recipes(:basic_recipe)
+    @recipe = recipes(:one)
+    @user = users(:john)
     @other_users_recipe = recipes(:minimal_recipe)
     sign_in @user
 
-    # Mock Git operations
-    GitRepo.any_instance.stubs(:commit_changes).returns(true)
-    GitRepo.any_instance.stubs(:push_changes).returns(true)
-    GitRepo.any_instance.stubs(:create_branch).returns(true)
-    GitRepo.any_instance.stubs(:switch_branch).returns(true)
-    GitRepo.any_instance.stubs(:sync_to_git).returns(true)
-    Recipe.any_instance.stubs(:sync_to_git).returns(true)
-    Recipe.any_instance.stubs(:head_commit_sha).returns("abc123")
+    # Mock repository operations
+    DataRepositoryService.any_instance.stubs(:push_app_files).returns(true)
+    DataRepositoryService.any_instance.stubs(:initialize_repository).returns(true)
   end
 
   test "index shows only current user's published recipes" do

@@ -24,11 +24,8 @@ module GitBackedModel
     @performing_git_operation = true
 
     begin
-      repo.write_model(self)
-      repo.commit_changes(
-        message: "Initial commit",
-        author: commit_author
-      )
+      repo.initialize_repository(repo_name: repo_name)
+      repo.push_app_files(source_path: source_path) if source_path.present?
     rescue StandardError => e
       handle_git_error(e)
     ensure
@@ -37,21 +34,14 @@ module GitBackedModel
   end
 
   def sync_to_git
-    puts "GitBackedModel#sync_to_git called"
     return unless should_sync_to_git?
-    puts "GitBackedModel#sync_to_git should sync"
     return if @performing_git_operation
-    puts "GitBackedModel#sync_to_git not already performing operation"
     return unless should_create_repository?
-    puts "GitBackedModel#sync_to_git should create repository"
+
     @performing_git_operation = true
 
     begin
-      repo.write_model(self)
-      repo.commit_changes(
-        message: "Update #{model_name} #{identifier}: #{change_description}",
-        author: updated_by
-      )
+      repo.push_app_files(source_path: source_path)
     rescue StandardError => e
       handle_git_error(e)
     ensure
@@ -60,27 +50,14 @@ module GitBackedModel
   end
 
   def repo
-    puts "GitBackedModel#repo called"
     return nil unless should_create_repository?
-    puts "GitBackedModel#repo should create repository"
 
     @repo ||= begin
       case self
       when GeneratedApp
-        puts "GitBackedModel#repo creating AppRepository"
-        AppRepository.new(
-          user: commit_author,
-          app_name: name,
-          source_path: source_path,
-          cleanup_after_push: cleanup_after_push?
-        )
+        AppRepositoryService.new(self)
       else
-        puts "GitBackedModel#repo creating DataRepository"
-        DataRepository.new(
-          user: commit_author,
-          source_path: source_path,
-          cleanup_after_push: cleanup_after_push?
-        )
+        DataRepositoryService.new(user: commit_author)
       end
     end
   end
@@ -125,18 +102,19 @@ module GitBackedModel
       # Try the source_path attribute first (database column)
       # Then try source_path_attribute (dynamic method)
       if has_attribute?(:source_path)
-        puts "GitBackedModel#source_path: Found source_path column, value: #{self[:source_path].inspect}"
         self[:source_path]
       elsif respond_to?(:source_path_attribute)
-        puts "GitBackedModel#source_path: Using source_path_attribute"
         source_path_attribute
       end
     else
       path_option
     end
 
-    puts "GitBackedModel#source_path: Final value: #{@source_path.inspect}"
     @source_path
+  end
+
+  def repo_name
+    respond_to?(:name) ? name : "#{self.class.name.underscore}-#{id}"
   end
 
   def commit_author

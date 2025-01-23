@@ -5,18 +5,7 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
   def setup
     @user = users(:john)
     @user.stubs(:github_token).returns("fake-token")
-
-    @generated_app = generated_apps(:pending_app)
-    @app_status = @generated_app.app_status
-    @app_status.update!(
-      status: "pending",
-      status_history: [],
-      started_at: nil,
-      completed_at: nil,
-      error_message: nil
-    )
-
-    @service = GithubRepositoryService.new(@generated_app)
+    @service = GithubRepositoryService.new(user: @user)
     @repository_name = "test-repo"
   end
 
@@ -27,144 +16,86 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
     mock_client.expects(:repository?).with("#{@user.github_username}/#{@repository_name}").returns(false)
     mock_client.expects(:create_repository).with(@repository_name, {
       private: false,
-      auto_init: false,
-      description: "Repository created via railsnew.io"
+      auto_init: true,
+      description: "Repository created via railsnew.io",
+      default_branch: "main"
     }).returns(response)
 
     Octokit::Client.stubs(:new).returns(mock_client)
 
-    response = @service.create_repository(repo_name: @repository_name)
-    assert_equal "https://github.com/#{@user.github_username}/#{@repository_name}", response.html_url
-
-    # Verify GeneratedApp was updated
-    @generated_app.reload
-    assert_equal @repository_name, @generated_app.github_repo_name
-    assert_equal response.html_url, @generated_app.github_repo_url
+    result = @service.create_repository(repo_name: @repository_name)
+    assert_equal response.html_url, result.html_url
   end
 
   test "raises error when repository already exists" do
-    mock_client = Object.new
-    def mock_client.repository?(*)
-      true
+    mock_client = mock("octokit_client")
+    mock_client.expects(:repository?).with("#{@user.github_username}/#{@repository_name}").returns(true)
+    Octokit::Client.stubs(:new).returns(mock_client)
+
+    error = assert_raises(GithubRepositoryService::RepositoryExistsError) do
+      @service.create_repository(repo_name: @repository_name)
     end
 
-    @service.stub :client, mock_client do
-      assert_difference -> { AppGeneration::LogEntry.count }, 1 do # One error log entry
-        error = assert_raises(GithubRepositoryService::RepositoryExistsError) do
-          @service.create_repository(repo_name: @repository_name)
-        end
-
-        assert_equal "Repository 'test-repo' already exists", error.message
-      end
-
-      # Verify log entry
-      log_entry = @generated_app.log_entries.last
-      assert log_entry.error?
-      assert_equal "Repository 'test-repo' already exists", log_entry.message
-    end
+    assert_equal "Repository 'test-repo' already exists", error.message
   end
 
   test "handles rate limit exceeded" do
-    mock_client = Object.new
-    def mock_client.repository?(*)
-      raise Octokit::TooManyRequests.new(response_headers: {})
+    mock_client = mock("octokit_client")
+    mock_client.stubs(:repository?).raises(Octokit::TooManyRequests.new(response_headers: {}))
+    mock_client.stubs(:rate_limit).returns(Data.define(:resets_at).new(resets_at: Time.now))
+    Octokit::Client.stubs(:new).returns(mock_client)
+
+    error = assert_raises(GithubRepositoryService::ApiError) do
+      @service.create_repository(repo_name: @repository_name)
     end
-    def mock_client.rate_limit
-      Data.define(:resets_at).new(resets_at: Time.now)
-    end
 
-    @service.stub :client, mock_client do
-      # We expect 5 log entries:
-      # 1. Warning for first rate limit hit
-      # 2. Warning for second rate limit hit
-      # 3. Warning for third rate limit hit
-      # 4. Warning for fourth rate limit hit
-      # 5. Final error after max retries
-      assert_difference -> { AppGeneration::LogEntry.count }, 5 do
-        error = assert_raises(GithubRepositoryService::ApiError) do
-          @service.create_repository(repo_name: @repository_name)
-        end
-
-        assert_match /Rate limit exceeded/, error.message
-      end
-
-      # Verify log entries
-      log_entries = @generated_app.log_entries.recent_first
-      assert log_entries[0].error?, "Last entry should be error"
-      assert_match /Rate limit exceeded and retry attempts exhausted/, log_entries[0].message
-
-      # Check that we have 4 warning entries for the retries
-      assert_equal 4, log_entries[1..].count { |entry| entry.warn? }
-      log_entries[1..].each do |entry|
-        assert_match /Rate limit exceeded, waiting for reset/, entry.message
-      end
-    end
+    assert_match /Rate limit exceeded/, error.message
   end
 
   test "handles general GitHub API errors" do
-    mock_client = Object.new
-    def mock_client.repository?(*)
-      raise Octokit::Error.new(response_headers: {})
+    mock_client = mock("octokit_client")
+    mock_client.stubs(:repository?).raises(Octokit::Error.new(response_headers: {}))
+    Octokit::Client.stubs(:new).returns(mock_client)
+
+    error = assert_raises(GithubRepositoryService::ApiError) do
+      @service.create_repository(repo_name: @repository_name)
     end
 
-    @service.stub :client, mock_client do
-      # We expect 4 log entries:
-      # 1. Error for first attempt
-      # 2. Error for first retry
-      # 3. Error for second retry
-      # 4. Final error after max retries
-      assert_difference -> { AppGeneration::LogEntry.count }, 4 do
-        error = assert_raises(GithubRepositoryService::ApiError) do
-          @service.create_repository(repo_name: @repository_name)
-        end
-
-        assert_match /GitHub API error/, error.message
-      end
-
-      # Verify log entries
-      log_entries = @generated_app.log_entries.recent_first
-      assert_equal 4, log_entries.count { |entry| entry.error? }
-
-      log_entries.each do |entry|
-        assert entry.error?
-        assert_match /GitHub API error/, entry.message
-        assert entry.metadata.key?("retry_count") if entry != log_entries.last
-      end
-    end
+    assert_match /GitHub API error/, error.message
   end
 
-  test "repository_exists? returns false when client raises StandardError" do
-    client_mock = mock("octokit_client")
-    client_mock.expects(:repository?).raises(StandardError.new("Random error"))
+  test "commits changes successfully" do
+    repo_full_name = "#{@user.github_username}/#{@repository_name}"
+    tree_items = [ { path: "test.txt", content: "test" } ]
 
-    @service.stub :client, client_mock do
-      assert_equal false, @service.send(:repository_exists?, "test-repo")
-    end
-  end
+    mock_client = mock("octokit_client")
+    mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(
+      Data.define(:object).new(object: Data.define(:sha).new(sha: "old_sha"))
+    )
+    mock_client.expects(:commit).with(repo_full_name, "old_sha").returns(
+      Data.define(:commit).new(commit: Data.define(:tree).new(tree: Data.define(:sha).new(sha: "tree_sha")))
+    )
+    mock_client.expects(:create_tree).with(repo_full_name, tree_items, base_tree: "tree_sha").returns(
+      Data.define(:sha).new(sha: "new_tree_sha")
+    )
+    mock_client.expects(:create_commit).with(
+      repo_full_name,
+      "test commit",
+      "new_tree_sha",
+      "tree_sha",
+      author: {
+        name: @user.github_username,
+        email: "#{@user.github_username}@users.noreply.github.com"
+      }
+    ).returns(Data.define(:sha).new(sha: "new_sha"))
+    mock_client.expects(:update_ref).with(repo_full_name, "heads/main", "new_sha")
 
-  test "transitions to creating_github_repo state before creating repository" do
-    service = GithubRepositoryService.new(@generated_app)
+    Octokit::Client.stubs(:new).returns(mock_client)
 
-    # Track if creating_github_repo! was called
-    creating_github_repo_called = false
-    @generated_app.define_singleton_method(:create_github_repo!) do
-      creating_github_repo_called = true
-    end
-
-    # Stub external calls
-    service.stub(:repository_exists?, false) do
-      mock_client = mock("octokit_client")
-      mock_response = Data.define(:html_url).new(html_url: "https://github.com/user/repo")
-      mock_client.expects(:create_repository).with("test-repo", {
-        private: false,
-        auto_init: false,
-        description: "Repository created via railsnew.io"
-      }).returns(mock_response)
-
-      service.stub(:client, mock_client) do
-        service.create_repository(repo_name: "test-repo")
-        assert creating_github_repo_called, "creating_github_repo! should have been called"
-      end
-    end
+    @service.commit_changes(
+      repo_name: @repository_name,
+      message: "test commit",
+      tree_items: tree_items
+    )
   end
 end

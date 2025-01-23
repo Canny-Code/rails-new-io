@@ -43,8 +43,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
     app = GeneratedApp.create!(
       name: "test-app",
       user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
       recipe: @recipe,
       selected_gems: [],
       configuration_options: {}
@@ -58,8 +56,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
     app = GeneratedApp.new
     assert_not app.valid?
     assert_includes app.errors[:name], "can't be blank"
-    assert_includes app.errors[:ruby_version], "can't be blank"
-    assert_includes app.errors[:rails_version], "can't be blank"
     assert_includes app.errors[:user], "must exist"
   end
 
@@ -77,8 +73,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
       app = GeneratedApp.new(
         name: invalid_name,
         user: @user,
-        ruby_version: "3.2.0",
-        rails_version: "7.1.0",
         recipe: @recipe,
         selected_gems: [],
         configuration_options: {}
@@ -100,8 +94,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
       app = GeneratedApp.new(
         name: valid_name,
         user: @user,
-        ruby_version: "3.2.0",
-        rails_version: "7.1.0",
         recipe: @recipe,
         selected_gems: [],
         configuration_options: {}
@@ -114,8 +106,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
     GeneratedApp.create!(
       name: "my-app",
       user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
       recipe: @recipe,
       selected_gems: [],
       configuration_options: {}
@@ -124,8 +114,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
     second_app = GeneratedApp.new(
       name: "my-app",
       user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
       recipe: @recipe,
       selected_gems: [],
       configuration_options: {}
@@ -139,8 +127,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
     app = GeneratedApp.create!(
       name: "test-app",
       user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
       recipe: @recipe,
       selected_gems: [],
       configuration_options: {}
@@ -156,8 +142,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
     app = GeneratedApp.create!(
       name: "test-app",
       user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
       recipe: @recipe,
       selected_gems: [ "devise", "rspec" ],
       configuration_options: { database: "postgresql", css: "tailwind" }
@@ -172,8 +156,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
     app = GeneratedApp.create!(
       name: "test-app",
       user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
       recipe: @recipe,
       selected_gems: [],
       configuration_options: {}
@@ -189,8 +171,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
     app = GeneratedApp.create!(
       name: "test-app",
       user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
       recipe: @recipe,
       selected_gems: [],
       configuration_options: {}
@@ -230,8 +210,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
     app = GeneratedApp.create!(
       name: "test-app-2",
       user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
       recipe: @recipe,
       selected_gems: [],
       configuration_options: {}
@@ -252,8 +230,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
     app = GeneratedApp.create!(
       name: "test-app",
       user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
       recipe: @recipe,
       selected_gems: [],
       configuration_options: {},
@@ -275,8 +251,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
     app = GeneratedApp.create!(
       name: "test-app",
       user: @user,
-      ruby_version: "3.2.0",
-      rails_version: "7.1.0",
       recipe: @recipe,
       selected_gems: [],
       configuration_options: {}

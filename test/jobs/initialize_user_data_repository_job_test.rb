@@ -1,34 +1,50 @@
 require "test_helper"
+require_relative "../support/git_test_helper"
 
 class InitializeUserDataRepositoryJobTest < ActiveSupport::TestCase
+  include GitTestHelper
+
   def setup
     @user = users(:john)
-    @mock_client = mock("octokit_client")
-    Octokit::Client.stubs(:new).returns(@mock_client)
+
+    @repo_name = "rails-new-io-data-test"
   end
 
   test "does not create repository if it already exists" do
-    @mock_client.expects(:repository?).returns(true)
-    @mock_client.expects(:create_repository).never
+    # Stub before any GitHub operations
+    User.any_instance.stubs(:github_username).returns("test-user")
 
-    InitializeUserDataRepositoryJob.perform_now(@user.id)
+    setup_github_mocks
+
+    # Simulate repository already exists
+    mock_client = mock("octokit_client")
+    mock_client.expects(:repository?).with("test-user/#{DataRepositoryService.name_for_environment}").returns(true)
+    Octokit::Client.stubs(:new).returns(mock_client)
+
+    result = InitializeUserDataRepositoryJob.perform_now(@user.id)
+
+    assert_nil result, "Job should return nil when repository already exists"
   end
 
   test "creates data repository if it does not exist" do
-    @mock_client.expects(:repository?).returns(false)
-    @mock_client.expects(:create_repository).once.returns(true)
-    @mock_client.expects(:ref).returns(OpenStruct.new(object: OpenStruct.new(sha: "old_sha")))
-    @mock_client.expects(:commit).returns(OpenStruct.new(commit: OpenStruct.new(tree: OpenStruct.new(sha: "tree_sha"))))
-    @mock_client.expects(:create_tree).returns(OpenStruct.new(sha: "new_tree_sha"))
-    @mock_client.expects(:create_commit).returns(OpenStruct.new(sha: "new_sha"))
-    @mock_client.expects(:update_ref)
+    # Stub before any GitHub operations
+    User.any_instance.stubs(:github_username).returns("test-user")
 
-    InitializeUserDataRepositoryJob.perform_now(@user.id)
+    setup_github_mocks
+
+    expect_github_operations(create_repo: true, expect_git_operations: true)
+
+    result = InitializeUserDataRepositoryJob.perform_now(@user.id)
+
+    assert result.is_a?(GitRepo), "Job should return a GitRepo object"
+    assert_equal "https://github.com/test-user/#{@repo_name}", result.html_url
   end
 
   test "handles user not found" do
     assert_nothing_raised do
-      InitializeUserDataRepositoryJob.perform_now(-1)
+      result = InitializeUserDataRepositoryJob.perform_now(-1)
+
+      assert_nil result, "Job should return nil when user not found"
     end
   end
 end

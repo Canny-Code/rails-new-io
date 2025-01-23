@@ -2,11 +2,13 @@ require "application_system_test_case"
 
 class IngredientsTest < ApplicationSystemTestCase
   setup do
-    # Mock git operations
-    GitRepo.any_instance.stubs(:commit_changes).returns(true)
-    GitRepo.any_instance.stubs(:push_changes).returns(true)
+    # Mock repository operations
+    DataRepositoryService.any_instance.stubs(:push_app_files).returns(true)
+    DataRepositoryService.any_instance.stubs(:initialize_repository).returns(true)
 
+    @ingredient = ingredients(:one)
     @user = users(:john)
+    sign_in @user
     OmniAuth.config.test_mode = true
     OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new({
       provider: "github",
@@ -25,7 +27,6 @@ class IngredientsTest < ApplicationSystemTestCase
     })
     visit root_path
     click_on "Get in"
-    @ingredient = ingredients(:rails_authentication)
   end
 
   test "creating a new ingredient" do

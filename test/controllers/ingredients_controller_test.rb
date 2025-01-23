@@ -2,13 +2,13 @@ require "test_helper"
 
 class IngredientsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    # Mock git operations
-    GitRepo.any_instance.stubs(:commit_changes).returns(true)
-    GitRepo.any_instance.stubs(:push_changes).returns(true)
+    # Mock repository operations
+    DataRepositoryService.any_instance.stubs(:push_app_files).returns(true)
+    DataRepositoryService.any_instance.stubs(:initialize_repository).returns(true)
 
+    @ingredient = ingredients(:one)
     @user = users(:john)
     @other_user = users(:jane)
-    @ingredient = ingredients(:rails_authentication)
     sign_in @user
   end
 

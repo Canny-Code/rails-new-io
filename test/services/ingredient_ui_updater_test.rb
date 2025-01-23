@@ -2,12 +2,12 @@ require "test_helper"
 
 class IngredientUiUpdaterTest < ActiveSupport::TestCase
   setup do
-    # Stub git interactions
-    DataRepository.any_instance.stubs(:write_model).returns(true)
-    DataRepository.any_instance.stubs(:commit_changes).returns(true)
-    GitRepo.any_instance.stubs(:commit_changes).returns(true)
-    GitRepo.any_instance.stubs(:ensure_github_repo_exists).returns(true)
-    GitRepo.any_instance.stubs(:remote_repo_exists?).returns(true)
+    @ingredient = ingredients(:one)
+    @updater = IngredientUiUpdater.new(@ingredient)
+
+    # Mock repository operations
+    DataRepositoryService.any_instance.stubs(:push_app_files).returns(true)
+    DataRepositoryService.any_instance.stubs(:initialize_repository).returns(true)
 
     # Clean up any existing test data
     Page.where(title: "Your Custom Ingredients").destroy_all
