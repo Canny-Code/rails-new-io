@@ -7,7 +7,7 @@ module GitTestHelper
   GitTree = Data.define(:sha)
   GitRepo = Data.define(:html_url)
 
-  def setup_github_mocks
+  def setup_github_mocks(recipe = nil)
     @user.stubs(:github_token).returns("fake-token")
     @user.stubs(:github_username).returns("test-user")
 
@@ -34,6 +34,9 @@ module GitTestHelper
 
     # Mock repository response
     @repo_mock = GitRepo.new(html_url: "https://github.com/test-user/#{@repo_name}")
+
+    # If recipe is provided, stub its git operations
+    recipe&.stubs(:sync_to_git).returns(true)
   end
 
   def expect_github_operations(create_repo: false, expect_git_operations: false, raise_error: false)

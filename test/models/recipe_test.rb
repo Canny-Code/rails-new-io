@@ -32,7 +32,7 @@ class RecipeTest < ActiveSupport::TestCase
     @recipe = recipes(:blog_recipe)
     @ingredient = ingredients(:rails_authentication)
     @user = users(:john)
-    stub_git_operations(@recipe)
+    setup_github_mocks(@recipe)
   end
 
   test "adds ingredient with configuration" do
