@@ -9,6 +9,9 @@ class SessionsController < ApplicationController
         httponly: true,
         secure: Rails.env.production?
       }
+      Rails.logger.info("Enqueueing InitializeUserDataRepositoryJob for user: #{@user.id}")
+      InitializeUserDataRepositoryJob.perform_later(@user.id)
+      Rails.logger.info("Job enqueued successfully")
       redirect_to redirect_path, notice: "Logged in as #{@user.name}"
     else
       redirect_to root_url, alert: "Failure"

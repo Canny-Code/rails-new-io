@@ -7,7 +7,6 @@ gem "aasm", "~> 5.5.0"
 gem "bootsnap", require: false
 gem "faraday-retry", "~> 2.2.1"
 gem "friendly_id", "~> 5.5.1"
-gem "git", "~> 2.3.3"
 gem "kamal", "~> 2.4.0", require: false
 gem "thruster", "~> 0.1.10", require: false
 gem "mission_control-jobs", "~> 1.0.1"

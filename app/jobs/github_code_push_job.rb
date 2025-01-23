@@ -1,9 +1,19 @@
 class GithubCodePushJob < ApplicationJob
-  retry_on GithubCodePushService::GitError, wait: 5.seconds, attempts: 5
+  queue_as :default
 
-  def perform(user_id, repository_name, source_path)
+  def perform(user_id, repo_name, source_path, cleanup_after_push = false)
     user = User.find(user_id)
-    service = GithubCodePushService.new(user, repository_name, source_path)
-    service.push
+
+    repo = GitRepo.new(
+      user: user,
+      repo_name: repo_name,
+      source_path: source_path,
+      cleanup_after_push: cleanup_after_push
+    )
+
+    repo.commit_changes(
+      message: "Update repository",
+      author: user
+    )
   end
 end

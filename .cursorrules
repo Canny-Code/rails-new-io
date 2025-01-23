@@ -47,6 +47,16 @@ You also use the latest versions of Tailwind, Stimulus, Hotwire and Turbo.
 
 If you don't get something right for the 1st/2nd try, time to add ample debug messages (rather than re-trying it for the 3rd/4th... time). Sprinkle puts / conole.log statements generously, so that I can feed back the output to you and resolve the issue efficiently and quickly, rather than taking further shots.
 
+This can be explicity triggered by "DEBUG TIME!" - if the prompt contains this, add ample debug messages to the test code so that I can see what's going on and feed it back to future prompts
+
+Always use puts, rather than Rails.logger.debug. I want to see the debug messages in the test output, rather than separately in the logs.
+
+Always start debug messages with "DEBUG: "
+
+[callbacks]
+
+Be very careful and think twice before adding callbacks. If possible, call the code explicitly rather than relying on callbacks as they can get messy - especially if there are multiple of them, their order matters and/or they rely on each other. Thus, always prefer calling the code explicitly what otherwise would have been a callback.
+
 [mood]
 
 - cheerful, positive, self-deprecating humor

@@ -1,17 +1,65 @@
 require "test_helper"
 
 class DataRepositoryTest < ActiveSupport::TestCase
-  fixtures :users, :recipes, :ingredients, :generated_apps
+  include GitTestHelper
 
-  def setup
-    @user = users(:john)
-    @repo = DataRepository.new(user: @user)
-    @git_mock = mock("git")
-    @repo.stubs(:git).returns(@git_mock)
-    @git_mock.stubs(:fetch)
-    @git_mock.stubs(:reset_hard)
-    @git_mock.stubs(:pull)
-    @repo.stubs(:remote_repo_exists?).returns(true)  # Prevent actual GitHub API calls
+  setup do
+    @user = users(:jane)
+    @user.stubs(:name).returns("Jane Smith")
+    @user.stubs(:email).returns("jane@example.com")
+
+    @repo_name = "rails-new-io-data-test"
+    @source_path = Rails.root.join("tmp", "test_source")
+
+    setup_github_mocks
+    @repo = DataRepository.new(@user)
+  end
+
+  test "initializes with user" do
+    assert_equal @user, @repo.user
+    assert_equal "rails-new-io-data-test", @repo.repo_name
+  end
+
+  test "initializes with options hash" do
+    repo = DataRepository.new(
+      user: @user,
+      source_path: @source_path,
+      cleanup_after_push: true
+    )
+
+    assert_equal @user, repo.user
+    assert_equal "rails-new-io-data-test", repo.repo_name
+    assert_equal @source_path, repo.source_path
+    assert repo.cleanup_after_push
+  end
+
+  test "creates repository if it does not exist" do
+    expect_github_operations(create_repo: true)
+    @repo.create_repository
+  end
+
+  test "does not create repository if it already exists" do
+    expect_github_operations
+    @repo.create_repository
+  end
+
+  test "writes model to repository" do
+    page = Page.new(
+      title: "Test Page",
+      content: "Test content",
+      user: @user
+    )
+
+    expect_github_operations
+    @repo.write_model(page)
+  end
+
+  test "handles GitHub API errors" do
+    @mock_client.expects(:repository?).raises(Octokit::Error.new)
+
+    assert_raises DataRepository::Error do
+      @repo.create_repository
+    end
   end
 
   # Class method tests

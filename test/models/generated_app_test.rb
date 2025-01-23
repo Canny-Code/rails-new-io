@@ -11,8 +11,6 @@
 #  is_public             :boolean          default(TRUE)
 #  last_build_at         :datetime
 #  name                  :string           not null
-#  rails_version         :string           not null
-#  ruby_version          :string           not null
 #  selected_gems         :json             not null
 #  source_path           :string
 #  created_at            :datetime         not null

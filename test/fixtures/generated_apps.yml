@@ -11,8 +11,6 @@
 #  is_public             :boolean          default(TRUE)
 #  last_build_at         :datetime
 #  name                  :string           not null
-#  rails_version         :string           not null
-#  ruby_version          :string           not null
 #  selected_gems         :json             not null
 #  source_path           :string
 #  created_at            :datetime         not null
@@ -38,8 +36,6 @@ blog_app:
   description: "A personal blog with authentication and markdown support"
   user: jane
   recipe: blog_recipe
-  ruby_version: "3.2.2"
-  rails_version: "7.1.2"
   selected_gems: ["devise", "redcarpet", "tailwindcss-rails"]
   configuration_options:
     database: "postgresql"
@@ -54,8 +50,6 @@ api_project:
   description: "REST API for inventory management"
   user: jane
   recipe: api_recipe
-  ruby_version: "3.2.2"
-  rails_version: "7.1.2"
   selected_gems: ["jsonapi-serializer", "rack-cors", "rswag"]
   configuration_options:
     database: "postgresql"
@@ -71,8 +65,6 @@ saas_starter:
   description: "SaaS starter template with authentication and billing"
   user: john
   recipe: blog_recipe
-  ruby_version: "3.2.2"
-  rails_version: "7.1.2"
   selected_gems: ["devise", "pay", "stripe", "sidekiq"]
   configuration_options:
     database: "postgresql"
@@ -88,8 +80,6 @@ api_project_2:
   description: "Weather API service"
   user: jane
   recipe: api_recipe
-  ruby_version: "3.2.2"
-  rails_version: "7.1.2"
   selected_gems: ["jsonapi-serializer"]
   configuration_options:
     database: "postgresql"
@@ -101,8 +91,6 @@ api_project_3:
   description: "Payment processing API"
   user: jane
   recipe: api_recipe
-  ruby_version: "3.2.2"
-  rails_version: "7.1.2"
   selected_gems: ["jsonapi-serializer"]
   configuration_options:
     database: "postgresql"
@@ -114,8 +102,6 @@ pending_app:
   description: "App in pending state"
   user: john
   recipe: blog_recipe
-  ruby_version: "3.2.2"
-  rails_version: "7.1.2"
   selected_gems: []
   configuration_options:
     database: "postgresql"

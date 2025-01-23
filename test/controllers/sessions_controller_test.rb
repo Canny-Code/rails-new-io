@@ -55,7 +55,9 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
     OmniAuth.config.test_mode = true
     OmniAuth.config.mock_auth[:github] = auth_hash
 
-    get "/auth/github/callback", env: { 'omniauth.auth': auth_hash }
+    assert_enqueued_with(job: InitializeUserDataRepositoryJob, args: [ user.id ]) do
+      get "/auth/github/callback", env: { 'omniauth.auth': auth_hash }
+    end
 
     assert_response :redirect
     assert_redirected_to dashboard_url

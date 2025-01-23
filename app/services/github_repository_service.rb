@@ -11,14 +11,14 @@ class GithubRepositoryService
     @logger = AppGeneration::Logger.new(generated_app)
   end
 
-  def create_repository(name)
-    if repository_exists?(name)
-      @logger.error("Repository '#{name}' already exists")
-      raise RepositoryExistsError, "Repository '#{name}' already exists"
+  def create_repository(repo_name:)
+    if repository_exists?(repo_name)
+      @logger.error("Repository '#{repo_name}' already exists")
+      raise RepositoryExistsError, "Repository '#{repo_name}' already exists"
     end
 
     @generated_app.create_github_repo!
-    @logger.info("Creating repository: #{name}", { username: @user.github_username })
+    @logger.info("Creating repository: #{repo_name}", { username: @user.github_username })
 
     with_error_handling do
       options = {
@@ -27,14 +27,14 @@ class GithubRepositoryService
         description: "Repository created via railsnew.io"
       }
 
-      response = client.create_repository(name, options)
+      response = client.create_repository(repo_name, **options)
 
       @generated_app.update!(
-        github_repo_name: name,
+        github_repo_name: repo_name,
         github_repo_url: response.html_url
       )
 
-      @logger.info("GitHub repo #{name} created successfully", { url: response.html_url })
+      @logger.info("GitHub repo #{repo_name} created successfully", { url: response.html_url })
       response
     end
   end

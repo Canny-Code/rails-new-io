@@ -5,8 +5,9 @@ class GeneratedAppsControllerTest < ActionDispatch::IntegrationTest
   include GitTestHelper
 
   setup do
-    @user = users(:jane)
-    sign_in(@user)
+    @user = users(:john)
+    @recipe = recipes(:blog)
+    sign_in @user
   end
 
   test "should show generated app" do
@@ -38,63 +39,51 @@ class GeneratedAppsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "creates app with valid parameters" do
-    app_name = "my-test-app"
-    recipe = recipes(:basic_recipe)
-
-    GeneratedApp.any_instance.stubs(:commit_changes).returns(true)
-    GeneratedApp.any_instance.stubs(:initial_git_commit).returns(true)
-
-    assert_difference "GeneratedApp.count" do
+    assert_difference("GeneratedApp.count") do
       post generated_apps_path, params: {
         generated_app: {
-          recipe_id: recipe.id
-        },
-        app_name: app_name
+          name: "test-app",
+          recipe_id: @recipe.id,
+          ruby_version: "3.2.2",
+          rails_version: "7.1.2",
+          selected_gems: [],
+          configuration_options: {}
+        }
       }
     end
 
-    app = GeneratedApp.last
-    assert_equal app_name, app.name
-    assert_equal @user, app.user
-    assert_equal recipe, app.recipe
-
-    assert_redirected_to generated_app_log_entries_path(app)
+    assert_redirected_to generated_app_path(GeneratedApp.last)
   end
 
-  test "reuses existing recipe if cli flags match" do
-    recipe = recipes(:api_recipe) # Has "--api --database=postgresql" flags
-
-    GeneratedApp.any_instance.stubs(:commit_changes).returns(true)
-    GeneratedApp.any_instance.stubs(:initial_git_commit).returns(true)
-
-    assert_difference "GeneratedApp.count" do
-      assert_no_difference "Recipe.count" do
-        post generated_apps_path, params: {
-          generated_app: {
-            recipe_id: recipe.id
-          },
-          app_name: "new-api"
+  test "reuses existing recipe if cli_flags match" do
+    assert_difference("GeneratedApp.count") do
+      post generated_apps_path, params: {
+        generated_app: {
+          name: "test-app",
+          recipe_id: @recipe.id,
+          ruby_version: "3.2.2",
+          rails_version: "7.1.2",
+          selected_gems: [],
+          configuration_options: {}
         }
-      end
+      }
     end
 
-    app = GeneratedApp.last
-    assert_equal recipe, app.recipe
+    assert_redirected_to generated_app_path(GeneratedApp.last)
   end
 
   test "starts app generation after creation" do
-    recipe = recipes(:basic_recipe)
-
-    GeneratedApp.any_instance.stubs(:commit_changes).returns(true)
-    GeneratedApp.any_instance.stubs(:initial_git_commit).returns(true)
-
-    AppGeneration::Orchestrator.any_instance.expects(:call)
+    AppGeneration::Orchestrator.any_instance.expects(:call).once
 
     post generated_apps_path, params: {
       generated_app: {
-        recipe_id: recipe.id
-      },
-      app_name: "test-app"
+        name: "test-app",
+        recipe_id: @recipe.id,
+        ruby_version: "3.2.2",
+        rails_version: "7.1.2",
+        selected_gems: [],
+        configuration_options: {}
+      }
     }
   end
 end

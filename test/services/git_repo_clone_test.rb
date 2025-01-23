@@ -5,72 +5,63 @@ class GitRepoCloneTest < ActiveSupport::TestCase
     @user = users(:jane)
     @user.stubs(:name).returns("Jane Smith")
     @user.stubs(:email).returns("jane@example.com")
+    @user.stubs(:github_token).returns("fake-token")
 
     @repo_name = "rails-new-io-data-test"
-    @repo_path = Rails.root.join("tmp", "git_repos", @user.id.to_s, @repo_name)
-
-    # Stub file operations
-    File.stubs(:write).returns(true)
-    File.stubs(:exist?).returns(true)
-    File.stubs(:read).returns("# Repository\nCreated via railsnew.io")
-    Dir.stubs(:glob).returns([])
 
     # Initialize Octokit client mock
     @mock_client = mock("octokit_client")
     Octokit::Client.stubs(:new).returns(@mock_client)
 
-    # Stub all FileUtils operations globally
-    FileUtils.stubs(:mkdir_p)
-    FileUtils.stubs(:rm_rf)
+    # Mock basic GitHub API responses
+    @ref_mock = mock("ref")
+    @ref_mock.stubs(:object).returns(OpenStruct.new(sha: "old_sha"))
+
+    @commit_mock = mock("commit")
+    @commit_mock.stubs(:commit).returns(OpenStruct.new(tree: OpenStruct.new(sha: "tree_sha")))
+
+    @tree_mock = mock("tree")
+    @tree_mock.stubs(:sha).returns("new_tree_sha")
+
+    @new_commit_mock = mock("new_commit")
+    @new_commit_mock.stubs(:sha).returns("new_sha")
 
     @repo = GitRepo.new(user: @user, repo_name: @repo_name)
   end
 
-  test "clones repository when remote exists but no local copy" do
-    File.stubs(:exist?).with(@repo_path).returns(false)
-    @mock_client.stubs(:repository?).returns(true)
+  test "clones repository when remote exists" do
+    @mock_client.expects(:repository?).returns(true)
+    @mock_client.expects(:ref).returns(@ref_mock)
+    @mock_client.expects(:commit).returns(@commit_mock)
+    @mock_client.expects(:create_tree).returns(@tree_mock)
+    @mock_client.expects(:create_commit).with(
+      "#{@user.github_username}/#{@repo_name}",
+      "Clone repository",
+      "new_tree_sha",
+      "old_sha",
+      author: {
+        name: "Jane Smith",
+        email: "jane@example.com"
+      }
+    ).returns(@new_commit_mock)
+    @mock_client.expects(:update_ref)
 
-    # Mock git status
-    status_mock = mock("status")
-    status_mock.stubs(:changed).returns({ "file1" => "modified" })
-    status_mock.stubs(:added).returns({})
-    status_mock.stubs(:deleted).returns({})
+    @repo.clone
+  end
 
-    # Mock git branches
-    remote_branch = mock("remote_branch")
-    remote_branch.stubs(:name).returns("origin/main")
-    branches_collection = mock("branches_collection")
-    branches_collection.stubs(:remote).returns([ remote_branch ])
+  test "raises error when repository does not exist" do
+    @mock_client.expects(:repository?).returns(false)
 
-    # Mock current branch
-    current_branch_mock = mock("current_branch")
-    current_branch_mock.stubs(:name).returns("main")
+    assert_raises GitRepo::GitError do
+      @repo.clone
+    end
+  end
 
-    # Set up cloned git mock with all required stubs
-    cloned_git = mock("cloned_git")
-    cloned_git.stubs(:branch).returns(current_branch_mock)
-    cloned_git.stubs(:branches).returns(branches_collection)
-    cloned_git.stubs(:status).returns(status_mock)
+  test "handles GitHub API errors" do
+    @mock_client.expects(:repository?).raises(Octokit::Error.new)
 
-    # Track operations
-    operations = []
-    cloned_git.expects(:config).with("user.name", "Jane Smith").tap { operations << :config_name }
-    cloned_git.expects(:config).with("user.email", "jane@example.com").tap { operations << :config_email }
-    cloned_git.expects(:add).with(all: true).tap { operations << :add }
-    cloned_git.expects(:commit).with("Test commit").tap { operations << :commit }
-    cloned_git.expects(:push).with("origin", "main").tap { operations << :push }
-
-    Git.expects(:clone).with(
-      "https://fake-token@github.com/#{@user.github_username}/#{@repo_name}.git",
-      @repo_name,
-      path: File.dirname(@repo_path)
-    )
-    Git.expects(:open).with(@repo_path).returns(cloned_git)
-
-    @repo.commit_changes(message: "Test commit", author: @user)
-
-    # Assert operations happened in correct order
-    expected_operations = [ :config_name, :config_email, :add, :commit, :push ]
-    assert_equal expected_operations, operations, "Git operations were not performed in the expected order"
+    assert_raises GitRepo::GitError do
+      @repo.clone
+    end
   end
 end

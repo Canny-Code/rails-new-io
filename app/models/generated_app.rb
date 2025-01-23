@@ -11,8 +11,6 @@
 #  is_public             :boolean          default(TRUE)
 #  last_build_at         :datetime
 #  name                  :string           not null
-#  rails_version         :string           not null
-#  ruby_version          :string           not null
 #  selected_gems         :json             not null
 #  source_path           :string
 #  created_at            :datetime         not null
@@ -35,14 +33,18 @@
 #
 class GeneratedApp < ApplicationRecord
   include HasGenerationLifecycle
+  include GitBackedModel
 
-  broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
-  broadcasts_to ->(generated_app) { [ :notification_badge, generated_app.user_id ] }
+  attr_accessor :source_path
 
-  after_update_commit :broadcast_clone_box, if: :completed?
+  delegate :ruby_version, :rails_version, to: :recipe
 
   belongs_to :user
   belongs_to :recipe
+
+  has_one :app_status, dependent: :destroy
+  has_many :app_changes, dependent: :destroy
+  has_many :log_entries, class_name: "AppGeneration::LogEntry", dependent: :destroy
 
   validates :name, presence: true,
                   uniqueness: { scope: :user_id },
@@ -50,7 +52,7 @@ class GeneratedApp < ApplicationRecord
                     with: /\A[a-z0-9][a-z0-9\-_]*[a-z0-9]\z/i,
                     message: "only allows letters, numbers, dashes and underscores, must start and end with a letter or number"
                   }
-  validates :ruby_version, :rails_version, presence: true
+
   validates :github_repo_url,
     format: {
       with: %r{\Ahttps://github\.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+\z},
@@ -59,8 +61,19 @@ class GeneratedApp < ApplicationRecord
     allow_blank: true
   validates :recipe, presence: true
 
+  after_create :create_app_status
+
+  after_update_commit :broadcast_clone_box, if: :completed?
+
+  broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
+  broadcasts_to ->(generated_app) { [ :notification_badge, generated_app.user_id ] }
+
+  git_backed_options(
+    source_path: -> { source_path },
+    cleanup_after_push: -> { true }
+  )
+
   def apply_ingredient!(ingredient, configuration = {})
-    # Get logger instance
     logger = AppGeneration::Logger.new(self)
 
     transaction do
@@ -123,6 +136,10 @@ class GeneratedApp < ApplicationRecord
 
   def ingredients
     recipe.recipe_ingredients.includes(:ingredient).map(&:ingredient)
+  end
+
+  def on_git_error(error)
+    app_status.fail!(error.message)
   end
 
   private
