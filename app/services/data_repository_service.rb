@@ -44,7 +44,6 @@ class DataRepositoryService < GithubRepositoryService
     }
 
     commit_changes(
-      repo_name: repo_name,
       message: "Update ingredient: #{ingredient.name}",
       tree_items: tree_items
     )
@@ -62,8 +61,15 @@ class DataRepositoryService < GithubRepositoryService
     }
 
     commit_changes(
-      repo_name: repo_name,
       message: "Update recipe: #{recipe.name}",
+      tree_items: tree_items
+    )
+  end
+
+  def commit_changes(message:, tree_items:)
+    super(
+      repo_name: self.class.name_for_environment,
+      message: message,
       tree_items: tree_items
     )
   end
@@ -98,7 +104,6 @@ class DataRepositoryService < GithubRepositoryService
     }
 
     commit_changes(
-      repo_name: repo_name,
       message: "Initialize repository structure",
       tree_items: tree_items
     )

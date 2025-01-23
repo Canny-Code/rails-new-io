@@ -10,8 +10,10 @@ class AppRepositoryService < GithubRepositoryService
     )
   end
 
-  def initialize_repository(repo_name:)
+  def initialize_repository
     generated_app.create_github_repo!
+
+    repo_name = generated_app.name
 
     response = create_repository(
       repo_name: repo_name,
@@ -56,8 +58,15 @@ class AppRepositoryService < GithubRepositoryService
     end
 
     commit_changes(
-      repo_name: generated_app.github_repo_name,
       message: "Initial commit",
+      tree_items: tree_items
+    )
+  end
+
+  def commit_changes(message:, tree_items:)
+    super(
+      repo_name: generated_app.github_repo_name,
+      message: message,
       tree_items: tree_items
     )
   end

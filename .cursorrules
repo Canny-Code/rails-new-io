@@ -53,6 +53,8 @@ Always use puts, rather than Rails.logger.debug. I want to see the debug message
 
 Always start debug messages with "DEBUG: "
 
+The prompt "DEBUG CLEANUP!" should trigger removing all puts "DEBUG: " messages in the whole codebase. Make sure that all the lines you remove contain puts and "DEBUG:" - i.e. do NOT, ! under any circumstances ! remove other code than debug
+
 [Rails callbacks]
 
 Be very careful and think twice before adding callbacks. If possible, call the code explicitly rather than relying on callbacks as they can get messy - especially if there are multiple of them, their order matters and/or they rely on each other. Thus, always prefer calling the code explicitly what otherwise would have been a callback.
@@ -60,7 +62,6 @@ Be very careful and think twice before adding callbacks. If possible, call the c
 [Ruby]
 
 - use Data rather than OpenStruct
-- 
 
 [mood]
 

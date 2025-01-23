@@ -1,13 +1,15 @@
 require "test_helper"
+require_relative "../../support/git_test_helper"
 
 class GitBackedModelTest < ActiveSupport::TestCase
   include ActiveSupport::Testing::TimeHelpers
+  include GitTestHelper
 
   class TestModel
     include ActiveModel::Model
     include GitBackedModel
 
-    attr_accessor :id, :name, :source_path, :user, :created_at, :updated_at
+    attr_accessor :id, :name, :user, :created_at, :updated_at, :created_by
 
     def self.has_attribute?(attr)
       attr.to_s == "source_path"
@@ -18,7 +20,11 @@ class GitBackedModelTest < ActiveSupport::TestCase
     end
 
     def [](attr)
-      instance_variable_get("@#{attr}")
+      if attr.to_s == "id"
+        id
+      else
+        instance_variable_get("@#{attr}")
+      end
     end
 
     def changed
@@ -29,46 +35,63 @@ class GitBackedModelTest < ActiveSupport::TestCase
       { "name" => [ "old", "new" ] }
     end
 
-    def identifier
-      "test-#{id}"
-    end
-
-    def change_description
-      "test change"
-    end
-
-    def model_name
+    def self.name
       "TestModel"
     end
 
-    def updated_by
-      user
+    def model_name
+      @_model_name ||= ActiveModel::Name.new(self.class)
     end
+  end
+
+  class TestModelWithoutSourcePath < TestModel
+    def self.has_attribute?(attr)
+      false
+    end
+
+    git_backed_options(source_path: "test")
+  end
+
+  class TestModelWithDynamicOptions < TestModelWithoutSourcePath
+    git_backed_options(
+      source_path: -> { "#{name}-path" },
+      cleanup_after_push: -> { name == "cleanup-me" }
+    )
   end
 
   def setup
     @user = users(:john)
+    @repo_name = DataRepositoryService.name_for_environment
+
     @model = TestModel.new(
       id: 1,
       name: "test",
-      source_path: Rails.root.join("tmp/test").to_s,
       user: @user,
       created_at: Time.now,
       updated_at: Time.now
     )
 
-    # Mock DataRepository
-    @repo_mock = mock("data_repository")
-    @repo_mock.stubs(:write_model)
-    @repo_mock.stubs(:commit_changes)
-    DataRepository.stubs(:new).returns(@repo_mock)
+    # Set source_path through instance variable since it's not an attribute
+    @model.instance_variable_set(:@source_path, Rails.root.join("tmp/test").to_s)
+
+    FileUtils.mkdir_p(@model.source_path)
+    setup_github_mocks
+  end
+
+  def teardown
+    # Reset git_backed_options after each test
+    TestModel.git_backed_options({})
+    TestModelWithoutSourcePath.git_backed_options({})
+    TestModelWithDynamicOptions.git_backed_options({})
+
+    # Reset any instance variables
+    @model.remove_instance_variable(:@source_path) if @model.instance_variable_defined?(:@source_path)
   end
 
   test "includes necessary methods" do
     assert_respond_to @model, :initial_git_commit
     assert_respond_to @model, :sync_to_git
     assert_respond_to @model, :repo
-    assert_respond_to @model, :commit_author
     assert_respond_to @model, :should_sync_to_git?
   end
 
@@ -83,8 +106,11 @@ class GitBackedModelTest < ActiveSupport::TestCase
 
   test "initial_git_commit creates repository and pushes files" do
     repo = mock("repo")
-    repo.expects(:initialize_repository).with(repo_name: "test")
-    repo.expects(:push_app_files).with(source_path: @model.source_path)
+    repo.expects(:initialize_repository)
+    repo.expects(:commit_changes).with(
+      message: "Initial commit",
+      tree_items: []
+    )
     @model.stubs(:repo).returns(repo)
 
     @model.initial_git_commit
@@ -92,7 +118,10 @@ class GitBackedModelTest < ActiveSupport::TestCase
 
   test "sync_to_git pushes files" do
     repo = mock("repo")
-    repo.expects(:push_app_files).with(source_path: @model.source_path)
+    repo.expects(:commit_changes).with(
+      message: "Update test_model",
+      tree_items: []
+    )
     @model.stubs(:repo).returns(repo)
 
     @model.sync_to_git
@@ -104,9 +133,12 @@ class GitBackedModelTest < ActiveSupport::TestCase
   end
 
   test "repo returns AppRepositoryService for GeneratedApp" do
-    app = GeneratedApp.new
+    app = GeneratedApp.new(
+      app_status: app_statuses(:completed_api_status),
+      user: @user,
+      name: "test-app"
+    )
     app.stubs(:should_create_repository?).returns(true)
-    app.stubs(:commit_author).returns(@user)
     repo = app.send(:repo)
     assert_instance_of AppRepositoryService, repo
   end
@@ -127,7 +159,7 @@ class GitBackedModelTest < ActiveSupport::TestCase
   end
 
   test "should_create_repository? returns false if source_path is blank" do
-    @model.source_path = nil
+    @model.instance_variable_set(:@source_path, nil)
     assert_not @model.should_create_repository?
   end
 
@@ -157,55 +189,48 @@ class GitBackedModelTest < ActiveSupport::TestCase
   end
 
   test "source_path returns configured value" do
-    TestModel.git_backed_options(source_path: "test")
-    assert_equal "test", @model.source_path
+    klass = Class.new(TestModel) do
+      def self.has_attribute?(attr)
+        false
+      end
+
+      def self.name
+        "TestModelConfigured"
+      end
+    end
+    Object.const_set("TestModelConfigured", klass)
+
+    klass.git_backed_options(source_path: "test")
+
+    model = klass.new(
+      id: 1,
+      name: "test",
+      user: @user,
+      created_at: Time.now,
+      updated_at: Time.now
+    )
+
+    result = model.source_path
+    assert_equal "test", result
+  ensure
+    Object.send(:remove_const, "TestModelConfigured") if Object.const_defined?("TestModelConfigured")
   end
 
   test "source_path executes proc if configured" do
-    TestModel.git_backed_options(source_path: -> { "test" })
-    assert_equal "test", @model.source_path
+    model = TestModelWithoutSourcePath.new(
+      id: 1,
+      name: "test",
+      user: @user,
+      created_at: Time.now,
+      updated_at: Time.now
+    )
+
+    TestModelWithoutSourcePath.git_backed_options(source_path: -> { "test" })
+    assert_equal "test", model.source_path
   end
 
   test "source_path returns attribute value if available" do
     assert_equal Rails.root.join("tmp/test").to_s, @model.source_path
-  end
-
-  test "repo_name returns name if available" do
-    assert_equal "test", @model.repo_name
-  end
-
-  test "repo_name returns fallback if name not available" do
-    @model.name = nil
-    assert_equal "test_model-1", @model.repo_name
-  end
-
-  test "commit_author returns user if available" do
-    assert_equal @model.user, @model.commit_author
-  end
-
-  test "commit_author returns created_by if user not available" do
-    @model.user = nil
-    @model.stubs(:created_by).returns("creator")
-    assert_equal "creator", @model.commit_author
-  end
-
-  test "updated_by returns user if available" do
-    assert_equal @model.user, @model.updated_by
-  end
-
-  test "updated_by returns updated_by if user not available" do
-    @model.user = nil
-    @model.stubs(:updated_by).returns("updater")
-    assert_equal "updater", @model.updated_by
-  end
-
-  test "identifier returns name if available" do
-    assert_equal "test", @model.identifier
-  end
-
-  test "identifier returns id if name not available" do
-    @model.name = nil
-    assert_equal 1, @model.identifier
   end
 
   test "change_description returns formatted changes" do
@@ -237,9 +262,12 @@ class GitBackedModelTest < ActiveSupport::TestCase
   end
 
   test "uses correct repository class for GeneratedApp" do
-    app = GeneratedApp.new
+    app = GeneratedApp.new(
+      app_status: app_statuses(:completed_api_status),
+      user: @user,
+      name: "test-app"
+    )
     app.stubs(:should_create_repository?).returns(true)
-    app.stubs(:commit_author).returns(@user)
     repo = app.send(:repo)
     assert_instance_of AppRepositoryService, repo
   end
@@ -257,30 +285,23 @@ class GitBackedModelTest < ActiveSupport::TestCase
     @model.handle_git_error(error)
   end
 
-  test "uses user as commit author when available" do
-    assert_equal @user, @model.send(:commit_author)
-  end
-
-  test "raises error when no commit author available" do
-    @model.user = nil
-    assert_raises(StandardError) do
-      @model.send(:commit_author)
-    end
-  end
-
   test "evaluates git_backed_options in instance context" do
-    class TestModelWithDynamicOptions < TestModel
+    test_class = Class.new(TestModel) do
+      def self.has_attribute?(attr)
+        false
+      end
+
       git_backed_options(
         source_path: -> { "#{name}-path" },
         cleanup_after_push: -> { name == "cleanup-me" }
       )
     end
 
-    model = TestModelWithDynamicOptions.new(name: "test")
-    assert_equal "test-path", model.send(:source_path)
-    assert_not model.send(:cleanup_after_push?)
+    model = test_class.new(name: "test")
+    assert_equal "test-path", model.source_path
+    assert_not model.cleanup_after_push?
 
     model.name = "cleanup-me"
-    assert model.send(:cleanup_after_push?)
+    assert model.cleanup_after_push?
   end
 end

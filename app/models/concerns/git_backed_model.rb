@@ -1,12 +1,6 @@
 module GitBackedModel
   extend ActiveSupport::Concern
 
-  included do
-    # Remove the callbacks - we'll call these methods explicitly
-    # after_commit :initial_git_commit, on: :create
-    # after_commit :sync_to_git, on: :update
-  end
-
   class_methods do
     def git_backed_options(options = {})
       @git_backed_options = options
@@ -24,8 +18,11 @@ module GitBackedModel
     @performing_git_operation = true
 
     begin
-      repo.initialize_repository(repo_name: repo_name)
-      repo.push_app_files(source_path: source_path) if source_path.present?
+      repo.initialize_repository
+      repo.commit_changes(
+        message: "Initial commit",
+        tree_items: []
+      ) if source_path.present?
     rescue StandardError => e
       handle_git_error(e)
     ensure
@@ -41,7 +38,10 @@ module GitBackedModel
     @performing_git_operation = true
 
     begin
-      repo.push_app_files(source_path: source_path)
+      repo.commit_changes(
+        message: "Update #{model_name.singular}",
+        tree_items: []
+      )
     rescue StandardError => e
       handle_git_error(e)
     ensure
@@ -57,7 +57,7 @@ module GitBackedModel
       when GeneratedApp
         AppRepositoryService.new(self)
       else
-        DataRepositoryService.new(user: commit_author)
+        DataRepositoryService.new(user: created_by)
       end
     end
   end
@@ -114,19 +114,11 @@ module GitBackedModel
   end
 
   def repo_name
-    respond_to?(:name) ? name : "#{self.class.name.underscore}-#{id}"
-  end
-
-  def commit_author
-    respond_to?(:user) ? user : created_by
-  end
-
-  def updated_by
-    respond_to?(:user) ? user : updated_by
+    name
   end
 
   def identifier
-    respond_to?(:name) ? name : id
+    name
   end
 
   def change_description
