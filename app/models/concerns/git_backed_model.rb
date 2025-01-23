@@ -17,13 +17,10 @@ module GitBackedModel
     end
   end
 
-  # Make these methods public so they can be called by the job
   def initial_git_commit
-    puts "GitBackedModel#initial_git_commit called"
     return if @performing_git_operation
-    puts "GitBackedModel#initial_git_commit not already performing operation"
     return unless should_create_repository?
-    puts "GitBackedModel#initial_git_commit should create repository"
+
     @performing_git_operation = true
 
     begin
@@ -94,19 +91,10 @@ module GitBackedModel
   end
 
   def should_create_repository?
-    # Don't create repository if source_path is not set
     path = source_path
-    puts "GitBackedModel#should_create_repository? source_path: #{path.inspect}"
     return false if path.blank?
+    return File.directory?(path) if Rails.env.test?
 
-    # In test environment, only create if source_path exists
-    if Rails.env.test?
-      exists = File.directory?(path)
-      puts "GitBackedModel#should_create_repository? directory exists? #{exists}"
-      return exists
-    end
-
-    # In other environments, always create if source_path is set
     true
   end
 
