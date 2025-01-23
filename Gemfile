@@ -10,7 +10,7 @@ gem "friendly_id", "~> 5.5.1"
 gem "kamal", "~> 2.4.0", require: false
 gem "thruster", "~> 0.1.10", require: false
 gem "mission_control-jobs", "~> 1.0.1"
-gem "noticed", "~> 2.5.1"
+gem "noticed", "~> 2.6.0"
 gem "litestream", "~> 0.12.0"
 gem "octokit", "~> 9.2.0"
 gem "omniauth-github", github: "omniauth/omniauth-github", branch: "master"
@@ -34,7 +34,7 @@ group :development do
   gem "aasm-diagram", "~> 0.1.3"
   gem "annotaterb"
   gem "better_html", require: false
-  gem "erb_lint", "~> 0.8.0", require: false
+  gem "erb_lint", "~> 0.9.0", require: false
   gem "overcommit", require: false
   gem "rails-erd", "~> 1.7.2"
 end
@@ -42,8 +42,9 @@ end
 group :test do
   gem "capybara"
   gem "capybara-lockstep", "~> 2.2.2"
+  gem "minitest-difftastic", "~> 0.1.2"
   gem "database_cleaner-active_record"
-  gem "selenium-webdriver", "~> 4.27.0"
+  gem "selenium-webdriver", "~> 4.28.0"
   gem "mocha", "~> 2.7.1"
 end
 

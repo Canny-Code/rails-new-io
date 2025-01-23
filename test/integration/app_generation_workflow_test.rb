@@ -36,7 +36,7 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
     git_repo = mock("git_repo")
     git_repo.stubs(:commit_changes).returns(true)
     git_repo.stubs(:create_repository).returns(true)
-    AppRepository.stubs(:new).returns(git_repo)
+    AppRepositoryService.stubs(:new).returns(git_repo)
     GeneratedApp.any_instance.stubs(:repo).returns(git_repo)
   end
 
