@@ -2,9 +2,9 @@ require "test_helper"
 
 class RecipesControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @recipe = recipes(:one)
+    @recipe = recipes(:blog_recipe)
     @user = users(:john)
-    @other_users_recipe = recipes(:minimal_recipe)
+    @other_users_recipe = recipes(:api_recipe)
     sign_in @user
 
     # Mock repository operations

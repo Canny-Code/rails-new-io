@@ -1,4 +1,5 @@
 class RecipesController < ApplicationController
+  rescue_from ActiveRecord::RecordNotFound, with: :not_found
   before_action :authenticate_user!
   before_action :set_recipe, only: [ :show, :destroy ]
 
@@ -55,6 +56,10 @@ class RecipesController < ApplicationController
   end
 
   private
+
+  def not_found
+    head :not_found
+  end
 
   def set_recipe
     @recipe = current_user.recipes.find(params[:id])

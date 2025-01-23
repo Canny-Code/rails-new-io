@@ -87,7 +87,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     FileUtils.rm_rf(source_path)
   end
 
-  test "skips pushing files if source directory doesn't exist" do
+  test "skips pushing files for non-existent source path" do
     @service.push_app_files(source_path: "/nonexistent/path")
   end
 end

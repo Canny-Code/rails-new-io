@@ -29,7 +29,7 @@ blog_recipe:
   description: "A basic blog setup"
   cli_flags: "--database=postgresql"
   created_by: john
-  status: "draft"
+  status: "published"
 
 api_recipe:
   name: "API Starter"

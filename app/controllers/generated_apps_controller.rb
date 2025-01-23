@@ -19,9 +19,7 @@ class GeneratedAppsController < ApplicationController
 
     @generated_app = current_user.generated_apps.create!(
       name: params[:app_name],
-      recipe: recipe,
-      ruby_version: recipe.ruby_version,
-      rails_version: recipe.rails_version
+      recipe: recipe
     )
 
     AppGeneration::Orchestrator.new(@generated_app).call

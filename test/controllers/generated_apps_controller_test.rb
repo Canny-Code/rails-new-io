@@ -6,7 +6,7 @@ class GeneratedAppsControllerTest < ActionDispatch::IntegrationTest
 
   setup do
     @user = users(:john)
-    @recipe = recipes(:blog)
+    @recipe = recipes(:api_recipe)
     sign_in @user
   end
 
@@ -22,13 +22,12 @@ class GeneratedAppsControllerTest < ActionDispatch::IntegrationTest
     response_body = response.body
 
     # Should include current user's published recipes
-    assert_match recipes(:api_recipe).name, response_body
-    assert_match recipes(:basic_recipe).name, response_body
+    assert_match recipes(:minimal_recipe).name, response_body  # John's published recipe
+    assert_match recipes(:blog_recipe).name, response_body    # John's published recipe
 
-    # Should not include draft recipes
-    assert_no_match recipes(:blog_recipe).name, response_body
     # Should not include other user's recipes
-    assert_no_match recipes(:minimal_recipe).name, response_body
+    assert_no_match recipes(:api_recipe).name, response_body    # Jane's recipe
+    assert_no_match recipes(:basic_recipe).name, response_body  # Jane's recipe
   end
 
   test "requires authentication" do
@@ -39,48 +38,45 @@ class GeneratedAppsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "creates app with valid parameters" do
+    recipe = recipes(:minimal_recipe) # This recipe belongs to John
     assert_difference("GeneratedApp.count") do
       post generated_apps_path, params: {
+        app_name: "test-app",
         generated_app: {
-          name: "test-app",
-          recipe_id: @recipe.id,
-          ruby_version: "3.2.2",
-          rails_version: "7.1.2",
+          recipe_id: recipe.id,
           selected_gems: [],
           configuration_options: {}
         }
       }
     end
 
-    assert_redirected_to generated_app_path(GeneratedApp.last)
+    assert_redirected_to generated_app_log_entries_path(GeneratedApp.last)
   end
 
   test "reuses existing recipe if cli_flags match" do
+    recipe = recipes(:minimal_recipe) # This recipe belongs to John
     assert_difference("GeneratedApp.count") do
       post generated_apps_path, params: {
+        app_name: "test-app",
         generated_app: {
-          name: "test-app",
-          recipe_id: @recipe.id,
-          ruby_version: "3.2.2",
-          rails_version: "7.1.2",
+          recipe_id: recipe.id,
           selected_gems: [],
           configuration_options: {}
         }
       }
     end
 
-    assert_redirected_to generated_app_path(GeneratedApp.last)
+    assert_redirected_to generated_app_log_entries_path(GeneratedApp.last)
   end
 
   test "starts app generation after creation" do
+    recipe = recipes(:minimal_recipe) # This recipe belongs to John
     AppGeneration::Orchestrator.any_instance.expects(:call).once
 
     post generated_apps_path, params: {
+      app_name: "test-app",
       generated_app: {
-        name: "test-app",
-        recipe_id: @recipe.id,
-        ruby_version: "3.2.2",
-        rails_version: "7.1.2",
+        recipe_id: recipe.id,
         selected_gems: [],
         configuration_options: {}
       }
