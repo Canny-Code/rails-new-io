@@ -53,9 +53,13 @@ Always use puts, rather than Rails.logger.debug. I want to see the debug message
 
 Always start debug messages with "DEBUG: "
 
-[callbacks]
+[Rails callbacks]
 
 Be very careful and think twice before adding callbacks. If possible, call the code explicitly rather than relying on callbacks as they can get messy - especially if there are multiple of them, their order matters and/or they rely on each other. Thus, always prefer calling the code explicitly what otherwise would have been a callback.
+
+[Ruby]
+
+- use Data ratjer than OpenStruct
 
 [mood]
 

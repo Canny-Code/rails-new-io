@@ -1,6 +1,8 @@
 require "test_helper"
 
 class GithubCodePushJobTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
+
   def setup
     @user = users(:john)
     @repo_name = "test-repo"
@@ -12,12 +14,16 @@ class GithubCodePushJobTest < ActiveSupport::TestCase
     Octokit::Client.stubs(:new).returns(@mock_client)
     @mock_client.stubs(:repository?).returns(true)
 
+    # Mock file system operations
+    File.stubs(:directory?).with(@source_path).returns(true)
+    Dir.stubs(:glob).with("#{@source_path}/**/*", File::FNM_DOTMATCH).returns([])
+
     # Mock basic GitHub API responses
     @ref_mock = mock("ref")
-    @ref_mock.stubs(:object).returns(OpenStruct.new(sha: "old_sha"))
+    @ref_mock.stubs(:object).returns(Data.define(:sha).new(sha: "old_sha"))
 
     @commit_mock = mock("commit")
-    @commit_mock.stubs(:commit).returns(OpenStruct.new(tree: OpenStruct.new(sha: "tree_sha")))
+    @commit_mock.stubs(:commit).returns(Data.define(:tree).new(tree: Data.define(:sha).new(sha: "tree_sha")))
 
     @tree_mock = mock("tree")
     @tree_mock.stubs(:sha).returns("new_tree_sha")
