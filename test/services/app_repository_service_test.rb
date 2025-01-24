@@ -14,16 +14,18 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     mock_client = mock("octokit_client")
     mock_client.expects(:repository?).with("#{@user.github_username}/#{@repository_name}").returns(false)
-    mock_client.expects(:create_repository).with(@repository_name, {
+    mock_client.expects(:create_repository).with(
+      @repository_name,
       private: false,
       auto_init: false,
       description: "Repository created via railsnew.io",
       default_branch: "main"
-    }).returns(response)
+    ).returns(response)
 
     Octokit::Client.stubs(:new).returns(mock_client)
 
-    result = @service.initialize_repository(repo_name: @repository_name)
+    @generated_app.name = @repository_name
+    result = @service.initialize_repository
     assert_equal response.html_url, result.html_url
 
     # Verify GeneratedApp was updated
@@ -70,8 +72,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
       "new_tree_sha",
       "tree_sha",
       author: {
-        name: @user.github_username,
-        email: "#{@user.github_username}@users.noreply.github.com"
+        name: @user.name,
+        email: @user.email
       }
     ).returns(Data.define(:sha).new(sha: "new_sha"))
     mock_client.expects(:update_ref).with(
@@ -82,12 +84,17 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     Octokit::Client.stubs(:new).returns(mock_client)
 
-    @service.push_app_files(source_path: source_path)
+    result = @service.push_app_files(source_path: source_path)
+    assert_equal "new_sha", result.sha
   ensure
     FileUtils.rm_rf(source_path)
   end
 
   test "skips pushing files for non-existent source path" do
-    @service.push_app_files(source_path: "/nonexistent/path")
+    # No client should be created since we're skipping
+    Octokit::Client.expects(:new).never
+
+    result = @service.push_app_files(source_path: "/nonexistent/path")
+    assert_nil result
   end
 end
