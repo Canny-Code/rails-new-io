@@ -17,7 +17,7 @@ class AppRepositoryService < GithubRepositoryService
 
     response = create_repository(
       repo_name: repo_name,
-      auto_init: false # We'll initialize with our own structure
+      auto_init: false
     )
 
     generated_app.update!(

@@ -12,26 +12,60 @@ class GithubRepositoryService
     @logger = logger
   end
 
-  def create_repository(repo_name:, description: "Repository created via railsnew.io", private: false, auto_init: false)
-    if repository_exists?(repo_name)
+  def create_repository(repo_name:, description: "Repository created via railsnew.io", private: false, auto_init: true)
+    puts "\nDEBUG: [create_repository] Starting with repo_name: #{repo_name}"
+    # First check if repository exists
+    puts "DEBUG: [create_repository] Checking if repository exists"
+    exists = begin
+      puts "DEBUG: [create_repository] Calling repository_exists?"
+      result = repository_exists?(repo_name)
+      puts "DEBUG: [create_repository] repository_exists? returned: #{result}"
+      result
+    rescue GithubRepositoryService::ApiError => e
+      puts "DEBUG: [create_repository] Caught ApiError: #{e.class} - #{e.message}"
+      puts "DEBUG: [create_repository] ApiError backtrace:\n#{e.backtrace.join("\n")}"
+      raise # Re-raise API errors immediately
+    rescue => e
+      puts "DEBUG: [create_repository] Caught unexpected error: #{e.class} - #{e.message}"
+      puts "DEBUG: [create_repository] Error backtrace:\n#{e.backtrace.join("\n")}"
+      raise
+    end
+
+    if exists
+      puts "DEBUG: [create_repository] Repository exists, raising error"
       logger.error("Repository '#{repo_name}' already exists")
       raise RepositoryExistsError, "Repository '#{repo_name}' already exists"
     end
 
+    puts "DEBUG: [create_repository] Repository doesn't exist, creating it"
     with_error_handling do
-      # Just pass everything as a single hash to Octokit
-      client.create_repository(repo_name, private: private, auto_init: auto_init, description: description)
+      puts "DEBUG: [create_repository] Calling GitHub API to create repository"
+      client.create_repository(repo_name,
+        private: private,
+        auto_init: auto_init,
+        description: description,
+        default_branch: "main"
+      )
     end
   end
 
   def repository_exists?(name)
+    puts "\nDEBUG: [repository_exists?] Starting check for: #{name}"
+    puts "DEBUG: [repository_exists?] Full repo name: #{user.github_username}/#{name}"
     with_error_handling do
-      client.repository?("#{user.github_username}/#{name}")
+      puts "DEBUG: [repository_exists?] Calling client.repository?"
+      result = client.repository?("#{user.github_username}/#{name}")
+      puts "DEBUG: [repository_exists?] client.repository? returned: #{result}"
+      result
     end
   rescue GithubRepositoryService::ApiError => e
+    puts "DEBUG: [repository_exists?] Caught ApiError: #{e.class} - #{e.message}"
+    puts "DEBUG: [repository_exists?] ApiError backtrace:\n#{e.backtrace.join("\n")}"
     raise # Re-raise API errors
   rescue StandardError => e
-    false # Assume repository doesn't exist if we can't check
+    puts "DEBUG: [repository_exists?] Caught unexpected error: #{e.class} - #{e.message}"
+    puts "DEBUG: [repository_exists?] Error backtrace:\n#{e.backtrace.join("\n")}"
+    raise # Don't swallow unexpected errors
   end
 
   def commit_changes(repo_name:, message:, tree_items:, base_tree_sha: nil)
@@ -91,27 +125,44 @@ class GithubRepositoryService
   def with_error_handling
     retries = 0
     begin
-      yield
+      puts "DEBUG: [with_error_handling] Attempt #{retries + 1}"
+      result = yield
+      puts "DEBUG: [with_error_handling] Call succeeded, returning: #{result.inspect}"
+      result
     rescue Octokit::TooManyRequests => e
-      logger.warn("Rate limit exceeded, waiting for reset", {
-        reset_time: client.rate_limit.resets_at,
-        retry_count: retries
-      })
+      puts "DEBUG: [with_error_handling] Caught TooManyRequests on attempt #{retries + 1}"
+      puts "DEBUG: [with_error_handling] Error details: #{e.inspect}"
 
-      reset_time = client.rate_limit.resets_at
+      # Get rate limit info once
+      rate_limit = client.rate_limit
+      reset_time = rate_limit.resets_at
       sleep_time = [ reset_time - Time.now, 0 ].max
-      sleep(sleep_time)
 
-      retry if (retries += 1) <= @max_retries
+      logger.warn("Rate limit exceeded, waiting for reset. Reset time: #{reset_time}, retry: #{retries}")
+      puts "DEBUG: [with_error_handling] Would sleep for #{sleep_time} seconds"
 
+      retries += 1
+      if retries < @max_retries
+        puts "DEBUG: [with_error_handling] Retrying (attempt #{retries + 1})"
+        retry
+      end
+
+      puts "DEBUG: [with_error_handling] Max retries exceeded, raising ApiError"
       logger.error("Rate limit exceeded and retry attempts exhausted")
       raise ApiError, "Rate limit exceeded and retry attempts exhausted"
     rescue Octokit::Error => e
-      logger.error("GitHub API error", { error: e.message, retry_count: retries })
+      puts "DEBUG: [with_error_handling] Caught Octokit::Error on attempt #{retries + 1}: #{e.message}"
+      logger.error("GitHub API error: #{e.message}")
 
-      retry if (retries += 1) <= @max_retries
+      retries += 1
+      if retries < @max_retries
+        puts "DEBUG: [with_error_handling] Retrying (attempt #{retries + 1})"
+        retry
+      end
       raise ApiError, "GitHub API error: #{e.message}"
     rescue StandardError => e
+      puts "DEBUG: [with_error_handling] Caught unexpected error: #{e.class} - #{e.message}"
+      puts "DEBUG: [with_error_handling] Error backtrace:\n#{e.backtrace.join("\n")}"
       raise Error, "Unexpected error: #{e.message}"
     end
   end

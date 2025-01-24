@@ -13,7 +13,6 @@ class AppGenerationJob < ApplicationJob
       workflow.step :complete_generation
     end
   rescue StandardError => e
-    # Only mark as failed if not already failed
     unless @generated_app.app_status.failed?
       @generated_app.mark_as_failed!(e.message)
     end

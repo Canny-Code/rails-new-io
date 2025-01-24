@@ -39,24 +39,16 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
   end
 
   test "generates app and pushes to GitHub" do
-    # Ensure the app's Git repo path exists
     repo_path = Rails.root.join("tmp", "git_repos", @user.id.to_s, "#{@repo_name}")
     FileUtils.mkdir_p(repo_path)
     FileUtils.touch(File.join(repo_path, "test.rb"))
 
-    puts "DEBUG: Before job execution"
-    puts "DEBUG: Initial github_repo_url: #{@generated_app.github_repo_url.inspect}"
-    puts "DEBUG: Initial app_status: #{@generated_app.app_status.status}"
-
-    # Mock command execution first
     service = mock_command_execution(@generated_app)
-    service.expects(:execute).tap { puts "DEBUG: command_execution.execute called" }.returns(true)
+    service.expects(:execute).returns(true)
 
-    # Mock GitHub repository creation
     repo_response = GitRepo.new(html_url: "https://github.com/test-user/#{@repo_name}")
     app_repo_service = mock("app_repo_service")
     app_repo_service.expects(:initialize_repository).tap { |x|
-      puts "DEBUG: app_repo_service.initialize_repository called"
       @generated_app.create_github_repo!
       @generated_app.generate!
       @generated_app.update!(
@@ -64,49 +56,32 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
         github_repo_url: repo_response.html_url
       )
     }.returns(repo_response)
-    app_repo_service.stubs(:push_app_files).tap { puts "DEBUG: app_repo_service.push_app_files called" }.returns(true)
-    app_repo_service.stubs(:commit_changes).tap { puts "DEBUG: app_repo_service.commit_changes called" }.returns(true)
-    AppRepositoryService.expects(:new).tap { puts "DEBUG: AppRepositoryService.new called" }.returns(app_repo_service)
 
-    # Mock AppGeneration::Orchestrator
+    app_repo_service.stubs(:push_app_files).returns(true)
+    app_repo_service.stubs(:commit_changes).returns(true)
+    AppRepositoryService.expects(:new).returns(app_repo_service)
+
     orchestrator = mock("orchestrator")
     orchestrator.expects(:perform_generation).tap { |x|
-      puts "DEBUG: orchestrator.perform_generation called"
-      # Actually call the command execution service here
       service.execute
     }.returns(true)
-    AppGeneration::Orchestrator.expects(:new).tap { puts "DEBUG: AppGeneration::Orchestrator.new called" }.returns(orchestrator)
+    AppGeneration::Orchestrator.expects(:new).returns(orchestrator)
 
-    # Mock only the broadcast methods
-    AppStatus.any_instance.stubs(:broadcast_status_steps).tap { puts "DEBUG: broadcast_status_steps called" }.returns(true)
-    AppStatus.any_instance.stubs(:broadcast_status_change).tap { puts "DEBUG: broadcast_status_change called" }.returns(true)
-    AppStatus.any_instance.stubs(:notify_status_change).tap { puts "DEBUG: notify_status_change called" }.returns(true)
-    AppStatus.any_instance.stubs(:update_generated_app_build_time).tap { puts "DEBUG: update_generated_app_build_time called" }.returns(true)
+    AppStatus.any_instance.stubs(:broadcast_status_steps).returns(true)
+    AppStatus.any_instance.stubs(:broadcast_status_change).returns(true)
+    AppStatus.any_instance.stubs(:notify_status_change).returns(true)
+    AppStatus.any_instance.stubs(:update_generated_app_build_time).returns(true)
 
-    # Let state transitions happen naturally - DO NOT STUB THESE
-    # Let AcidicJob manage the workflow naturally
     AppGenerationJob.perform_now(@generated_app.id)
 
-    # Debug AcidicJob state
-    puts "DEBUG: AcidicJob::Execution count: #{AcidicJob::Execution.count}"
-    AcidicJob::Execution.all.each do |execution|
-      puts "DEBUG: AcidicJob::Execution: #{execution.inspect}"
-      puts "DEBUG: AcidicJob::Execution entries: #{execution.entries.order(:timestamp).pluck(:step, :action).inspect}"
-    end
-
-    puts "DEBUG: After job execution"
     @generated_app.reload
-    puts "DEBUG: After reload github_repo_url: #{@generated_app.github_repo_url.inspect}"
-    puts "DEBUG: After reload app_status: #{@generated_app.app_status.status}"
 
-    # Set source_path again since it's not persisted
     @generated_app.source_path = @source_path.to_s
     assert_equal "completed", @generated_app.app_status.status
     assert_equal "https://github.com/test-user/#{@repo_name}", @generated_app.github_repo_url
   end
 
   test "handles GitHub API errors during app generation" do
-    # Mock repository existence check to return true
     @mock_client.expects(:repository?).returns(true)
     service = mock_command_execution(@generated_app)
     service.expects(:execute).never
