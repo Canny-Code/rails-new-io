@@ -13,7 +13,64 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "initializes repository with correct structure" do
-    expect_github_operations(create_repo: true, expect_git_operations: true)
+    mock_client = mock("octokit_client")
+    mock_client.expects(:repository?).with("#{@user.github_username}/#{@repo_name}").returns(false)
+    mock_client.expects(:create_repository).with(
+      @repo_name,
+      private: false,
+      auto_init: false,
+      description: "Repository created via railsnew.io",
+      default_branch: "main"
+    ).returns(Data.define(:html_url).new(html_url: "https://github.com/#{@user.github_username}/#{@repo_name}"))
+
+    # Expect git operations for creating initial structure
+    mock_client.expects(:ref).with("#{@user.github_username}/#{@repo_name}", "heads/main").returns(
+      Data.define(:object).new(object: Data.define(:sha).new(sha: "old_sha"))
+    )
+    mock_client.expects(:commit).with("#{@user.github_username}/#{@repo_name}", "old_sha").returns(
+      Data.define(:commit).new(commit: Data.define(:tree).new(tree: Data.define(:sha).new(sha: "tree_sha")))
+    )
+    mock_client.expects(:create_tree).with(
+      "#{@user.github_username}/#{@repo_name}",
+      [
+        {
+          path: "README.md",
+          mode: "100644",
+          type: "blob",
+          content: "# Data Repository\nThis repository contains data for railsnew.io"
+        },
+        {
+          path: "ingredients/.keep",
+          mode: "100644",
+          type: "blob",
+          content: ""
+        },
+        {
+          path: "recipes/.keep",
+          mode: "100644",
+          type: "blob",
+          content: ""
+        }
+      ],
+      base_tree: "tree_sha"
+    ).returns(Data.define(:sha).new(sha: "new_tree_sha"))
+    mock_client.expects(:create_commit).with(
+      "#{@user.github_username}/#{@repo_name}",
+      "Initialize repository structure",
+      "new_tree_sha",
+      "tree_sha",
+      author: {
+        name: @user.name,
+        email: @user.email
+      }
+    ).returns(Data.define(:sha).new(sha: "new_sha"))
+    mock_client.expects(:update_ref).with(
+      "#{@user.github_username}/#{@repo_name}",
+      "heads/main",
+      "new_sha"
+    )
+
+    Octokit::Client.stubs(:new).returns(mock_client)
 
     result = @service.initialize_repository
     assert_equal "https://github.com/#{@user.github_username}/#{@repo_name}", result.html_url

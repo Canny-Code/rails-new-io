@@ -6,6 +6,12 @@ module AppGeneration
     setup do
       @generated_app = generated_apps(:pending_app)
       @orchestrator = Orchestrator.new(@generated_app)
+      @original_adapter = ActiveJob::Base.queue_adapter
+      ActiveJob::Base.queue_adapter = :solid_queue
+    end
+
+    teardown do
+      ActiveJob::Base.queue_adapter = @original_adapter
     end
 
     test "enqueues generation job when app is in pending state" do
