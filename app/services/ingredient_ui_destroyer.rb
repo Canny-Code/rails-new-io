@@ -9,8 +9,7 @@ class IngredientUiDestroyer
 
   def call
     ActiveRecord::Base.transaction do
-      page = Page.find_by(title: "Your Custom Ingredients")
-      return unless page
+      page = Page.find_by!(title: "Your Custom Ingredients")
 
       group = page.groups.find_by(title: ingredient.category)
       return unless group

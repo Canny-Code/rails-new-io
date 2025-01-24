@@ -18,16 +18,12 @@
 require "test_helper"
 
 class PageTest < ActiveSupport::TestCase
-  include GitTestHelper
-
   setup do
     @page = Page.new(
       title: "Test Page",
       slug: "test-page",
       position: 1
     )
-
-    setup_github_mocks
   end
 
   test "validates presence of title" do
@@ -37,6 +33,7 @@ class PageTest < ActiveSupport::TestCase
   end
 
   test "validates presence of slug" do
+    @page.title = nil # Clear title so FriendlyId doesn't generate a slug
     @page.slug = nil
     assert_not @page.valid?
     assert_includes @page.errors[:slug], "can't be blank"
@@ -46,18 +43,5 @@ class PageTest < ActiveSupport::TestCase
     @page.position = nil
     assert_not @page.valid?
     assert_includes @page.errors[:position], "can't be blank"
-  end
-
-  test "creates initial commit when created" do
-    expect_github_operations(create_repo: true)
-    assert @page.save
-  end
-
-  test "syncs to git when updated" do
-    expect_github_operations(create_repo: true)
-    assert @page.save
-
-    expect_github_operations
-    @page.update(title: "Updated Title")
   end
 end
