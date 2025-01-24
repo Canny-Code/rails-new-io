@@ -96,7 +96,7 @@ class GeneratedApp < ApplicationRecord
         configuration: configuration
       )
 
-      template_path = DataRepository.new(user: user).template_path(ingredient)
+      template_path = DataRepositoryService.new(user: user).template_path(ingredient)
 
       require "rails/generators"
       require "rails/generators/rails/app/app_generator"

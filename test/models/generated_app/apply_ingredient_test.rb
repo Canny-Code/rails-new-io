@@ -23,11 +23,6 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     @generator.stubs(:apply)
     Rails::Generators::AppGenerator.stubs(:new).returns(@generator)
 
-    # Mock the DataRepository
-    @data_repository = mock("data_repository")
-    @data_repository.stubs(:template_path).returns("path/to/template.rb")
-    DataRepository.stubs(:new).returns(@data_repository)
-
     # Mock directory operations
     Dir.stubs(:chdir).yields
   end
@@ -54,7 +49,7 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     configuration = { "auth_type" => "devise" }
     template_path = "path/to/template.rb"
 
-    @data_repository.expects(:template_path).with(@ingredient).returns(template_path)
+    DataRepositoryService.any_instance.stubs(:template_path).with(@ingredient).returns(template_path)
     @generator.expects(:apply).once
 
     Rails::Generators::AppGenerator.expects(:new).with(

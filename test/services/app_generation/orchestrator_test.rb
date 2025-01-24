@@ -65,10 +65,9 @@ module AppGeneration
 
       # Mock template path verification
       data_repository = mock("data_repository")
-      template_path = Rails.root.join("test/fixtures/templates/test.rb").to_s
-      data_repository.stubs(:template_path).returns(template_path)
-      DataRepository.stubs(:new).with(user: @generated_app.user).returns(data_repository)
-      File.stubs(:exist?).with(template_path).returns(true)
+      data_repository.stubs(:template_path).returns("path/to/template.rb")
+      DataRepositoryService.stubs(:new).with(user: @generated_app.user).returns(data_repository)
+      File.stubs(:exist?).with("path/to/template.rb").returns(true)
 
       # Expect the app to be marked as generating and ingredients to be applied
       @generated_app.expects(:generate!).once
@@ -97,22 +96,21 @@ module AppGeneration
 
       # Mock template path verification to fail
       data_repository = mock("data_repository")
-      template_path = "/nonexistent/path/template.rb"
-      data_repository.stubs(:template_path).returns(template_path)
-      DataRepository.stubs(:new).with(user: @generated_app.user).returns(data_repository)
-      File.stubs(:exist?).with(template_path).returns(false)
+      data_repository.stubs(:template_path).returns("/nonexistent/path/template.rb")
+      DataRepositoryService.stubs(:new).with(user: @generated_app.user).returns(data_repository)
+      File.stubs(:exist?).with("/nonexistent/path/template.rb").returns(false)
 
       # Expect proper state transitions and error handling
       @generated_app.expects(:generate!).once
-      @generated_app.expects(:mark_as_failed!).with("Template file not found: #{template_path}")
+      @generated_app.expects(:mark_as_failed!).with("Template file not found: /nonexistent/path/template.rb")
 
       # Expect proper logging
       sequence = sequence("error_logging")
       AppGeneration::Logger.any_instance.expects(:info).with("Starting app generation").in_sequence(sequence)
       AppGeneration::Logger.any_instance.expects(:info).with("Executing Rails new command").in_sequence(sequence)
       AppGeneration::Logger.any_instance.expects(:info).with("Applying ingredients").in_sequence(sequence)
-      AppGeneration::Logger.any_instance.expects(:error).with("Template file not found", { path: template_path }).in_sequence(sequence)
-      AppGeneration::Logger.any_instance.expects(:error).with("App generation failed", { error: "Template file not found: #{template_path}" }).in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:error).with("Template file not found", { path: "/nonexistent/path/template.rb" }).in_sequence(sequence)
+      AppGeneration::Logger.any_instance.expects(:error).with("App generation failed", { error: "Template file not found: /nonexistent/path/template.rb" }).in_sequence(sequence)
 
       assert_raises(StandardError) do
         @orchestrator.perform_generation
@@ -156,10 +154,9 @@ module AppGeneration
 
       # Mock template path verification
       data_repository = mock("data_repository")
-      template_path = Rails.root.join("test/fixtures/templates/test.rb").to_s
-      data_repository.stubs(:template_path).returns(template_path)
-      DataRepository.stubs(:new).with(user: @generated_app.user).returns(data_repository)
-      File.stubs(:exist?).with(template_path).returns(true)
+      data_repository.stubs(:template_path).returns("path/to/template.rb")
+      DataRepositoryService.stubs(:new).with(user: @generated_app.user).returns(data_repository)
+      File.stubs(:exist?).with("path/to/template.rb").returns(true)
 
       # Mock ingredient application to fail
       @generated_app.expects(:generate!).once
@@ -186,10 +183,9 @@ module AppGeneration
 
       # Mock template path verification
       data_repository = mock("data_repository")
-      template_path = Rails.root.join("test/fixtures/templates/test.rb").to_s
-      data_repository.stubs(:template_path).returns(template_path)
-      DataRepository.stubs(:new).with(user: @generated_app.user).returns(data_repository)
-      File.stubs(:exist?).with(template_path).returns(true)
+      data_repository.stubs(:template_path).returns("path/to/template.rb")
+      DataRepositoryService.stubs(:new).with(user: @generated_app.user).returns(data_repository)
+      File.stubs(:exist?).with("path/to/template.rb").returns(true)
 
       # Clean up any existing ingredients
       @generated_app.recipe.recipe_ingredients.destroy_all
