@@ -16,12 +16,15 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
 
     mock_client = mock("octokit_client")
     mock_client.expects(:repository?).with("#{@user.github_username}/#{@repository_name}").returns(false)
-    mock_client.expects(:create_repository).with(@repository_name, {
-      private: false,
-      auto_init: true,
-      description: "Repository created via railsnew.io",
-      default_branch: "main"
-    }).returns(response)
+    mock_client.expects(:create_repository).with(
+      @repository_name,
+      has_entries(
+        private: false,
+        auto_init: true,
+        description: "Repository created via railsnew.io",
+        default_branch: "main"
+      )
+    ).returns(response)
 
     Octokit::Client.stubs(:new).returns(mock_client)
 
@@ -42,60 +45,36 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "handles rate limit exceeded" do
-    puts "\n\nDEBUG: ==================== STARTING RATE LIMIT TEST ===================="
-    puts "DEBUG: Setting up test with user: #{@user.github_username}"
     mock_client = mock("octokit_client")
     reset_time = Time.now + 10.minutes
     repo_full_name = "#{@user.github_username}/#{@repository_name}"
-    puts "DEBUG: Full repo name: #{repo_full_name}"
 
     # Create a proper TooManyRequests error
-    puts "DEBUG: Creating TooManyRequests error"
-    rate_limit_error = begin
-      error = Octokit::TooManyRequests.new({
-        status: 429,
-        body: "API rate limit exceeded",
-        response_headers: { "X-RateLimit-Reset" => reset_time.to_i.to_s }
-      })
-      puts "DEBUG: Successfully created error: #{error.class}"
-      error
-    rescue => e
-      puts "DEBUG: FAILED TO CREATE ERROR: #{e.class} - #{e.message}"
-      puts "DEBUG: Backtrace:\n#{e.backtrace.join("\n")}"
-      raise
-    end
+    rate_limit_error = Octokit::TooManyRequests.new({
+      status: 429,
+      body: "API rate limit exceeded",
+      response_headers: { "X-RateLimit-Reset" => reset_time.to_i.to_s }
+    })
 
-    puts "DEBUG: Setting up mock expectations"
     # Expect repository? to be called up to max retries (3) times and always raise
     mock_client.expects(:repository?).with(repo_full_name)
               .times(3)
               .raises(rate_limit_error)
-              .tap { puts "DEBUG: Set up repository? mock to raise #{rate_limit_error.class}" }
 
     # Rate limit should be checked each time
     mock_client.expects(:rate_limit).times(3)
               .returns(Data.define(:resets_at).new(resets_at: reset_time))
-              .tap { puts "DEBUG: Set up rate_limit mock to return reset_time: #{reset_time}" }
 
     # We should never get to create_repository
     mock_client.expects(:create_repository).never
-              .tap { puts "DEBUG: Set up create_repository to never be called" }
 
-    puts "DEBUG: Setting up Octokit client stub"
     Octokit::Client.stubs(:new).returns(mock_client)
-                  .tap { puts "DEBUG: Octokit client stub set up" }
 
-    puts "DEBUG: About to call create_repository and expect ApiError"
     error = assert_raises(GithubRepositoryService::ApiError) do
-      puts "DEBUG: ---> CALLING create_repository with repo_name: #{@repository_name}"
-      result = @service.create_repository(repo_name: @repository_name)
-      puts "DEBUG: SHOULD NOT GET HERE - create_repository returned: #{result.inspect}"
+      @service.create_repository(repo_name: @repository_name)
     end
 
-    puts "DEBUG: Error raised as expected: #{error.class} - #{error.message}"
-    puts "DEBUG: Error backtrace:\n#{error.backtrace.join("\n")}"
     assert_match /Rate limit exceeded and retry attempts exhausted/, error.message
-    puts "DEBUG: ==================== TEST COMPLETE ====================\n\n"
   end
 
   test "handles general GitHub API errors" do
@@ -124,15 +103,18 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
     mock_client.expects(:create_tree).with(repo_full_name, tree_items, base_tree: "tree_sha").returns(
       Data.define(:sha).new(sha: "new_tree_sha")
     )
+
+    expected_author = {
+      name: @user.name || @user.github_username,
+      email: @user.email || "#{@user.github_username}@users.noreply.github.com"
+    }
+
     mock_client.expects(:create_commit).with(
       repo_full_name,
       "test commit",
       "new_tree_sha",
       "tree_sha",
-      author: {
-        name: @user.github_username,
-        email: "#{@user.github_username}@users.noreply.github.com"
-      }
+      author: expected_author
     ).returns(Data.define(:sha).new(sha: "new_sha"))
     mock_client.expects(:update_ref).with(repo_full_name, "heads/main", "new_sha")
 

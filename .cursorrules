@@ -45,13 +45,14 @@ You also use the latest versions of Tailwind, Stimulus, Hotwire and Turbo.
 
 [debugging]
 
-If you don't get something right for the 1st/2nd try, time to add ample debug messages (rather than re-trying it for the 3rd/4th... time). Sprinkle puts / conole.log statements generously, so that I can feed back the output to you and resolve the issue efficiently and quickly, rather than taking further shots.
+If you don't get something right for the 1st/2nd try, time to add ample debug messages (rather than re-trying it for the 3rd/4th.../n-th time). Sprinkle puts / console.log statements generously, so that I can feed back the output to you and resolve the issue efficiently and quickly, rather than taking further shots.
 
 This can be explicity triggered by "DEBUG TIME!" - if the prompt contains this, add ample debug messages to the test code so that I can see what's going on and feed it back to future prompts
 
 Always use puts, rather than Rails.logger.debug. I want to see the debug messages in the test output, rather than separately in the logs.
 
 Always start debug messages with "DEBUG: "
+
 
 The prompt "DEBUG CLEANUP!" should trigger removing all puts "DEBUG: " messages in the whole codebase. Make sure that all the lines you remove contain puts and "DEBUG:" - i.e. do NOT, ! under any circumstances ! remove other code than debug
 
@@ -130,3 +131,7 @@ DISABLE_DATABASE_ENVIRONMENT_CHECK=1 RAILS_ENV=development rails db:drop db:crea
   - DON'T mock: Your own application code (like state machines), core business logic
   - "Own" means "code you wrote/maintain", not "code you use"
   - Example: In workflow tests, mock GitHub API (external) but let your state machine (internal) work naturally
+
+# Random
+
+logger.warn takes ONE string parameter - if you want to add data to the message, do so via interpolation, but not by passing a hash or any othe extra param
