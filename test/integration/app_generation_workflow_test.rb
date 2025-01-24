@@ -59,6 +59,10 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
       puts "DEBUG: app_repo_service.initialize_repository called"
       @generated_app.create_github_repo!
       @generated_app.generate!
+      @generated_app.update!(
+        github_repo_name: @repo_name,
+        github_repo_url: repo_response.html_url
+      )
     }.returns(repo_response)
     app_repo_service.stubs(:push_app_files).tap { puts "DEBUG: app_repo_service.push_app_files called" }.returns(true)
     app_repo_service.stubs(:commit_changes).tap { puts "DEBUG: app_repo_service.commit_changes called" }.returns(true)
@@ -68,7 +72,8 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
     orchestrator = mock("orchestrator")
     orchestrator.expects(:perform_generation).tap { |x|
       puts "DEBUG: orchestrator.perform_generation called"
-      # State transitions are handled by create_github_repo! and generate! above
+      # Actually call the command execution service here
+      service.execute
     }.returns(true)
     AppGeneration::Orchestrator.expects(:new).tap { puts "DEBUG: AppGeneration::Orchestrator.new called" }.returns(orchestrator)
 
