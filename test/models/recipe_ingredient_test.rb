@@ -55,7 +55,7 @@ class RecipeIngredientTest < ActiveSupport::TestCase
   end
 
   test "converts to git format" do
-    stub_git_operations(@recipe, expect_sync: false)
+    setup_github_mocks(@recipe)
     @recipe_ingredient.applied_at = Time.current
     expected = {
       ingredient_name: @ingredient.name,
@@ -68,7 +68,7 @@ class RecipeIngredientTest < ActiveSupport::TestCase
   end
 
   test "applies ingredient configuration" do
-    stub_git_operations(@recipe, expect_sync: false)
+    setup_github_mocks(@recipe)
     freeze_time do
       # Ensure applied_at is nil
       assert_nil @recipe_ingredient.applied_at, "applied_at should be nil before test"
@@ -92,7 +92,7 @@ class RecipeIngredientTest < ActiveSupport::TestCase
   end
 
   test "does not reapply if already applied" do
-    stub_git_operations(@recipe, expect_sync: false)
+    setup_github_mocks(@recipe)
     @recipe_ingredient.update!(applied_at: 1.day.ago)
     @ingredient.expects(:configuration_for).never
 
