@@ -12,7 +12,7 @@ class GithubRepositoryService
     @logger = logger
   end
 
-  def create_repository(repo_name:, description: nil, private: false, auto_init: true)
+  def create_repository(repo_name:, description: "Repository created via railsnew.io", private: false, auto_init: false)
     if repository_exists?(repo_name)
       logger.error("Repository '#{repo_name}' already exists")
       raise RepositoryExistsError, "Repository '#{repo_name}' already exists"
@@ -20,7 +20,7 @@ class GithubRepositoryService
 
     with_error_handling do
       # Just pass everything as a single hash to Octokit
-      client.create_repository(repo_name, private: private, auto_init: auto_init, description: description || "Repository created via railsnew.io")
+      client.create_repository(repo_name, private: private, auto_init: auto_init, description: description)
     end
   end
 

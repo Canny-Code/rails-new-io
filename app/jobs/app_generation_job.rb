@@ -28,8 +28,7 @@ class AppGenerationJob < ApplicationJob
   private
 
   def create_github_repository
-    result = GithubRepositoryService.new(@generated_app)
-      .create_repository(repo_name: @generated_app.name)
+    result = AppRepositoryService.new(@generated_app).initialize_repository
     result
   end
 

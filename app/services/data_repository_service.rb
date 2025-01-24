@@ -74,6 +74,10 @@ class DataRepositoryService < GithubRepositoryService
     )
   end
 
+  def template_path(ingredient)
+    Rails.root.join("tmp", "ingredients", ingredient.name, "template.rb").to_s
+  end
+
   private
 
   def create_initial_structure(repo_name)

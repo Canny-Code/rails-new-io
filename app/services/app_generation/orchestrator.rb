@@ -47,7 +47,7 @@ module AppGeneration
       @logger.info("Applying ingredients")
       @generated_app.ingredients.each do |ingredient|
         # Verify template exists before trying to apply it
-        template_path = DataRepository.new(user: @generated_app.user).template_path(ingredient)
+        template_path = DataRepositoryService.new(user: @generated_app.user).template_path(ingredient)
 
         unless File.exist?(template_path)
           @logger.error("Template file not found", { path: template_path })

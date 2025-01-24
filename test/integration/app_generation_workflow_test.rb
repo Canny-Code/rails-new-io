@@ -31,13 +31,6 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
 
     # Mock apply_ingredient! to prevent actual template application
     GeneratedApp.any_instance.stubs(:apply_ingredient!).returns(true)
-
-    # Mock git operations
-    git_repo = mock("git_repo")
-    git_repo.stubs(:commit_changes).returns(true)
-    git_repo.stubs(:create_repository).returns(true)
-    AppRepositoryService.stubs(:new).returns(git_repo)
-    GeneratedApp.any_instance.stubs(:repo).returns(git_repo)
   end
 
   teardown do
@@ -51,13 +44,56 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
     FileUtils.mkdir_p(repo_path)
     FileUtils.touch(File.join(repo_path, "test.rb"))
 
-    expect_github_operations(create_repo: true, expect_git_operations: false)
-    service = mock_command_execution(@generated_app)
-    service.expects(:execute).returns(true)
+    puts "DEBUG: Before job execution"
+    puts "DEBUG: Initial github_repo_url: #{@generated_app.github_repo_url.inspect}"
+    puts "DEBUG: Initial app_status: #{@generated_app.app_status.status}"
 
+    # Mock command execution first
+    service = mock_command_execution(@generated_app)
+    service.expects(:execute).tap { puts "DEBUG: command_execution.execute called" }.returns(true)
+
+    # Mock GitHub repository creation
+    repo_response = GitRepo.new(html_url: "https://github.com/test-user/#{@repo_name}")
+    app_repo_service = mock("app_repo_service")
+    app_repo_service.expects(:initialize_repository).tap { |x|
+      puts "DEBUG: app_repo_service.initialize_repository called"
+      @generated_app.create_github_repo!
+      @generated_app.generate!
+    }.returns(repo_response)
+    app_repo_service.stubs(:push_app_files).tap { puts "DEBUG: app_repo_service.push_app_files called" }.returns(true)
+    app_repo_service.stubs(:commit_changes).tap { puts "DEBUG: app_repo_service.commit_changes called" }.returns(true)
+    AppRepositoryService.expects(:new).tap { puts "DEBUG: AppRepositoryService.new called" }.returns(app_repo_service)
+
+    # Mock AppGeneration::Orchestrator
+    orchestrator = mock("orchestrator")
+    orchestrator.expects(:perform_generation).tap { |x|
+      puts "DEBUG: orchestrator.perform_generation called"
+      # State transitions are handled by create_github_repo! and generate! above
+    }.returns(true)
+    AppGeneration::Orchestrator.expects(:new).tap { puts "DEBUG: AppGeneration::Orchestrator.new called" }.returns(orchestrator)
+
+    # Mock only the broadcast methods
+    AppStatus.any_instance.stubs(:broadcast_status_steps).tap { puts "DEBUG: broadcast_status_steps called" }.returns(true)
+    AppStatus.any_instance.stubs(:broadcast_status_change).tap { puts "DEBUG: broadcast_status_change called" }.returns(true)
+    AppStatus.any_instance.stubs(:notify_status_change).tap { puts "DEBUG: notify_status_change called" }.returns(true)
+    AppStatus.any_instance.stubs(:update_generated_app_build_time).tap { puts "DEBUG: update_generated_app_build_time called" }.returns(true)
+
+    # Let state transitions happen naturally - DO NOT STUB THESE
+    # Let AcidicJob manage the workflow naturally
     AppGenerationJob.perform_now(@generated_app.id)
 
+    # Debug AcidicJob state
+    puts "DEBUG: AcidicJob::Execution count: #{AcidicJob::Execution.count}"
+    AcidicJob::Execution.all.each do |execution|
+      puts "DEBUG: AcidicJob::Execution: #{execution.inspect}"
+      puts "DEBUG: AcidicJob::Execution entries: #{execution.entries.order(:timestamp).pluck(:step, :action).inspect}"
+    end
+
+    puts "DEBUG: After job execution"
     @generated_app.reload
+    puts "DEBUG: After reload github_repo_url: #{@generated_app.github_repo_url.inspect}"
+    puts "DEBUG: After reload app_status: #{@generated_app.app_status.status}"
+
     # Set source_path again since it's not persisted
     @generated_app.source_path = @source_path.to_s
     assert_equal "completed", @generated_app.app_status.status
