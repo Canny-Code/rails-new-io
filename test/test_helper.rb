@@ -52,8 +52,6 @@ module ActiveSupport
   class TestCase
     extend CoverageHelper
 
-    parallelize(workers: :number_of_processors)
-
     unless skip_coverage?
       parallelize_setup do |worker|
         SimpleCov.command_name "#{SimpleCov.command_name}-#{worker}"
@@ -67,6 +65,7 @@ module ActiveSupport
     fixtures :all
 
     def setup
+      DatabaseCleaner.strategy = :truncation
       DatabaseCleaner.start
       # Create test app directories
       %w[blog_app api_project saas_starter weather_api payment_api].each do |app|
@@ -134,7 +133,7 @@ module ActiveRecord
           "recipe_ingredients" => [ "recipes", "ingredients" ],
           "generated_apps" => [ "recipes", "users" ],
           "recipes" => [ "users" ],
-          "ingredients" => [ "users" ],
+          "ingredients" => [ "users", "recipes" ],
           "commits" => [ "users" ]
         }
 

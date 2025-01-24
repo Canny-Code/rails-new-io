@@ -2,7 +2,7 @@ require "test_helper"
 
 class IngredientUiUpdaterTest < ActiveSupport::TestCase
   setup do
-    @ingredient = ingredients(:one)
+    @ingredient = ingredients(:rails_authentication)
     @updater = IngredientUiUpdater.new(@ingredient)
 
     # Mock repository operations
@@ -10,7 +10,7 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
     DataRepositoryService.any_instance.stubs(:initialize_repository).returns(true)
 
     # Clean up any existing test data
-    Page.where(title: "Your Custom Ingredients").destroy_all
+    # Page.where(title: "Your Custom Ingredients").destroy_all  # Remove this line as we'll use the fixture
 
     # Create a fresh copy of the ingredient to avoid frozen record issues
     fixture_ingredient = ingredients(:rails_authentication).dup
@@ -22,7 +22,7 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
       created_by: users(:john)  # Use the user fixture directly since it's just a reference
     )
 
-    @page = Page.create!(title: "Your Custom Ingredients")
+    @page = pages(:custom_ingredients)  # Use the fixture instead of creating a new page
     @group = @page.groups.create!(title: @ingredient.category, behavior_type: "custom_ingredient_checkbox")
     @sub_group = @group.sub_groups.create!(title: "Default")
 
@@ -50,7 +50,7 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
     SubGroup.where(id: @sub_group&.id).destroy_all
     Group.where(id: @group&.id).destroy_all
     @ingredient&.destroy
-    Page.where(title: "Your Custom Ingredients").destroy_all
+    # Page.where(title: "Your Custom Ingredients").destroy_all  # Remove this line as we're using the fixture
   end
 
   test "updates element attributes when ingredient is updated" do
@@ -143,11 +143,12 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
   end
 
   test "handles non-existent page gracefully" do
-    # Delete in correct order: elements -> sub_groups -> groups -> page
+    # Delete in correct order: elements -> sub_groups -> groups
     Element.where(sub_group_id: @sub_group.id).delete_all
     SubGroup.where(group_id: @group.id).delete_all
     Group.where(page_id: @page.id).delete_all
-    Page.where(id: @page.id).delete_all
+    # Don't delete the page as it's a fixture
+    # Page.where(id: @page.id).delete_all
 
     assert_nothing_raised do
       IngredientUiUpdater.call(@ingredient)
