@@ -5,16 +5,19 @@ module Buttons
     class Component < ApplicationComponent
       include Phlex::Rails::Helpers::LinkTo
 
-      def initialize(text:, path:, icon: true)
+      def initialize(text:, path:, icon: true, disabled: false, data: {})
         @text = text
         @path = path
         @icon = icon
+        @disabled = disabled
+        @data = data
       end
 
       def view_template
         link_to(
           @path,
-          class: "inline-flex items-center rounded-md bg-[#ac3b61] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#993351] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#993351]"
+          class: "#{@disabled ? "opacity-50 cursor-not-allowed" : ""} inline-flex items-center rounded-md bg-[#ac3b61] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#993351] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#993351]",
+          data: @data
         ) do
           if @icon
             svg(class: "-ml-0.5 mr-1.5 size-5", viewbox: "0 0 20 20", fill: "currentColor", aria_hidden: "true", data_slot: "icon") do |s|
