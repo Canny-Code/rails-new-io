@@ -13,25 +13,22 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "initializes repository with correct structure" do
-    mock_client = mock("octokit_client")
-    mock_client.expects(:repository?).with("#{@user.github_username}/#{@repo_name}").returns(false)
-    mock_client.expects(:create_repository).with(
+    repo_full_name = "#{@user.github_username}/#{@repo_name}"
+
+    @mock_client.expects(:repository?).with(repo_full_name).returns(false)
+    @mock_client.expects(:create_repository).with(
       @repo_name,
       private: false,
-      auto_init: false,
+      auto_init: true,
       description: "Repository created via railsnew.io",
       default_branch: "main"
     ).returns(Data.define(:html_url).new(html_url: "https://github.com/#{@user.github_username}/#{@repo_name}"))
 
-    # Expect git operations for creating initial structure
-    mock_client.expects(:ref).with("#{@user.github_username}/#{@repo_name}", "heads/main").returns(
-      Data.define(:object).new(object: Data.define(:sha).new(sha: "old_sha"))
-    )
-    mock_client.expects(:commit).with("#{@user.github_username}/#{@repo_name}", "old_sha").returns(
-      Data.define(:commit).new(commit: Data.define(:tree).new(tree: Data.define(:sha).new(sha: "tree_sha")))
-    )
-    mock_client.expects(:create_tree).with(
-      "#{@user.github_username}/#{@repo_name}",
+    # First ref call to get base tree SHA
+    @mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(@first_ref_mock)
+    @mock_client.expects(:commit).with(repo_full_name, "old_sha").returns(@commit_mock)
+    @mock_client.expects(:create_tree).with(
+      repo_full_name,
       [
         {
           path: "README.md",
@@ -53,24 +50,29 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
         }
       ],
       base_tree: "tree_sha"
-    ).returns(Data.define(:sha).new(sha: "new_tree_sha"))
-    mock_client.expects(:create_commit).with(
-      "#{@user.github_username}/#{@repo_name}",
+    ).returns(@tree_mock)
+
+    # Second ref call to get latest commit SHA for parent
+    @mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(@first_ref_mock)
+
+    # Create commit with the latest commit SHA as parent
+    @mock_client.expects(:create_commit).with(
+      repo_full_name,
       "Initialize repository structure",
       "new_tree_sha",
-      "tree_sha",
+      "old_sha",
       author: {
         name: @user.name,
         email: @user.email
       }
-    ).returns(Data.define(:sha).new(sha: "new_sha"))
-    mock_client.expects(:update_ref).with(
-      "#{@user.github_username}/#{@repo_name}",
+    ).returns(@new_commit_mock)
+
+    # Update ref to point to new commit
+    @mock_client.expects(:update_ref).with(
+      repo_full_name,
       "heads/main",
       "new_sha"
     )
-
-    Octokit::Client.stubs(:new).returns(mock_client)
 
     result = @service.initialize_repository
     assert_equal "https://github.com/#{@user.github_username}/#{@repo_name}", result.html_url
@@ -82,9 +84,44 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
       template_content: "# Test template"
     )
 
-    expect_github_operations(expect_git_operations: true, create_repo: false)
+    repo_full_name = "#{@user.github_username}/#{@repo_name}"
 
-    @service.write_ingredient(ingredient, repo_name: @repo_name)
+    # Mock the GitHub API calls in sequence
+    # First ref call to get base tree SHA
+    @mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(@first_ref_mock)
+    @mock_client.expects(:commit).with(repo_full_name, "old_sha").returns(@commit_mock)
+    @mock_client.expects(:create_tree).with(
+      repo_full_name,
+      [
+        {
+          path: "ingredients/test_ingredient/template.rb",
+          mode: "100644",
+          type: "blob",
+          content: "# Test template"
+        }
+      ],
+      base_tree: "tree_sha"
+    ).returns(@tree_mock)
+    # Second ref call to get latest commit SHA
+    @mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(@first_ref_mock)
+    @mock_client.expects(:create_commit).with(
+      repo_full_name,
+      "Update ingredient: test_ingredient",
+      "new_tree_sha",
+      "old_sha",
+      author: {
+        name: @user.name,
+        email: @user.email
+      }
+    ).returns(@new_commit_mock)
+    @mock_client.expects(:update_ref).with(
+      repo_full_name,
+      "heads/main",
+      "new_sha"
+    )
+
+    result = @service.write_ingredient(ingredient, repo_name: @repo_name)
+    assert_equal "new_sha", result.sha
   end
 
   test "writes recipe to repository" do
@@ -93,9 +130,44 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
       to_yaml: "# Test recipe YAML"
     )
 
-    expect_github_operations(expect_git_operations: true, create_repo: false)
+    repo_full_name = "#{@user.github_username}/#{@repo_name}"
 
-    @service.write_recipe(recipe, repo_name: @repo_name)
+    # Mock the GitHub API calls in sequence
+    # First ref call to get base tree SHA
+    @mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(@first_ref_mock)
+    @mock_client.expects(:commit).with(repo_full_name, "old_sha").returns(@commit_mock)
+    @mock_client.expects(:create_tree).with(
+      repo_full_name,
+      [
+        {
+          path: "recipes/test_recipe.yml",
+          mode: "100644",
+          type: "blob",
+          content: "# Test recipe YAML"
+        }
+      ],
+      base_tree: "tree_sha"
+    ).returns(@tree_mock)
+    # Second ref call to get latest commit SHA
+    @mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(@first_ref_mock)
+    @mock_client.expects(:create_commit).with(
+      repo_full_name,
+      "Update recipe: test_recipe",
+      "new_tree_sha",
+      "old_sha",
+      author: {
+        name: @user.name,
+        email: @user.email
+      }
+    ).returns(@new_commit_mock)
+    @mock_client.expects(:update_ref).with(
+      repo_full_name,
+      "heads/main",
+      "new_sha"
+    )
+
+    result = @service.write_recipe(recipe, repo_name: @repo_name)
+    assert_equal "new_sha", result.sha
   end
 
   test "name_for_environment returns base name with dev suffix in development" do
