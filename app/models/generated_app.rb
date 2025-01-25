@@ -61,8 +61,6 @@ class GeneratedApp < ApplicationRecord
     allow_blank: true
   validates :recipe, presence: true
 
-  after_create :create_app_status
-
   after_update_commit :broadcast_clone_box, if: :completed?
 
   broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
