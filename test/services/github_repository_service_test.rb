@@ -106,15 +106,23 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
     tree_items = [ { path: "test.txt", content: "test" } ]
 
     mock_client = mock("octokit_client")
-    mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(
-      Data.define(:object).new(object: Data.define(:sha).new(sha: "old_sha"))
-    )
-    mock_client.expects(:commit).with(repo_full_name, "old_sha").returns(
-      Data.define(:commit).new(commit: Data.define(:tree).new(tree: Data.define(:sha).new(sha: "tree_sha")))
-    )
+    ref_response = Data.define(:object).new(object: Data.define(:sha).new(sha: "old_sha"))
+
+    # First ref call to get base tree SHA
+    mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(ref_response)
+
+    # Create a proper commit mock with both sha and commit methods
+    commit_tree = Data.define(:sha).new(sha: "tree_sha")
+    commit_data = Data.define(:tree).new(tree: commit_tree)
+    commit = Data.define(:commit, :sha).new(commit: commit_data, sha: "old_sha")
+    mock_client.expects(:commit).with(repo_full_name, "old_sha").returns(commit)
+
     mock_client.expects(:create_tree).with(repo_full_name, tree_items, base_tree: "tree_sha").returns(
       Data.define(:sha).new(sha: "new_tree_sha")
     )
+
+    # Second ref call to get latest commit SHA for parent
+    mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(ref_response)
 
     expected_author = {
       name: @user.name || @user.github_username,
@@ -125,17 +133,19 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       repo_full_name,
       "test commit",
       "new_tree_sha",
-      "tree_sha",
+      "old_sha",
       author: expected_author
     ).returns(Data.define(:sha).new(sha: "new_sha"))
     mock_client.expects(:update_ref).with(repo_full_name, "heads/main", "new_sha")
 
     Octokit::Client.stubs(:new).returns(mock_client)
 
-    @service.commit_changes(
+    result = @service.commit_changes(
       repo_name: @repository_name,
       message: "test commit",
       tree_items: tree_items
     )
+
+    assert_equal "new_sha", result.sha
   end
 end
