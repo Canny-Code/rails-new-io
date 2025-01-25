@@ -11,19 +11,21 @@ class GitBackedModelTest < ActiveSupport::TestCase
 
     attr_accessor :id, :name, :user, :created_at, :updated_at, :created_by
 
-    def self.has_attribute?(attr)
+    def has_attribute?(attr)
       attr.to_s == "source_path"
     end
 
     def []=(attr, value)
-      instance_variable_set("@#{attr}", value)
+      @attributes ||= {}
+      @attributes[attr.to_s] = value
     end
 
     def [](attr)
+      @attributes ||= {}
       if attr.to_s == "id"
         id
       else
-        instance_variable_get("@#{attr}")
+        @attributes[attr.to_s]
       end
     end
 
@@ -45,7 +47,7 @@ class GitBackedModelTest < ActiveSupport::TestCase
   end
 
   class TestModelWithoutSourcePath < TestModel
-    def self.has_attribute?(attr)
+    def has_attribute?(attr)
       false
     end
 
@@ -61,6 +63,16 @@ class GitBackedModelTest < ActiveSupport::TestCase
 
     def cleanup_after_push?
       name == "cleanup-me"
+    end
+  end
+
+  class TestModelWithSourcePathAttribute < TestModel
+    def has_attribute?(attr)
+      false
+    end
+
+    def source_path_attribute
+      "computed-path"
     end
   end
 
@@ -110,6 +122,16 @@ class GitBackedModelTest < ActiveSupport::TestCase
     )
     @model.stubs(:repo).returns(repo)
 
+    @model.sync_to_git
+  end
+
+  test "sync_to_git handles errors through handle_git_error" do
+    error = StandardError.new("Commit failed")
+    repo = mock("repo")
+    repo.expects(:commit_changes).raises(error)
+    @model.stubs(:repo).returns(repo)
+
+    @model.expects(:handle_git_error).with(error)
     @model.sync_to_git
   end
 
@@ -168,6 +190,14 @@ class GitBackedModelTest < ActiveSupport::TestCase
     assert_equal Rails.root.join("tmp/test").to_s, @model.source_path
   end
 
+  test "source_path uses database attribute when has_attribute? is true" do
+    model = TestModel.new
+    model[:source_path] = "/test/path"
+    assert model.has_attribute?(:source_path), "Model should have source_path attribute"
+    assert_equal "/test/path", model[:"source_path"]
+    assert_equal "/test/path", model.source_path
+  end
+
   test "source_path can be overridden in subclasses" do
     model = TestModelWithoutSourcePath.new
     assert_equal "test", model.source_path
@@ -213,5 +243,20 @@ class GitBackedModelTest < ActiveSupport::TestCase
     @model.stubs(:should_create_repository?).returns(true)
     repo = @model.send(:repo)
     assert_instance_of DataRepositoryService, repo
+  end
+
+  test "source_path uses source_path_attribute when available" do
+    model = TestModelWithSourcePathAttribute.new
+    assert_equal "computed-path", model.source_path
+  end
+
+  test "initial_git_commit handles errors through handle_git_error" do
+    error = StandardError.new("Repository initialization failed")
+    repo = mock("repo")
+    repo.expects(:initialize_repository).raises(error)
+    @model.stubs(:repo).returns(repo)
+
+    @model.expects(:handle_git_error).with(error)
+    @model.initial_git_commit
   end
 end

@@ -38,6 +38,7 @@ module HasGenerationLifecycle
 
   def push_to_github!
     app_status.start_github_push!
+    logger.info("Starting GitHub push")
   end
 
   def start_ci!

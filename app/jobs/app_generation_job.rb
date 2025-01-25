@@ -27,8 +27,8 @@ class AppGenerationJob < ApplicationJob
   private
 
   def create_github_repository
-    result = AppRepositoryService.new(@generated_app).initialize_repository
-    result
+    AppRepositoryService.new(@generated_app).initialize_repository
+    @logger.info("GitHub repo #{@generated_app.name} created successfully")
   end
 
   def generate_rails_app
@@ -41,6 +41,7 @@ class AppGenerationJob < ApplicationJob
     @generated_app.push_to_github!
     @generated_app.initial_git_commit
     @generated_app.sync_to_git
+    @logger.info("GitHub push finished successfully")
   end
 
   def start_ci

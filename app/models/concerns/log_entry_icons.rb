@@ -12,8 +12,6 @@ module LogEntryIcons
     when /starting app generation workflow/
       "🐙 🛤️ 🏗️ 🪄 🎬 "
     when /starting github repo creation/
-      "🐙 🏗️ 🚀 "
-    when /creating repository/
       "🐙 🏗️ 🔄 "
     when /github repo .+ created successfully/
       "🐙 🏗️ ✅ "
