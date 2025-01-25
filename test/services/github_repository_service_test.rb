@@ -89,6 +89,18 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
     assert_match /GitHub API error/, error.message
   end
 
+  test "handles unexpected errors" do
+    mock_client = mock("octokit_client")
+    mock_client.stubs(:repository?).raises(StandardError.new("Something went wrong"))
+    Octokit::Client.stubs(:new).returns(mock_client)
+
+    error = assert_raises(GithubRepositoryService::Error) do
+      @service.create_repository(repo_name: @repository_name)
+    end
+
+    assert_equal "Unexpected error: Something went wrong", error.message
+  end
+
   test "commits changes successfully" do
     repo_full_name = "#{@user.github_username}/#{@repository_name}"
     tree_items = [ { path: "test.txt", content: "test" } ]

@@ -153,3 +153,10 @@ logger.warn takes ONE string parameter - if you want to add data to the message,
 # and its functionality is already handled by other parts of the codebase, remove it.
 # Example: GithubCodePushJob was removed because its functionality was already handled by
 # AppRepositoryService, DataRepositoryService, and GithubRepositoryService.
+
+# System Test Authentication
+- Don't use sign_in helper in system tests (it's for integration tests)
+- Instead, use the full browser flow:
+  1. Set up OmniAuth.config.mock_auth
+  2. visit root_path
+  3. click_on "Get in"

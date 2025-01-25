@@ -8,7 +8,8 @@ class IngredientsTest < ApplicationSystemTestCase
 
     @ingredient = ingredients(:rails_authentication)
     @user = users(:john)
-    sign_in @user
+
+    # Set up OmniAuth mock for system tests
     OmniAuth.config.test_mode = true
     OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new({
       provider: "github",
@@ -25,6 +26,8 @@ class IngredientsTest < ApplicationSystemTestCase
         }
       }
     })
+
+    # Visit root and click the auth link - this is the actual browser flow
     visit root_path
     click_on "Get in"
   end

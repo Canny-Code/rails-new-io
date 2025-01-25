@@ -113,6 +113,7 @@ class GithubRepositoryService
 
       retries += 1
       if retries < @max_retries
+        sleep sleep_time
         retry
       end
 
