@@ -1,16 +1,6 @@
 module GitBackedModel
   extend ActiveSupport::Concern
 
-  class_methods do
-    def git_backed_options(options = {})
-      @git_backed_options = options
-    end
-
-    def get_git_backed_options
-      @git_backed_options || {}
-    end
-  end
-
   def initial_git_commit
     return if @performing_git_operation
     return unless should_create_repository?
@@ -76,41 +66,17 @@ module GitBackedModel
   end
 
   def cleanup_after_push?
-    options = self.class.get_git_backed_options
-    cleanup_option = options[:cleanup_after_push]
-
-    case cleanup_option
-    when Proc
-      instance_exec(&cleanup_option)
-    when nil
-      false
-    else
-      cleanup_option
-    end
+    false
   end
 
   def source_path
     return @source_path if defined?(@source_path)
 
-    options = self.class.get_git_backed_options
-    path_option = options[:source_path]
-
-    @source_path = case path_option
-    when Proc
-      instance_exec(&path_option)
-    when nil
-      # Try the source_path attribute first (database column)
-      # Then try source_path_attribute (dynamic method)
-      if has_attribute?(:source_path)
-        self[:source_path]
-      elsif respond_to?(:source_path_attribute)
-        source_path_attribute
-      end
-    else
-      path_option
+    @source_path = if has_attribute?(:source_path)
+      self[:source_path]
+    elsif respond_to?(:source_path_attribute)
+      source_path_attribute
     end
-
-    @source_path
   end
 
   def repo_name

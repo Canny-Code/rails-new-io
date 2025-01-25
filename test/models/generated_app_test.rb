@@ -292,4 +292,11 @@ class GeneratedAppTest < ActiveSupport::TestCase
     end
     assert app.completed?
   end
+
+  test "sets up git backed model methods correctly" do
+    app = GeneratedApp.new(source_path: "/tmp/test_path")
+
+    assert_equal "/tmp/test_path", app.source_path
+    assert app.cleanup_after_push?
+  end
 end

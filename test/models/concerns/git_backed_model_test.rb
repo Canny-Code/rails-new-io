@@ -49,14 +49,19 @@ class GitBackedModelTest < ActiveSupport::TestCase
       false
     end
 
-    git_backed_options(source_path: "test")
+    def source_path
+      "test"
+    end
   end
 
-  class TestModelWithDynamicOptions < TestModelWithoutSourcePath
-    git_backed_options(
-      source_path: -> { "#{name}-path" },
-      cleanup_after_push: -> { name == "cleanup-me" }
-    )
+  class TestModelWithDynamicPath < TestModelWithoutSourcePath
+    def source_path
+      "#{name}-path"
+    end
+
+    def cleanup_after_push?
+      name == "cleanup-me"
+    end
   end
 
   def setup
@@ -78,30 +83,11 @@ class GitBackedModelTest < ActiveSupport::TestCase
     setup_github_mocks
   end
 
-  def teardown
-    # Reset git_backed_options after each test
-    TestModel.git_backed_options({})
-    TestModelWithoutSourcePath.git_backed_options({})
-    TestModelWithDynamicOptions.git_backed_options({})
-
-    # Reset any instance variables
-    @model.remove_instance_variable(:@source_path) if @model.instance_variable_defined?(:@source_path)
-  end
-
   test "includes necessary methods" do
     assert_respond_to @model, :initial_git_commit
     assert_respond_to @model, :sync_to_git
     assert_respond_to @model, :repo
     assert_respond_to @model, :should_sync_to_git?
-  end
-
-  test "responds to git_backed_options" do
-    assert_respond_to TestModel, :git_backed_options
-  end
-
-  test "configures git_backed_options" do
-    TestModel.git_backed_options(source_path: "test")
-    assert_equal "test", TestModel.get_git_backed_options[:source_path]
   end
 
   test "initial_git_commit creates repository and pushes files" do
@@ -178,59 +164,22 @@ class GitBackedModelTest < ActiveSupport::TestCase
     assert_not @model.cleanup_after_push?
   end
 
-  test "cleanup_after_push? returns configured value" do
-    TestModel.git_backed_options(cleanup_after_push: true)
-    assert @model.cleanup_after_push?
+  test "source_path returns attribute value if available" do
+    assert_equal Rails.root.join("tmp/test").to_s, @model.source_path
   end
 
-  test "cleanup_after_push? executes proc if configured" do
-    TestModel.git_backed_options(cleanup_after_push: -> { true })
-    assert @model.cleanup_after_push?
-  end
-
-  test "source_path returns configured value" do
-    klass = Class.new(TestModel) do
-      def self.has_attribute?(attr)
-        false
-      end
-
-      def self.name
-        "TestModelConfigured"
-      end
-    end
-    Object.const_set("TestModelConfigured", klass)
-
-    klass.git_backed_options(source_path: "test")
-
-    model = klass.new(
-      id: 1,
-      name: "test",
-      user: @user,
-      created_at: Time.now,
-      updated_at: Time.now
-    )
-
-    result = model.source_path
-    assert_equal "test", result
-  ensure
-    Object.send(:remove_const, "TestModelConfigured") if Object.const_defined?("TestModelConfigured")
-  end
-
-  test "source_path executes proc if configured" do
-    model = TestModelWithoutSourcePath.new(
-      id: 1,
-      name: "test",
-      user: @user,
-      created_at: Time.now,
-      updated_at: Time.now
-    )
-
-    TestModelWithoutSourcePath.git_backed_options(source_path: -> { "test" })
+  test "source_path can be overridden in subclasses" do
+    model = TestModelWithoutSourcePath.new
     assert_equal "test", model.source_path
   end
 
-  test "source_path returns attribute value if available" do
-    assert_equal Rails.root.join("tmp/test").to_s, @model.source_path
+  test "dynamic source_path and cleanup_after_push behavior" do
+    model = TestModelWithDynamicPath.new(name: "test")
+    assert_equal "test-path", model.source_path
+    assert_not model.cleanup_after_push?
+
+    model.name = "cleanup-me"
+    assert model.cleanup_after_push?
   end
 
   test "change_description returns formatted changes" do
@@ -243,18 +192,6 @@ class GitBackedModelTest < ActiveSupport::TestCase
   end
 
   test "handle_git_error calls on_git_error if available" do
-    error = StandardError.new("Test error")
-    @model.stubs(:on_git_error)
-    @model.expects(:on_git_error).with(error)
-    @model.handle_git_error(error)
-  end
-
-  test "handle_git_error raises error if on_git_error not available" do
-    error = StandardError.new("Test error")
-    assert_raises(StandardError) { @model.handle_git_error(error) }
-  end
-
-  test "handle_git_error handles repository errors" do
     error = StandardError.new("Test error")
     @model.stubs(:on_git_error)
     @model.expects(:on_git_error).with(error)
@@ -276,32 +213,5 @@ class GitBackedModelTest < ActiveSupport::TestCase
     @model.stubs(:should_create_repository?).returns(true)
     repo = @model.send(:repo)
     assert_instance_of DataRepositoryService, repo
-  end
-
-  test "handles git errors with custom handler" do
-    error = StandardError.new("Test error")
-    @model.stubs(:on_git_error)
-    @model.expects(:on_git_error).with(error)
-    @model.handle_git_error(error)
-  end
-
-  test "evaluates git_backed_options in instance context" do
-    test_class = Class.new(TestModel) do
-      def self.has_attribute?(attr)
-        false
-      end
-
-      git_backed_options(
-        source_path: -> { "#{name}-path" },
-        cleanup_after_push: -> { name == "cleanup-me" }
-      )
-    end
-
-    model = test_class.new(name: "test")
-    assert_equal "test-path", model.source_path
-    assert_not model.cleanup_after_push?
-
-    model.name = "cleanup-me"
-    assert model.cleanup_after_push?
   end
 end

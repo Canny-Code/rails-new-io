@@ -68,10 +68,9 @@ class GeneratedApp < ApplicationRecord
   broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
   broadcasts_to ->(generated_app) { [ :notification_badge, generated_app.user_id ] }
 
-  git_backed_options(
-    source_path: -> { source_path },
-    cleanup_after_push: -> { true }
-  )
+  def cleanup_after_push?
+    true
+  end
 
   def apply_ingredient!(ingredient, configuration = {})
     logger = AppGeneration::Logger.new(self)
