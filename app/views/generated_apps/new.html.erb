@@ -23,10 +23,10 @@
                        data-github-name-validator-target="input"
                        name="app_name"
                        data-action="input->github-name-validator#validate"
-                       autocomplete="off"
-                       placeholder="my-next-big-thing"
-                       class="appearance-none w-full px-5 py-3 border-2 border-gray-300 text-base leading-6 mx-5 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-lg">
-                </input>
+                autocomplete="off"
+                placeholder="my-next-big-thing"
+                class="appearance-none w-full px-5 py-3 border-2 border-gray-300 text-base leading-6 mx-5 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-lg">
+              </input>
               <div class="text-sm mx-5">
                 <div data-github-name-validator-target="message" class="hidden"></div>
                 <div data-github-name-validator-target="spinner" class="hidden flex justify-center">
@@ -40,7 +40,6 @@
           </div>
         </div>
       </div>
-
       <div class="border-b border-gray-200 bg-white px-4 py-5 sm:px-6">
         <div class="-ml-4 -mt-4 flex flex-wrap items-center justify-between sm:flex-nowrap">
           <div class="ml-4 mt-4">
@@ -55,14 +54,18 @@
           </div>
         </div>
       </div>
-
       <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
         <div class="mt-1 sm:mt-0 sm:col-span-2">
-          <div class="max-w-lg space-y-4">
+          <div class="max-w-lg space-y-4" data-controller="recipe-selector">
             <%= collection_radio_buttons :generated_app, :recipe_id, @recipes, :id, :name do |b| %>
               <div class="relative flex items-start">
                 <div class="flex items-center h-5">
-                  <%= b.radio_button class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" %>
+                  <%= b.radio_button class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300",
+                                   checked: b.object.id.to_s == params[:recipe_id],
+                                   data: {
+                                     recipe_selector_target: "radio",
+                                     action: "change->recipe-selector#updateUrl"
+                                   } %>
                 </div>
                 <div class="ml-3 text-sm">
                   <%= b.label class: "font-medium text-gray-700" %>
