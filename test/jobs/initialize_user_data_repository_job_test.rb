@@ -41,10 +41,32 @@ class InitializeUserDataRepositoryJobTest < ActiveSupport::TestCase
   end
 
   test "handles user not found" do
+    Rails.logger.expects(:error).with("User not found with id: -1")
+
     assert_nothing_raised do
       result = InitializeUserDataRepositoryJob.perform_now(-1)
-
       assert_nil result, "Job should return nil when user not found"
     end
+  end
+
+  test "logs and re-raises error when repository initialization fails" do
+    error = StandardError.new("Repository creation failed")
+    error.set_backtrace([ "line 1", "line 2" ])
+
+    # Stub before any operations
+    User.any_instance.stubs(:github_username).returns("test-user")
+    DataRepositoryService.any_instance.stubs(:initialize_repository).raises(error)
+
+    # Mock the entire logger
+    mock_logger = mock("logger")
+    mock_logger.stubs(:info)
+    mock_logger.expects(:error).with("Failed to initialize user data repository: Repository creation failed").once
+    mock_logger.expects(:error).with("line 1\nline 2").once
+    Rails.stubs(:logger).returns(mock_logger)
+
+    error_raised = assert_raises StandardError do
+      InitializeUserDataRepositoryJob.perform_now(@user.id)
+    end
+    assert_equal "Repository creation failed", error_raised.message
   end
 end

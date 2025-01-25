@@ -6,7 +6,7 @@ class IngredientsTest < ApplicationSystemTestCase
     DataRepositoryService.any_instance.stubs(:push_app_files).returns(true)
     DataRepositoryService.any_instance.stubs(:initialize_repository).returns(true)
 
-    @ingredient = ingredients(:one)
+    @ingredient = ingredients(:rails_authentication)
     @user = users(:john)
     sign_in @user
     OmniAuth.config.test_mode = true

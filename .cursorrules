@@ -60,9 +60,18 @@ The prompt "DEBUG CLEANUP!" should trigger removing all puts "DEBUG: " messages 
 
 Be very careful and think twice before adding callbacks. If possible, call the code explicitly rather than relying on callbacks as they can get messy - especially if there are multiple of them, their order matters and/or they rely on each other. Thus, always prefer calling the code explicitly what otherwise would have been a callback.
 
-[Ruby]
+[Ruby best practices and code style]
 
 - use Ruby's built-in Data rather than OpenStruct
+- use tap whenever possible. For example, this:
+
+    result =
+    Rails.logger.info("Data repository creation completed")
+    result
+
+    should be
+
+    data_repository.initialize_repository.tap { Rails.logger.info("Data repository creation completed") }
 
 [mood]
 
@@ -138,3 +147,9 @@ logger.warn takes ONE string parameter - if you want to add data to the message,
 
 # Test file naming should exactly match the file being tested
 # e.g. app/services/user_service.rb -> test/services/user_service_test.rb
+
+# Dead code removal
+# If you find code that's not used anywhere in the application (only referenced in its own test),
+# and its functionality is already handled by other parts of the codebase, remove it.
+# Example: GithubCodePushJob was removed because its functionality was already handled by
+# AppRepositoryService, DataRepositoryService, and GithubRepositoryService.
