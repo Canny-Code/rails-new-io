@@ -43,7 +43,8 @@ module GitTestHelper
         repo_name,
         private: false,
         auto_init: false,
-        description: "Repository created via railsnew.io"
+        description: "Repository created via railsnew.io",
+        default_branch: "main"
       ).returns(GitRepo.new(html_url: "https://github.com/#{@user.github_username}/#{repo_name}"))
     end
 

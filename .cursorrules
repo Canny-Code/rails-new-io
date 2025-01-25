@@ -135,3 +135,6 @@ DISABLE_DATABASE_ENVIRONMENT_CHECK=1 RAILS_ENV=development rails db:drop db:crea
 # Random
 
 logger.warn takes ONE string parameter - if you want to add data to the message, do so via interpolation, but not by passing a hash or any othe extra param
+
+# Test file naming should exactly match the file being tested
+# e.g. app/services/user_service.rb -> test/services/user_service_test.rb
