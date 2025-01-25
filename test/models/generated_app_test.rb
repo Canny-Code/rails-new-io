@@ -299,4 +299,14 @@ class GeneratedAppTest < ActiveSupport::TestCase
     assert_equal "/tmp/test_path", app.source_path
     assert app.cleanup_after_push?
   end
+
+  test "on_git_error fails app status with error message" do
+    app = generated_apps(:pending_app)
+    error = StandardError.new("Git repository error occurred")
+
+    app.on_git_error(error)
+
+    assert app.app_status.failed?
+    assert_equal "Git repository error occurred", app.app_status.error_message
+  end
 end

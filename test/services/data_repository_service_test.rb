@@ -97,4 +97,32 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
 
     @service.write_recipe(recipe, repo_name: @repo_name)
   end
+
+  test "name_for_environment returns base name with dev suffix in development" do
+    Rails.env.stubs(:development?).returns(true)
+    Rails.env.stubs(:test?).returns(false)
+    Rails.env.stubs(:production?).returns(false)
+
+    assert_equal "rails-new-io-data-dev", DataRepositoryService.name_for_environment
+  end
+
+  test "name_for_environment returns base name in production" do
+    Rails.env.stubs(:development?).returns(false)
+    Rails.env.stubs(:test?).returns(false)
+    Rails.env.stubs(:production?).returns(true)
+
+    assert_equal "rails-new-io-data", DataRepositoryService.name_for_environment
+  end
+
+  test "name_for_environment raises error for unknown environment" do
+    Rails.env.stubs(:development?).returns(false)
+    Rails.env.stubs(:test?).returns(false)
+    Rails.env.stubs(:production?).returns(false)
+    Rails.stubs(:env).returns(ActiveSupport::StringInquirer.new("staging"))
+
+    error = assert_raises(ArgumentError) do
+      DataRepositoryService.name_for_environment
+    end
+    assert_equal "Unknown Rails environment: staging", error.message
+  end
 end

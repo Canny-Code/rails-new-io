@@ -79,14 +79,6 @@ module GitBackedModel
     end
   end
 
-  def repo_name
-    name
-  end
-
-  def identifier
-    name
-  end
-
   def change_description
     changes.except("created_at", "updated_at").map do |attr, (old_val, new_val)|
       "#{attr}: #{old_val} -> #{new_val}"
