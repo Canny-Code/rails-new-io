@@ -46,48 +46,29 @@ class GithubRepositoryService
   end
 
   def commit_changes(repo_name:, message:, tree_items:, base_tree_sha: nil)
-    puts "DEBUG: Committing changes to #{repo_name}"
-    puts "DEBUG: Message: #{message}"
-    puts "DEBUG: Tree items: #{tree_items.inspect}"
-
     with_error_handling do
       repo_full_name = "#{user.github_username}/#{repo_name}"
-      puts "DEBUG: Full repo name: #{repo_full_name}"
 
       # Get current tree SHA if not provided
       if base_tree_sha.nil?
         begin
-          puts "DEBUG: Getting latest commit from main branch"
-          puts "DEBUG: Attempting to get ref for #{repo_full_name}"
           ref = client.ref(repo_full_name, "heads/main")
-          puts "DEBUG: Got ref: #{ref.inspect}"
-          puts "DEBUG: Ref class: #{ref.class}"
-          puts "DEBUG: Ref object: #{ref.object.inspect}" if ref&.object
-          puts "DEBUG: Got ref SHA: #{ref.object.sha}" if ref&.object
-
           commit = client.commit(repo_full_name, ref.object.sha)
-          puts "DEBUG: Got commit: #{commit.sha}"
-
           base_tree_sha = commit.commit.tree.sha
-          puts "DEBUG: Using base tree SHA: #{base_tree_sha}"
         rescue Octokit::NotFound => e
-          puts "DEBUG: Branch or reference not found: #{e.message}"
           raise
         end
       end
 
       # Create new tree
-      puts "DEBUG: Creating new tree with base: #{base_tree_sha}"
       new_tree = client.create_tree(
         repo_full_name,
         tree_items,
         base_tree: base_tree_sha
       )
-      puts "DEBUG: Created new tree: #{new_tree.sha}"
 
       # Get the latest commit SHA to use as parent
       latest_commit_sha = client.ref(repo_full_name, "heads/main").object.sha
-      puts "DEBUG: Using parent commit: #{latest_commit_sha}"
 
       # Create commit
       new_commit = client.create_commit(
@@ -97,7 +78,6 @@ class GithubRepositoryService
         latest_commit_sha,
         author: commit_author
       )
-      puts "DEBUG: Created new commit: #{new_commit.sha}"
 
       # Update reference
       client.update_ref(
@@ -105,7 +85,6 @@ class GithubRepositoryService
         "heads/main",
         new_commit.sha
       )
-      puts "DEBUG: Updated ref to new commit"
 
       new_commit
     end

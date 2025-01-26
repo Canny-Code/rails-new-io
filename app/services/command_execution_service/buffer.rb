@@ -9,14 +9,12 @@ class CommandExecutionService
       @log_entry = create_initial_log_entry
       @last_flush = Time.current
       @completed = false
-      Rails.logger.debug "%%%%% Buffer initialized with log entry #{@log_entry.id}"
     end
 
     def append(message)
       should_flush = false
 
       synchronize do
-        Rails.logger.debug "%%%%% Buffer append: Adding message of length #{message.length}"
         @output << message
         should_flush = should_flush?
       end
@@ -25,7 +23,6 @@ class CommandExecutionService
     end
 
     def complete!
-      Rails.logger.debug "%%%%% Buffer complete! called"
       @completed = true
       flush
     end
@@ -34,16 +31,12 @@ class CommandExecutionService
       synchronize do
         return if @output.empty?
 
-        Rails.logger.debug "%%%%% Buffer flush: Current entry: #{@log_entry&.id}, buffer size: #{@output.length}"
-
         if @log_entry.nil?
           @log_entry = create_initial_log_entry
-          Rails.logger.debug "%%%%% Created new log entry: #{@log_entry.id}"
         end
 
         new_content = @output.join("\n")
         message = @log_entry.message.present? ? "#{@log_entry.message}\n#{new_content}" : new_content
-        Rails.logger.debug "%%%%% Updating log entry #{@log_entry.id} with message length: #{message.length}"
 
         @log_entry.update!(
           message: message,

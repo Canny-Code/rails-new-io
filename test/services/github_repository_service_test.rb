@@ -155,4 +155,39 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
 
     assert_equal "new_sha", result.sha
   end
+
+  test "commit_changes raises error when ref not found" do
+    repo_full_name = "#{@user.github_username}/#{@repository_name}"
+    tree_items = [ { path: "test.txt", content: "test" } ]
+    not_found_error = Octokit::NotFound.new(
+      status: 404,
+      body: "Not Found",
+      response_headers: {}
+    )
+
+    mock_client = mock("octokit_client")
+    Octokit::Client.stubs(:new).returns(mock_client)
+
+    # Expect ref call to fail with NotFound 3 times due to retries
+    mock_client.expects(:ref)
+              .with(repo_full_name, "heads/main")
+              .raises(not_found_error)
+              .times(3)
+
+    # We should never get to these calls
+    mock_client.expects(:commit).never
+    mock_client.expects(:create_tree).never
+    mock_client.expects(:create_commit).never
+    mock_client.expects(:update_ref).never
+
+    error = assert_raises(GithubRepositoryService::ApiError) do
+      @service.commit_changes(
+        repo_name: @repository_name,
+        message: "test commit",
+        tree_items: tree_items
+      )
+    end
+
+    assert_equal "GitHub API error:  : 404 - Not Found", error.message
+  end
 end
