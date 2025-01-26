@@ -33,25 +33,9 @@ skip_git_element:
   label: Skip Git
   description: Skip Git files
   position: 0
-  sub_group: dev_env_default
+  sub_group: basic_setup_misc_default
   variant: skip_git (Element::RailsFlagCheckbox)
   command_line_value: "--skip-git"
-
-skip_docker_element:
-  label: Skip Docker
-  description: Skip Docker files
-  position: 1
-  sub_group: dev_env_default
-  variant: skip_docker (Element::RailsFlagCheckbox)
-  command_line_value: "--skip-docker"
-
-skip_action_mailer_element:
-  label: Skip Action Mailer
-  description: Skip Action Mailer files
-  position: 2
-  sub_group: dev_env_default
-  variant: skip_action_mailer (Element::RailsFlagCheckbox)
-  command_line_value: "--skip-action-mailer"
 
 database_sqlite3:
   label: SQLite3
@@ -100,3 +84,171 @@ database_mariadb_trilogy:
   description: Use MariaDB (Trilogy) as your database
   image_path: Mariadb.svg
   position: 5
+
+skip_docker_element:
+  label: Skip Docker
+  sub_group: infrastructure_setup_default
+  variant: skip_docker (Element::RailsFlagCheckbox)
+  description: Skip Docker setup
+  position: 0
+
+skip_kamal_element:
+  label: Skip Kamal
+  sub_group: infrastructure_setup_default
+  variant: skip_kamal (Element::RailsFlagCheckbox)
+  description: Skip Kamal setup
+  position: 1
+
+skip_thruster_element:
+  label: Skip Thruster
+  sub_group: infrastructure_setup_default
+  variant: skip_thruster (Element::RailsFlagCheckbox)
+  description: Skip Thruster setup
+  position: 2
+
+skip_ci_element:
+  label: Skip CI
+  sub_group: infrastructure_setup_default
+  variant: skip_ci (Element::RailsFlagCheckbox)
+  description: Skip CI setup
+  position: 3
+
+skip_active_record_element:
+  label: Skip Active Record
+  sub_group: main_courses_default
+  variant: skip_active_record (Element::RailsFlagCheckbox)
+  description: Skip Active Record setup
+  position: 0
+
+skip_action_text_element:
+  label: Skip Action Text
+  sub_group: main_courses_default
+  variant: skip_action_text (Element::RailsFlagCheckbox)
+  description: Skip Action Text setup
+  position: 1
+
+skip_active_storage_element:
+  label: Skip Active Storage
+  sub_group: main_courses_default
+  variant: skip_active_storage (Element::RailsFlagCheckbox)
+  description: Skip Active Storage setup
+  position: 2
+
+skip_action_cable_element:
+  label: Skip Action Cable
+  sub_group: main_courses_default
+  variant: skip_action_cable (Element::RailsFlagCheckbox)
+  description: Skip Action Cable setup
+  position: 3
+
+skip_active_job_element:
+  label: Skip Active Job
+  sub_group: main_courses_default
+  variant: skip_active_job (Element::RailsFlagCheckbox)
+  description: Skip Active Job setup
+  position: 4
+
+skip_solid_element:
+  label: Skip Solid
+  sub_group: main_courses_default
+  variant: skip_solid (Element::RailsFlagCheckbox)
+  description: Skip Solid setup
+  position: 5
+
+skip_action_mailer_element:
+  label: Skip Action Mailer
+  sub_group: email_me_maybe_default
+  variant: skip_action_mailer (Element::RailsFlagCheckbox)
+  description: Skip Action Mailer setup
+  position: 0
+
+skip_action_mailbox_element:
+  label: Skip Action Mailbox
+  sub_group: email_me_maybe_default
+  variant: skip_action_mailbox (Element::RailsFlagCheckbox)
+  description: Skip Action Mailbox setup
+  position: 1
+
+skip_rubocop_element:
+  label: Skip Rubocop
+  sub_group: basic_setup_misc_default
+  variant: skip_rubocop (Element::RailsFlagCheckbox)
+  description: Skip Rubocop setup
+  position: 0
+
+skip_brakeman_element:
+  label: Skip Brakeman
+  sub_group: basic_setup_misc_default
+  variant: skip_brakeman (Element::RailsFlagCheckbox)
+  description: Skip Brakeman setup
+  position: 1
+
+skip_dev_gems_element:
+  label: Skip Dev Gems
+  sub_group: basic_setup_misc_default
+  variant: skip_dev_gems (Element::RailsFlagCheckbox)
+  description: Skip Dev Gems setup
+  position: 2
+
+skip_devcontainer_element:
+  label: Skip Devcontainer
+  sub_group: basic_setup_misc_default
+  variant: skip_devcontainer (Element::RailsFlagCheckbox)
+  description: Skip Devcontainer setup
+  position: 3
+
+skip_keeps_element:
+  label: Skip Keeps
+  sub_group: basic_setup_misc_default
+  variant: skip_keeps (Element::RailsFlagCheckbox)
+  description: Skip Keeps setup
+  position: 4
+
+skip_jbuilder_element:
+  label: Skip Jbuilder
+  sub_group: basic_setup_misc_default
+  variant: skip_jbuilder (Element::RailsFlagCheckbox)
+  description: Skip Jbuilder setup
+  position: 5
+
+skip_bootsnap_element:
+  label: Skip Bootsnap
+  sub_group: basic_setup_misc_default
+  variant: skip_bootsnap (Element::RailsFlagCheckbox)
+  description: Skip Bootsnap setup
+  position: 6
+
+skip_asset_pipeline_element:
+  label: Skip Asset Pipeline
+  sub_group: frontend_basics_default
+  variant: skip_asset_pipeline (Element::RailsFlagCheckbox)
+  description: Skip Asset Pipeline setup
+  position: 0
+
+skip_js_element:
+  label: Skip JS
+  sub_group: frontend_basics_default
+  variant: skip_js (Element::RailsFlagCheckbox)
+  description: Skip JS setup
+  position: 1
+
+skip_hotwire_element:
+  label: Skip Hotwire
+  sub_group: frontend_basics_default
+  variant: skip_hotwire (Element::RailsFlagCheckbox)
+  description: Skip Hotwire setup
+  position: 2
+
+skip_test_element:
+  label: Skip Test
+  sub_group: testing_basics_default
+  variant: skip_test (Element::RailsFlagCheckbox)
+  description: Skip Test setup
+  position: 0
+
+skip_system_test_element:
+  label: Skip System Test
+  sub_group: testing_basics_default
+  variant: skip_system_test (Element::RailsFlagCheckbox)
+  description: Skip System Test setup
+  position: 1

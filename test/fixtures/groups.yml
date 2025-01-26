@@ -27,6 +27,34 @@ databases:
   page: basic_setup
   behavior_type: database_choice
 
-dev_env:
-  title: Development Environment
+main_courses:
+  title: Main Courses
   page: basic_setup
+
+email_me_maybe:
+  title: Email Me Maybe
+  page: basic_setup
+
+infrastructure_setup:
+  title: Infrastructure Setup
+  page: basic_setup
+
+basic_setup_misc:
+  title: Basic Setup Misc
+  page: basic_setup
+
+frontend_basics:
+  title: Frontend Basics
+  page: frontend
+
+javascript_framework:
+  title: Javascript Framework
+  page: frontend
+
+css_framework:
+  title: CSS Framework
+  page: frontend
+
+testing_basics:
+  title: Testing Basics
+  page: testing

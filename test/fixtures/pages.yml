@@ -23,7 +23,17 @@ basic_setup:
   slug: "basic-setup"
   position: 0
 
+testing:
+  title: "Testing"
+  slug: "testing"
+  position: 1
+
+frontend:
+  title: "Frontend"
+  slug: "frontend"
+  position: 2
+
 custom_ingredients:
   title: "Your Custom Ingredients"
   slug: "your-custom-ingredients"
-  position: 1
+  position: 3

@@ -36,6 +36,34 @@ databases_default:
   title: Default
   group: databases
 
-dev_env_default:
+main_courses_default:
   title: Default
-  group: dev_env
+  group: main_courses
+
+email_me_maybe_default:
+  title: Default
+  group: email_me_maybe
+
+infrastructure_setup_default:
+  title: Default
+  group: infrastructure_setup
+
+basic_setup_misc_default:
+  title: Default
+  group: basic_setup_misc
+
+frontend_basics_default:
+  title: Default
+  group: frontend_basics
+
+javascript_framework_default:
+  title: Default
+  group: javascript_framework
+
+css_framework_default:
+  title: Default
+  group: css_framework
+
+testing_basics_default:
+  title: Default
+  group: testing_basics

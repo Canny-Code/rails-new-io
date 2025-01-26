@@ -21,7 +21,117 @@ skip_docker:
   checked: false
   display_when: "checked"
 
+skip_thruster:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_kamal:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_ci:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_action_text:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_active_record:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_active_job:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_active_storage:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_action_cable:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_solid:
+  default: false
+  checked: false
+  display_when: "checked"
+
 skip_action_mailer:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_action_mailbox:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_rubocop:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_brakeman:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_dev_gems:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_devcontainer:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_keeps:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_jbuilder:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_bootsnap:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_asset_pipeline:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_js:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_hotwire:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_test:
+  default: false
+  checked: false
+  display_when: "checked"
+
+skip_system_test:
   default: false
   checked: false
   display_when: "checked"
