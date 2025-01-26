@@ -252,3 +252,80 @@ skip_system_test_element:
   variant: skip_system_test (Element::RailsFlagCheckbox)
   description: Skip System Test setup
   position: 1
+
+javascript_importmap_element:
+  label: Importmap
+  sub_group: javascript_framework_default
+  variant: javascript_importmap (Element::RadioButton)
+  description: Use Importmap as your JavaScript framework
+  position: 0
+
+javascript_bun_element:
+  label: Bun
+  sub_group: javascript_framework_default
+  variant: javascript_bun (Element::RadioButton)
+  description: Use Bun as your JavaScript framework
+  position: 1
+
+javascript_webpack_element:
+  label: Webpack
+  sub_group: javascript_framework_default
+  variant: javascript_webpack (Element::RadioButton)
+  description: Use Webpack as your JavaScript framework
+  position: 2
+
+javascript_esbuild_element:
+  label: Esbuild
+  sub_group: javascript_framework_default
+  variant: javascript_esbuild (Element::RadioButton)
+  description: Use Esbuild as your JavaScript framework
+  position: 3
+
+javascript_rollup_element:
+  label: Rollup
+  sub_group: javascript_framework_default
+  variant: javascript_rollup (Element::RadioButton)
+  description: Use Rollup as your JavaScript framework
+  position: 4
+
+no_css_framework_element:
+  label: No CSS Framework
+  sub_group: css_framework_default
+  variant: no_css_framework (Element::RadioButton)
+  description: Skip CSS Framework setup
+  position: 0
+
+css_tailwind_element:
+  label: Tailwind
+  sub_group: css_framework_default
+  variant: css_tailwind (Element::RadioButton)
+  description: Use Tailwind as your CSS framework
+  position: 1
+
+css_bootstrap_element:
+  label: Bootstrap
+  sub_group: css_framework_default
+  variant: css_bootstrap (Element::RadioButton)
+  description: Use Bootstrap as your CSS framework
+  position: 2
+
+css_bulma_element:
+  label: Bulma
+  sub_group: css_framework_default
+  variant: css_bulma (Element::RadioButton)
+  description: Use Bulma as your CSS framework
+  position: 3
+
+css_postcss_element:
+  label: PostCSS
+  sub_group: css_framework_default
+  variant: css_postcss (Element::RadioButton)
+  description: Use PostCSS as your CSS framework
+  position: 4
+
+css_sass_element:
+  label: Sass
+  sub_group: css_framework_default
+  variant: css_sass (Element::RadioButton)
+  description: Use Sass as your CSS framework
+  position: 5

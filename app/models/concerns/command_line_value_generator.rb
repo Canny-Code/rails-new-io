@@ -4,6 +4,10 @@ module CommandLineValueGenerator
   def generate_command_line_value
     if sub_group.group.behavior_type == "database_choice"
       generate_database_choice_command_line_value
+    elsif sub_group.group.behavior_type == "javascript_radio_button"
+      generate_javascript_radio_button_command_line_value
+    elsif sub_group.group.behavior_type == "css_radio_button"
+      generate_css_radio_button_command_line_value
     elsif sub_group.group.behavior_type == "custom_ingredient_checkbox"
       label
     else
@@ -11,10 +15,19 @@ module CommandLineValueGenerator
     end
   end
 
+  def generate_javascript_radio_button_command_line_value
+    label.downcase
+  end
+
+  def generate_css_radio_button_command_line_value
+    label.downcase
+  end
+
   def generate_generic_checkbox_command_line_value
     override_map = {
       "Run bundle install?" => "--skip-bundle",
       "Include `.keep` files?" => "--skip-keep"
+
     }
 
     # Handle override cases first

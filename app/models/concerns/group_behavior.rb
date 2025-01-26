@@ -15,6 +15,18 @@ module GroupBehavior
         "radio-button-choice-generated-output-outlet": "#database-choice",
         "output-prefix": "-d"
       }
+    when "javascript_radio_button"
+      {
+        controller: "radio-button-choice",
+        "radio-button-choice-generated-output-outlet": "#javascript-choice",
+        "output-prefix": "-j"
+      }
+    when "css_radio_button"
+      {
+        controller: "radio-button-choice",
+        "radio-button-choice-generated-output-outlet": "#css-choice",
+        "output-prefix": "-c"
+      }
     when "generic_checkbox"
       {
         controller: "rails-flag-checkbox",

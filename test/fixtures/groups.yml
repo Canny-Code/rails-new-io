@@ -50,10 +50,12 @@ frontend_basics:
 javascript_framework:
   title: Javascript Framework
   page: frontend
+  behavior_type: javascript_radio_button
 
 css_framework:
   title: CSS Framework
   page: frontend
+  behavior_type: css_radio_button
 
 testing_basics:
   title: Testing Basics

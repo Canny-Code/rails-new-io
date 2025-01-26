@@ -31,3 +31,47 @@ database_mariadb_mysql:
 database_mariadb_trilogy:
   default: false
   selected_option: mariadb-trilogy
+
+no_css_framework:
+  default: true
+  selected_option: none
+
+javascript_importmap:
+  default: false
+  selected_option: importmap
+
+javascript_bun:
+  default: false
+  selected_option: bun
+
+javascript_webpack:
+  default: false
+  selected_option: webpack
+
+javascript_esbuild:
+  default: false
+  selected_option: esbuild
+
+javascript_rollup:
+  default: false
+  selected_option: rollup
+
+css_tailwind:
+  default: false
+  selected_option: tailwind
+
+css_bootstrap:
+  default: false
+  selected_option: bootstrap
+
+css_bulma:
+  default: false
+  selected_option: bulma
+
+css_postcss:
+  default: false
+  selected_option: postcss
+
+css_sass:
+  default: false
+  selected_option: sass
