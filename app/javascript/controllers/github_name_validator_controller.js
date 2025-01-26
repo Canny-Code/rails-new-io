@@ -86,12 +86,16 @@ export default class extends Controller {
   }
 
   disableSubmit() {
-    this.submitButtonTarget.disabled = true
-    this.submitButtonTarget.classList.add('opacity-50', 'cursor-not-allowed')
+    this.submitButtonTargets.forEach(button => {
+      button.disabled = true
+      button.classList.add('opacity-50', 'cursor-not-allowed')
+    })
   }
 
   enableSubmit() {
-    this.submitButtonTarget.disabled = false
-    this.submitButtonTarget.classList.remove('opacity-50', 'cursor-not-allowed')
+    this.submitButtonTargets.forEach(button => {
+      button.disabled = false
+      button.classList.remove('opacity-50', 'cursor-not-allowed')
+    })
   }
 }
