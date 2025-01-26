@@ -22,7 +22,9 @@ class RecipesController < ApplicationController
       recipe_params[:rails_flags]
     ].compact.join(" ")
 
-    if existing_recipe = Recipe.find_duplicate(cli_flags)
+    ingredient_ids = recipe_params[:ingredient_ids]&.compact_blank.presence || []
+
+    if existing_recipe = Recipe.find_duplicate(cli_flags, ingredient_ids)
       redirect_to existing_recipe, alert: "A recipe with these settings already exists"
       return
     end

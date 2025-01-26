@@ -6,10 +6,34 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     DataRepositoryService.any_instance.stubs(:push_app_files).returns(true)
     DataRepositoryService.any_instance.stubs(:initialize_repository).returns(true)
 
+    # Mock GitHub API calls
+    mock_client = mock("octokit_client")
+    ref_response = Data.define(:object).new(object: Data.define(:sha).new(sha: "old_sha"))
+    commit_tree = Data.define(:sha).new(sha: "tree_sha")
+    commit_data = Data.define(:tree).new(tree: commit_tree)
+    commit = Data.define(:commit, :sha).new(commit: commit_data, sha: "old_sha")
+    new_tree = Data.define(:sha).new(sha: "new_tree_sha")
+    new_commit = Data.define(:sha).new(sha: "new_sha")
+
+    mock_client.stubs(:ref).returns(ref_response)
+    mock_client.stubs(:commit).returns(commit)
+    mock_client.stubs(:create_tree).returns(new_tree)
+    mock_client.stubs(:create_commit).returns(new_commit)
+    mock_client.stubs(:update_ref).returns(true)
+    mock_client.stubs(:repository?).returns(true)
+
+    Octokit::Client.stubs(:new).returns(mock_client)
+
     @ingredient = ingredients(:rails_authentication)
     @user = users(:john)
     @other_user = users(:jane)
     sign_in @user
+  end
+
+  def teardown
+    super
+    Mocha::Mockery.instance.teardown
+    Mocha::Mockery.instance.stubba.unstub_all
   end
 
   test "should get index" do

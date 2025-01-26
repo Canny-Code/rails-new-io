@@ -271,7 +271,7 @@ class RecipeTest < ActiveSupport::TestCase
     recipe2.add_ingredient!(ingredient2)
     recipe2.add_ingredient!(ingredient1)
 
-    assert_equal recipe1, Recipe.find_duplicate("--api")
+    assert_equal recipe1, Recipe.find_duplicate("--api", [ ingredient1.id, ingredient2.id ])
   end
 
   test "find_duplicate returns nil when recipes have same ingredients but different cli_flags" do

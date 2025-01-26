@@ -20,7 +20,13 @@ class IngredientsController < ApplicationController
     @ingredient = current_user.ingredients.build(ingredient_params)
 
     if @ingredient.save
+      # Create UI elements
       IngredientUiCreator.call(@ingredient)
+
+      # Write to Git repository
+      data_repository = DataRepositoryService.new(user: current_user)
+      data_repository.write_ingredient(@ingredient, repo_name: data_repository.class.name_for_environment)
+
       redirect_to @ingredient, notice: "Ingredient was successfully created."
     else
       render :new, status: :unprocessable_entity
@@ -29,6 +35,10 @@ class IngredientsController < ApplicationController
 
   def update
     if @ingredient.update(ingredient_params)
+      # Write to Git repository
+      data_repository = DataRepositoryService.new(user: current_user)
+      data_repository.write_ingredient(@ingredient, repo_name: data_repository.class.name_for_environment)
+
       redirect_to @ingredient, notice: "Ingredient was successfully updated."
     else
       render :edit, status: :unprocessable_entity

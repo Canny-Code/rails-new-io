@@ -9,7 +9,14 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
     @user = users(:john)
     @repo_name = DataRepositoryService.name_for_environment
     @service = DataRepositoryService.new(user: @user)
-    setup_github_mocks
+
+    mocks = setup_github_mocks
+    @mock_client = mocks.client
+    @first_ref_mock = mocks.first_ref
+    @second_ref_mock = mocks.second_ref
+    @commit_mock = mocks.commit
+    @tree_mock = mocks.tree
+    @new_commit_mock = mocks.new_commit
   end
 
   test "initializes repository with correct structure" do

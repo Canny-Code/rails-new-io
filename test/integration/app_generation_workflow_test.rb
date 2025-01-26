@@ -24,7 +24,8 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
       source_path: @source_path.to_s
     )
 
-    setup_github_mocks
+    mocks = setup_github_mocks
+    @mock_client = mocks.client
 
     # Mock File.exist? to return true for template paths
     File.stubs(:exist?).returns(true)

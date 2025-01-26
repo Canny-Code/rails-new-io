@@ -3,12 +3,19 @@ require "minitest/mock"
 
 class GithubRepositoryServiceTest < ActiveSupport::TestCase
   def setup
+    super  # Add this line to ensure fixtures are properly loaded
     @user = users(:john)
     @user.stubs(:github_token).returns("fake-token")
     @service = GithubRepositoryService.new(user: @user)
     @repository_name = "test-repo"
     # Skip sleep in tests
     GithubRepositoryService.any_instance.stubs(:sleep)
+  end
+
+  def teardown
+    super
+    Mocha::Mockery.instance.teardown
+    Mocha::Mockery.instance.stubba.unstub_all
   end
 
   test "creates a repository successfully" do

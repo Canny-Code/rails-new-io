@@ -93,18 +93,35 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "published", Recipe.last.status
   end
 
-  test "create prevents duplicate recipes with same CLI flags" do
+  test "create prevents duplicate recipes with same CLI flags and ingredients" do
     existing_recipe = recipes(:basic_recipe)
 
-    assert_no_difference("Recipe.count") do
+    # First try with same CLI flags but different ingredients - should succeed
+    assert_difference("Recipe.count") do
       post recipes_path, params: {
         recipe: {
           name: "Different Name",
           description: "Different description",
-          status: "draft",
+          status: "published",
           api_flag: "--api",
           database_choice: "--database=mysql",
-          rails_flags: nil
+          rails_flags: nil,
+          ingredient_ids: [ ingredients(:rails_authentication).id ]
+        }
+      }
+    end
+
+    # Now try with same CLI flags and no ingredients (like basic_recipe) - should fail
+    assert_no_difference("Recipe.count") do
+      post recipes_path, params: {
+        recipe: {
+          name: "Different Name 2",
+          description: "Different description 2",
+          status: "published",
+          api_flag: "--api",
+          database_choice: "--database=mysql",
+          rails_flags: nil,
+          ingredient_ids: []
         }
       }
     end
