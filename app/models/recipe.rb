@@ -71,75 +71,58 @@ class Recipe < ApplicationRecord
     # A recipe is a duplicate if it has:
     # 1. The same cli_flags AND
     # 2. The same ingredients (or both have no ingredients)
-    sql = if ingredient_ids.nil?
-      # Original behavior - find a recipe with the same flags and ingredients as another recipe
-      <<~SQL
-        WITH recipe_ingredients_grouped AS (
+
+    if ingredient_ids.nil?
+      Recipe.joins(<<~SQL)
+        LEFT JOIN (
           SELECT recipe_id,
                  COUNT(*) as ingredient_count,
                  GROUP_CONCAT(ingredient_id ORDER BY ingredient_id) as ingredient_list
           FROM recipe_ingredients
           GROUP BY recipe_id
-        )
-        SELECT r.*
-        FROM recipes r
-        LEFT JOIN recipe_ingredients_grouped rig ON rig.recipe_id = r.id
-        WHERE r.cli_flags = ?
-        AND (
+        ) AS rig ON rig.recipe_id = recipes.id
+      SQL
+      .where(cli_flags: cli_flags)
+      .where(<<~SQL)
+        (
           COALESCE(rig.ingredient_count, 0) = 0
           OR EXISTS (
             SELECT 1
             FROM recipes r2
-            LEFT JOIN recipe_ingredients_grouped rig2 ON rig2.recipe_id = r2.id
-            WHERE r2.cli_flags = r.cli_flags
-            AND r2.id != r.id
+            LEFT JOIN (
+              SELECT recipe_id,
+                     COUNT(*) as ingredient_count,
+                     GROUP_CONCAT(ingredient_id ORDER BY ingredient_id) as ingredient_list
+              FROM recipe_ingredients
+              GROUP BY recipe_id
+            ) AS rig2 ON rig2.recipe_id = r2.id
+            WHERE r2.cli_flags = recipes.cli_flags
+            AND r2.id != recipes.id
             AND COALESCE(rig.ingredient_count, 0) > 0
             AND COALESCE(rig2.ingredient_count, 0) > 0
             AND COALESCE(rig.ingredient_list, '') = COALESCE(rig2.ingredient_list, '')
           )
         )
-        ORDER BY r.id
-        LIMIT 1
       SQL
+      .order(:id)
+      .first
     else
-      # New behavior - find a recipe with the same flags and exactly these ingredients
-      placeholders = ingredient_ids.map { "?" }.join(",")
-      <<~SQL
-        WITH recipe_ingredients_grouped AS (
+      Recipe.joins(<<~SQL)
+        LEFT JOIN (
           SELECT recipe_id,
-                 COUNT(*) as ingredient_count,
-                 GROUP_CONCAT(ingredient_id ORDER BY ingredient_id) as ingredient_list
+                 COUNT(*) as ingredient_count
           FROM recipe_ingredients
           GROUP BY recipe_id
-        )
-        SELECT r.*
-        FROM recipes r
-        LEFT JOIN recipe_ingredients_grouped rig ON rig.recipe_id = r.id
-        WHERE r.cli_flags = ?
-        AND COALESCE(rig.ingredient_count, 0) = ?
-        AND NOT EXISTS (
-          -- Check that all recipe ingredients are in our list
-          SELECT 1
-          FROM recipe_ingredients ri
-          WHERE ri.recipe_id = r.id
-          AND ri.ingredient_id NOT IN (#{placeholders})
-        )
-        ORDER BY r.id
-        LIMIT 1
+        ) AS rig ON rig.recipe_id = recipes.id
       SQL
+      .where(cli_flags: cli_flags)
+      .where("COALESCE(rig.ingredient_count, 0) = ?", ingredient_ids.size)
+      .where(RecipeIngredient.where("recipe_ingredients.recipe_id = recipes.id")
+                            .where.not(ingredient_id: ingredient_ids)
+                            .arel.exists.not)
+      .order(:id)
+      .first
     end
-
-    binds = if ingredient_ids.nil?
-      [ cli_flags ]
-    else
-      [
-        cli_flags,
-        ingredient_ids.size,
-        *ingredient_ids.sort
-      ]
-    end
-
-    find_by_sql([ sql, *binds ]).first
   end
 
   private
