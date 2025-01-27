@@ -92,4 +92,20 @@ class CommandLineValueGeneratorTest < ActiveSupport::TestCase
       assert_equal expected, instance.generate_database_choice_command_line_value
     end
   end
+
+  test "generates command line value for javascript radio button" do
+    instance = DummyClass.new(
+      label: "esBuild",
+      sub_group: StubSubGroup.new("javascript_radio_button")
+    )
+    assert_equal "esbuild", instance.generate_command_line_value
+  end
+
+  test "generates command line value for css radio button" do
+    instance = DummyClass.new(
+      label: "Tailwind",
+      sub_group: StubSubGroup.new("css_radio_button")
+    )
+    assert_equal "tailwind", instance.generate_command_line_value
+  end
 end
