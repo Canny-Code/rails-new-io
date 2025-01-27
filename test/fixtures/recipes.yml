@@ -57,3 +57,17 @@ basic_recipe:
   status: "published"
   created_by: jane
   head_commit_sha: "abc123"
+
+omakase_recipe:
+  name: "Omakase"
+  description: "A basic Rails application setup"
+  cli_flags: ""
+  created_by: trinity_takei
+  status: "published"
+
+api_only_recipe:
+  name: "API Only"
+  description: "Preconfigure smaller stack for API only app"
+  cli_flags: "--api"
+  created_by: trinity_takei
+  status: "published"
