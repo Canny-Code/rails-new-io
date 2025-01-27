@@ -34,69 +34,39 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     assert_equal response.html_url, @generated_app.github_repo_url
   end
 
-  test "pushes app files to repository" do
+  test "pushes app files to repository with existing commits" do
     source_path = "/tmp/test-app"
-    FileUtils.mkdir_p(source_path)
-    File.write(File.join(source_path, "test.rb"), "puts 'test'")
+    app_dir = File.join(source_path, @generated_app.name)
+    FileUtils.mkdir_p(app_dir)
+    FileUtils.mkdir_p(File.join(app_dir, ".git"))  # Need the .git dir for the directory check
+    File.write(File.join(app_dir, "test.rb"), "puts 'test'")
 
-    @generated_app.update!(github_repo_name: @repository_name)
-
-    mock_client = mock("octokit_client")
-    # First ref call to get base tree SHA
-    mock_client.expects(:ref).with("#{@user.github_username}/#{@repository_name}", "heads/main").returns(
-      Data.define(:object).new(object: Data.define(:sha).new(sha: "old_sha"))
-    )
-    mock_client.expects(:commit).with("#{@user.github_username}/#{@repository_name}", "old_sha").returns(
-      Data.define(:commit, :sha).new(
-        commit: Data.define(:tree).new(tree: Data.define(:sha).new(sha: "tree_sha")),
-        sha: "old_sha"
-      )
-    )
-    mock_client.expects(:create_tree).with(
-      "#{@user.github_username}/#{@repository_name}",
-      [
-        {
-          path: "README.md",
-          mode: "100644",
-          type: "blob",
-          content: "# #{@generated_app.name}\n\nCreated via railsnew.io"
-        },
-        {
-          path: "test.rb",
-          mode: "100644",
-          type: "blob",
-          content: "puts 'test'"
-        }
-      ],
-      base_tree: "tree_sha"
-    ).returns(Data.define(:sha).new(sha: "new_tree_sha"))
-
-    # Second ref call to get latest commit SHA
-    mock_client.expects(:ref).with("#{@user.github_username}/#{@repository_name}", "heads/main").returns(
-      Data.define(:object).new(object: Data.define(:sha).new(sha: "old_sha"))
+    @generated_app.update!(
+      github_repo_name: @repository_name,
+      github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}"
     )
 
-    mock_client.expects(:create_commit).with(
-      "#{@user.github_username}/#{@repository_name}",
-      "Initial commit",
-      "new_tree_sha",
-      "old_sha",  # This should match the SHA from the second ref call
-      author: {
-        name: @user.name,
-        email: @user.email
-      }
-    ).returns(Data.define(:sha).new(sha: "new_sha"))
+    # Mock git commands for existing repository
+    @service.stubs(:`).with("git rev-parse --verify HEAD 2>/dev/null").returns("existing-sha")  # Has commits
+    @service.stubs(:`).with("git rev-parse --abbrev-ref HEAD").returns("main\n")
+    @service.stubs(:`).with("git remote -v").returns("")
+    @service.stubs(:`).with("git status --porcelain 2>&1").returns("")
+    @service.stubs(:`).with("git config --list 2>&1").returns("")
+    @service.stubs(:`).with("git push -v -u origin main 2>&1").returns("")
+    @service.stubs(:`).with("git remote add origin #{@generated_app.github_repo_url} 2>&1").returns("")
 
-    mock_client.expects(:update_ref).with(
-      "#{@user.github_username}/#{@repository_name}",
-      "heads/main",
-      "new_sha"
-    )
+    # Mock $? for command success
+    status_mock = mock
+    status_mock.stubs(:success?).returns(true)
+    @service.stubs(:$?).returns(status_mock)
 
-    Octokit::Client.stubs(:new).returns(mock_client)
+    # Mock system calls
+    @service.stubs(:system).with("git remote add origin #{@generated_app.github_repo_url}").returns(true)
+    @service.stubs(:system).with("git remote set-url origin #{@generated_app.github_repo_url}").returns(true)
+    @service.stubs(:system).with("git remote set-url origin https://#{@user.github_token}@github.com/#{@user.github_username}/#{@repository_name}").returns(true)
 
     result = @service.push_app_files(source_path: source_path)
-    assert_equal "new_sha", result.sha
+    assert_nil result
   ensure
     FileUtils.rm_rf(source_path)
   end
