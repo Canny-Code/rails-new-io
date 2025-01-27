@@ -10,9 +10,16 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
     @user = users(:john)
     @repo_name = "test-app"
     @source_path = Rails.root.join("tmp", "test_source")
-    FileUtils.mkdir_p(@source_path)
-    FileUtils.touch(File.join(@source_path, "test.rb"))
-    FileUtils.touch(File.join(@source_path, "Gemfile"))
+    FileUtils.mkdir_p(File.join(@source_path, @repo_name))
+    FileUtils.touch(File.join(@source_path, @repo_name, "test.rb"))
+    FileUtils.touch(File.join(@source_path, @repo_name, "Gemfile"))
+
+    # Initialize Git repo in the app directory
+    Dir.chdir(File.join(@source_path, @repo_name)) do
+      system("git init --quiet")
+      system("git config user.name 'Test User'")
+      system("git config user.email 'test@example.com'")
+    end
 
     # Ensure the Git repo base path exists
     FileUtils.mkdir_p(Rails.root.join("tmp", "git_repos", @user.id.to_s))
@@ -40,46 +47,63 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
   end
 
   test "generates app and pushes to GitHub" do
+    puts "\nDEBUG: ===== Test Setup ====="
+    puts "DEBUG: Initial state: #{@generated_app.app_status.status}"
+    puts "DEBUG: App ID: #{@generated_app.id}"
+    puts "DEBUG: App name: #{@generated_app.name}"
+    puts "DEBUG: Source path: #{@generated_app.source_path}"
+    puts "DEBUG: User: #{@user.github_username}"
+
     repo_path = Rails.root.join("tmp", "git_repos", @user.id.to_s, "#{@repo_name}")
     FileUtils.mkdir_p(repo_path)
     FileUtils.touch(File.join(repo_path, "test.rb"))
 
+    # Mock GitHub API operations
+    puts "\nDEBUG: ===== Setting up External Service Mocks ====="
+    repo_response = GitRepo.new(html_url: "https://github.com/#{@user.github_username}/#{@repo_name}")
+    puts "DEBUG: Expected repo URL: #{repo_response.html_url}"
+
+    puts "DEBUG: Setting up GitHub API mocks"
+    @mock_client.expects(:repository?).with("#{@user.github_username}/#{@repo_name}").returns(false)
+    @mock_client.expects(:create_repository).with(
+      @repo_name,
+      has_entries(
+        private: false,
+        auto_init: false,
+        description: "Repository created via railsnew.io",
+        default_branch: "main"
+      )
+    ).returns(repo_response)
+
+    # Mock command execution (external system call)
+    puts "DEBUG: Setting up command execution mock"
     service = mock_command_execution(@generated_app)
     service.expects(:execute).returns(true)
 
-    repo_response = GitRepo.new(html_url: "https://github.com/test-user/#{@repo_name}")
-    app_repo_service = mock("app_repo_service")
-    app_repo_service.expects(:initialize_repository).tap { |x|
-      @generated_app.create_github_repo!
-      @generated_app.generate!
-      @generated_app.update!(
-        github_repo_name: @repo_name,
-        github_repo_url: repo_response.html_url
-      )
-    }.returns(repo_response)
+    # Mock Git system commands
+    AppRepositoryService.any_instance.stubs(:system).returns(true)
+    AppRepositoryService.any_instance.stubs(:`).with("git rev-parse --verify HEAD 2>/dev/null").returns("")
+    AppRepositoryService.any_instance.stubs(:`).with(regexp_matches(/git add \. .* && git -c init\.defaultBranch=main commit -m/)).returns("")
+    AppRepositoryService.any_instance.stubs(:`).with("git rev-parse --abbrev-ref HEAD").returns("main\n")
+    AppRepositoryService.any_instance.stubs(:`).with("git remote -v").returns("")
+    AppRepositoryService.any_instance.stubs(:`).with("git remote add origin #{repo_response.html_url} 2>&1").returns("")
+    AppRepositoryService.any_instance.stubs(:`).with("git push -v -u origin main 2>&1").returns("")
 
-    app_repo_service.stubs(:push_app_files).returns(true)
-    app_repo_service.stubs(:commit_changes).returns(true)
-    AppRepositoryService.expects(:new).returns(app_repo_service)
-
-    orchestrator = mock("orchestrator")
-    orchestrator.expects(:perform_generation).tap { |x|
-      service.execute
-    }.returns(true)
-    AppGeneration::Orchestrator.expects(:new).returns(orchestrator)
-
-    AppStatus.any_instance.stubs(:broadcast_status_steps).returns(true)
-    AppStatus.any_instance.stubs(:broadcast_status_change).returns(true)
-    AppStatus.any_instance.stubs(:notify_status_change).returns(true)
-    AppStatus.any_instance.stubs(:update_generated_app_build_time).returns(true)
-
+    puts "\nDEBUG: ===== Starting Job Execution ====="
+    puts "DEBUG: Before perform_now - State: #{@generated_app.app_status.status}"
     AppGenerationJob.perform_now(@generated_app.id)
+    puts "DEBUG: After perform_now - State: #{@generated_app.app_status.status}"
 
     @generated_app.reload
-
     @generated_app.source_path = @source_path.to_s
+
+    puts "\nDEBUG: ===== Final Assertions ====="
+    puts "DEBUG: Final state: #{@generated_app.app_status.status}"
+    puts "DEBUG: Final repo URL: #{@generated_app.github_repo_url}"
+    puts "DEBUG: Expected repo URL: #{repo_response.html_url}"
+
     assert_equal "completed", @generated_app.app_status.status
-    assert_equal "https://github.com/test-user/#{@repo_name}", @generated_app.github_repo_url
+    assert_equal "https://github.com/#{@user.github_username}/#{@repo_name}", @generated_app.github_repo_url
   end
 
   test "handles GitHub API errors during app generation" do

@@ -35,8 +35,6 @@ class GeneratedApp < ApplicationRecord
   include HasGenerationLifecycle
   include GitBackedModel
 
-  attr_accessor :source_path
-
   delegate :ruby_version, :rails_version, to: :recipe
 
   belongs_to :user
