@@ -196,4 +196,19 @@ class IngredientTest < ActiveSupport::TestCase
       @ingredient.configuration_for({})
     end
   end
+
+  test "generates commit message" do
+    @ingredient.name = "Test Ingredient"
+    @ingredient.description = "A test description"
+    @ingredient.id = 42
+
+    expected_message = <<~COMMIT_MESSAGE
+    * Test Ingredient (#{AppDomain.url}/ingredients/42)
+
+      A test description
+
+    COMMIT_MESSAGE
+
+    assert_equal expected_message, @ingredient.to_commit_message
+  end
 end
