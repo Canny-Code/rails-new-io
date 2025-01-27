@@ -78,4 +78,87 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     result = @service.push_app_files(source_path: "/nonexistent/path")
     assert_nil result
   end
+
+  test "raises error when app directory is missing" do
+    source_path = "/tmp/test-app"
+    FileUtils.mkdir_p(source_path)
+
+    error = assert_raises(RuntimeError) do
+      @service.push_app_files(source_path: source_path)
+    end
+
+    assert_match(/Rails app directory not found at/, error.message)
+  ensure
+    FileUtils.rm_rf(source_path)
+  end
+
+  test "creates initial commit when repository has no commits" do
+    source_path = "/tmp/test-app"
+    app_dir = File.join(source_path, @generated_app.name)
+    FileUtils.mkdir_p(app_dir)
+    FileUtils.mkdir_p(File.join(app_dir, ".git"))
+
+    @generated_app.update!(
+      github_repo_name: @repository_name,
+      github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}"
+    )
+
+    # Mock empty HEAD (no commits)
+    @service.stubs(:`).with("git rev-parse --verify HEAD 2>/dev/null").returns("")
+    @service.stubs(:`).with("git add . 2>&1 && git -c init.defaultBranch=main commit -m \"#{@service.send(:initial_commit_message)}\" 2>&1").returns("")
+    @service.stubs(:`).with("git rev-parse --abbrev-ref HEAD").returns("main\n")
+    @service.stubs(:`).with("git remote -v").returns("")
+    @service.stubs(:`).with("git status --porcelain 2>&1").returns("")
+    @service.stubs(:`).with("git push -v -u origin main 2>&1").returns("")
+    @service.stubs(:`).with("git remote add origin #{@generated_app.github_repo_url} 2>&1").returns("")
+    @service.stubs(:`).with("git config --list 2>&1").returns("")
+
+    status_mock = mock
+    status_mock.stubs(:success?).returns(true)
+    @service.stubs(:$?).returns(status_mock)
+
+    # Mock system calls
+    @service.stubs(:system).with("git remote set-url origin #{@generated_app.github_repo_url}").returns(true)
+    @service.stubs(:system).with("git remote set-url origin https://#{@user.github_token}@github.com/#{@user.github_username}/#{@repository_name}").returns(true)
+
+    result = @service.push_app_files(source_path: source_path)
+    assert_nil result
+  ensure
+    FileUtils.rm_rf(source_path)
+  end
+
+  test "renames branch to main when on different branch" do
+    source_path = "/tmp/test-app"
+    app_dir = File.join(source_path, @generated_app.name)
+    FileUtils.mkdir_p(app_dir)
+    FileUtils.mkdir_p(File.join(app_dir, ".git"))
+
+    @generated_app.update!(
+      github_repo_name: @repository_name,
+      github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}"
+    )
+
+    # Mock branch name as 'master'
+    @service.stubs(:`).with("git rev-parse --verify HEAD 2>/dev/null").returns("existing-sha")
+    @service.stubs(:`).with("git rev-parse --abbrev-ref HEAD").returns("master\n")
+    @service.stubs(:`).with("git branch -M main 2>&1").returns("")
+    @service.stubs(:`).with("git remote -v").returns("")
+    @service.stubs(:`).with("git status --porcelain 2>&1").returns("")
+    @service.stubs(:`).with("git push -v -u origin main 2>&1").returns("")
+    @service.stubs(:`).with("git remote add origin #{@generated_app.github_repo_url} 2>&1").returns("")
+    @service.stubs(:`).with("git config --list 2>&1").returns("")
+
+    status_mock = mock
+    status_mock.stubs(:success?).returns(true)
+    @service.stubs(:$?).returns(status_mock)
+
+    # Mock system calls with specific commands
+    @service.stubs(:system).with("git remote set-url origin #{@generated_app.github_repo_url}").returns(true)
+    @service.stubs(:system).with("git remote set-url origin https://#{@user.github_token}@github.com/#{@user.github_username}/#{@repository_name}").returns(true)
+
+    result = @service.push_app_files(source_path: source_path)
+    assert_nil result
+  ensure
+    FileUtils.rm_rf(source_path)
+  end
 end

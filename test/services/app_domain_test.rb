@@ -54,4 +54,35 @@ class AppDomainTest < ActiveSupport::TestCase
   ensure
     Rails.application.config.force_ssl = false
   end
+
+  # New tests to cover specific lines
+
+  test "uses action_mailer host configuration when available" do
+    ENV["APP_HOST"] = "env-example.com"
+    Rails.application.config.action_mailer.default_url_options = { host: "mailer-example.com" }
+
+    assert_equal "http://mailer-example.com", AppDomain.url
+  end
+
+  test "uses routes host configuration when action_mailer host is not set" do
+    ENV["APP_HOST"] = "env-example.com"
+    Rails.application.routes.default_url_options = { host: "routes-example.com" }
+
+    assert_equal "http://routes-example.com", AppDomain.url
+  end
+
+  test "uses action_mailer port when available" do
+    ENV["APP_HOST"] = "example.com"
+    ENV["APP_PORT"] = "3000"
+    Rails.application.config.action_mailer.default_url_options = { port: "4000" }
+
+    assert_equal "http://example.com:4000", AppDomain.url
+  end
+
+  test "uses http protocol when force_ssl is disabled" do
+    ENV["APP_HOST"] = "example.com"
+    Rails.application.config.force_ssl = false
+
+    assert_equal "http://example.com", AppDomain.url
+  end
 end
