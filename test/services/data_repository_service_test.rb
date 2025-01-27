@@ -206,4 +206,33 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
     end
     assert_equal "Unknown Rails environment: staging", error.message
   end
+
+  test "raises error when writing ingredient template to local filesystem fails" do
+    ingredient = Data.define(:name, :template_content).new(
+      name: "test_ingredient",
+      template_content: "# Test template"
+    )
+
+    # Simulate a filesystem error
+    File.expects(:write).raises(Errno::EACCES, "Permission denied")
+
+    error = assert_raises(DataRepositoryService::Error) do
+      @service.write_ingredient(ingredient, repo_name: @repo_name)
+    end
+
+    assert_equal "Failed to write ingredient template to local filesystem: Permission denied - Permission denied", error.message
+  end
+
+  test "raises error when repository initialization fails" do
+    repo_full_name = "#{@user.github_username}/#{@repo_name}"
+
+    @mock_client.expects(:repository?).with(repo_full_name).returns(false)
+    @mock_client.expects(:create_repository).raises(StandardError.new("Failed to create repository"))
+
+    error = assert_raises(DataRepositoryService::Error) do
+      @service.initialize_repository
+    end
+
+    assert_equal "Failed to initialize repository: Unexpected error: Failed to create repository", error.message
+  end
 end

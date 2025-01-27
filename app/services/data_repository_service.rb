@@ -59,7 +59,7 @@ class DataRepositoryService < GithubRepositoryService
     begin
       File.write(local_path, template_content)
     rescue StandardError => e
-      raise
+      raise Error, "Failed to write ingredient template to local filesystem: #{e.message}"
     end
 
     commit_changes(
