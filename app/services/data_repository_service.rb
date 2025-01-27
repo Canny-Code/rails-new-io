@@ -18,11 +18,9 @@ class DataRepositoryService < GithubRepositoryService
 
   def initialize_repository
     repo_name = self.class.name_for_environment
-    repo_full_name = "#{user.github_username}/#{repo_name}"
 
     begin
-      # Create repository with auto_init to get a base commit
-      response = create_repository(
+      create_repository(
         repo_name: repo_name,
         description: "Repository created via railsnew.io",
         auto_init: true,
@@ -30,18 +28,15 @@ class DataRepositoryService < GithubRepositoryService
       )
 
       # Give Github a moment to create the initial commit
-      sleep 2
+      sleep 1
 
       create_initial_structure(repo_name)
-      response
     rescue RepositoryExistsError
       begin
         create_initial_structure(repo_name)
       rescue StandardError => e
         # Continue anyway as the repository might already have the structure
       end
-      # Return a GitRepo object for existing repository
-      GitTestHelper::GitRepo.new(html_url: "https://github.com/#{repo_full_name}")
     rescue StandardError => e
       raise Error, "Failed to initialize repository: #{e.message}"
     end

@@ -13,9 +13,8 @@ class InitializeUserDataRepositoryJob < ApplicationJob
     Rails.logger.info("Creating data repository for user: #{user.github_username}")
     data_repository = DataRepositoryService.new(user: user)
 
-    result = data_repository.initialize_repository
+    data_repository.initialize_repository
     Rails.logger.info("Data repository creation completed")
-    result
   rescue StandardError => e
     Rails.logger.error("Failed to initialize user data repository: #{e.message}")
     Rails.logger.error(e.backtrace.join("\n"))
