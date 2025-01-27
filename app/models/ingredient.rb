@@ -85,6 +85,15 @@ class Ingredient < ApplicationRecord
     ERB.new(template_content).result_with_hash(configuration.symbolize_keys)
   end
 
+  def to_commit_message
+    <<~COMMIT_MESSAGE
+    * #{name} (#{AppDomain.url}/ingredients/#{id})
+
+      #{description}
+
+    COMMIT_MESSAGE
+  end
+
   private
 
   def cleanup_ui_elements

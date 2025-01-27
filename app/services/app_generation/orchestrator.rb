@@ -9,14 +9,11 @@ module AppGeneration
       validate_initial_state!
 
       AppGenerationJob.perform_later(@generated_app.id)
-
-      true
     rescue AppGeneration::Errors::InvalidStateError
       raise
     rescue StandardError => e
       @logger.error("Failed to start app generation", { error: e.message })
       @generated_app.mark_as_failed!(e.message)
-      false
     end
 
     def perform_generation

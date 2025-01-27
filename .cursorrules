@@ -160,3 +160,9 @@ logger.warn takes ONE string parameter - if you want to add data to the message,
   1. Set up OmniAuth.config.mock_auth
   2. visit root_path
   3. click_on "Get in"
+
+# If Solid Queue jobs seem stuck (not being processed):
+# 1. Check if jobs are actually in the queue (SolidQueue::Job.where(class_name: "YourJobClass").count)
+# 2. If jobs are there but not being processed, try restarting the Rails server
+# 3. This usually indicates the Puma plugin for Solid Queue got into a bad state
+# 4. A restart will reinitialize everything cleanly

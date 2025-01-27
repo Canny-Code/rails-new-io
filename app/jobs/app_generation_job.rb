@@ -8,7 +8,7 @@ class AppGenerationJob < ApplicationJob
     execute_workflow(unique_by: generated_app_id) do |workflow|
       workflow.step :create_github_repository
       workflow.step :generate_rails_app
-      workflow.step :sync_to_github
+      workflow.step :push_to_github
       workflow.step :start_ci
       workflow.step :complete_generation
     end
@@ -33,14 +33,12 @@ class AppGenerationJob < ApplicationJob
 
   def generate_rails_app
     @logger.info("Starting Rails app generation")
-    result = AppGeneration::Orchestrator.new(@generated_app).perform_generation
-    result
+    AppGeneration::Orchestrator.new(@generated_app).perform_generation
   end
 
-  def sync_to_github
+  def push_to_github
     @generated_app.push_to_github!
-    @generated_app.initial_git_commit
-    @generated_app.sync_to_git
+    AppRepositoryService.new(@generated_app).push_app_files(source_path: @generated_app.source_path)
     @logger.info("GitHub push finished successfully")
   end
 

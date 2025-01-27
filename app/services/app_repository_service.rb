@@ -31,49 +31,106 @@ class AppRepositoryService < GithubRepositoryService
   def push_app_files(source_path:)
     return unless File.directory?(source_path)
 
-    tree_items = []
-
-    # Add README
-    tree_items << {
-      path: "README.md",
-      mode: "100644",
-      type: "blob",
-      content: readme_content
-    }
-
-    # Add all files from source directory
-    Dir.glob("#{source_path}/**/*", File::FNM_DOTMATCH).each do |file_path|
-      next if File.directory?(file_path)
-      next if file_path.end_with?("/.") || file_path.end_with?("/..")
-
-      relative_path = file_path.sub("#{source_path}/", "")
-      content = File.read(file_path)
-
-      tree_items << {
-        path: relative_path,
-        mode: "100644",
-        type: "blob",
-        content: content
-      }
+    app_dir = File.join(source_path, generated_app.name)
+    unless File.directory?(app_dir)
+      logger.error("Rails app directory not found", { path: app_dir })
+      raise "Rails app directory not found at #{app_dir}"
     end
 
-    commit_changes(
-      message: "Initial commit",
-      tree_items: tree_items
-    )
-  end
+    Dir.chdir(app_dir) do
+      unless File.directory?(".git")
+        logger.error("Not a git repository", { path: app_dir })
+        raise "Not a git repository at #{app_dir}"
+      end
 
-  def commit_changes(message:, tree_items:)
-    super(
-      repo_name: generated_app.github_repo_name,
-      message: message,
-      tree_items: tree_items
-    )
+      if `git rev-parse --verify HEAD 2>/dev/null`.empty?
+        init_output = `git add . 2>&1 && git -c init.defaultBranch=main commit -m "#{initial_commit_message}" 2>&1`
+
+        unless $?.success?
+          logger.error("Failed to create initial commit", {
+            error: init_output,
+            git_status: `git status --porcelain 2>&1`.strip,
+            exit_code: $?.exitstatus
+          })
+          raise "Failed to create initial commit:\n#{init_output}"
+        end
+      end
+
+      current_branch = `git rev-parse --abbrev-ref HEAD`.strip
+      if current_branch != "main"
+        rename_output = `git branch -M main 2>&1`
+        unless $?.success?
+          logger.error("Failed to rename branch to main", {
+            error: rename_output,
+            current_branch: current_branch,
+            exit_code: $?.exitstatus
+          })
+          raise "Failed to rename branch to main:\n#{rename_output}"
+        end
+      end
+
+      remotes = `git remote -v`.strip
+      if remotes.include?("origin")
+        current_url = remotes[/origin\s+(\S+)/, 1]
+        if current_url != generated_app.github_repo_url
+          system("git remote set-url origin #{generated_app.github_repo_url}")
+        end
+      else
+        add_output = `git remote add origin #{generated_app.github_repo_url} 2>&1`
+        unless $?.success?
+          logger.error("Failed to add remote", {
+            error: add_output,
+            current_remotes: `git remote -v 2>&1`.strip,
+            git_status: `git status --porcelain 2>&1`.strip,
+            exit_code: $?.exitstatus
+          })
+          raise "Failed to add git remote:\n#{add_output}"
+        end
+      end
+
+      repo_url_with_token = generated_app.github_repo_url.sub("https://", "https://#{user.github_token}@")
+      system("git remote set-url origin #{repo_url_with_token}")
+
+      push_output = `git push -v -u origin main 2>&1`
+
+      system("git remote set-url origin #{generated_app.github_repo_url}")
+
+      unless $?.success?
+        logger.error("Failed to push to GitHub", {
+          error: push_output,
+          git_status: `git status --porcelain 2>&1`.strip,
+          current_branch: "main",
+          exit_code: $?.exitstatus,
+          git_config: `git config --list 2>&1`.strip
+        })
+        raise "Failed to push to GitHub:\n#{push_output}"
+      end
+    end
   end
 
   private
 
-  def readme_content
-    "# #{generated_app.name}\n\nCreated via railsnew.io"
+  def initial_commit_message
+    ingredients_message = if generated_app.recipe.ingredients.any?
+      <<~INGREDIENTS_MESSAGE
+      ============
+      Ingredients:
+      ============
+
+      #{generated_app.recipe.ingredients.map(&:to_commit_message).join("\n\n")}
+      INGREDIENTS_MESSAGE
+    else
+      ""
+    end
+
+    <<~INITIAL_COMMIT_MESSAGE
+    Initial commit by railsnew.io
+
+    command line flags:
+
+    #{generated_app.recipe.cli_flags.squish.strip}
+
+    #{ingredients_message}
+    INITIAL_COMMIT_MESSAGE
   end
 end

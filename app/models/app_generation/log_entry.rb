@@ -30,7 +30,6 @@ module AppGeneration
     self.table_name = "app_generation_log_entries"
 
     after_commit -> {
-      Rails.logger.debug "%%%%% LogEntry Create callback: #{id}"
       stream_name = "#{generated_app.to_gid}:app_generation_log_entries"
       Turbo::StreamsChannel.broadcast_prepend_to(
         stream_name,
@@ -41,7 +40,6 @@ module AppGeneration
     }, on: :create
 
     after_commit -> {
-      Rails.logger.debug "%%%%% LogEntry Update callback: #{id}, message length: #{message.length}"
       stream_name = "#{generated_app.to_gid}:app_generation_log_entries"
       Turbo::StreamsChannel.broadcast_replace_to(
         stream_name,
