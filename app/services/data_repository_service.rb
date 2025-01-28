@@ -27,9 +27,6 @@ class DataRepositoryService < GithubRepositoryService
         private: false
       )
 
-      # Give Github a moment to create the initial commit
-      sleep 1
-
       create_initial_structure(repo_name)
     rescue RepositoryExistsError
       begin

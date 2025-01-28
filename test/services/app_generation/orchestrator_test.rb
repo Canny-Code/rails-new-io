@@ -190,6 +190,8 @@ module AppGeneration
       # Mock template path verification
       data_repository = mock("data_repository")
       data_repository.stubs(:template_path).returns("path/to/template.rb")
+      data_repository.stubs(:class).returns(DataRepositoryService)
+      data_repository.expects(:write_recipe).with(instance_of(Recipe), repo_name: "rails-new-io-data-test").twice
       DataRepositoryService.stubs(:new).with(user: @generated_app.user).returns(data_repository)
       File.stubs(:exist?).with("path/to/template.rb").returns(true)
 
@@ -204,6 +206,8 @@ module AppGeneration
 
       # Verify ingredients are added in correct order
       assert_equal [ ingredient1.id, ingredient2.id ], @generated_app.recipe.ingredients.order(:position).pluck(:id)
+      assert_equal 1, @generated_app.recipe.recipe_ingredients.first.position
+      assert_equal 2, @generated_app.recipe.recipe_ingredients.last.position
 
       # Unstub ingredients to use actual implementation
       @generated_app.unstub(:ingredients)
@@ -229,6 +233,10 @@ module AppGeneration
       assert_equal 2, @generated_app.recipe.recipe_ingredients.count
       assert_equal ingredient1.id, @generated_app.recipe.recipe_ingredients.first.ingredient_id
       assert_equal ingredient2.id, @generated_app.recipe.recipe_ingredients.last.ingredient_id
+      assert_equal ingredient1.name, @generated_app.recipe.recipe_ingredients.first.ingredient.name
+      assert_equal ingredient2.name, @generated_app.recipe.recipe_ingredients.last.ingredient.name
+      assert_equal [ ingredient1.id, ingredient2.id ], @generated_app.recipe.ingredients.order(:position).pluck(:id)
+      assert_equal [ 1, 2 ], @generated_app.recipe.recipe_ingredients.order(:position).pluck(:position)
     end
   end
 end
