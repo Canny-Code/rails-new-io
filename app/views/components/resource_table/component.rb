@@ -1,6 +1,13 @@
 class ResourceTable::Component < ApplicationComponent
   include Phlex::Rails::Helpers::LinkTo
   include Phlex::Rails::Helpers::ButtonTo
+  include Phlex::Rails::Helpers::Routes
+  include DashboardHelper
+
+  delegate :params, to: :helpers
+
+  DEFAULT_SORT_DIRECTION = "asc"
+  DEFAULT_SORT_COLUMN = "created_at"
 
   def initialize(resources:, columns:, actions: [ :view, :edit, :delete ])
     @resources = resources
@@ -57,7 +64,7 @@ class ResourceTable::Component < ApplicationComponent
   end
 
   def render_cell_content(resource, column)
-    content = column[:content].call(resource)
+    content = column[:content].call(resource).to_s
 
     if column == @columns.first
       div(class: "flex items-center") do
@@ -70,7 +77,7 @@ class ResourceTable::Component < ApplicationComponent
             end
           end
           if column[:subcontent]
-            div(class: "mt-1 text-gray-500") { column[:subcontent].call(resource) }
+            div(class: "mt-1 text-gray-500") { plain column[:subcontent].call(resource).to_s }
           end
         end
       end
@@ -90,8 +97,10 @@ class ResourceTable::Component < ApplicationComponent
   end
 
   def render_view_button(resource)
-    link_to(send("#{resource.class.name.downcase}_path", resource), class: "text-gray-400 hover:text-gray-500") do
-      span(class: "sr-only") { "View #{resource.class.name.downcase}" }
+    path = send("#{resource.class.name.underscore}_path", resource)
+
+    link_to(path, class: "text-gray-400 hover:text-gray-500") do
+      span(class: "sr-only") { "View #{resource.class.name.underscore.humanize}" }
       svg(class: "w-6 h-6", xmlns: "http://www.w3.org/2000/svg", fill: "none", viewbox: "0 0 24 24", stroke: "currentColor") do |s|
         s.path(stroke_linecap: "round", stroke_linejoin: "round", stroke_width: "2", d: "M15 12a3 3 0 11-6 0 3 3 0 016 0z")
         s.path(stroke_linecap: "round", stroke_linejoin: "round", stroke_width: "2", d: "M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z")
@@ -128,7 +137,30 @@ class ResourceTable::Component < ApplicationComponent
 
   def render_header(column)
     if column[:sortable]
-      sort_link_to(column[:header], column[:sort_key])
+      current_direction = params[:direction] || DEFAULT_SORT_DIRECTION
+      current_column = params[:sort] || DEFAULT_SORT_COLUMN
+
+      direction = if column[:sort_key].to_s == current_column && current_direction == "asc"
+        "desc"
+      else
+        "asc"
+      end
+
+      link_to(
+        dashboard_path(
+          sort: column[:sort_key],
+          direction: direction,
+          status: params[:status],
+          search: params[:search]
+        ),
+        class: "group inline-flex items-center py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
+        data: { turbo_frame: "generated_apps_list" }
+      ) do
+        plain column[:header]
+        if column[:sort_key].to_s == current_column
+          span(class: "ml-2") { plain direction == "asc" ? "↓" : "↑" }
+        end
+      end
     else
       plain column[:header]
     end

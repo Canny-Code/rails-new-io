@@ -36,21 +36,19 @@
       sort_key: :created_at
     }
   ],
-  actions: [ :view, :edit, :delete ],
-  secondary_actions: render(Phlex::HTML.new) do |component|
-    component.div(class: "flex gap-4") do
-      render Buttons::Primary::Component.new(
-        text: "My Ingredients",
-        path: ingredients_path,
-        icon: false,
-        html_options: { data: { turbo_frame: "_top" } }
-      )
-      render Buttons::Primary::Component.new(
-        text: "My Recipes",
-        path: recipes_path,
-        icon: false,
-        html_options: { data: { turbo_frame: "_top" } }
-      )
-    end
-  end
+  actions: [ :view, :delete ],
+  secondary_actions: [
+    render(Buttons::Primary::Component.new(
+      text: "My Ingredients",
+      path: ingredients_path,
+      icon: false,
+      html_options: { data: { turbo_frame: "_top" } }
+    )),
+    render(Buttons::Primary::Component.new(
+      text: "My Recipes",
+      path: recipes_path,
+      icon: false,
+      html_options: { data: { turbo_frame: "_top" } }
+    ))
+  ]
 ) %>

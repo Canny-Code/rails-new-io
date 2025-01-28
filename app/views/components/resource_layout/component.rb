@@ -37,7 +37,9 @@ class ResourceLayout::Component < ApplicationComponent
 
       if @secondary_actions
         div(class: "flex justify-end gap-4 mt-8") do
-          @secondary_actions
+          Array(@secondary_actions).each do |action|
+            unsafe_raw action
+          end
         end
       end
     end
