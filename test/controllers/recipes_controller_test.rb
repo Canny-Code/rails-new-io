@@ -85,7 +85,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
         recipe: {
           name: "My API App",
           description: "A cool API app",
-          api_flag: "--api"
+          api_flag: "--api --skip-turbo"
         }
       }
     end
@@ -150,7 +150,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
           name: "My App",
           description: "A description",
           status: "invalid_status",
-          api_flag: "--api"
+          api_flag: "--api --skip-turbo"
         }
       }
     end

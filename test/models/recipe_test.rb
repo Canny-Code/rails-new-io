@@ -204,16 +204,16 @@ class RecipeTest < ActiveSupport::TestCase
     ingredient2 = ingredients(:api_setup)
 
     recipe1 = recipes(:blog_recipe)
-    recipe1.update!(cli_flags: "--api")
+    recipe1.update!(cli_flags: "--api --skip-turbo")
     recipe1.recipe_ingredients.destroy_all  # Clear existing ingredients first
     recipe1.add_ingredient!(ingredient1)
 
     recipe2 = recipes(:minimal_recipe)
-    recipe2.update!(cli_flags: "--api")
+    recipe2.update!(cli_flags: "--api --skip-turbo")
     recipe2.recipe_ingredients.destroy_all  # Clear existing ingredients first
     recipe2.add_ingredient!(ingredient2)
 
-    assert_nil Recipe.find_duplicate("--api")
+    assert_nil Recipe.find_duplicate("--api --skip-turbo")
   end
 
   test "find_duplicate returns nil when recipes have same cli_flags and some common ingredients" do
@@ -222,18 +222,18 @@ class RecipeTest < ActiveSupport::TestCase
     ingredient3 = ingredients(:basic)
 
     recipe1 = recipes(:blog_recipe)
-    recipe1.update!(cli_flags: "--api")
+    recipe1.update!(cli_flags: "--api --skip-turbo")
     recipe1.recipe_ingredients.destroy_all
     recipe1.add_ingredient!(ingredient1)
     recipe1.add_ingredient!(ingredient2)
 
     recipe2 = recipes(:minimal_recipe)
-    recipe2.update!(cli_flags: "--api")
+    recipe2.update!(cli_flags: "--api --skip-turbo")
     recipe2.recipe_ingredients.destroy_all
     recipe2.add_ingredient!(ingredient1)
     recipe2.add_ingredient!(ingredient3)
 
-    assert_nil Recipe.find_duplicate("--api")
+    assert_nil Recipe.find_duplicate("--api --skip-turbo")
   end
 
   test "find_duplicate returns recipe when exact match exists" do
@@ -279,7 +279,7 @@ class RecipeTest < ActiveSupport::TestCase
     ingredient2 = ingredients(:api_setup)
 
     recipe1 = recipes(:blog_recipe)
-    recipe1.update!(cli_flags: "--api")
+    recipe1.update!(cli_flags: "--api --skip-turbo")
     recipe1.add_ingredient!(ingredient1)
     recipe1.add_ingredient!(ingredient2)
 
@@ -288,7 +288,7 @@ class RecipeTest < ActiveSupport::TestCase
     recipe2.add_ingredient!(ingredient1)
     recipe2.add_ingredient!(ingredient2)
 
-    assert_nil Recipe.find_duplicate("--api")
+    assert_nil Recipe.find_duplicate("--api --skip-turbo")
   end
 
   test "find_duplicate works with recipes that have no ingredients" do
