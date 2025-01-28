@@ -10,11 +10,11 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     @generated_app = generated_apps(:blog_app)
 
     # Create test directories
-    @source_path = create_test_directory("test_apps")
-    @app_directory = File.join(@source_path, @generated_app.name)
+    @workspace_path = create_test_directory("test_apps")
+    @app_directory = File.join(@workspace_path, @generated_app.name)
     FileUtils.mkdir_p(@app_directory)
     FileUtils.touch(File.join(@app_directory, "Gemfile"))
-    @generated_app.update!(source_path: @source_path)
+    @generated_app.update!(workspace_path: @workspace_path)
 
     # Mock the logger to avoid actual logging
     @logger = mock("logger")

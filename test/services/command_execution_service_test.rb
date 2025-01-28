@@ -9,7 +9,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
     # Use an existing app and reset its status
     @generated_app = generated_apps(:pending_app)
-    @generated_app.update!(source_path: @temp_dir)
+    @generated_app.update!(workspace_path: @temp_dir)
     @app_status = @generated_app.app_status
     @app_status.update!(
       status: "generating",

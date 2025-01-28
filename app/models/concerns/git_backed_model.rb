@@ -12,7 +12,7 @@ module GitBackedModel
       repo.commit_changes(
         message: "Initial commit",
         tree_items: []
-      ) if source_path.present?
+      ) if workspace_path.present?
     rescue StandardError => e
       handle_git_error(e)
     ensure
@@ -58,25 +58,14 @@ module GitBackedModel
   end
 
   def should_create_repository?
-    path = source_path
-    return false if path.blank?
-    return File.directory?(path) if Rails.env.test?
+    return false if workspace_path.blank?
+    return File.directory?(workspace_path) if Rails.env.test?
 
     true
   end
 
   def cleanup_after_push?
     false
-  end
-
-  def source_path
-    return @source_path if defined?(@source_path)
-
-    @source_path = if has_attribute?(:source_path)
-      self[:source_path]
-    elsif respond_to?(:source_path_attribute)
-      source_path_attribute
-    end
   end
 
   def change_description

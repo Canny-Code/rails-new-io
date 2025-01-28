@@ -12,7 +12,7 @@
 #  last_build_at         :datetime
 #  name                  :string           not null
 #  selected_gems         :json             not null
-#  source_path           :string
+#  workspace_path        :string
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
 #  recipe_id             :integer          not null
@@ -74,7 +74,7 @@ class GeneratedApp < ApplicationRecord
     transaction do
       logger.info("Applying ingredient...", {
         ingredient: ingredient.name,
-        source_path: source_path,
+        workspace_path: workspace_path,
         pwd: Dir.pwd
       })
 
@@ -96,7 +96,7 @@ class GeneratedApp < ApplicationRecord
       require "rails/generators"
       require "rails/generators/rails/app/app_generator"
 
-      app_directory = File.join(source_path, name)
+      app_directory = File.join(workspace_path, name)
 
       Dir.chdir(app_directory) do
         ENV["BUNDLE_GEMFILE"] = File.join(Dir.pwd, "Gemfile")

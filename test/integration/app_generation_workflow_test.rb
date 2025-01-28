@@ -9,9 +9,9 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
 
   setup do
     @user = users(:john)
-    @repo_name = "test-app"
-    @source_path = create_test_directory("test_source")
-    @app_dir = File.join(@source_path, @repo_name)
+    @repo_name = "test_app"
+    @workspace_path = create_test_directory("test_source")
+    @app_dir = File.join(@workspace_path, @repo_name)
 
     FileUtils.mkdir_p(@app_dir)
     FileUtils.touch(File.join(@app_dir, "test.rb"))
@@ -25,7 +25,7 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
       name: @repo_name,
       user: @user,
       recipe: recipes(:blog_recipe),
-      source_path: @source_path.to_s
+      workspace_path: @workspace_path.to_s
     )
 
     mocks = setup_github_mocks
@@ -77,7 +77,7 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
     AppGenerationJob.perform_now(@generated_app.id)
 
     @generated_app.reload
-    @generated_app.source_path = @source_path.to_s
+    @generated_app.workspace_path = @workspace_path.to_s
 
     assert_equal "completed", @generated_app.app_status.status
     assert_equal "https://github.com/#{@user.github_username}/#{@repo_name}", @generated_app.github_repo_url
@@ -92,13 +92,13 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
       AppGenerationJob.perform_now(@generated_app.id)
     end
 
-    assert_equal "Repository 'test-app' already exists", error.message
+    assert_equal "Repository 'test_app' already exists", error.message
 
     @generated_app.reload
-    # Set source_path again since it's not persisted
-    @generated_app.source_path = @source_path.to_s
+    # Set workspace_path again since it's not persisted
+    @generated_app.workspace_path = @workspace_path.to_s
     assert_equal "failed", @generated_app.app_status.status
     assert_nil @generated_app.github_repo_url
-    assert_equal "Repository 'test-app' already exists", @generated_app.app_status.error_message
+    assert_equal "Repository 'test_app' already exists", @generated_app.app_status.error_message
   end
 end

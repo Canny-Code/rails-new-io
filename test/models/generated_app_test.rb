@@ -12,7 +12,7 @@
 #  last_build_at         :datetime
 #  name                  :string           not null
 #  selected_gems         :json             not null
-#  source_path           :string
+#  workspace_path        :string
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
 #  recipe_id             :integer          not null
@@ -294,9 +294,8 @@ class GeneratedAppTest < ActiveSupport::TestCase
   end
 
   test "sets up git backed model methods correctly" do
-    app = GeneratedApp.new(source_path: "/tmp/test_path")
-
-    assert_equal "/tmp/test_path", app.source_path
+    app = GeneratedApp.new(workspace_path: "/tmp/test_path")
+    assert_equal "/tmp/test_path", app.workspace_path
     assert app.cleanup_after_push?
   end
 

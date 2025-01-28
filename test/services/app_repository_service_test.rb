@@ -44,8 +44,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "pushes app files to repository with existing commits" do
-    source_path = create_test_directory("test-app")
-    app_dir = File.join(source_path, @generated_app.name)
+    workspace_path = create_test_directory("test-app")
+    app_dir = File.join(workspace_path, @generated_app.name)
     FileUtils.mkdir_p(app_dir)
     File.write(File.join(app_dir, "test.rb"), "puts 'test'")
     init_git_repo(app_dir)
@@ -53,12 +53,12 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     @generated_app.update!(
       github_repo_name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
-      source_path: source_path
+      workspace_path: workspace_path
     )
 
     # Mock directory checks
     File.stubs(:directory?).returns(true)  # Default for safety
-    File.stubs(:directory?).with(source_path).returns(true)
+    File.stubs(:directory?).with(workspace_path).returns(true)
     File.stubs(:directory?).with(app_dir).returns(true)
     File.stubs(:directory?).with(".git").returns(true)
 
@@ -85,27 +85,27 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     end
   end
 
-  test "skips pushing files for non-existent source path" do
+  test "skips pushing files for non-existent workspace path" do
     # No client should be created since we're skipping
     Octokit::Client.expects(:new).never
 
-    @generated_app.update!(source_path: "/nonexistent/path")
+    @generated_app.update!(workspace_path: "/nonexistent/path")
     result = @service.push_app_files
     assert_nil result
   end
 
   test "raises error when app directory is missing" do
-    source_path = create_test_directory("test-app")
-    FileUtils.mkdir_p(source_path)
+    workspace_path = create_test_directory("test-app")
+    FileUtils.mkdir_p(workspace_path)
 
     Turbo::StreamsChannel.stubs(:broadcast_prepend_to)
     Turbo::StreamsChannel.stubs(:broadcast_replace_to)
 
-    @generated_app.update!(source_path: source_path)
+    @generated_app.update!(workspace_path: workspace_path)
 
     File.stubs(:directory?).returns(true)  # Default for safety
-    File.stubs(:directory?).with(source_path).returns(true)
-    app_dir = File.join(source_path, @generated_app.name)
+    File.stubs(:directory?).with(workspace_path).returns(true)
+    app_dir = File.join(workspace_path, @generated_app.name)
     File.stubs(:directory?).with(app_dir).returns(false)  # This triggers the error
 
     error = assert_raises(RuntimeError) do
@@ -116,20 +116,20 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "creates initial commit when repository has no commits" do
-    source_path = create_test_directory("test-app")
-    app_dir = File.join(source_path, @generated_app.name)
+    workspace_path = create_test_directory("test-app")
+    app_dir = File.join(workspace_path, @generated_app.name)
     FileUtils.mkdir_p(app_dir)
     init_git_repo(app_dir)
 
     @generated_app.update!(
       github_repo_name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
-      source_path: source_path
+      workspace_path: workspace_path
     )
 
     # Mock directory checks
     File.stubs(:directory?).returns(true)  # Default for safety
-    File.stubs(:directory?).with(source_path).returns(true)
+    File.stubs(:directory?).with(workspace_path).returns(true)
     File.stubs(:directory?).with(app_dir).returns(true)
     File.stubs(:directory?).with(".git").returns(true)
 
@@ -159,20 +159,20 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "renames branch to main when on different branch" do
-    source_path = create_test_directory("test-app")
-    app_dir = File.join(source_path, @generated_app.name)
+    workspace_path = create_test_directory("test-app")
+    app_dir = File.join(workspace_path, @generated_app.name)
     FileUtils.mkdir_p(app_dir)
     init_git_repo(app_dir)
 
     @generated_app.update!(
       github_repo_name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
-      source_path: source_path
+      workspace_path: workspace_path
     )
 
     # Mock directory checks
     File.stubs(:directory?).returns(true)  # Default for safety
-    File.stubs(:directory?).with(source_path).returns(true)
+    File.stubs(:directory?).with(workspace_path).returns(true)
     File.stubs(:directory?).with(app_dir).returns(true)
     File.stubs(:directory?).with(".git").returns(true)
 
@@ -201,8 +201,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "raises error when directory is not a git repository" do
-    source_path = create_test_directory("test-app")
-    app_dir = File.join(source_path, @generated_app.name)
+    workspace_path = create_test_directory("test-app")
+    app_dir = File.join(workspace_path, @generated_app.name)
     FileUtils.mkdir_p(app_dir)
     File.write(File.join(app_dir, "test.rb"), "puts 'test'")  # Add a file to make it a valid directory
 
@@ -213,12 +213,12 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     @generated_app.update!(
       github_repo_name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
-      source_path: source_path
+      workspace_path: workspace_path
     )
 
     # Mock directory checks
     File.stubs(:directory?).returns(true)  # Default for safety
-    File.stubs(:directory?).with(source_path).returns(true)
+    File.stubs(:directory?).with(workspace_path).returns(true)
     File.stubs(:directory?).with(app_dir).returns(true)
     File.stubs(:directory?).with(".git").returns(false)  # This is what triggers the error
 
@@ -230,8 +230,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "raises error when initial commit creation fails" do
-    source_path = create_test_directory("test-app")
-    app_dir = File.join(source_path, @generated_app.name)
+    workspace_path = create_test_directory("test-app")
+    app_dir = File.join(workspace_path, @generated_app.name)
     FileUtils.mkdir_p(app_dir)
     init_git_repo(app_dir)
 
@@ -242,12 +242,12 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     @generated_app.update!(
       github_repo_name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
-      source_path: source_path
+      workspace_path: workspace_path
     )
 
     # Mock directory checks
     File.stubs(:directory?).returns(true)  # Default for safety
-    File.stubs(:directory?).with(source_path).returns(true)
+    File.stubs(:directory?).with(workspace_path).returns(true)
     File.stubs(:directory?).with(app_dir).returns(true)
     File.stubs(:directory?).with(".git").returns(true)
 
@@ -273,8 +273,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "raises error when branch rename fails" do
-    source_path = create_test_directory("test-app")
-    app_dir = File.join(source_path, @generated_app.name)
+    workspace_path = create_test_directory("test-app")
+    app_dir = File.join(workspace_path, @generated_app.name)
     FileUtils.mkdir_p(app_dir)
     init_git_repo(app_dir)
 
@@ -285,12 +285,12 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     @generated_app.update!(
       github_repo_name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
-      source_path: source_path
+      workspace_path: workspace_path
     )
 
     # Mock directory checks
     File.stubs(:directory?).returns(true)  # Default for safety
-    File.stubs(:directory?).with(source_path).returns(true)
+    File.stubs(:directory?).with(workspace_path).returns(true)
     File.stubs(:directory?).with(app_dir).returns(true)
     File.stubs(:directory?).with(".git").returns(true)
 

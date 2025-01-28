@@ -101,9 +101,9 @@ class CommandExecutionService
     if @command.start_with?("rails new")
       @temp_dir = Dir.mktmpdir
       @logger.info("Created temporary directory", { path: @temp_dir })
-      @generated_app.update(source_path: @temp_dir)
+      @generated_app.update(workspace_path: @temp_dir)
     else
-      @temp_dir = @generated_app.source_path
+      @temp_dir = @generated_app.workspace_path
       @logger.info("Using existing app directory", { path: @temp_dir })
     end
   end

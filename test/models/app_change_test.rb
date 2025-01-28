@@ -32,7 +32,7 @@ class AppChangeTest < ActiveSupport::TestCase
     @recipe_change = @app_change.recipe_change
 
     # Ensure source path exists
-    @generated_app.source_path = Rails.root.join("tmp", "test_apps", "blog_app")
+    @generated_app.workspace_path = Rails.root.join("tmp", "test_apps", "blog_app")
     @generated_app.save!
   end
 

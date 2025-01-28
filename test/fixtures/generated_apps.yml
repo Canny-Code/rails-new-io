@@ -12,7 +12,7 @@
 #  last_build_at         :datetime
 #  name                  :string           not null
 #  selected_gems         :json             not null
-#  source_path           :string
+#  workspace_path        :string
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
 #  recipe_id             :integer          not null
@@ -70,7 +70,7 @@ saas_starter:
     database: "postgresql"
     css: "tailwind"
     testing: "minitest"
-  source_path: <%= Rails.root.join("tmp", "test_saas_starter") %>
+  workspace_path: <%= Rails.root.join("tmp", "test_saas_starter") %>
   github_repo_url: "https://github.com/johndoe/saas-starter"
   github_repo_name: "saas-starter"
   is_public: false
@@ -84,7 +84,7 @@ api_project_2:
   configuration_options:
     database: "postgresql"
     api_only: true
-  source_path: <%= Rails.root.join("tmp", "test_apps", "weather_api") %>
+  workspace_path: <%= Rails.root.join("tmp", "test_apps", "weather_api") %>
 
 api_project_3:
   name: "payment-api"
@@ -95,7 +95,7 @@ api_project_3:
   configuration_options:
     database: "postgresql"
     api_only: true
-  source_path: <%= Rails.root.join("tmp", "test_apps", "payment_api") %>
+  workspace_path: <%= Rails.root.join("tmp", "test_apps", "payment_api") %>
 
 pending_app:
   name: "pending-app"
@@ -105,4 +105,4 @@ pending_app:
   selected_gems: []
   configuration_options:
     database: "postgresql"
-  source_path: <%= Rails.root.join("tmp", "test_apps", "pending_app") %>
+  workspace_path: <%= Rails.root.join("tmp", "test_apps", "pending_app") %>

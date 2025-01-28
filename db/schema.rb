@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_01_23_060603) do
+ActiveRecord::Schema[8.0].define(version: 2025_01_28_140620) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -176,7 +176,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_01_23_060603) do
     t.boolean "is_public", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "source_path"
+    t.string "workspace_path"
     t.integer "recipe_id", null: false
     t.index ["github_repo_url"], name: "index_generated_apps_on_github_repo_url", unique: true
     t.index ["name"], name: "index_generated_apps_on_name"

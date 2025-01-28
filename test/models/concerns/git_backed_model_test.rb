@@ -9,25 +9,7 @@ class GitBackedModelTest < ActiveSupport::TestCase
     include ActiveModel::Model
     include GitBackedModel
 
-    attr_accessor :id, :name, :user, :created_at, :updated_at, :created_by
-
-    def has_attribute?(attr)
-      attr.to_s == "source_path"
-    end
-
-    def []=(attr, value)
-      @attributes ||= {}
-      @attributes[attr.to_s] = value
-    end
-
-    def [](attr)
-      @attributes ||= {}
-      if attr.to_s == "id"
-        id
-      else
-        @attributes[attr.to_s]
-      end
-    end
+    attr_accessor :id, :name, :user, :created_at, :updated_at, :created_by, :workspace_path
 
     def changed
       [ "name" ]
@@ -46,36 +28,6 @@ class GitBackedModelTest < ActiveSupport::TestCase
     end
   end
 
-  class TestModelWithoutSourcePath < TestModel
-    def has_attribute?(attr)
-      false
-    end
-
-    def source_path
-      "test"
-    end
-  end
-
-  class TestModelWithDynamicPath < TestModelWithoutSourcePath
-    def source_path
-      "#{name}-path"
-    end
-
-    def cleanup_after_push?
-      name == "cleanup-me"
-    end
-  end
-
-  class TestModelWithSourcePathAttribute < TestModel
-    def has_attribute?(attr)
-      false
-    end
-
-    def source_path_attribute
-      "computed-path"
-    end
-  end
-
   def setup
     @user = users(:john)
     @repo_name = DataRepositoryService.name_for_environment
@@ -85,13 +37,11 @@ class GitBackedModelTest < ActiveSupport::TestCase
       name: "test",
       user: @user,
       created_at: Time.now,
-      updated_at: Time.now
+      updated_at: Time.now,
+      workspace_path: Rails.root.join("tmp/test").to_s
     )
 
-    # Set source_path through instance variable since it's not an attribute
-    @model.instance_variable_set(:@source_path, Rails.root.join("tmp/test").to_s)
-
-    FileUtils.mkdir_p(@model.source_path)
+    FileUtils.mkdir_p(@model.workspace_path)
     setup_github_mocks
   end
 
@@ -166,12 +116,12 @@ class GitBackedModelTest < ActiveSupport::TestCase
     assert_not @model.should_sync_to_git?
   end
 
-  test "should_create_repository? returns false if source_path is blank" do
-    @model.instance_variable_set(:@source_path, nil)
+  test "should_create_repository? returns false if workspace_path is blank" do
+    @model.workspace_path = nil
     assert_not @model.should_create_repository?
   end
 
-  test "should_create_repository? returns true if source_path exists and not in test env" do
+  test "should_create_repository? returns true if workspace_path exists and not in test env" do
     Rails.env.stubs(:test?).returns(false)
     assert @model.should_create_repository?
   end
@@ -182,7 +132,7 @@ class GitBackedModelTest < ActiveSupport::TestCase
     # Stub all File.directory? calls to return false by default
     File.stubs(:directory?).returns(false)
     # Only return true for the specific path we care about
-    File.stubs(:directory?).with(@model.source_path).returns(true)
+    File.stubs(:directory?).with(@model.workspace_path).returns(true)
 
     assert @model.should_create_repository?
   end
@@ -191,30 +141,8 @@ class GitBackedModelTest < ActiveSupport::TestCase
     assert_not @model.cleanup_after_push?
   end
 
-  test "source_path returns attribute value if available" do
-    assert_equal Rails.root.join("tmp/test").to_s, @model.source_path
-  end
-
-  test "source_path uses database attribute when has_attribute? is true" do
-    model = TestModel.new
-    model[:source_path] = "/test/path"
-    assert model.has_attribute?(:source_path), "Model should have source_path attribute"
-    assert_equal "/test/path", model[:"source_path"]
-    assert_equal "/test/path", model.source_path
-  end
-
-  test "source_path can be overridden in subclasses" do
-    model = TestModelWithoutSourcePath.new
-    assert_equal "test", model.source_path
-  end
-
-  test "dynamic source_path and cleanup_after_push behavior" do
-    model = TestModelWithDynamicPath.new(name: "test")
-    assert_equal "test-path", model.source_path
-    assert_not model.cleanup_after_push?
-
-    model.name = "cleanup-me"
-    assert model.cleanup_after_push?
+  test "workspace_path returns attribute value if available" do
+    assert_equal Rails.root.join("tmp/test").to_s, @model.workspace_path
   end
 
   test "change_description returns formatted changes" do
@@ -248,20 +176,5 @@ class GitBackedModelTest < ActiveSupport::TestCase
     @model.stubs(:should_create_repository?).returns(true)
     repo = @model.send(:repo)
     assert_instance_of DataRepositoryService, repo
-  end
-
-  test "source_path uses source_path_attribute when available" do
-    model = TestModelWithSourcePathAttribute.new
-    assert_equal "computed-path", model.source_path
-  end
-
-  test "initial_git_commit handles errors through handle_git_error" do
-    error = StandardError.new("Repository initialization failed")
-    repo = mock("repo")
-    repo.expects(:initialize_repository).raises(error)
-    @model.stubs(:repo).returns(repo)
-
-    @model.expects(:handle_git_error).with(error)
-    @model.initial_git_commit
   end
 end

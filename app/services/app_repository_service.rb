@@ -29,9 +29,9 @@ class AppRepositoryService < GithubRepositoryService
   end
 
   def push_app_files
-    return unless File.directory?(generated_app.source_path)
+    return unless File.directory?(generated_app.workspace_path)
 
-    app_dir = File.join(generated_app.source_path, generated_app.name)
+    app_dir = File.join(generated_app.workspace_path, generated_app.name)
 
     unless File.directory?(app_dir)
       logger.error("Rails app directory not found", { path: app_dir })
