@@ -46,6 +46,10 @@ class RecipesController < ApplicationController
         end
       end
 
+      # Write to Git repository
+      data_repository = DataRepositoryService.new(user: current_user)
+      data_repository.write_recipe(@recipe, repo_name: data_repository.class.name_for_environment)
+
       redirect_to @recipe, notice: "Recipe was successfully created."
     else
       redirect_to setup_recipes_path(slug: "basic-setup"), status: :unprocessable_entity

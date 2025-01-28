@@ -47,7 +47,7 @@ class Recipe < ApplicationRecord
         configuration: configuration
       )
     end
-    sync_to_git
+    DataRepositoryService.new(user: created_by).write_recipe(self, repo_name: DataRepositoryService.name_for_environment)
   end
 
   def remove_ingredient!(ingredient)
@@ -55,7 +55,7 @@ class Recipe < ApplicationRecord
       recipe_ingredients.find_by!(ingredient: ingredient).destroy
       reorder_positions
     end
-    sync_to_git
+    DataRepositoryService.new(user: created_by).write_recipe(self, repo_name: DataRepositoryService.name_for_environment)
   end
 
   def reorder_ingredients!(new_order)
@@ -64,7 +64,7 @@ class Recipe < ApplicationRecord
         ri.update!(position: new_order.index(ri.ingredient_id))
       end
     end
-    sync_to_git
+    DataRepositoryService.new(user: created_by).write_recipe(self, repo_name: DataRepositoryService.name_for_environment)
   end
 
   def self.find_duplicate(cli_flags, ingredient_ids = nil)
@@ -123,6 +123,23 @@ class Recipe < ApplicationRecord
       .order(:id)
       .first
     end
+  end
+
+  def to_yaml
+    {
+      name: name,
+      description: description,
+      cli_flags: cli_flags,
+      rails_version: rails_version,
+      ruby_version: ruby_version,
+      ingredients: recipe_ingredients.order(:position).map { |ri|
+        {
+          name: ri.ingredient.name,
+          position: ri.position,
+          configuration: ri.configuration
+        }
+      }
+    }.to_yaml
   end
 
   private

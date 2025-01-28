@@ -32,7 +32,9 @@ module GitTestHelper
     new_commit_mock.stubs(:sha).returns("new_sha")
 
     # If recipe is provided, stub its git operations
-    recipe.stubs(:sync_to_git).returns(true) if recipe
+    if recipe
+      stub_git_syncing_for(recipe)
+    end
 
     # Return a struct with all the mocks
     Data.define(:client, :first_ref, :second_ref, :commit, :tree, :new_commit).new(
@@ -43,6 +45,13 @@ module GitTestHelper
       tree: tree_mock,
       new_commit: new_commit_mock
     )
+  end
+
+  def stub_git_syncing_for(recipe)
+    # Create a unique mock for each recipe
+    data_repository = mock("data_repository_#{recipe.object_id}")
+    DataRepositoryService.expects(:new).with(user: recipe.created_by).returns(data_repository).at_least_once
+    data_repository.expects(:write_recipe).with(recipe, repo_name: DataRepositoryService.name_for_environment).at_least_once
   end
 
   def expect_github_operations(create_repo: false, raise_error: false)
