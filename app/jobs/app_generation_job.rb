@@ -4,6 +4,7 @@ class AppGenerationJob < ApplicationJob
   def perform(generated_app_id)
     @generated_app = GeneratedApp.find(generated_app_id)
     @logger = AppGeneration::Logger.new(@generated_app)
+    @repository_service = AppRepositoryService.new(@generated_app)
 
     execute_workflow(unique_by: generated_app_id) do |workflow|
       workflow.step :create_github_repository
@@ -13,13 +14,11 @@ class AppGenerationJob < ApplicationJob
       workflow.step :complete_generation
     end
   rescue StandardError => e
-    unless @generated_app.app_status.failed?
-      @generated_app.mark_as_failed!(e.message)
-    end
+    @generated_app.mark_as_failed!(e.message) unless @generated_app.app_status.failed?
 
     @logger.error("Failed to execute workflow", {
       error: e.message,
-      backtrace: e.backtrace.first(5)
+      backtrace: e.backtrace.first(10)
     })
     raise
   end
@@ -27,7 +26,7 @@ class AppGenerationJob < ApplicationJob
   private
 
   def create_github_repository
-    AppRepositoryService.new(@generated_app).initialize_repository
+    @repository_service.create_github_repository
     @logger.info("GitHub repo #{@generated_app.name} created successfully")
   end
 
@@ -38,7 +37,7 @@ class AppGenerationJob < ApplicationJob
 
   def push_to_github
     @generated_app.push_to_github!
-    AppRepositoryService.new(@generated_app).push_app_files
+    @repository_service.push_app_files
     @logger.info("GitHub push finished successfully")
   end
 

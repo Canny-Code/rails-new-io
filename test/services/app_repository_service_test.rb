@@ -27,7 +27,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     Octokit::Client.stubs(:new).returns(mock_client)
 
     @generated_app.name = @repository_name
-    result = @service.initialize_repository
+    result = @service.create_github_repository
     assert_equal response.html_url, result.html_url
 
     # Verify GeneratedApp was updated

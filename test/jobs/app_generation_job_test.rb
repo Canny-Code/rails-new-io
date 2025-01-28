@@ -12,7 +12,7 @@ class AppGenerationJobTest < ActiveSupport::TestCase
     app_repo_service = mock
 
     AppRepositoryService.expects(:new).with(@generated_app).returns(app_repo_service)
-    app_repo_service.expects(:initialize_repository).raises(StandardError.new(error_message))
+    app_repo_service.expects(:create_github_repository).raises(StandardError.new(error_message))
 
     # Expect error logs in the correct sequence
     error_sequence = sequence("error_logging")
