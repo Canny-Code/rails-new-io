@@ -1,6 +1,8 @@
 require "test_helper"
 
 class AppRepositoryServiceTest < ActiveSupport::TestCase
+  include DisableParallelization
+
   def setup
     @user = users(:john)
     @user.stubs(:github_token).returns("fake-token")
@@ -35,11 +37,11 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "pushes app files to repository with existing commits" do
-    source_path = "/tmp/test-app"
+    source_path = create_test_directory("test-app")
     app_dir = File.join(source_path, @generated_app.name)
     FileUtils.mkdir_p(app_dir)
-    FileUtils.mkdir_p(File.join(app_dir, ".git"))  # Need the .git dir for the directory check
     File.write(File.join(app_dir, "test.rb"), "puts 'test'")
+    init_git_repo(app_dir)
 
     @generated_app.update!(
       github_repo_name: @repository_name,
@@ -67,8 +69,6 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     result = @service.push_app_files(source_path: source_path)
     assert_nil result
-  ensure
-    FileUtils.rm_rf(source_path)
   end
 
   test "skips pushing files for non-existent source path" do
@@ -80,7 +80,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "raises error when app directory is missing" do
-    source_path = "/tmp/test-app"
+    source_path = create_test_directory("test-app")
     FileUtils.mkdir_p(source_path)
 
     error = assert_raises(RuntimeError) do
@@ -88,15 +88,13 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     end
 
     assert_match(/Rails app directory not found at/, error.message)
-  ensure
-    FileUtils.rm_rf(source_path)
   end
 
   test "creates initial commit when repository has no commits" do
-    source_path = "/tmp/test-app"
+    source_path = create_test_directory("test-app")
     app_dir = File.join(source_path, @generated_app.name)
     FileUtils.mkdir_p(app_dir)
-    FileUtils.mkdir_p(File.join(app_dir, ".git"))
+    init_git_repo(app_dir)
 
     @generated_app.update!(
       github_repo_name: @repository_name,
@@ -123,15 +121,13 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     result = @service.push_app_files(source_path: source_path)
     assert_nil result
-  ensure
-    FileUtils.rm_rf(source_path)
   end
 
   test "renames branch to main when on different branch" do
-    source_path = "/tmp/test-app"
+    source_path = create_test_directory("test-app")
     app_dir = File.join(source_path, @generated_app.name)
     FileUtils.mkdir_p(app_dir)
-    FileUtils.mkdir_p(File.join(app_dir, ".git"))
+    init_git_repo(app_dir)
 
     @generated_app.update!(
       github_repo_name: @repository_name,
@@ -158,7 +154,5 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     result = @service.push_app_files(source_path: source_path)
     assert_nil result
-  ensure
-    FileUtils.rm_rf(source_path)
   end
 end

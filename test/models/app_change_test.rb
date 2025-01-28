@@ -48,7 +48,7 @@ class AppChangeTest < ActiveSupport::TestCase
     FileUtils.expects(:rm_f).with(template_path)
 
     # Mock CommandExecutionService
-    mock_execution = mock
+    mock_execution = mock("command_execution")
     mock_execution.expects(:execute)
     CommandExecutionService.expects(:new).
       with(@generated_app, "bin/rails app:template LOCATION=#{template_path}").
@@ -73,7 +73,7 @@ class AppChangeTest < ActiveSupport::TestCase
     FileUtils.expects(:rm_f).with(template_path)
 
     # Mock CommandExecutionService with failure
-    mock_execution = mock
+    mock_execution = mock("command_execution")
     mock_execution.expects(:execute).raises(RuntimeError.new("Template application failed"))
     CommandExecutionService.expects(:new).
       with(@generated_app, "bin/rails app:template LOCATION=#{template_path}").
@@ -98,7 +98,7 @@ class AppChangeTest < ActiveSupport::TestCase
     FileUtils.expects(:rm_f).with(template_path)  # Always expect cleanup
 
     # Mock CommandExecutionService
-    mock_execution = mock
+    mock_execution = mock("command_execution")
     mock_execution.expects(:execute)
     CommandExecutionService.expects(:new).
       with(@generated_app, "bin/rails app:template LOCATION=#{template_path}").

@@ -37,7 +37,10 @@ class AppRepositoryService < GithubRepositoryService
       raise "Rails app directory not found at #{app_dir}"
     end
 
-    Dir.chdir(app_dir) do
+    original_dir = Dir.pwd
+    begin
+      Dir.chdir(app_dir)
+
       unless File.directory?(".git")
         logger.error("Not a git repository", { path: app_dir })
         raise "Not a git repository at #{app_dir}"
@@ -105,6 +108,8 @@ class AppRepositoryService < GithubRepositoryService
         })
         raise "Failed to push to GitHub:\n#{push_output}"
       end
+    ensure
+      Dir.chdir(original_dir) if original_dir && File.directory?(original_dir)
     end
   end
 

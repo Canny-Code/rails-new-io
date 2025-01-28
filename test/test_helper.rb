@@ -28,12 +28,14 @@ require "minitest/mock"
 require "database_cleaner/active_record"
 require "phlex/testing/view_helper"
 require_relative "support/vite_test_helper"
+require_relative "support/directory_test_helper"
 
 # Ensure Vite's test environment is properly set
 ENV["VITE_RUBY_TEST"] = "true"
 
 class ActionDispatch::IntegrationTest
   include ViteTestHelper
+  include DirectoryTestHelper
 end
 
 class ActionDispatch::SystemTest
@@ -52,7 +54,8 @@ module ActiveSupport
   class TestCase
     extend CoverageHelper
 
-    parallelize(workers: :number_of_processors)
+    # Only parallelize tests that don't do git operations
+    parallelize(workers: :number_of_processors) unless ENV["TEST_DISABLE_PARALLEL"]
 
     unless skip_coverage?
       parallelize_setup do |worker|
@@ -80,6 +83,20 @@ module ActiveSupport
 
     set_fixture_class noticed_notifications: AppStatusChangeNotifier::Notification
     set_fixture_class noticed_events: AppStatusChangeNotifier
+
+    include DirectoryTestHelper
+  end
+end
+
+# Add a module to mark tests that can't run in parallel
+module DisableParallelization
+  def self.included(base)
+    base.class_eval do
+      def self.inherited(klass)
+        super
+        klass.parallelize(workers: 1)
+      end
+    end
   end
 end
 

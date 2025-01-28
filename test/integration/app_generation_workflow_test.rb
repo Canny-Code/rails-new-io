@@ -3,27 +3,20 @@ require_relative "../support/git_test_helper"
 require_relative "../support/command_execution_test_helper"
 
 class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
+  include DisableParallelization
   include GitTestHelper
   include CommandExecutionTestHelper
 
   setup do
     @user = users(:john)
     @repo_name = "test-app"
-    @source_path = Rails.root.join("tmp", "test_source")
+    @source_path = create_test_directory("test_source")
+    @app_dir = File.join(@source_path, @repo_name)
 
-    # Clean up any existing test directories first
-    FileUtils.rm_rf(@source_path) if Dir.exist?(@source_path)
-
-    FileUtils.mkdir_p(File.join(@source_path, @repo_name))
-    FileUtils.touch(File.join(@source_path, @repo_name, "test.rb"))
-    FileUtils.touch(File.join(@source_path, @repo_name, "Gemfile"))
-
-    # Initialize Git repo in the app directory
-    Dir.chdir(File.join(@source_path, @repo_name)) do
-      system("git init --quiet")
-      system("git config user.name 'Test User'")
-      system("git config user.email 'test@example.com'")
-    end
+    FileUtils.mkdir_p(@app_dir)
+    FileUtils.touch(File.join(@app_dir, "test.rb"))
+    FileUtils.touch(File.join(@app_dir, "Gemfile"))
+    init_git_repo(@app_dir)
 
     # Ensure the Git repo base path exists
     FileUtils.mkdir_p(Rails.root.join("tmp", "git_repos", @user.id.to_s))
@@ -46,7 +39,6 @@ class AppGenerationWorkflowTest < ActionDispatch::IntegrationTest
   end
 
   teardown do
-    FileUtils.rm_rf(@source_path)
     FileUtils.rm_rf(Rails.root.join("tmp", "git_repos", @user.id.to_s))
   end
 

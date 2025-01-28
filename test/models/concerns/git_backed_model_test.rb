@@ -103,7 +103,7 @@ class GitBackedModelTest < ActiveSupport::TestCase
   end
 
   test "initial_git_commit creates repository and pushes files" do
-    repo = mock("repo")
+    repo = mock("git_repository")
     repo.expects(:initialize_repository)
     repo.expects(:commit_changes).with(
       message: "Initial commit",
@@ -115,7 +115,7 @@ class GitBackedModelTest < ActiveSupport::TestCase
   end
 
   test "sync_to_git pushes files" do
-    repo = mock("repo")
+    repo = mock("git_repository")
     repo.expects(:commit_changes).with(
       message: "Update test_model",
       tree_items: []
@@ -127,7 +127,7 @@ class GitBackedModelTest < ActiveSupport::TestCase
 
   test "sync_to_git handles errors through handle_git_error" do
     error = StandardError.new("Commit failed")
-    repo = mock("repo")
+    repo = mock("git_repository")
     repo.expects(:commit_changes).raises(error)
     @model.stubs(:repo).returns(repo)
 
@@ -178,7 +178,12 @@ class GitBackedModelTest < ActiveSupport::TestCase
 
   test "should_create_repository? checks directory existence in test env" do
     Rails.env.stubs(:test?).returns(true)
+
+    # Stub all File.directory? calls to return false by default
+    File.stubs(:directory?).returns(false)
+    # Only return true for the specific path we care about
     File.stubs(:directory?).with(@model.source_path).returns(true)
+
     assert @model.should_create_repository?
   end
 

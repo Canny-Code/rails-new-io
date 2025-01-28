@@ -9,8 +9,12 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     @ingredient = ingredients(:rails_authentication)
     @generated_app = generated_apps(:blog_app)
 
-    # Set required source path
-    @generated_app.update!(source_path: Rails.root.join("tmp/test_apps").to_s)
+    # Create test directories
+    @source_path = create_test_directory("test_apps")
+    @app_directory = File.join(@source_path, @generated_app.name)
+    FileUtils.mkdir_p(@app_directory)
+    FileUtils.touch(File.join(@app_directory, "Gemfile"))
+    @generated_app.update!(source_path: @source_path)
 
     # Mock the logger to avoid actual logging
     @logger = mock("logger")
@@ -22,9 +26,6 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     @generator = mock("generator")
     @generator.stubs(:apply)
     Rails::Generators::AppGenerator.stubs(:new).returns(@generator)
-
-    # Mock directory operations
-    Dir.stubs(:chdir).yields
   end
 
   test "successfully applies ingredient" do
@@ -92,13 +93,9 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
 
   test "uses correct environment variables and paths" do
     configuration = { "auth_type" => "devise" }
-    app_directory = File.join(@generated_app.source_path, @generated_app.name)
 
-    Dir.unstub(:chdir)
-    Dir.expects(:chdir).with(app_directory).yields
     @generator.expects(:apply).once
-
-    ENV.expects(:[]=).with("BUNDLE_GEMFILE", File.join(Dir.pwd, "Gemfile"))
+    ENV.expects(:[]=).with("BUNDLE_GEMFILE", File.join(@app_directory, "Gemfile"))
 
     @generated_app.apply_ingredient!(@ingredient, configuration)
   end
