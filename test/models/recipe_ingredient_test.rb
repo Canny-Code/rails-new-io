@@ -55,7 +55,6 @@ class RecipeIngredientTest < ActiveSupport::TestCase
   end
 
   test "converts to git format" do
-    setup_github_mocks(@recipe)
     @recipe_ingredient.applied_at = Time.current
     expected = {
       ingredient_name: @ingredient.name,
@@ -68,7 +67,6 @@ class RecipeIngredientTest < ActiveSupport::TestCase
   end
 
   test "applies ingredient configuration" do
-    setup_github_mocks(@recipe)
     freeze_time do
       # Ensure applied_at is nil
       assert_nil @recipe_ingredient.applied_at, "applied_at should be nil before test"
@@ -82,6 +80,9 @@ class RecipeIngredientTest < ActiveSupport::TestCase
         with(@recipe_ingredient.configuration).
         returns("# Template content")
 
+      # Mock recipe touch since that's what triggers git syncing
+      Recipe.any_instance.expects(:touch)
+
       # Call apply! and verify it's not returning early
       result = @recipe_ingredient.apply!
 
@@ -92,9 +93,9 @@ class RecipeIngredientTest < ActiveSupport::TestCase
   end
 
   test "does not reapply if already applied" do
-    setup_github_mocks(@recipe)
     @recipe_ingredient.update!(applied_at: 1.day.ago)
     @ingredient.expects(:configuration_for).never
+    Recipe.any_instance.expects(:touch).never
 
     @recipe_ingredient.apply!
   end

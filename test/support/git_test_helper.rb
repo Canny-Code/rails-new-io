@@ -31,11 +31,6 @@ module GitTestHelper
     new_commit_mock = mock("new_commit")
     new_commit_mock.stubs(:sha).returns("new_sha")
 
-    # If recipe is provided, stub its git operations
-    if recipe
-      stub_git_syncing_for(recipe)
-    end
-
     # Return a struct with all the mocks
     Data.define(:client, :first_ref, :second_ref, :commit, :tree, :new_commit).new(
       client: mock_client,
