@@ -1,12 +1,13 @@
 class ResourceLayout::Component < ApplicationComponent
-  def initialize(title:, subtitle:, new_button_text: nil, new_button_path: nil, resources:, columns:, empty_state: nil)
+  def initialize(title:, subtitle:, new_button_text: nil, new_button_path: nil, resources:, empty_state: nil, columns:, actions: [ :view, :edit, :delete ])
     @title = title
     @subtitle = subtitle
     @new_button_text = new_button_text
     @new_button_path = new_button_path
     @resources = resources
-    @columns = columns
     @empty_state = empty_state
+    @columns = columns
+    @actions = actions
   end
 
   def template
@@ -18,7 +19,11 @@ class ResourceLayout::Component < ApplicationComponent
               render_header
               if @resources.any?
                 div(class: "px-4 sm:px-6 lg:px-8") do
-                  render ResourceTable::Component.new(resources: @resources, columns: @columns)
+                  render ResourceTable::Component.new(
+                    resources: @resources,
+                    columns: @columns,
+                    actions: @actions
+                  )
                 end
               else
                 render @empty_state if @empty_state

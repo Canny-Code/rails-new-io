@@ -2,9 +2,10 @@ class ResourceTable::Component < ApplicationComponent
   include Phlex::Rails::Helpers::LinkTo
   include Phlex::Rails::Helpers::ButtonTo
 
-  def initialize(resources:, columns:)
+  def initialize(resources:, columns:, actions: [ :view, :edit, :delete ])
     @resources = resources
     @columns = columns
+    @actions = actions
   end
 
   def template
@@ -81,9 +82,9 @@ class ResourceTable::Component < ApplicationComponent
   def render_actions_cell(resource)
     td(class: "whitespace-nowrap px-3 py-5 text-sm text-gray-500") do
       div(class: "flex justify-end gap-4") do
-        render_view_button(resource)
-        render_edit_button(resource)
-        render_delete_button(resource)
+        render_view_button(resource) if @actions.include?(:view)
+        render_edit_button(resource) if @actions.include?(:edit)
+        render_delete_button(resource) if @actions.include?(:delete)
       end
     end
   end
