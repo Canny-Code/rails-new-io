@@ -8,7 +8,7 @@ class ResourceTable::Component < ApplicationComponent
     @actions = actions
   end
 
-  def template
+  def view_template
     table(class: "min-w-full divide-y divide-gray-300") do
       thead do
         tr do

@@ -12,7 +12,7 @@ class ResourceLayout::Component < ApplicationComponent
     @secondary_actions = secondary_actions
   end
 
-  def template
+  def view_template
     div(class: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8") do
       div(class: "mt-8 flex flex-col") do
         div(class: "-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8") do
