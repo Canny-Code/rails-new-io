@@ -3,6 +3,7 @@
 class Nav::Main::Component < ApplicationComponent
   include Phlex::Rails::Helpers::LinkTo
   include Phlex::Rails::Helpers::ButtonTo
+  include Phlex::Rails::Helpers::ClassNames
 
   delegate :current_user, :current_page?, to: :helpers
 
@@ -26,30 +27,17 @@ class Nav::Main::Component < ApplicationComponent
             class:
               "flex flex-1 items-center justify-center sm:items-stretch sm:justify-start"
           ) do
-            div(class: "hidden sm:ml-6 sm:flex sm:space-x-8") do
+            div(class: "hidden sm:ml-6 sm:flex sm:space-x-4 h-16 items-center") do
               whitespace
-              comment do
-                %(Current: "border-indigo-500 text-gray-900", Default: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700")
-              end
-              whitespace
-              link_to(
-                dashboard_path,
-                class: "inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              ) do
+              link_to(dashboard_path, class: nav_link_classes(dashboard_path)) do
                 plain "My Apps"
               end
               whitespace
-              link_to(
-                recipes_path,
-                class: "inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              ) do
+              link_to(recipes_path, class: nav_link_classes(recipes_path)) do
                 plain "My Recipes"
               end
               whitespace
-              link_to(
-                ingredients_path,
-                class: "inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              ) do
+              link_to(ingredients_path, class: nav_link_classes(ingredients_path)) do
                 plain "My Ingredients"
               end
             end
@@ -84,6 +72,14 @@ class Nav::Main::Component < ApplicationComponent
   end
 
   private
+
+  def nav_link_classes(path)
+    class_names(
+      "inline-flex items-center border-b-[4px] px-1 font-medium h-16 box-border",
+      "border-[#ac3b61] text-gray-900" => current_page?(path),
+      "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700" => !current_page?(path)
+    )
+  end
 
   def github_icon
     svg(
