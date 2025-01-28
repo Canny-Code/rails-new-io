@@ -1,79 +1,56 @@
 <%= turbo_stream_from [ :generated_app, current_user.id ] %>
 <%= turbo_stream_from [ :notification_badge, current_user.id ] %>
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-  <div class="flex justify-between items-center bg-white rounded-lg border-t border-l border-r border-gray-200 p-8 mt-8">
-    <div class="">
-      <h1 class="text-2xl font-semibold text-gray-900">
-        Welcome <%= current_user.github_username %>!
-      </h1>
-      <p class="mt-2 text-base text-gray-600">
-        What will you build today?
-      </p>
-    </div>
-    <% if @generated_apps.any? %>
-      <div class="sm:flex sm:items-center justify-end">
-        <%= form_with url: dashboard_path,
-            method: :get,
-            data: { turbo_frame: "generated_apps_list" } do |f| %>
-          <%= f.text_field :search,
-              value: params[:search],
-              placeholder: "Search...",
-              class: "text-sm rounded-lg border-gray-300",
-              data: {
-                controller: "autosubmit",
-                action: "input->autosubmit#submit",
-                autosubmit_target: "input"
-              } %>
-        <% end %>
-        <div class="mt-4 sm:ml-4 sm:mt-0 sm:flex-none">
-          <%= render Buttons::Primary::Component.new(
-            text: "Generate new app",
-            path: new_generated_app_path
-          ) %>
-        </div>
-      </div>
-    <% end %>
-  </div>
-  <% if @generated_apps.any? %>
-    <div class="py-12 px-4 sm:px-6 lg:px-8 bg-white rounded-b-lg border-l border-r border-b border-b border-gray-200">
-      <%= turbo_frame_tag "generated_apps_list" do %>
-        <div class="mt-8 flow-root">
-          <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-              <table class="min-w-full divide-y divide-gray-300">
-                <tr>
-                  <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
-                    <%= sort_link_to "Name", :name %>
-                  </th>
-                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    <%= sort_link_to "Status", :status %>
-                  </th>
-                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    <%= sort_link_to "Created", :created_at %>
-                  </th>
-                  <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0"></th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200">
-                <%= render @generated_apps %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      <% end %>
-    </div>
-  <% else %>
-    <%= render EmptyState::Component.new(
-      user: current_user,
-      title: "No apps yet",
-      description: "Get started by creating your first app.",
-      button_text: "Start your journey",
-      button_path: new_generated_app_path,
-      emoji: "🚀"
-    ) %>
-  <% end %>
-  <div class="flex justify-end gap-4 mt-8">
-    <%= link_to "My Ingredients", ingredients_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500", data: { turbo_frame: "_top" } %>
-    <%= link_to "My Recipes", recipes_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500", data: { turbo_frame: "_top" } %>
-  </div>
-</div>
+
+<%= render ResourceLayout::Component.new(
+  title: "Welcome #{current_user.github_username}!",
+  subtitle: "What will you build today?",
+  new_button_text: "Generate new app",
+  new_button_path: new_generated_app_path,
+  resources: @generated_apps,
+  search: true,
+  empty_state: EmptyState::Component.new(
+    user: current_user,
+    title: "No apps yet",
+    description: "Get started by creating your first app.",
+    button_text: "Start your journey",
+    button_path: new_generated_app_path,
+    emoji: "🚀"
+  ),
+  columns: [
+    {
+      header: "Name",
+      content: ->(app) { app.name },
+      sortable: true,
+      sort_key: :name
+    },
+    {
+      header: "Status",
+      content: ->(app) { app.status },
+      sortable: true,
+      sort_key: :status
+    },
+    {
+      header: "Created",
+      content: ->(app) { app.created_at },
+      sortable: true,
+      sort_key: :created_at
+    }
+  ],
+  actions: [ :view, :edit, :delete ],
+  secondary_actions: render(Phlex::HTML.new) do |component|
+    component.div(class: "flex gap-4") do
+      render Buttons::Primary::Component.new(
+        text: "My Ingredients",
+        path: ingredients_path,
+        icon: false,
+        html_options: { data: { turbo_frame: "_top" } }
+      )
+      render Buttons::Primary::Component.new(
+        text: "My Recipes",
+        path: recipes_path,
+        icon: false,
+        html_options: { data: { turbo_frame: "_top" } }
+      )
+    end
+  end
+) %>

@@ -1,5 +1,5 @@
 class ResourceLayout::Component < ApplicationComponent
-  def initialize(title:, subtitle:, new_button_text: nil, new_button_path: nil, resources:, empty_state: nil, columns:, actions: [ :view, :edit, :delete ])
+  def initialize(title:, subtitle:, new_button_text: nil, new_button_path: nil, resources:, empty_state: nil, columns:, actions: [ :view, :edit, :delete ], search: false, secondary_actions: nil)
     @title = title
     @subtitle = subtitle
     @new_button_text = new_button_text
@@ -8,6 +8,8 @@ class ResourceLayout::Component < ApplicationComponent
     @empty_state = empty_state
     @columns = columns
     @actions = actions
+    @search = search
+    @secondary_actions = secondary_actions
   end
 
   def template
@@ -30,6 +32,12 @@ class ResourceLayout::Component < ApplicationComponent
               end
             end
           end
+        end
+      end
+
+      if @secondary_actions
+        div(class: "flex justify-end gap-4 mt-8") do
+          @secondary_actions
         end
       end
     end
