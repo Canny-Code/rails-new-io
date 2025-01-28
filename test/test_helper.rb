@@ -144,17 +144,6 @@ module ActiveRecord
   class FixtureSet
     class << self
       def create_fixtures_with_order(fixtures_directory, fixture_set_names, class_names = {}, config = ActiveRecord::Base)
-        # Define dependencies based on foreign keys
-        dependencies = {
-          "app_changes" => [ "ingredients", "generated_apps" ],
-          "app_statuses" => [ "generated_apps" ],
-          "recipe_ingredients" => [ "recipes", "ingredients" ],
-          "generated_apps" => [ "recipes", "users" ],
-          "recipes" => [ "users" ],
-          "ingredients" => [ "users", "recipes" ],
-          "commits" => [ "users" ]
-        }
-
         # Load fixtures in correct order
         ordered_fixtures = []
 

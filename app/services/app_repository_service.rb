@@ -32,12 +32,14 @@ class AppRepositoryService < GithubRepositoryService
     return unless File.directory?(generated_app.source_path)
 
     app_dir = File.join(generated_app.source_path, generated_app.name)
+
     unless File.directory?(app_dir)
       logger.error("Rails app directory not found", { path: app_dir })
       raise "Rails app directory not found at #{app_dir}"
     end
 
     original_dir = Dir.pwd
+
     begin
       Dir.chdir(app_dir)
       validate_git_repository!
@@ -60,12 +62,9 @@ class AppRepositoryService < GithubRepositoryService
   end
 
   def create_initial_commit_if_needed!
-    # Check if HEAD exists
-    return unless run_git_command("git rev-parse --verify HEAD 2>/dev/null").empty?
+    return if head_exists?
 
-    # Create initial commit
-    message = initial_commit_message
-    success = system("git add . && git -c init.defaultBranch=main commit -m '#{message}'")
+    success = system("git add . && git -c init.defaultBranch=main commit -m '#{initial_commit_message}'")
 
     unless success
       git_status = run_git_command("git status --porcelain")
@@ -163,5 +162,9 @@ class AppRepositoryService < GithubRepositoryService
 
     #{ingredients_message}
     INITIAL_COMMIT_MESSAGE
+  end
+
+  def head_exists?
+    !run_git_command("git rev-parse --verify HEAD 2>/dev/null").empty?
   end
 end
