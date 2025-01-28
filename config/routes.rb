@@ -28,7 +28,6 @@ Rails.application.routes.draw do
   end
 
   resources :generated_apps, only: [ :new, :show, :create ] do
-    resources :generation_attempts, only: [ :create ]
     resources :log_entries, only: [ :index ]
   end
 
