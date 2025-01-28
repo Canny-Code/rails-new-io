@@ -40,80 +40,106 @@ class AppRepositoryService < GithubRepositoryService
     original_dir = Dir.pwd
     begin
       Dir.chdir(app_dir)
-
-      unless File.directory?(".git")
-        logger.error("Not a git repository", { path: app_dir })
-        raise "Not a git repository at #{app_dir}"
-      end
-
-      if `git rev-parse --verify HEAD 2>/dev/null`.empty?
-        init_output = `git add . 2>&1 && git -c init.defaultBranch=main commit -m "#{initial_commit_message}" 2>&1`
-
-        unless $?.success?
-          logger.error("Failed to create initial commit", {
-            error: init_output,
-            git_status: `git status --porcelain 2>&1`.strip,
-            exit_code: $?.exitstatus
-          })
-          raise "Failed to create initial commit:\n#{init_output}"
-        end
-      end
-
-      current_branch = `git rev-parse --abbrev-ref HEAD`.strip
-      if current_branch != "main"
-        rename_output = `git branch -M main 2>&1`
-        unless $?.success?
-          logger.error("Failed to rename branch to main", {
-            error: rename_output,
-            current_branch: current_branch,
-            exit_code: $?.exitstatus
-          })
-          raise "Failed to rename branch to main:\n#{rename_output}"
-        end
-      end
-
-      remotes = `git remote -v`.strip
-      if remotes.include?("origin")
-        current_url = remotes[/origin\s+(\S+)/, 1]
-        if current_url != generated_app.github_repo_url
-          system("git remote set-url origin #{generated_app.github_repo_url}")
-        end
-      else
-        add_output = `git remote add origin #{generated_app.github_repo_url} 2>&1`
-        unless $?.success?
-          logger.error("Failed to add remote", {
-            error: add_output,
-            current_remotes: `git remote -v 2>&1`.strip,
-            git_status: `git status --porcelain 2>&1`.strip,
-            exit_code: $?.exitstatus
-          })
-          raise "Failed to add git remote:\n#{add_output}"
-        end
-      end
-
-      repo_url_with_token = generated_app.github_repo_url.sub("https://", "https://#{user.github_token}@")
-      system("git remote set-url origin #{repo_url_with_token}")
-
-      push_output = `git push -v -u origin main 2>&1`
-
-      system("git remote set-url origin #{generated_app.github_repo_url}")
-
-      unless $?.success?
-        logger.error("Failed to push to GitHub", {
-          error: push_output,
-          git_status: `git status --porcelain 2>&1`.strip,
-          current_branch: "main",
-          exit_code: $?.exitstatus,
-          git_config: `git config --list 2>&1`.strip
-        })
-        raise "Failed to push to GitHub:\n#{push_output}"
-      end
+      validate_git_repository!
+      create_initial_commit_if_needed!
+      ensure_main_branch!
+      setup_remote!
+      push_to_remote!
     ensure
       Dir.chdir(original_dir) if original_dir && File.directory?(original_dir)
     end
   end
 
   private
+
+  def validate_git_repository!
+    unless File.directory?(".git")
+      logger.error("Not a git repository", { path: Dir.pwd })
+      raise "Not a git repository at #{Dir.pwd}"
+    end
+  end
+
+  def create_initial_commit_if_needed!
+    # Check if HEAD exists
+    return unless run_git_command("git rev-parse --verify HEAD 2>/dev/null").empty?
+
+    # Create initial commit
+    message = initial_commit_message
+    success = system("git add . && git -c init.defaultBranch=main commit -m '#{message}'")
+
+    unless success
+      git_status = run_git_command("git status --porcelain")
+      logger.error("Failed to create initial commit", {
+        git_status: git_status.strip
+      })
+      raise "Failed to create initial commit"
+    end
+  end
+
+  def ensure_main_branch!
+    current_branch = run_git_command("git rev-parse --abbrev-ref HEAD").strip
+    return if current_branch == "main"
+
+    success = system("git branch -M main")
+    unless success
+      logger.error("Failed to rename branch to main", {
+        current_branch: current_branch
+      })
+      raise "Failed to rename branch to main"
+    end
+  end
+
+  def setup_remote!
+    remotes = run_git_command("git remote -v").strip
+
+    if remotes.include?("origin")
+      current_url = remotes[/origin\s+(\S+)/, 1]
+      if current_url != generated_app.github_repo_url
+        success = system("git remote set-url origin #{generated_app.github_repo_url}")
+        unless success
+          logger.error("Failed to update remote URL")
+          raise "Failed to update remote URL"
+        end
+      end
+    else
+      success = system("git remote add origin #{generated_app.github_repo_url}")
+      unless success
+        git_status = run_git_command("git status --porcelain")
+        logger.error("Failed to add remote", {
+          current_remotes: remotes,
+          git_status: git_status.strip
+        })
+        raise "Failed to add git remote"
+      end
+    end
+  end
+
+  def push_to_remote!
+    # Set URL with token for push
+    repo_url_with_token = generated_app.github_repo_url.sub("https://", "https://#{user.github_token}@")
+    system("git remote set-url origin #{repo_url_with_token}")
+
+    # Push to remote
+    success = system("git push -v -u origin main")
+
+    # Reset URL without token
+    system("git remote set-url origin #{generated_app.github_repo_url}")
+
+    unless success
+      git_status = run_git_command("git status --porcelain")
+      git_config = run_git_command("git config --list")
+      logger.error("Failed to push to GitHub", {
+        git_status: git_status.strip,
+        current_branch: "main",
+        git_config: git_config.strip
+      })
+      raise "Failed to push to GitHub"
+    end
+  end
+
+  def run_git_command(command)
+    `#{command}`
+  end
 
   def initial_commit_message
     ingredients_message = if generated_app.recipe.ingredients.any?
