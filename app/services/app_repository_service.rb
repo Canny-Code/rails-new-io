@@ -31,17 +31,17 @@ class AppRepositoryService < GithubRepositoryService
   def push_app_files
     return unless File.directory?(generated_app.workspace_path)
 
-    app_dir = File.join(generated_app.workspace_path, generated_app.name)
+    app_directory_path = File.join(generated_app.workspace_path, generated_app.name)
 
-    unless File.directory?(app_dir)
-      logger.error("Rails app directory not found", { path: app_dir })
-      raise "Rails app directory not found at #{app_dir}"
+    unless File.directory?(app_directory_path)
+      logger.error("Rails app directory not found", { path: app_directory_path })
+      raise "Rails app directory not found at #{app_directory_path}"
     end
 
     original_dir = Dir.pwd
 
     begin
-      Dir.chdir(app_dir)
+      Dir.chdir(app_directory_path)
       validate_git_repository!
       create_initial_commit_if_needed!
       ensure_main_branch!

@@ -74,7 +74,7 @@ class GeneratedApp < ApplicationRecord
     transaction do
       logger.info("Applying ingredient...", {
         ingredient: ingredient.name,
-        workspace_path: workspace_path,
+        workspace_path:,
         pwd: Dir.pwd
       })
 
@@ -96,9 +96,9 @@ class GeneratedApp < ApplicationRecord
       require "rails/generators"
       require "rails/generators/rails/app/app_generator"
 
-      app_directory = File.join(workspace_path, name)
+      app_directory_path = File.join(workspace_path, name)
 
-      Dir.chdir(app_directory) do
+      Dir.chdir(app_directory_path) do
         ENV["BUNDLE_GEMFILE"] = File.join(Dir.pwd, "Gemfile")
 
         Rails.application.config.generators.templates += [ File.dirname(template_path) ]
