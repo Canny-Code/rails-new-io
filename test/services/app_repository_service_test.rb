@@ -45,7 +45,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     @generated_app.update!(
       github_repo_name: @repository_name,
-      github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}"
+      github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
+      source_path: source_path
     )
 
     # Mock git commands for existing repository
@@ -67,7 +68,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     @service.stubs(:system).with("git remote set-url origin #{@generated_app.github_repo_url}").returns(true)
     @service.stubs(:system).with("git remote set-url origin https://#{@user.github_token}@github.com/#{@user.github_username}/#{@repository_name}").returns(true)
 
-    result = @service.push_app_files(source_path: source_path)
+    result = @service.push_app_files
     assert_nil result
   end
 
@@ -75,7 +76,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     # No client should be created since we're skipping
     Octokit::Client.expects(:new).never
 
-    result = @service.push_app_files(source_path: "/nonexistent/path")
+    @generated_app.update!(source_path: "/nonexistent/path")
+    result = @service.push_app_files
     assert_nil result
   end
 
@@ -83,8 +85,10 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     source_path = create_test_directory("test-app")
     FileUtils.mkdir_p(source_path)
 
+    @generated_app.update!(source_path: source_path)
+
     error = assert_raises(RuntimeError) do
-      @service.push_app_files(source_path: source_path)
+      @service.push_app_files
     end
 
     assert_match(/Rails app directory not found at/, error.message)
@@ -98,7 +102,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     @generated_app.update!(
       github_repo_name: @repository_name,
-      github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}"
+      github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
+      source_path: source_path
     )
 
     # Mock empty HEAD (no commits)
@@ -119,7 +124,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     @service.stubs(:system).with("git remote set-url origin #{@generated_app.github_repo_url}").returns(true)
     @service.stubs(:system).with("git remote set-url origin https://#{@user.github_token}@github.com/#{@user.github_username}/#{@repository_name}").returns(true)
 
-    result = @service.push_app_files(source_path: source_path)
+    result = @service.push_app_files
     assert_nil result
   end
 
@@ -131,7 +136,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     @generated_app.update!(
       github_repo_name: @repository_name,
-      github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}"
+      github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
+      source_path: source_path
     )
 
     # Mock branch name as 'master'
@@ -152,7 +158,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     @service.stubs(:system).with("git remote set-url origin #{@generated_app.github_repo_url}").returns(true)
     @service.stubs(:system).with("git remote set-url origin https://#{@user.github_token}@github.com/#{@user.github_username}/#{@repository_name}").returns(true)
 
-    result = @service.push_app_files(source_path: source_path)
+    result = @service.push_app_files
     assert_nil result
   end
 end
