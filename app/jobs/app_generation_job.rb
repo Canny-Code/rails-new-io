@@ -32,7 +32,7 @@ class AppGenerationJob < ApplicationJob
 
   def generate_rails_app
     @logger.info("Starting Rails app generation")
-    AppGeneration::Orchestrator.new(@generated_app).perform_generation
+    AppGeneration::Orchestrator.new(@generated_app).generate_rails_app
   end
 
   def push_to_github

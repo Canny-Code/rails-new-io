@@ -5,7 +5,7 @@ module AppGeneration
       @logger = AppGeneration::Logger.new(generated_app)
     end
 
-    def call
+    def enqueue_app_generation_job
       validate_initial_state!
 
       AppGenerationJob.perform_later(@generated_app.id)
@@ -16,14 +16,12 @@ module AppGeneration
       @generated_app.mark_as_failed!(e.message)
     end
 
-    def perform_generation
+    def generate_rails_app
       @logger.info("Starting app generation")
-
-      # Mark as generating and create the Rails app
       @generated_app.generate!
+
       execute_rails_new_command
 
-      # Then apply each ingredient
       apply_ingredients
 
       @logger.info("App generation completed successfully")

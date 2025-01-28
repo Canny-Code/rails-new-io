@@ -71,7 +71,7 @@ class GeneratedAppsControllerTest < ActionDispatch::IntegrationTest
 
   test "starts app generation after creation" do
     recipe = recipes(:minimal_recipe) # This recipe belongs to John
-    AppGeneration::Orchestrator.any_instance.expects(:call).once
+    AppGeneration::Orchestrator.any_instance.expects(:enqueue_app_generation_job).once
 
     post generated_apps_path, params: {
       app_name: "test-app",

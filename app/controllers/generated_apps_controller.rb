@@ -22,7 +22,7 @@ class GeneratedAppsController < ApplicationController
       recipe: recipe
     )
 
-    AppGeneration::Orchestrator.new(@generated_app).call
+    AppGeneration::Orchestrator.new(@generated_app).enqueue_app_generation_job
 
     redirect_to generated_app_log_entries_path(@generated_app)
   end

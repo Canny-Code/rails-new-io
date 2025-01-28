@@ -18,7 +18,7 @@ module AppGeneration
       assert @generated_app.pending?
 
       assert_difference -> { SolidQueue::Job.count } do
-        assert @orchestrator.call
+        assert @orchestrator.enqueue_app_generation_job
       end
 
       job = SolidQueue::Job.last
@@ -34,7 +34,7 @@ module AppGeneration
       assert_not @generated_app.pending?
 
       error = assert_raises(AppGeneration::Errors::InvalidStateError) do
-        @orchestrator.call
+        @orchestrator.enqueue_app_generation_job
       end
 
       assert_equal "App must be in pending state to start generation", error.message
@@ -54,7 +54,7 @@ module AppGeneration
         "App generation failed: #{error_message}"
       ).in_sequence(sequence)
 
-      assert_not @orchestrator.call
+      assert_not @orchestrator.enqueue_app_generation_job
       assert @generated_app.reload.failed?
       assert_equal error_message, @generated_app.app_status.error_message
     end
@@ -87,7 +87,7 @@ module AppGeneration
       AppGeneration::Logger.any_instance.expects(:info).with("Finished applying ingredient", { ingredient: ingredient.name }).in_sequence(sequence)
       AppGeneration::Logger.any_instance.expects(:info).with("App generation completed successfully").in_sequence(sequence)
 
-      @orchestrator.perform_generation
+      @orchestrator.generate_rails_app
     end
 
     test "handles missing template files during generation" do
@@ -119,7 +119,7 @@ module AppGeneration
       AppGeneration::Logger.any_instance.expects(:error).with("App generation failed", { error: "Template file not found: /nonexistent/path/template.rb" }).in_sequence(sequence)
 
       assert_raises(StandardError) do
-        @orchestrator.perform_generation
+        @orchestrator.generate_rails_app
       end
     end
 
@@ -142,7 +142,7 @@ module AppGeneration
       AppGeneration::Logger.any_instance.expects(:error).with("App generation failed", { error: error_message }).in_sequence(sequence)
 
       assert_raises(StandardError) do
-        @orchestrator.perform_generation
+        @orchestrator.generate_rails_app
       end
     end
 
@@ -177,7 +177,7 @@ module AppGeneration
       AppGeneration::Logger.any_instance.expects(:error).with("App generation failed", { error: error_message }).in_sequence(sequence)
 
       assert_raises(StandardError) do
-        @orchestrator.perform_generation
+        @orchestrator.generate_rails_app
       end
     end
 
@@ -223,7 +223,7 @@ module AppGeneration
       AppGeneration::Logger.any_instance.expects(:info).with("App generation completed successfully").in_sequence(sequence)
 
       # Perform generation
-      @orchestrator.perform_generation
+      @orchestrator.generate_rails_app
 
       # Verify final state
       assert_equal 2, @generated_app.recipe.recipe_ingredients.count
