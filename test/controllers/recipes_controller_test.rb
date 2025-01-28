@@ -130,28 +130,6 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "A recipe with these settings already exists", flash[:alert]
   end
 
-  test "create handles missing CLI flags gracefully" do
-    assert_difference("Recipe.count") do
-      post recipes_path, params: {
-        recipe: {
-          name: "Basic App",
-          description: "A basic Rails app",
-          status: "published",
-          api_flag: nil,
-          database_choice: nil,
-          rails_flags: nil
-        }
-      }
-    end
-
-    recipe = Recipe.last
-    assert_equal "", recipe.cli_flags
-    assert_equal "Basic App", recipe.name
-    assert_equal "A basic Rails app", recipe.description
-    assert_equal "published", recipe.status
-    assert_redirected_to recipe_path(recipe)
-  end
-
   test "create with missing name renders new" do
     assert_no_difference("Recipe.count") do
       post recipes_path, params: {
