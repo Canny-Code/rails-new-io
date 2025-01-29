@@ -3,6 +3,7 @@
     <div class="flex-1 min-w-0">
     </div>
   </div>
+
   <div class="mt-8">
     <div data-controller="github-name-validator"
          data-github-name-validator-check-url-value="<%= check_github_name_path %>"
@@ -49,6 +50,7 @@
           </div>
         </div>
       </div>
+
       <div class="border-b border-gray-200 bg-white px-4 py-5 sm:px-6">
         <div class="-ml-4 -mt-4 flex flex-wrap items-center justify-between sm:flex-nowrap">
           <div class="ml-4 mt-4">
@@ -63,51 +65,23 @@
           </div>
         </div>
       </div>
-      <h2 class="text-base font-semibold text-gray-900">Pre-cooked Recipes</h2>
-      <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
-        <div class="mt-1 sm:mt-0 sm:col-span-2">
-          <div class="max-w-lg space-y-4" data-controller="recipe-selector">
-            <%= collection_radio_buttons :generated_app, :recipe_id, @pre_cooked_recipes, :id, :name do |b| %>
-              <div class="relative flex items-start">
-                <div class="flex items-center h-5">
-                  <%= b.radio_button class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300",
-                                   checked: b.object.id.to_s == params[:recipe_id],
-                                   data: {
-                                     recipe_selector_target: "radio",
-                                     action: "change->recipe-selector#updateUrl"
-                                   } %>
-                </div>
-                <div class="ml-3 text-sm">
-                  <%= b.label class: "font-medium text-gray-700" %>
-                  <p class="text-gray-500"><%= b.object.description %></p>
-                </div>
-              </div>
-            <% end %>
-          </div>
-        </div>
 
-        <h2 class="text-base font-semibold text-gray-900">Your Recipes</h2>
-        <div class="mt-1 sm:mt-0 sm:col-span-2">
-          <div class="max-w-lg space-y-4" data-controller="recipe-selector">
-            <%= collection_radio_buttons :generated_app, :recipe_id, @recipes, :id, :name do |b| %>
-              <div class="relative flex items-start">
-                <div class="flex items-center h-5">
-                  <%= b.radio_button class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300",
-                                   checked: b.object.id.to_s == params[:recipe_id],
-                                   data: {
-                                     recipe_selector_target: "radio",
-                                     action: "change->recipe-selector#updateUrl"
-                                   } %>
-                </div>
-                <div class="ml-3 text-sm">
-                  <%= b.label class: "font-medium text-gray-700" %>
-                  <p class="text-gray-500"><%= b.object.description %></p>
-                </div>
-              </div>
-            <% end %>
-          </div>
-        </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <%= render Recipes::SectionComponent.new(
+          title: "Pre-cooked meals",
+          subtitle: "Choose from our pre-cooked meals or craft your own recipe from scratch",
+          recipes: @pre_cooked_recipes,
+          selected_recipe_id: params[:recipe_id]
+        ) %>
+
+        <%= render Recipes::SectionComponent.new(
+          title: "Your Recipes",
+          subtitle: "Select from your personalized recipes",
+          recipes: @recipes,
+          selected_recipe_id: params[:recipe_id]
+        ) %>
       </div>
+
       <div class="pt-5">
         <div class="flex justify-end">
           <%= link_to "Cancel", root_path, class: "bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
