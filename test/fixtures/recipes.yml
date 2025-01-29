@@ -28,6 +28,8 @@ blog_recipe:
   name: "Blog Recipe"
   description: "A basic blog setup"
   cli_flags: "--database=postgresql"
+  ruby_version: "3.4.1"
+  rails_version: "8.0.1"
   created_by: john
   status: "published"
 

@@ -222,6 +222,28 @@ class RecipeTest < ActiveSupport::TestCase
     assert_equal [ 1, 2 ], @recipe.recipe_ingredients.order(:position).pluck(:position)
   end
 
+  test "to_yaml generates correct yaml structure" do
+    recipe = recipes(:blog_recipe)
+    yaml = YAML.load(recipe.to_yaml)
+
+    assert_equal recipe.name, yaml[:name]
+    assert_equal recipe.description, yaml[:description]
+    assert_equal recipe.cli_flags, yaml[:cli_flags]
+    assert_equal recipe.rails_version, yaml[:rails_version]
+    assert_equal recipe.ruby_version, yaml[:ruby_version]
+
+    # Test ingredients array
+    ingredients = yaml[:ingredients]
+    assert_instance_of Array, ingredients
+
+    recipe_ingredient = recipe.recipe_ingredients.first
+    ingredient = ingredients.first
+
+    assert_equal recipe_ingredient.ingredient.name, ingredient[:name]
+    assert_equal recipe_ingredient.position, ingredient[:position]
+    assert_equal recipe_ingredient.configuration, ingredient[:configuration]
+  end
+
   test "find_duplicate returns nil when no recipes with matching cli_flags exist" do
     recipe = recipes(:blog_recipe)
     recipe.update!(cli_flags: "--api")
