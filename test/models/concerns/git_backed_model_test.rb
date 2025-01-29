@@ -64,6 +64,16 @@ class GitBackedModelTest < ActiveSupport::TestCase
     @model.initial_git_commit
   end
 
+  test "initial_git_commit handles errors through handle_git_error" do
+    error = StandardError.new("Repository initialization failed")
+    repo = mock("git_repository")
+    repo.expects(:initialize_repository).raises(error)
+    @model.stubs(:repo).returns(repo)
+
+    @model.expects(:handle_git_error).with(error)
+    @model.initial_git_commit
+  end
+
   test "sync_to_git pushes files" do
     repo = mock("git_repository")
     repo.expects(:commit_changes).with(
