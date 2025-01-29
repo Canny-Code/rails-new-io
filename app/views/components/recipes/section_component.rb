@@ -12,7 +12,7 @@ class Recipes::SectionComponent < Phlex::HTML
 
   def template
     div(class: "border rounded-lg shadow-sm p-6 mb-6") do
-      h3(class: "text-lg font-bold text-gray-900") { @title }
+      h3(class: "text-base font-bold text-gray-900") { @title }
       p(class: "text-sm text-gray-600 mb-4") { @subtitle }
 
       @recipes.each do |recipe|
