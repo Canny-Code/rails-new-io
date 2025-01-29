@@ -98,7 +98,7 @@ class ResourceTable::Component < ApplicationComponent
   def render_view_button(resource)
     path = send("#{resource.class.name.underscore}_path", resource)
 
-    link_to(path, class: "text-gray-400 hover:text-gray-500") do
+    link_to(path, class: "text-gray-400 hover:text-gray-500", data: { turbo_frame: "_top" }) do
       span(class: "sr-only") { "View #{resource.class.name.underscore.humanize}" }
       svg(class: "w-6 h-6", xmlns: "http://www.w3.org/2000/svg", fill: "none", viewbox: "0 0 24 24", stroke: "currentColor") do |s|
         s.path(stroke_linecap: "round", stroke_linejoin: "round", stroke_width: "2", d: "M15 12a3 3 0 11-6 0 3 3 0 016 0z")

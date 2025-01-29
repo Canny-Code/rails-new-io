@@ -1,54 +1,56 @@
 <%= turbo_stream_from [ :generated_app, current_user.id ] %>
 <%= turbo_stream_from [ :notification_badge, current_user.id ] %>
 
-<%= render ResourceLayout::Component.new(
-  title: "Welcome #{current_user.github_username}!",
-  subtitle: "What will you build today?",
-  new_button_text: "Generate new app",
-  new_button_path: new_generated_app_path,
-  resources: @generated_apps,
-  search: true,
-  empty_state: EmptyState::Component.new(
-    user: current_user,
-    title: "No apps yet",
-    description: "Get started by creating your first app.",
-    button_text: "Start your journey",
-    button_path: new_generated_app_path,
-    emoji: "🚀"
-  ),
-  columns: [
-    {
-      header: "Name",
-      content: ->(app) { app.name },
-      sortable: true,
-      sort_key: :name
-    },
-    {
-      header: "Status",
-      content: ->(app) { app.status },
-      sortable: true,
-      sort_key: :status
-    },
-    {
-      header: "Created",
-      content: ->(app) { app.created_at },
-      sortable: true,
-      sort_key: :created_at
-    }
-  ],
-  actions: [ :view, :delete ],
-  secondary_actions: [
-    render(Buttons::Primary::Component.new(
-      text: "My Ingredients",
-      path: ingredients_path,
-      icon: false,
-      html_options: { data: { turbo_frame: "_top" } }
-    )),
-    render(Buttons::Primary::Component.new(
-      text: "My Recipes",
-      path: recipes_path,
-      icon: false,
-      html_options: { data: { turbo_frame: "_top" } }
-    ))
-  ]
-) %>
+<%= turbo_frame_tag "generated_apps_list" do %>
+  <%= render ResourceLayout::Component.new(
+    title: "Welcome #{current_user.github_username}!",
+    subtitle: "What will you build today?",
+    new_button_text: "Generate new app",
+    new_button_path: new_generated_app_path,
+    resources: @generated_apps,
+    search: true,
+    empty_state: EmptyState::Component.new(
+      user: current_user,
+      title: "No apps yet",
+      description: "Get started by creating your first app.",
+      button_text: "Start your journey",
+      button_path: new_generated_app_path,
+      emoji: "🚀"
+    ),
+    columns: [
+      {
+        header: "Name",
+        content: ->(app) { app.name },
+        sortable: true,
+        sort_key: :name
+      },
+      {
+        header: "Status",
+        content: ->(app) { app.status },
+        sortable: false,
+        sort_key: :status
+      },
+      {
+        header: "Created",
+        content: ->(app) { app.created_at },
+        sortable: true,
+        sort_key: :created_at
+      }
+    ],
+    actions: [ :view ],
+    secondary_actions: [
+      render(Buttons::Primary::Component.new(
+        text: "My Ingredients",
+        path: ingredients_path,
+        icon: false,
+        html_options: { data: { turbo_frame: "_top" } }
+      )),
+      render(Buttons::Primary::Component.new(
+        text: "My Recipes",
+        path: recipes_path,
+        icon: false,
+        html_options: { data: { turbo_frame: "_top" } }
+      ))
+    ]
+  ) %>
+<% end %>
