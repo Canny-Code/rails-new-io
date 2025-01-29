@@ -2,7 +2,6 @@ class ResourceTable::Component < ApplicationComponent
   include Phlex::Rails::Helpers::LinkTo
   include Phlex::Rails::Helpers::ButtonTo
   include Phlex::Rails::Helpers::Routes
-  include DashboardHelper
 
   delegate :params, to: :helpers
 
@@ -137,30 +136,7 @@ class ResourceTable::Component < ApplicationComponent
 
   def render_header(column)
     if column[:sortable]
-      current_direction = params[:direction] || DEFAULT_SORT_DIRECTION
-      current_column = params[:sort] || DEFAULT_SORT_COLUMN
-
-      direction = if column[:sort_key].to_s == current_column && current_direction == "asc"
-        "desc"
-      else
-        "asc"
-      end
-
-      link_to(
-        dashboard_path(
-          sort: column[:sort_key],
-          direction: direction,
-          status: params[:status],
-          search: params[:search]
-        ),
-        class: "group inline-flex items-center py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
-        data: { turbo_frame: "generated_apps_list" }
-      ) do
-        plain column[:header]
-        if column[:sort_key].to_s == current_column
-          span(class: "ml-2") { plain direction == "asc" ? "↓" : "↑" }
-        end
-      end
+      render SortLink::Component.new(name: column[:header], column: column[:sort_key])
     else
       plain column[:header]
     end
