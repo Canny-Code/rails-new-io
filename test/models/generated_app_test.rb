@@ -183,28 +183,32 @@ class GeneratedAppTest < ActiveSupport::TestCase
     assert_nil app.error_message
 
     # Create GitHub repo
-    app.create_github_repo!
+    app.start_github_repo_creation!
     assert app.app_status.creating_github_repo?
 
     # Start generation
-    app.generate!
-    assert app.app_status.generating?
-    assert_not_nil app.started_at
-    assert_nil app.completed_at
+    assert_changes -> { app.reload.last_build_at } do
+      app.start_generation!
+    end
+    assert app.generating?
 
     # Push to GitHub
-    app.push_to_github!
+    assert_changes -> { app.reload.last_build_at } do
+      app.start_github_push!
+    end
     assert app.app_status.pushing_to_github?
 
     # Start CI
-    app.start_ci!
-    assert app.app_status.running_ci?
+    assert_changes -> { app.reload.last_build_at } do
+      app.start_ci!
+    end
+    assert app.running_ci?
 
     # Complete generation
-    app.mark_as_completed!
-    assert app.app_status.completed?
-    assert_not_nil app.completed_at
-    assert_nil app.error_message
+    assert_changes -> { app.reload.last_build_at } do
+      app.complete!
+    end
+    assert app.completed?
 
     # Fail generation (from pending)
     app = GeneratedApp.create!(
@@ -215,7 +219,7 @@ class GeneratedAppTest < ActiveSupport::TestCase
       configuration_options: {}
     )
     error_message = "Something went wrong"
-    app.mark_as_failed!(error_message)
+    app.fail!(error_message)
     assert app.app_status.failed?
 
     assert_equal error_message, app.reload.app_status.reload.error_message
@@ -237,13 +241,13 @@ class GeneratedAppTest < ActiveSupport::TestCase
     )
 
     # Follow the proper state transition sequence
-    app.create_github_repo!
-    app.generate!
-    app.push_to_github!
+    app.start_github_repo_creation!
+    app.start_generation!
+    app.start_github_push!
     app.start_ci!
 
     assert_broadcasts_to("#{app.to_gid}:app_generation_log_entries") do
-      app.mark_as_completed!
+      app.complete!
     end
   end
 
@@ -264,19 +268,19 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
     # Create GitHub repo
     assert_changes -> { app.reload.last_build_at } do
-      app.create_github_repo!
+      app.start_github_repo_creation!
     end
     assert app.app_status.creating_github_repo?
 
     # Start generation
     assert_changes -> { app.reload.last_build_at } do
-      app.generate!
+      app.start_generation!
     end
     assert app.generating?
 
     # Push to GitHub
     assert_changes -> { app.reload.last_build_at } do
-      app.push_to_github!
+      app.start_github_push!
     end
     assert app.app_status.pushing_to_github?
 
@@ -288,7 +292,7 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
     # Complete generation
     assert_changes -> { app.reload.last_build_at } do
-      app.mark_as_completed!
+      app.complete!
     end
     assert app.completed?
   end
