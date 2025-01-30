@@ -16,6 +16,7 @@ module AppGeneration
     end
 
     def generate_rails_app
+      @generated_app.start_generation!
       @logger.info("Executing Rails new command")
       @command_execution_service.execute
       @logger.info("Rails app generation process finished successfully", {
@@ -38,7 +39,7 @@ module AppGeneration
 
     def push_to_remote
       @logger.info("Starting GitHub push")
-      @generated_app.app_status.start_github_push!
+      @generated_app.start_github_push!
       @repository_service.push_to_remote
       @logger.info("GitHub push completed successfully")
     end
@@ -61,7 +62,7 @@ module AppGeneration
         backtrace: error.backtrace.join("\n")
       })
 
-      @generated_app.fail!(error.message) unless @generated_app.app_status.failed?
+      @generated_app.fail!(error.message) unless @generated_app.failed?
     end
   end
 end
