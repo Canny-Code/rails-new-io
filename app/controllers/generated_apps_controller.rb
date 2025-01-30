@@ -15,15 +15,22 @@ class GeneratedAppsController < ApplicationController
   end
 
   def create
-    recipe = Recipe.where(created_by: current_user).find(params[:generated_app][:recipe_id])
+    begin
+      @generated_app = current_user.generated_apps.new(
+        name: params[:app_name],
+        recipe: Recipe.where(created_by: current_user).find(params[:generated_app][:recipe_id])
+      )
 
-    @generated_app = current_user.generated_apps.create!(
-      name: params[:app_name],
-      recipe: recipe
-    )
+      puts "DEBUG: Generated app created successfully"
 
-    AppGeneration::Orchestrator.new(@generated_app).enqueue_app_generation_job
-
-    redirect_to generated_app_log_entries_path(@generated_app)
+      if @generated_app.save
+        AppGenerationJob.perform_later(@generated_app.id)
+        redirect_to generated_app_log_entries_path(@generated_app)
+      else
+        redirect_to new_generated_app_path, alert: "Failed to create generated app: #{@generated_app.errors.full_messages.to_sentence}"
+      end
+    rescue ActiveRecord::RecordNotFound
+      redirect_to new_generated_app_path, alert: "Recipe not found - you either don't have access to this recipe or it doesn't exist"
+    end
   end
 end

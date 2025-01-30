@@ -35,14 +35,12 @@ class GeneratedApp < ApplicationRecord
   include HasGenerationLifecycle
   include GitBackedModel
 
+  attr_writer :logger
+
   delegate :ruby_version, :rails_version, to: :recipe
 
   belongs_to :user
   belongs_to :recipe
-
-  has_one :app_status, dependent: :destroy
-  has_many :app_changes, dependent: :destroy
-  has_many :log_entries, class_name: "AppGeneration::LogEntry", dependent: :destroy
 
   validates :name, presence: true,
                   uniqueness: { scope: :user_id },
@@ -59,26 +57,56 @@ class GeneratedApp < ApplicationRecord
     allow_blank: true
   validates :recipe, presence: true
 
-  after_update_commit :broadcast_clone_box, if: :completed?
-
-  broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
-  broadcasts_to ->(generated_app) { [ :notification_badge, generated_app.user_id ] }
-
   def cleanup_after_push?
     true
   end
 
-  def apply_ingredient!(ingredient, configuration = {})
-    logger = AppGeneration::Logger.new(self)
+  def apply_ingredients
+    repository_service = AppRepositoryService.new(self, @logger)
+
+    unless ingredients.any?
+      @logger.info("No ingredients to apply - moving on")
+      return
+    end
+
+    ingredients.each do |ingredient|
+      apply_ingredient(ingredient)
+
+      @logger.info("Committing ingredient changes")
+      repository_service.commit_changes_after_applying_ingredient(ingredient)
+      @logger.info("Ingredient applied successfully", { name: ingredient.name })
+    end
+  end
+
+  def start_ci
+    # future hook for custom CI - right now, it's just a status update
+    # CI run is handled by GitHub Actions
+    app_status.start_ci!
+  end
+
+  def complete
+    # hook to do stuff after app generation is complete
+    app_status.complete!
+  end
+
+  def command
+    "rails new #{name} #{recipe.cli_flags}"
+  end
+
+  def ingredients
+    @_ingredients ||= recipe.recipe_ingredients.includes(:ingredient).map(&:ingredient)
+  end
+
+  def on_git_error(error)
+    app_status.fail!(error.message)
+  end
+
+  private
+
+  def apply_ingredient(ingredient, configuration = {})
+    @logger.info("Applying ingredient", { name: ingredient.name })
 
     transaction do
-      logger.info("Applying ingredient...", {
-        ingredient: ingredient.name,
-        workspace_path:,
-        pwd: Dir.pwd
-      })
-
-      # Create recipe change first
       recipe_change = recipe.recipe_changes.create!(
         ingredient: ingredient,
         change_type: "add_ingredient",
@@ -91,7 +119,13 @@ class GeneratedApp < ApplicationRecord
         configuration: configuration
       )
 
-      template_path = DataRepositoryService.new(user: user).template_path(ingredient)
+      template_path = DataRepositoryService.new(user:).template_path(ingredient)
+
+      unless File.exist?(template_path)
+        @logger.error("Template file not found", { path: template_path })
+        raise "Template file not found: #{template_path}"
+      end
+
 
       require "rails/generators"
       require "rails/generators/rails/app/app_generator"
@@ -117,27 +151,13 @@ class GeneratedApp < ApplicationRecord
       end
     end
   rescue StandardError => e
-    logger.error("Failed to apply ingredient", {
+    @logger.error("Failed to apply ingredient", {
       error: e.message,
       backtrace: e.backtrace.first(20),
       pwd: Dir.pwd
     })
     raise
   end
-
-  def command
-    "rails new #{name} #{recipe.cli_flags}"
-  end
-
-  def ingredients
-    recipe.recipe_ingredients.includes(:ingredient).map(&:ingredient)
-  end
-
-  def on_git_error(error)
-    app_status.fail!(error.message)
-  end
-
-  private
 
   def broadcast_clone_box
     Turbo::StreamsChannel.broadcast_update_to(

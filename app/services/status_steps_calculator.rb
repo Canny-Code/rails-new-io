@@ -7,7 +7,7 @@ class StatusStepsCalculator
     @generated_app = generated_app
     @app_status = generated_app.app_status
     @current_state = @app_status.status.to_sym
-    @state_sequence = @app_status.state_sequence
+    @state_sequence = AppStatus.state_sequence
     @history = @app_status.status_history
   end
 

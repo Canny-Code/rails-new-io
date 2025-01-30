@@ -45,7 +45,7 @@ module GitBackedModel
     @repo ||= begin
       case self
       when GeneratedApp
-        AppRepositoryService.new(self)
+        AppRepositoryService.new(self, @logger)
       else
         DataRepositoryService.new(user: created_by)
       end

@@ -20,6 +20,7 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     @logger = mock("logger")
     @logger.stubs(:info)
     @logger.stubs(:error)
+    @generated_app.logger = @logger
     AppGeneration::Logger.stubs(:new).returns(@logger)
 
     # Mock Rails generators
@@ -33,7 +34,7 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
 
     assert_difference -> { @recipe.recipe_changes.count }, 1 do
       assert_difference -> { @generated_app.app_changes.count }, 1 do
-        @generated_app.apply_ingredient!(@ingredient, configuration)
+        @generated_app.send(:apply_ingredient, @ingredient, configuration)
       end
     end
 
@@ -63,7 +64,9 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
       auth_type: "devise"
     ).returns(@generator)
 
-    @generated_app.apply_ingredient!(@ingredient, configuration)
+    File.expects(:exist?).with(template_path).returns(true)
+
+    @generated_app.send(:apply_ingredient, @ingredient, configuration)
   end
 
   test "handles errors during application" do
@@ -87,7 +90,7 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     )
 
     assert_raises StandardError do
-      @generated_app.apply_ingredient!(@ingredient, configuration)
+      @generated_app.send(:apply_ingredient, @ingredient, configuration)
     end
   end
 
@@ -97,7 +100,7 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     @generator.expects(:apply).once
     ENV.expects(:[]=).with("BUNDLE_GEMFILE", File.join(@app_directory, "Gemfile"))
 
-    @generated_app.apply_ingredient!(@ingredient, configuration)
+    @generated_app.send(:apply_ingredient, @ingredient, configuration)
   end
 
   test "wraps operations in a transaction" do
@@ -123,7 +126,7 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     assert_no_difference -> { @recipe.recipe_changes.count } do
       assert_no_difference -> { @generated_app.app_changes.count } do
         assert_raises StandardError do
-          @generated_app.apply_ingredient!(@ingredient, configuration)
+          @generated_app.send(:apply_ingredient, @ingredient, configuration)
         end
       end
     end

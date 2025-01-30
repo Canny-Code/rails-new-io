@@ -8,60 +8,21 @@ module HasGenerationLifecycle
 
     after_create :create_app_status
 
+    # Core attributes
     delegate :status, :status_history, :started_at, :completed_at, :error_message,
-             :pending?, :generating?, :pushing_to_github?, :running_ci?, :completed?, :failed?,
+             *AppStatus.state_predicates,
+             *AppStatus.events,
              to: :app_status
+
+    after_update_commit :broadcast_clone_box, if: :completed?
+
+    broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
+    broadcasts_to ->(generated_app) { [ :notification_badge, generated_app.user_id ] }
 
     private
 
     def create_app_status
       build_app_status.save!
-      logger.info("Starting app generation workflow")
     end
-
-    def logger
-      @logger ||= AppGeneration::Logger.new(self)
-    end
-  end
-
-  def generate!
-    touch(:last_build_at)
-    app_status.start_generation!
-    logger.info("Starting app generation")
-  end
-
-  def create_github_repo!
-    touch(:last_build_at)
-    app_status.start_github_repo_creation!
-    logger.info("Starting GitHub repo creation")
-  end
-
-  def push_to_github!
-    app_status.start_github_push!
-    logger.info("Starting GitHub push")
-  end
-
-  def start_ci!
-    touch(:last_build_at)
-    app_status.start_ci!
-    logger.info("Starting CI run")
-  end
-
-  def mark_as_completed!
-    touch(:last_build_at)
-    app_status.complete!
-    logger.info("App generation completed successfully")
-  end
-
-  def mark_as_failed!(error_message)
-    touch(:last_build_at)
-    app_status.fail!(error_message)
-    logger.error("App generation failed: #{error_message}")
-  end
-
-  def restart!
-    touch(:last_build_at)
-    app_status.restart!
-    logger.info("Restarting app generation")
   end
 end

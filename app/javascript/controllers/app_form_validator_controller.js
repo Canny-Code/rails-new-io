@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "message", "spinner", "submitButton"]
+  static targets = ["input", "message", "spinner", "submitButton", "recipeRadio"]
   static values = {
     checkUrl: String,
     debounce: { type: Number, default: 500 },
@@ -14,7 +14,23 @@ export default class extends Controller {
     this.disableSubmit()
   }
 
-  async validate(event) {
+  connect() {
+    this.validateForm()
+  }
+
+  validateForm() {
+    const name = this.inputTarget.value.trim()
+    const recipeSelected = Array.from(this.recipeRadioTargets).some(radio => radio.checked)
+
+    if (!name || !recipeSelected) {
+      this.disableSubmit()
+      return
+    }
+
+    this.validate()
+  }
+
+  async validate() {
     if (!this.hasInputTarget || !this.hasMessageTarget || !this.hasSpinnerTarget || !this.hasSubmitButtonTarget) {
       return
     }
@@ -41,8 +57,14 @@ export default class extends Controller {
       this.hideSpinner()
 
       if (data.available) {
-        this.enableSubmit()
-        this.showMessage("✓ Name is available", this.successClassValue)
+        const recipeSelected = Array.from(this.recipeRadioTargets).some(radio => radio.checked)
+        if (recipeSelected) {
+          this.enableSubmit()
+          this.showMessage("✓ Name is available", this.successClassValue)
+        } else {
+          this.disableSubmit()
+          this.showMessage("Please select a recipe", this.errorClassValue)
+        }
       } else {
         this.disableSubmit()
         this.showMessage("✗ Name is already taken", this.errorClassValue)

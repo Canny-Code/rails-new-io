@@ -4,9 +4,9 @@
     </div>
   </div>
   <div class="mt-8">
-    <div data-controller="github-name-validator"
-         data-github-name-validator-check-url-value="<%= check_github_name_path %>"
-         data-github-name-validator-debounce-value="500">
+    <div data-controller="app-form-validator"
+         data-app-form-validator-check-url-value="<%= check_github_name_path %>"
+         data-app-form-validator-debounce-value="500">
       <%= form_tag generated_apps_path, method: :post, class: "space-y-8 divide-y divide-gray-200" do %>
         <div class="space-y-6 sm:space-y-5">
           <div class="relative overflow-hidden">
@@ -21,15 +21,15 @@
                 </label>
                 <div class="flex">
                   <input id="app-name"
-                       data-github-name-validator-target="input"
+                       data-app-form-validator-target="input"
                        name="app_name"
-                       data-action="input->github-name-validator#validate"
+                       data-action="input->app-form-validator#validateForm"
                   autocomplete="off"
                   placeholder="my-next-big-thing"
                   class="appearance-none w-full min-w-96 px-5 py-2 border-2 border-gray-300 text-base leading-6 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-xl">
                 <div class="ml-1 shrink-0">
                   <%= button_tag type: "submit",
-                  data: { github_name_validator_target: "submitButton" },
+                  data: { app_form_validator_target: "submitButton" },
                   disabled: true,
                   class: "h-full inline-flex justify-center ml-1 py-2 px-5 items-center border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed" do %>
                     Generate App
@@ -37,8 +37,8 @@
                 </div>
               </div>
               <div class="text-sm mx-5">
-                <div data-github-name-validator-target="message" class="hidden"></div>
-                <div data-github-name-validator-target="spinner" class="hidden flex justify-center">
+                <div data-app-form-validator-target="message" class="hidden"></div>
+                <div data-app-form-validator-target="spinner" class="hidden flex justify-center">
                   <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -48,78 +48,79 @@
             </div>
           </div>
         </div>
-      </div>
-      <div class="border-b border-gray-200 bg-white px-4 py-5 sm:px-6">
-        <div class="-ml-4 -mt-4 flex flex-wrap items-center justify-between sm:flex-nowrap">
-          <div class="ml-4 mt-4">
-            <h3 class="text-base font-semibold text-gray-900">Select Recipe</h3>
-            <p class="mt-1 text-sm text-gray-500">Choose from our pre-cooked meals or craft your own recipe from scratch</p>
-          </div>
-          <div class="ml-4 mt-4 shrink-0">
-            <%= render Buttons::Primary::Component.new(
-              text: "New Recipe",
-              path: setup_recipes_path(slug: "basic-setup")
-            ) %>
-          </div>
-        </div>
-      </div>
-      <h2 class="text-base font-semibold text-gray-900">Pre-cooked Recipes</h2>
-      <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
-        <div class="mt-1 sm:mt-0 sm:col-span-2">
-          <div class="max-w-lg space-y-4" data-controller="recipe-selector">
-            <%= collection_radio_buttons :generated_app, :recipe_id, @pre_cooked_recipes, :id, :name do |b| %>
-              <div class="relative flex items-start">
-                <div class="flex items-center h-5">
-                  <%= b.radio_button class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300",
-                                   checked: b.object.id.to_s == params[:recipe_id],
-                                   data: {
-                                     recipe_selector_target: "radio",
-                                     action: "change->recipe-selector#updateUrl"
-                                   } %>
-                </div>
-                <div class="ml-3 text-sm">
-                  <%= b.label class: "font-medium text-gray-700" %>
-                  <p class="text-gray-500"><%= b.object.description %></p>
-                </div>
-              </div>
-            <% end %>
+        <div class="border-b border-gray-200 bg-white px-4 py-5 sm:px-6">
+          <div class="-ml-4 -mt-4 flex flex-wrap items-center justify-between sm:flex-nowrap">
+            <div class="ml-4 mt-4">
+              <h3 class="text-base font-semibold text-gray-900">Select Recipe</h3>
+              <p class="mt-1 text-sm text-gray-500">Choose from our pre-cooked meals or craft your own recipe from scratch</p>
+            </div>
+            <div class="ml-4 mt-4 shrink-0">
+              <%= render Buttons::Primary::Component.new(
+                text: "New Recipe",
+                path: setup_recipes_path(slug: "basic-setup")
+              ) %>
+            </div>
           </div>
         </div>
+        <h2 class="text-base font-semibold text-gray-900">Pre-cooked Recipes</h2>
+        <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
+          <div class="mt-1 sm:mt-0 sm:col-span-2">
+            <div class="max-w-lg space-y-4" data-controller="recipe-selector">
+              <%= collection_radio_buttons :generated_app, :recipe_id, @pre_cooked_recipes, :id, :name do |b| %>
+                <div class="relative flex items-start">
+                  <div class="flex items-center h-5">
+                    <%= b.radio_button class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300",
+                                     checked: b.object.id.to_s == params[:recipe_id],
+                                     data: {
+                                       recipe_selector_target: "radio",
+                                       action: "change->recipe-selector#updateUrl change->app-form-validator#validateForm",
+                                       app_form_validator_target: "recipeRadio"
+                                     } %>
+                  </div>
+                  <div class="ml-3 text-sm">
+                    <%= b.label class: "font-medium text-gray-700" %>
+                    <p class="text-gray-500"><%= b.object.description %></p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
 
-        <h2 class="text-base font-semibold text-gray-900">Your Recipes</h2>
-        <div class="mt-1 sm:mt-0 sm:col-span-2">
-          <div class="max-w-lg space-y-4" data-controller="recipe-selector">
-            <%= collection_radio_buttons :generated_app, :recipe_id, @recipes, :id, :name do |b| %>
-              <div class="relative flex items-start">
-                <div class="flex items-center h-5">
-                  <%= b.radio_button class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300",
-                                   checked: b.object.id.to_s == params[:recipe_id],
-                                   data: {
-                                     recipe_selector_target: "radio",
-                                     action: "change->recipe-selector#updateUrl"
-                                   } %>
+          <h2 class="text-base font-semibold text-gray-900">Your Recipes</h2>
+          <div class="mt-1 sm:mt-0 sm:col-span-2">
+            <div class="max-w-lg space-y-4" data-controller="recipe-selector">
+              <%= collection_radio_buttons :generated_app, :recipe_id, @recipes, :id, :name do |b| %>
+                <div class="relative flex items-start">
+                  <div class="flex items-center h-5">
+                    <%= b.radio_button class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300",
+                                     checked: b.object.id.to_s == params[:recipe_id],
+                                     data: {
+                                       recipe_selector_target: "radio",
+                                       action: "change->recipe-selector#updateUrl change->app-form-validator#validateForm",
+                                       app_form_validator_target: "recipeRadio"
+                                     } %>
+                  </div>
+                  <div class="ml-3 text-sm">
+                    <%= b.label class: "font-medium text-gray-700" %>
+                    <p class="text-gray-500"><%= b.object.description %></p>
+                  </div>
                 </div>
-                <div class="ml-3 text-sm">
-                  <%= b.label class: "font-medium text-gray-700" %>
-                  <p class="text-gray-500"><%= b.object.description %></p>
-                </div>
-              </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        <div class="pt-5">
+          <div class="flex justify-end">
+            <%= link_to "Cancel", root_path, class: "bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+            <%= button_tag type: "submit",
+                    data: { app_form_validator_target: "submitButton" },
+                    disabled: true,
+                    class: "ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed" do %>
+              Generate App
             <% end %>
           </div>
         </div>
-      </div>
-      <div class="pt-5">
-        <div class="flex justify-end">
-          <%= link_to "Cancel", root_path, class: "bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
-          <%= button_tag type: "submit",
-                  data: { github_name_validator_target: "submitButton" },
-                  disabled: true,
-                  class: "ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed" do %>
-            Generate App
-          <% end %>
-        </div>
-      </div>
-    <% end %>
+      <% end %>
+    </div>
   </div>
-</div>
 </div>

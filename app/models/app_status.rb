@@ -31,7 +31,6 @@ class AppStatus < ApplicationRecord
 
   after_update :broadcast_status_change, if: :saved_change_to_status?
   after_save :notify_status_change, if: :saved_change_to_status?
-  after_save :update_generated_app_build_time, if: :saved_change_to_status?
 
   include AASM
 
@@ -44,38 +43,33 @@ class AppStatus < ApplicationRecord
     state :completed
     state :failed
 
+    after_all_transitions do
+      track_transition
+    end
+
     event :start_github_repo_creation do
       transitions from: :pending, to: :creating_github_repo
-      after { track_transition(:creating_github_repo) }
     end
 
     event :start_generation do
       transitions from: :creating_github_repo, to: :generating
       after do
         update(started_at: Time.current)
-        track_transition(:generating)
       end
     end
 
     event :start_github_push do
       transitions from: :generating, to: :pushing_to_github
-      after do
-        track_transition(:pushing_to_github)
-      end
     end
 
     event :start_ci do
       transitions from: :pushing_to_github, to: :running_ci
-      after do
-        track_transition(:running_ci)
-      end
     end
 
     event :complete do
       transitions from: :running_ci, to: :completed
       after do
         update(completed_at: Time.current)
-        track_transition(:completed)
       end
     end
 
@@ -86,26 +80,35 @@ class AppStatus < ApplicationRecord
           completed_at: Time.current,
           error_message: error_message
         )
-        track_transition(:failed)
       end
     end
 
     event :restart do
       transitions from: [ :generating, :failed ], to: :pending
       after do
-        self.error_message = nil
-        track_transition(:pending)
+        update(error_message: nil)
       end
     end
   end
 
-  def self.states
-    aasm.states.map(&:name)
+  class << self
+    def states
+      aasm.states.map(&:name)
+    end
+
+    def state_sequence
+      states - [ :failed ]
+    end
+
+    def events
+      aasm.events.map { |event| "#{event.name}!" }
+    end
+
+    def state_predicates
+      aasm.states.map { |state| "#{state.name}?" }
+    end
   end
 
-  def state_sequence
-    [ :pending, :creating_github_repo, :generating, :pushing_to_github, :running_ci, :completed ]
-  end
 
   def broadcast_status_steps
     channel = "#{generated_app.to_gid}:app_status"
@@ -118,15 +121,17 @@ class AppStatus < ApplicationRecord
     )
   end
 
-  def track_transition(to_state)
+  private
+
+  def track_transition
     history_entry = {
       from: aasm.from_state,
-      to: to_state,
+      to: aasm.to_state,
       timestamp: Time.current
     }
 
     self.status_history = status_history.push(history_entry)
-    save
+    generated_app.touch(:last_build_at)
     broadcast_status_steps
   end
 
@@ -155,11 +160,5 @@ class AppStatus < ApplicationRecord
       old_status: status_before_last_save,
       new_status: status
     ).deliver(generated_app.user)
-  end
-
-  private
-
-  def update_generated_app_build_time
-    generated_app.update_column(:last_build_at, Time.current)
   end
 end

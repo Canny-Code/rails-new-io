@@ -5,7 +5,7 @@ module CommandExecutionTestHelper
 
     CommandExecutionService.
       stubs(:new).
-      with(generated_app, generated_app.command).
+      with(generated_app, instance_of(AppGeneration::Logger)).
       returns(service)
 
     service

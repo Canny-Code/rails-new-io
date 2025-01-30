@@ -7,12 +7,17 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     @recipe = recipes(:blog_recipe)
     @temp_dir = Dir.mktmpdir
 
+    @logger = mock("logger")
+    @logger.stubs(:info).with { |message, metadata = {}| @generated_app.log_entries.create!(message: message, metadata: metadata, level: :info, phase: :generating) }
+    @logger.stubs(:error).with { |message, metadata = {}| @generated_app.log_entries.create!(message: message, metadata: metadata, level: :error, phase: :generating) }
+    AppGeneration::Logger.stubs(:new).returns(@logger)
+
     # Use an existing app and reset its status
     @generated_app = generated_apps(:pending_app)
     @generated_app.update!(workspace_path: @temp_dir)
     @app_status = @generated_app.app_status
     @app_status.update!(
-      status: "generating",
+      status: "creating_github_repo",
       status_history: [],
       started_at: nil,
       completed_at: nil,
@@ -25,7 +30,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     ]
 
     # Initialize service with the first valid command
-    @service = CommandExecutionService.new(@generated_app, @valid_commands.first)
+    @service = CommandExecutionService.new(@generated_app, @logger, @valid_commands.first)
   end
 
   def teardown
@@ -37,12 +42,31 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     error = "Sample error"
 
     @valid_commands.each do |command|
+      # Reset app state before each command
+      @app_status.update!(
+        status: "creating_github_repo",
+        status_history: [],
+        started_at: nil,
+        completed_at: nil,
+        error_message: nil
+      )
+
       initial_count = @generated_app.log_entries.count
-      service = CommandExecutionService.new(@generated_app, command)
+      service = CommandExecutionService.new(@generated_app, @logger, command)
+
+      puts "DEBUG: Initial log entry count: #{initial_count}"
 
       Open3.stub :popen3, mock_popen3(output, error, success: true) do
-        assert_difference -> { @generated_app.log_entries.count }, 7 do
+        puts "DEBUG: Before execution - log entries count: #{@generated_app.log_entries.count}"
+
+        assert_difference -> { @generated_app.log_entries.count }, 8 do
           service.execute
+        end
+
+        puts "DEBUG: After execution - log entries count: #{@generated_app.log_entries.count}"
+        puts "DEBUG: Log entries messages:"
+        @generated_app.log_entries.order(created_at: :asc).offset(initial_count).each do |entry|
+          puts "DEBUG: - #{entry.message} (#{entry.level})"
         end
 
         log_entries = @generated_app.log_entries.order(created_at: :asc).offset(initial_count)
@@ -50,11 +74,13 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
         expected_messages = [
           "Validating command: #{command}",
           "Command validation successful",
+          "Starting app generation",
           "Created temporary directory",
           "Preparing to execute command",
           "System environment details",
           "Environment variables for command execution",
-          "Initializing Rails application generation...\nSample output"
+          "Initializing Rails application generation...\nSample output",
+          "Rails app generation process started"
         ]
 
         expected_messages.each_with_index do |message, index|
@@ -76,7 +102,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
     assert_difference -> { AppGeneration::LogEntry.count }, 2 do # Expect both validation start and error logs
       error = assert_raises(CommandExecutionService::InvalidCommandError) do
-        CommandExecutionService.new(@generated_app, invalid_command)
+        CommandExecutionService.new(@generated_app, @logger, invalid_command)
       end
       assert_equal "App name in command must match GeneratedApp name", error.message
     end
@@ -97,7 +123,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
   test "raises error for invalid commands" do
     assert_difference -> { AppGeneration::LogEntry.count }, 2 do # Expect both validation start and error logs
       error = assert_raises(CommandExecutionService::InvalidCommandError) do
-        CommandExecutionService.new(@generated_app, "rm -rf /")
+        CommandExecutionService.new(@generated_app, @logger, "rm -rf /")
       end
       assert_equal "Command must start with one of: rails new, bin/rails app:template", error.message
     end
@@ -121,7 +147,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     invalid_commands.each do |cmd, (expected_message, expected_log)|
       assert_difference -> { AppGeneration::LogEntry.count }, 2 do # Expect both validation start and error logs
         error = assert_raises(CommandExecutionService::InvalidCommandError) do
-          CommandExecutionService.new(@generated_app, cmd)
+          CommandExecutionService.new(@generated_app, @logger, cmd)
         end
         assert_equal expected_message, error.message
 
@@ -138,11 +164,11 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
   test "handles timeouts" do
     @service.stub :run_isolated_process, -> { raise Timeout::Error } do
-      assert_difference -> { AppGeneration::LogEntry.count }, 1 do
+      assert_difference -> { AppGeneration::LogEntry.count }, 2 do
         assert_raises(Timeout::Error) { @service.execute }
       end
 
-      log_entries = @generated_app.log_entries.order(created_at: :desc).limit(1)
+      log_entries = @generated_app.log_entries.order(created_at: :desc).limit(2)
       assert_equal "Created temporary directory", log_entries[0].message
       assert log_entries.all? { |entry| entry.info? }
     end
@@ -153,11 +179,11 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     error = "Sample error"
 
     Open3.stub :popen3, mock_popen3(output, error, success: true) do
-      assert_difference -> { AppGeneration::LogEntry.count }, 7 do
+      assert_difference -> { AppGeneration::LogEntry.count }, 8 do
         @service.execute
       end
 
-      log_entries = @generated_app.log_entries.order(created_at: :desc).limit(7)
+      log_entries = @generated_app.log_entries.order(created_at: :desc).limit(8)
 
       assert_equal "Rails app generation process finished successfully", log_entries[0].message
       assert_equal "Rails app generation process started", log_entries[1].message
@@ -177,7 +203,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     error = "Error message"
 
     Open3.stub :popen3, mock_popen3(output, error, success: false) do
-      assert_difference -> { AppGeneration::LogEntry.count }, 7 do
+      assert_difference -> { AppGeneration::LogEntry.count }, 8 do
         assert_raises(RuntimeError) { @service.execute }
       end
 
@@ -217,7 +243,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       assert_equal pid, process_pid
     } do
       Open3.stub :popen3, mock_popen3(output, error, success: true, pid: pid) do
-        assert_difference -> { AppGeneration::LogEntry.count }, 8 do
+        assert_difference -> { AppGeneration::LogEntry.count }, 9 do
           @service.execute
         end
 
@@ -282,11 +308,11 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
   test "executes valid template command" do
     template_command = "bin/rails app:template LOCATION=lib/templates/blog.rb"
-    service = CommandExecutionService.new(@generated_app, template_command)
+    service = CommandExecutionService.new(@generated_app, @logger, template_command)
     output = "Template applied successfully"
 
     Open3.stub :popen3, mock_popen3(output, "", success: true) do
-      assert_difference -> { @generated_app.log_entries.count }, 7 do
+      assert_difference -> { @generated_app.log_entries.count }, 8 do
         service.execute
       end
 
@@ -307,7 +333,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     invalid_template_commands.each do |cmd, expected_error|
       assert_difference -> { AppGeneration::LogEntry.count }, 2 do
         error = assert_raises(CommandExecutionService::InvalidCommandError) do
-          CommandExecutionService.new(@generated_app, cmd)
+          CommandExecutionService.new(@generated_app, @logger, cmd)
         end
         assert_equal expected_error, error.message
 

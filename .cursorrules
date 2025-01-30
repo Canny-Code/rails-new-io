@@ -90,6 +90,10 @@ Update .cursorrules with learnings. When you run into something 'aha', add it to
 
 # Mocha for mocking, not Minitest::Mock
 
+# NEVER REMOVE DEBUG MESSAGES UNTIL THE TESTS ARE PASSING
+# ONLY REMOVE DEBUG MESSAGES WHEN EXPLICITLY TOLD TO DO SO
+# DEBUG MESSAGES ARE SACRED UNTIL THE PROBLEM IS SOLVED
+
 [gems]
 Ruby
 Rails

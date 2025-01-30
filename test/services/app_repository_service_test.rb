@@ -39,7 +39,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     # Verify GeneratedApp was updated
     @generated_app.reload
-    assert_equal @repository_name, @generated_app.github_repo_name
+    assert_equal @repository_name, @generated_app.name
     assert_equal response.html_url, @generated_app.github_repo_url
   end
 
@@ -51,7 +51,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     init_git_repo(app_dir)
 
     @generated_app.update!(
-      github_repo_name: @repository_name,
+      name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
       workspace_path: workspace_path
     )
@@ -63,11 +63,11 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     File.stubs(:directory?).with(".git").returns(true)
 
     # Mock git commands that need output
-    @service.stubs(:run_git_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("existing-sha")  # Has commits
-    @service.stubs(:run_git_command).with("git rev-parse --abbrev-ref HEAD").returns("main\n")
-    @service.stubs(:run_git_command).with("git remote -v").returns("")
-    @service.stubs(:run_git_command).with("git status --porcelain").returns("")
-    @service.stubs(:run_git_command).with("git config --list").returns("")
+    @service.stubs(:run_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("existing-sha")  # Has commits
+    @service.stubs(:run_command).with("git rev-parse --abbrev-ref HEAD").returns("main\n")
+    @service.stubs(:run_command).with("git remote -v").returns("")
+    @service.stubs(:run_command).with("git status --porcelain").returns("")
+    @service.stubs(:run_command).with("git config --list").returns("")
 
     # Mock system calls - all should succeed
     @service.stubs(:system).returns(true)  # Default success for safety
@@ -122,7 +122,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     init_git_repo(app_dir)
 
     @generated_app.update!(
-      github_repo_name: @repository_name,
+      name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
       workspace_path: workspace_path
     )
@@ -134,11 +134,11 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     File.stubs(:directory?).with(".git").returns(true)
 
     # Mock git commands that need output
-    @service.stubs(:run_git_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("")  # No commits yet
-    @service.stubs(:run_git_command).with("git rev-parse --abbrev-ref HEAD").returns("main\n")
-    @service.stubs(:run_git_command).with("git remote -v").returns("")
-    @service.stubs(:run_git_command).with("git status --porcelain").returns("")
-    @service.stubs(:run_git_command).with("git config --list").returns("")
+    @service.stubs(:run_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("")  # No commits yet
+    @service.stubs(:run_command).with("git rev-parse --abbrev-ref HEAD").returns("main\n")
+    @service.stubs(:run_command).with("git remote -v").returns("")
+    @service.stubs(:run_command).with("git status --porcelain").returns("")
+    @service.stubs(:run_command).with("git config --list").returns("")
 
     # Mock system calls - all should succeed
     @service.stubs(:system).returns(true)  # Default success for safety
@@ -165,7 +165,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     init_git_repo(app_dir)
 
     @generated_app.update!(
-      github_repo_name: @repository_name,
+      name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
       workspace_path: workspace_path
     )
@@ -177,11 +177,11 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     File.stubs(:directory?).with(".git").returns(true)
 
     # Mock git commands that need output
-    @service.stubs(:run_git_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("existing-sha")  # Has commits
-    @service.stubs(:run_git_command).with("git rev-parse --abbrev-ref HEAD").returns("master\n")  # On master branch
-    @service.stubs(:run_git_command).with("git remote -v").returns("")
-    @service.stubs(:run_git_command).with("git status --porcelain").returns("")
-    @service.stubs(:run_git_command).with("git config --list").returns("")
+    @service.stubs(:run_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("existing-sha")  # Has commits
+    @service.stubs(:run_command).with("git rev-parse --abbrev-ref HEAD").returns("master\n")  # On master branch
+    @service.stubs(:run_command).with("git remote -v").returns("")
+    @service.stubs(:run_command).with("git status --porcelain").returns("")
+    @service.stubs(:run_command).with("git config --list").returns("")
 
     # Mock system calls - all should succeed
     @service.stubs(:system).returns(true)  # Default success for safety
@@ -211,7 +211,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     Turbo::StreamsChannel.stubs(:broadcast_replace_to)
 
     @generated_app.update!(
-      github_repo_name: @repository_name,
+      name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
       workspace_path: workspace_path
     )
@@ -240,7 +240,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     Turbo::StreamsChannel.stubs(:broadcast_replace_to)
 
     @generated_app.update!(
-      github_repo_name: @repository_name,
+      name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
       workspace_path: workspace_path
     )
@@ -252,11 +252,11 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     File.stubs(:directory?).with(".git").returns(true)
 
     # Mock git commands
-    @service.stubs(:run_git_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("")  # No commits yet
-    @service.stubs(:run_git_command).with("git status --porcelain").returns("?? test.rb")  # Untracked file
-    @service.stubs(:run_git_command).with("git rev-parse --abbrev-ref HEAD").returns("main\n")
-    @service.stubs(:run_git_command).with("git remote -v").returns("")
-    @service.stubs(:run_git_command).with("git config --list").returns("")
+    @service.stubs(:run_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("")  # No commits yet
+    @service.stubs(:run_command).with("git status --porcelain").returns("?? test.rb")  # Untracked file
+    @service.stubs(:run_command).with("git rev-parse --abbrev-ref HEAD").returns("main\n")
+    @service.stubs(:run_command).with("git remote -v").returns("")
+    @service.stubs(:run_command).with("git config --list").returns("")
 
     # Mock system calls - make the initial commit fail
     @service.stubs(:system).returns(true)  # Default success for safety
@@ -283,7 +283,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     Turbo::StreamsChannel.stubs(:broadcast_replace_to)
 
     @generated_app.update!(
-      github_repo_name: @repository_name,
+      name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
       workspace_path: workspace_path
     )
@@ -295,11 +295,11 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     File.stubs(:directory?).with(".git").returns(true)
 
     # Mock git commands that need output
-    @service.stubs(:run_git_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("existing-sha")  # Has commits
-    @service.stubs(:run_git_command).with("git rev-parse --abbrev-ref HEAD").returns("master\n")  # On master branch
-    @service.stubs(:run_git_command).with("git remote -v").returns("")
-    @service.stubs(:run_git_command).with("git status --porcelain").returns("")
-    @service.stubs(:run_git_command).with("git config --list").returns("")
+    @service.stubs(:run_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("existing-sha")  # Has commits
+    @service.stubs(:run_command).with("git rev-parse --abbrev-ref HEAD").returns("master\n")  # On master branch
+    @service.stubs(:run_command).with("git remote -v").returns("")
+    @service.stubs(:run_command).with("git status --porcelain").returns("")
+    @service.stubs(:run_command).with("git config --list").returns("")
 
     # Mock system calls - make the branch rename fail
     @service.stubs(:system).returns(true)  # Default success for safety
