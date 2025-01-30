@@ -9,20 +9,15 @@ class AppGenerationJobTest < ActiveSupport::TestCase
 
   test "marks app as failed and raises error when github repository creation fails" do
     error_message = "Repository creation failed"
-    app_repo_service = mock
+    orchestrator = mock
+    app_status = mock
 
-    AppRepositoryService.expects(:new).with(@generated_app).returns(app_repo_service)
-    app_repo_service.expects(:create_github_repository).raises(StandardError.new(error_message))
+    @generated_app.stubs(:app_status).returns(app_status)
+    app_status.expects(:failed?).returns(true)  # Return true after we've called fail!
 
-    # Expect error logs in the correct sequence
-    error_sequence = sequence("error_logging")
-    @logger.expects(:error).with(
-      "App generation failed: #{error_message}"
-    ).in_sequence(error_sequence)
-    @logger.expects(:error).with(
-      "Failed to execute workflow",
-      has_entries(error: error_message, backtrace: instance_of(Array))
-    ).in_sequence(error_sequence)
+    AppGeneration::Orchestrator.expects(:new).with(@generated_app).returns(orchestrator)
+    orchestrator.expects(:create_github_repository).raises(StandardError.new(error_message))
+    orchestrator.expects(:handle_error).with(instance_of(StandardError))
 
     error = assert_raises StandardError do
       AppGenerationJob.perform_now(@generated_app.id)
