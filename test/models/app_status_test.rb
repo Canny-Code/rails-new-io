@@ -251,7 +251,7 @@ class AppStatusTest < ActiveSupport::TestCase
     reset_status
 
     # Create a logger to simulate the real process
-    logger = AppGeneration::Logger.new(@pending_app)
+    logger = AppGeneration::Logger.new(@app_status)
 
     # Create initial log entry (normally done by Buffer)
     AppGeneration::LogEntry.create!(
