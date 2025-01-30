@@ -50,10 +50,42 @@ class AppRepositoryService < GithubRepositoryService
   def push_to_remote
     app_directory_path = File.join(generated_app.workspace_path, generated_app.name)
 
+    # Validate directory exists before trying to chdir
+    unless File.directory?(app_directory_path)
+      logger.error("Rails app directory not found", { path: app_directory_path })
+      raise "Rails app directory not found at #{app_directory_path}"
+    end
+
     repo_url_with_token = generated_app.github_repo_url.sub("https://", "https://#{user.github_token}@")
 
     # Push to remote
     in_app_directory(app_directory_path) do
+      validate_git_repository
+      ensure_main_branch
+
+      # Set up remote if needed
+      remotes = run_command("git remote -v").strip
+      if remotes.include?("origin")
+        current_url = remotes[/origin\s+(\S+)/, 1]
+        if current_url != generated_app.github_repo_url
+          success = system("git remote set-url origin #{generated_app.github_repo_url}")
+          unless success
+            logger.error("Failed to update remote URL")
+            raise "Failed to update remote URL"
+          end
+        end
+      else
+        success = system("git remote add origin #{generated_app.github_repo_url}")
+        unless success
+          git_status = run_command("git status --porcelain")
+          logger.error("Failed to add remote", {
+            current_remotes: remotes,
+            git_status: git_status.strip
+          })
+          raise "Failed to add git remote"
+        end
+      end
+
       puts "DEBUG: Setting git remote URL with token"
       system("git remote set-url origin #{repo_url_with_token}")
 
@@ -119,7 +151,6 @@ class AppRepositoryService < GithubRepositoryService
     in_app_directory(app_directory_path) do
       validate_git_repository
       ensure_main_branch
-      setup_remote
     end
   end
 
