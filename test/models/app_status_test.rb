@@ -55,8 +55,8 @@ class AppStatusTest < ActiveSupport::TestCase
     assert_nil @app_status.started_at
 
     # Second transition
-    @app_status.start_generation!
-    assert_equal "generating", @app_status.status
+    @app_status.start_rails_app_generation!
+    assert_equal "generating_rails_app", @app_status.status
     assert_not_nil @app_status.started_at
 
     # Push to GitHub
@@ -76,14 +76,14 @@ class AppStatusTest < ActiveSupport::TestCase
     [
       {
         from: :pending,
-        invalid_transitions: [ :start_generation!, :start_github_push!, :start_ci!, :complete! ]
+        invalid_transitions: [ :start_rails_app_generation!, :start_github_push!, :start_ci!, :complete! ]
       },
       {
         from: :creating_github_repo,
         invalid_transitions: [ :start_github_push!, :start_ci!, :complete! ]
       },
       {
-        from: :generating,
+        from: :generating_rails_app,
         invalid_transitions: [ :start_ci!, :complete! ]
       },
       {
@@ -98,12 +98,12 @@ class AppStatusTest < ActiveSupport::TestCase
         case test_case[:from]
         when :creating_github_repo
           @app_status.start_github_repo_creation!
-        when :generating
+        when :generating_rails_app
           @app_status.start_github_repo_creation!
-          @app_status.start_generation!
+          @app_status.start_rails_app_generation!
         when :pushing_to_github
           @app_status.start_github_repo_creation!
-          @app_status.start_generation!
+          @app_status.start_rails_app_generation!
           @app_status.start_github_push!
         end
       end
@@ -117,7 +117,7 @@ class AppStatusTest < ActiveSupport::TestCase
   end
 
   test "can fail from any state" do
-    states = [ :pending, :creating_github_repo, :generating, :pushing_to_github, :running_ci ]
+    states = [ :pending, :creating_github_repo, :generating_rails_app, :pushing_to_github, :running_ci ]
     error_message = "Something went wrong"
 
     states.each do |state|
@@ -127,16 +127,16 @@ class AppStatusTest < ActiveSupport::TestCase
       case state
       when :creating_github_repo
         @app_status.start_github_repo_creation!
-      when :generating
+      when :generating_rails_app
         @app_status.start_github_repo_creation!
-        @app_status.start_generation!
+        @app_status.start_rails_app_generation!
       when :pushing_to_github
         @app_status.start_github_repo_creation!
-        @app_status.start_generation!
+        @app_status.start_rails_app_generation!
         @app_status.start_github_push!
       when :running_ci
         @app_status.start_github_repo_creation!
-        @app_status.start_generation!
+        @app_status.start_rails_app_generation!
         @app_status.start_github_push!
         @app_status.start_ci!
       end
@@ -152,7 +152,7 @@ class AppStatusTest < ActiveSupport::TestCase
     reset_status
 
     @app_status.start_github_repo_creation!
-    @app_status.start_generation!
+    @app_status.start_rails_app_generation!
     @app_status.fail!("Error occurred")
 
     assert_equal 3, @app_status.status_history.size
@@ -164,7 +164,7 @@ class AppStatusTest < ActiveSupport::TestCase
 
     second_transition = @app_status.status_history.second
     assert_equal "creating_github_repo", second_transition["from"]
-    assert_equal "generating", second_transition["to"]
+    assert_equal "generating_rails_app", second_transition["to"]
     assert_not_nil second_transition["timestamp"]
   end
 
@@ -174,7 +174,7 @@ class AppStatusTest < ActiveSupport::TestCase
   end
 
   test ".states returns all possible states" do
-    expected_states = %i[pending creating_github_repo generating pushing_to_github running_ci completed failed]
+    expected_states = %i[pending creating_github_repo generating_rails_app pushing_to_github running_ci completed failed]
     assert_equal expected_states, AppStatus.states
   end
 
@@ -209,8 +209,8 @@ class AppStatusTest < ActiveSupport::TestCase
     assert @app_status.creating_github_repo?
     assert_nil @app_status.started_at
 
-    @app_status.start_generation!
-    assert @app_status.generating?
+    @app_status.start_rails_app_generation!
+    assert @app_status.generating_rails_app?
     assert_not_nil @app_status.started_at
   end
 
@@ -231,7 +231,7 @@ class AppStatusTest < ActiveSupport::TestCase
     reset_status
 
     @app_status.start_github_repo_creation!
-    @app_status.start_generation!
+    @app_status.start_rails_app_generation!
     @app_status.fail!("Error occurred")
 
     assert_equal 3, @app_status.status_history.size
@@ -243,7 +243,7 @@ class AppStatusTest < ActiveSupport::TestCase
 
     second_transition = @app_status.status_history.second
     assert_equal "creating_github_repo", second_transition["from"]
-    assert_equal "generating", second_transition["to"]
+    assert_equal "generating_rails_app", second_transition["to"]
     assert_not_nil second_transition["timestamp"]
   end
 
@@ -267,7 +267,7 @@ class AppStatusTest < ActiveSupport::TestCase
     @app_status.start_github_repo_creation!
     logger.info("Starting GitHub repo creation")
 
-    @app_status.start_generation!
+    @app_status.start_rails_app_generation!
     logger.info("Starting generation")
 
     @app_status.start_github_push!
@@ -281,7 +281,7 @@ class AppStatusTest < ActiveSupport::TestCase
 
     # Get unique phases in order of creation
     actual_phases = @pending_app.log_entries.order(:created_at).pluck(:phase).uniq
-    expected_phases = %w[pending creating_github_repo generating pushing_to_github running_ci completed]
+    expected_phases = %w[pending creating_github_repo generating_rails_app pushing_to_github running_ci completed]
 
     assert_equal expected_phases, actual_phases,
       "Log entry phases should match status transitions"

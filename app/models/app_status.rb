@@ -37,7 +37,7 @@ class AppStatus < ApplicationRecord
   aasm column: :status do
     state :pending, initial: true
     state :creating_github_repo
-    state :generating
+    state :generating_rails_app
     state :pushing_to_github
     state :running_ci
     state :completed
@@ -51,15 +51,15 @@ class AppStatus < ApplicationRecord
       transitions from: :pending, to: :creating_github_repo
     end
 
-    event :start_generation do
-      transitions from: :creating_github_repo, to: :generating
+    event :start_rails_app_generation do
+      transitions from: :creating_github_repo, to: :generating_rails_app
       after do
         update(started_at: Time.current)
       end
     end
 
     event :start_github_push do
-      transitions from: :generating, to: :pushing_to_github
+      transitions from: :generating_rails_app, to: :pushing_to_github
     end
 
     event :start_ci do
@@ -74,7 +74,7 @@ class AppStatus < ApplicationRecord
     end
 
     event :fail do
-      transitions from: [ :pending, :creating_github_repo, :generating, :pushing_to_github, :running_ci ], to: :failed
+      transitions from: [ :pending, :creating_github_repo, :generating_rails_app, :pushing_to_github, :running_ci ], to: :failed
       after do |error_message|
         update(
           completed_at: Time.current,
@@ -84,7 +84,7 @@ class AppStatus < ApplicationRecord
     end
 
     event :restart do
-      transitions from: [ :generating, :failed ], to: :pending
+      transitions from: [ :generating_rails_app, :failed ], to: :pending
       after do
         update(error_message: nil)
       end

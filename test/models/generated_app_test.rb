@@ -188,9 +188,9 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
     # Start generation
     assert_changes -> { app.reload.last_build_at } do
-      app.start_generation!
+      app.start_rails_app_generation!
     end
-    assert app.generating?
+    assert app.generating_rails_app?
 
     # Push to GitHub
     assert_changes -> { app.reload.last_build_at } do
@@ -242,7 +242,7 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
     # Follow the proper state transition sequence
     app.start_github_repo_creation!
-    app.start_generation!
+    app.start_rails_app_generation!
     app.start_github_push!
     app.start_ci!
 
@@ -274,9 +274,9 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
     # Start generation
     assert_changes -> { app.reload.last_build_at } do
-      app.start_generation!
+      app.start_rails_app_generation!
     end
-    assert app.generating?
+    assert app.generating_rails_app?
 
     # Push to GitHub
     assert_changes -> { app.reload.last_build_at } do

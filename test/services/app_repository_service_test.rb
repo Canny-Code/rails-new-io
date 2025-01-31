@@ -84,10 +84,6 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     begin
       within_test_directory(app_dir) do
-        puts "DEBUG: Current directory: #{Dir.pwd}"
-        puts "DEBUG: Git directory exists: #{File.directory?('.git')}"
-        puts "DEBUG: App directory exists: #{File.directory?(app_dir)}"
-        puts "DEBUG: Git remotes:"
         system("git remote -v")
 
         # Verify initial state

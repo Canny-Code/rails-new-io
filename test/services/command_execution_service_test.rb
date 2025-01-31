@@ -8,8 +8,8 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     @temp_dir = Dir.mktmpdir
 
     @logger = mock("logger")
-    @logger.stubs(:info).with { |message, metadata = {}| @generated_app.log_entries.create!(message: message, metadata: metadata, level: :info, phase: :generating) }
-    @logger.stubs(:error).with { |message, metadata = {}| @generated_app.log_entries.create!(message: message, metadata: metadata, level: :error, phase: :generating) }
+    @logger.stubs(:info).with { |message, metadata = {}| @generated_app.log_entries.create!(message: message, metadata: metadata, level: :info, phase: :generating_rails_app) }
+    @logger.stubs(:error).with { |message, metadata = {}| @generated_app.log_entries.create!(message: message, metadata: metadata, level: :error, phase: :generating_rails_app) }
     AppGeneration::Logger.stubs(:new).returns(@logger)
 
     # Use an existing app and reset its status
@@ -54,19 +54,9 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       initial_count = @generated_app.log_entries.count
       service = CommandExecutionService.new(@generated_app, @logger, command)
 
-      puts "DEBUG: Initial log entry count: #{initial_count}"
-
       Open3.stub :popen3, mock_popen3(output, error, success: true) do
-        puts "DEBUG: Before execution - log entries count: #{@generated_app.log_entries.count}"
-
         assert_difference -> { @generated_app.log_entries.count }, 8 do
           service.execute
-        end
-
-        puts "DEBUG: After execution - log entries count: #{@generated_app.log_entries.count}"
-        puts "DEBUG: Log entries messages:"
-        @generated_app.log_entries.order(created_at: :asc).offset(initial_count).each do |entry|
-          puts "DEBUG: - #{entry.message} (#{entry.level})"
         end
 
         log_entries = @generated_app.log_entries.order(created_at: :asc).offset(initial_count)

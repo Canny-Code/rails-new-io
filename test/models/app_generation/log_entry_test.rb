@@ -66,7 +66,7 @@ module AppGeneration
     end
 
     test "supports all phases" do
-      %i[pending generating pushing_to_github running_ci completed failed].each do |phase|
+      %i[pending generating_rails_app pushing_to_github running_ci completed failed].each do |phase|
         @log_entry.phase = phase
         assert @log_entry.valid?
         assert @log_entry.public_send("#{phase}?")
