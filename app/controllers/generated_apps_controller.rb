@@ -21,8 +21,6 @@ class GeneratedAppsController < ApplicationController
         recipe: Recipe.where(created_by: current_user).find(params[:generated_app][:recipe_id])
       )
 
-      puts "DEBUG: Generated app created successfully"
-
       if @generated_app.save
         AppGenerationJob.perform_later(@generated_app.id)
         redirect_to generated_app_log_entries_path(@generated_app)

@@ -101,6 +101,30 @@ class GeneratedApp < ApplicationRecord
     app_status.fail!(error.message)
   end
 
+  def to_commit_message
+    ingredients_message = if recipe.ingredients.any?
+      <<~INGREDIENTS_MESSAGE
+      ============
+      Ingredients:
+      ============
+
+      #{recipe.ingredients.map(&:to_commit_message).join("\n\n")}
+      INGREDIENTS_MESSAGE
+    else
+      ""
+    end
+
+    <<~INITIAL_COMMIT_MESSAGE
+    Initial commit by railsnew.io
+
+    command line flags:
+
+    #{recipe.cli_flags.squish.strip}
+
+    #{ingredients_message}
+    INITIAL_COMMIT_MESSAGE
+  end
+
   private
 
   def apply_ingredient(ingredient, configuration = {})
