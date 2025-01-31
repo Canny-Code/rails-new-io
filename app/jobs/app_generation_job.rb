@@ -21,33 +21,13 @@ class AppGenerationJob < ApplicationJob
 
   private
 
-  def create_github_repository
-    orchestrator.create_github_repository
-  end
-
-  def generate_rails_app
-    orchestrator.generate_rails_app
-  end
-
-  def create_initial_commit
-    orchestrator.create_initial_commit
-  end
-
-  def apply_ingredients
-    orchestrator.apply_ingredients
-  end
-
-  def push_to_remote
-    orchestrator.push_to_remote
-  end
-
-  def start_ci
-    orchestrator.start_ci
-  end
-
-  def complete_generation
-    orchestrator.complete_generation
-  end
+  def create_github_repository = orchestrator.create_github_repository
+  def generate_rails_app = orchestrator.generate_rails_app
+  def create_initial_commit = orchestrator.create_initial_commit
+  def apply_ingredients = orchestrator.apply_ingredients
+  def push_to_remote = orchestrator.push_to_remote
+  def start_ci = orchestrator.start_ci
+  def complete_generation = orchestrator.complete_generation
 
   attr_reader :orchestrator
 end

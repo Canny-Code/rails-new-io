@@ -5,6 +5,7 @@ module AppGeneration
       @logger = AppGeneration::Logger.new(generated_app.app_status)
       @generated_app.logger = @logger
       @repository_service = AppRepositoryService.new(generated_app, @logger)
+      @generated_app.repository_service = @repository_service
       @command_execution_service = CommandExecutionService.new(generated_app, @logger)
       @logger.info("Starting app generation workflow")
     end

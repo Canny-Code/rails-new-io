@@ -53,13 +53,7 @@ class AppRepositoryService < GithubRepositoryService
   end
 
   def commit_changes_after_applying_ingredient(ingredient)
-    commit_message = <<~COMMIT_MESSAGE
-    Apply ingredient:
-
-    #{ingredient.to_commit_message}
-    COMMIT_MESSAGE
-
-    git_service.commit_changes(message: commit_message)
+    git_service.commit_changes(message: ingredient.to_commit_message)
   end
 
   private

@@ -83,3 +83,8 @@ pending_status:
   generated_app: pending_app
   status: pending
   status_history: []
+
+no_ingredients_status:
+  generated_app: no_ingredients_app
+  status: pending
+  status_history: []

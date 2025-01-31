@@ -49,7 +49,7 @@ module AppGeneration
       # Mock ingredient application
       ingredient = ingredients(:rails_authentication)
       @generated_app.stubs(:ingredients).returns([ ingredient ])
-      @generated_app.expects(:apply_ingredients).once.tap { puts "DEBUG: apply_ingredients expectation set" }
+      @generated_app.expects(:apply_ingredients).once
 
       # Mock template path verification
       data_repository = mock("data_repository")
@@ -72,25 +72,10 @@ module AppGeneration
       @logger.expects(:info).with("Applying ingredients", { count: 1 }).in_sequence(sequence)
       @logger.expects(:info).with("All ingredients applied successfully").in_sequence(sequence)
 
-      # Create orchestrator and perform generation
-      puts "DEBUG: Creating orchestrator"
       @orchestrator = Orchestrator.new(@generated_app)
-      puts "DEBUG: App status after creating orchestrator: #{@generated_app.status}"
-
-      puts "DEBUG: Creating GitHub repo"
       @orchestrator.create_github_repository
-      puts "DEBUG: App status after creating GitHub repo: #{@generated_app.status}"
-
-      puts "DEBUG: Calling generate_rails_app"
       @orchestrator.generate_rails_app
-      puts "DEBUG: App status after generate_rails_app: #{@generated_app.status}"
-
-      puts "DEBUG: Calling apply_ingredients"
       @orchestrator.apply_ingredients
-      puts "DEBUG: App status after apply_ingredients: #{@generated_app.status}"
-
-      # Verify state changes
-      puts "DEBUG: Final app status before assertion: #{@generated_app.status}"
       assert_equal "generating_rails_app", @generated_app.status
     end
 
@@ -109,9 +94,7 @@ module AppGeneration
       # Mock repository service
       repository_service = mock("repository_service")
       repository_service.expects(:create_github_repository).once.returns(true).tap do
-        puts "DEBUG: Starting GitHub repo creation"
         @generated_app.app_status.start_github_repo_creation!
-        puts "DEBUG: App status after start_github_repo_creation!: #{@generated_app.status}"
       end
       AppRepositoryService.stubs(:new).with(@generated_app, @logger).returns(repository_service)
 
@@ -142,32 +125,17 @@ module AppGeneration
         backtrace: kind_of(String)
       }).in_sequence(sequence)
 
-      # Create orchestrator and perform generation
-      puts "DEBUG: Creating orchestrator"
       @orchestrator = Orchestrator.new(@generated_app)
-      puts "DEBUG: App status after creating orchestrator: #{@generated_app.status}"
-
-      puts "DEBUG: Creating GitHub repo"
       @orchestrator.create_github_repository
-      puts "DEBUG: App status after creating GitHub repo: #{@generated_app.status}"
-
-      puts "DEBUG: Calling generate_rails_app"
       @orchestrator.generate_rails_app
-      puts "DEBUG: App status after generate_rails_app: #{@generated_app.status}"
 
       assert_raises(StandardError) do
-        puts "DEBUG: Calling apply_ingredients"
         @orchestrator.apply_ingredients
       rescue => e
-        puts "DEBUG: Handling error: #{e.message}"
-        puts "DEBUG: App status before handle_error: #{@generated_app.status}"
         @orchestrator.handle_error(e)
-        puts "DEBUG: App status after handle_error: #{@generated_app.status}"
         raise
       end
 
-      # Verify final state
-      puts "DEBUG: Final app status before assertions: #{@generated_app.status}"
       assert_equal "failed", @generated_app.status
       assert_equal error_message, @generated_app.error_message
     end
@@ -187,11 +155,9 @@ module AppGeneration
 
       # Mock repository service
       repository_service = mock("repository_service")
-      repository_service.expects(:create_github_repository).once.returns(true).tap do
-        puts "DEBUG: Starting GitHub repo creation"
-        @generated_app.app_status.start_github_repo_creation!
-        puts "DEBUG: App status after start_github_repo_creation!: #{@generated_app.status}"
-      end
+      repository_service.expects(:create_github_repository).once.returns(true)
+      @generated_app.app_status.start_github_repo_creation!
+
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
       # Mock command execution to fail
@@ -211,27 +177,16 @@ module AppGeneration
       }).in_sequence(sequence)
 
       # Create orchestrator and perform generation
-      puts "DEBUG: Creating orchestrator"
       @orchestrator = Orchestrator.new(@generated_app)
-      puts "DEBUG: App status after creating orchestrator: #{@generated_app.status}"
-
-      puts "DEBUG: Creating GitHub repo"
       @orchestrator.create_github_repository
-      puts "DEBUG: App status after creating GitHub repo: #{@generated_app.status}"
 
       assert_raises(StandardError) do
-        puts "DEBUG: Calling generate_rails_app"
         @orchestrator.generate_rails_app
       rescue => e
-        puts "DEBUG: Handling error: #{e.message}"
-        puts "DEBUG: App status before handle_error: #{@generated_app.status}"
         @orchestrator.handle_error(e)
-        puts "DEBUG: App status after handle_error: #{@generated_app.status}"
         raise
       end
 
-      # Verify final state
-      puts "DEBUG: Final app status before assertions: #{@generated_app.status}"
       assert_equal "failed", @generated_app.status
       assert_equal error_message, @generated_app.error_message
     end
@@ -251,16 +206,14 @@ module AppGeneration
 
       # Mock command execution
       command_service = mock("command_service")
-      command_service.expects(:execute).once.returns(true).tap { puts "DEBUG: command_service.execute called" }
+      command_service.expects(:execute).once.returns(true)
       CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
 
       # Mock repository service
       repository_service = mock("repository_service")
-      repository_service.expects(:create_github_repository).once.returns(true).tap do
-        puts "DEBUG: Starting GitHub repo creation"
-        @generated_app.app_status.start_github_repo_creation!
-        puts "DEBUG: App status after start_github_repo_creation!: #{@generated_app.status}"
-      end
+      repository_service.expects(:create_github_repository).once.returns(true)
+      @generated_app.app_status.start_github_repo_creation!
+
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
       # Mock ingredient setup
@@ -290,34 +243,18 @@ module AppGeneration
       }).in_sequence(sequence)
 
       # Mock ingredient application to fail
-      @generated_app.expects(:apply_ingredients).raises(error).tap { puts "DEBUG: apply_ingredients expectation set to raise error" }
+      @generated_app.expects(:apply_ingredients).raises(error)
 
-      # Create orchestrator and perform generation
-      puts "DEBUG: Creating orchestrator"
       @orchestrator = Orchestrator.new(@generated_app)
-      puts "DEBUG: App status after creating orchestrator: #{@generated_app.status}"
-
-      puts "DEBUG: Creating GitHub repo"
       @orchestrator.create_github_repository
-      puts "DEBUG: App status after creating GitHub repo: #{@generated_app.status}"
-
-      puts "DEBUG: Calling generate_rails_app"
       @orchestrator.generate_rails_app
-      puts "DEBUG: App status after generate_rails_app: #{@generated_app.status}"
 
       assert_raises(StandardError) do
-        puts "DEBUG: Calling apply_ingredients"
         @orchestrator.apply_ingredients
       rescue => e
-        puts "DEBUG: Handling error: #{e.message}"
-        puts "DEBUG: App status before handle_error: #{@generated_app.status}"
         @orchestrator.handle_error(e)
-        puts "DEBUG: App status after handle_error: #{@generated_app.status}"
         raise
       end
-
-      # Verify final state
-      puts "DEBUG: Final app status before assertions: #{@generated_app.status}"
       assert_equal "failed", @generated_app.status
       assert_equal error_message, @generated_app.error_message
     end
@@ -329,18 +266,13 @@ module AppGeneration
 
       # Mock command execution
       command_service = mock("command_service")
-      command_service.expects(:execute).once.returns(true).tap do
-        puts "DEBUG: command_service.execute called"
-      end
+      command_service.expects(:execute).once.returns(true)
       CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
 
       # Mock repository service
       repository_service = mock("repository_service")
-      repository_service.expects(:create_github_repository).once.returns(true).tap do
-        puts "DEBUG: Starting GitHub repo creation"
-        @generated_app.app_status.start_github_repo_creation!
-        puts "DEBUG: App status after start_github_repo_creation!: #{@generated_app.status}"
-      end
+      repository_service.expects(:create_github_repository).once.returns(true)
+      @generated_app.app_status.start_github_repo_creation!
       AppRepositoryService.stubs(:new).with(@generated_app, @logger).returns(repository_service)
 
       # Mock template path verification
@@ -384,25 +316,10 @@ module AppGeneration
       # Mock apply_ingredients to succeed
       @generated_app.expects(:apply_ingredients).once.returns(true)
 
-      # Create orchestrator and perform generation
-      puts "DEBUG: Creating orchestrator"
       @orchestrator = Orchestrator.new(@generated_app)
-      puts "DEBUG: App status after creating orchestrator: #{@generated_app.status}"
-
-      puts "DEBUG: Creating GitHub repo"
       @orchestrator.create_github_repository
-      puts "DEBUG: App status after creating GitHub repo: #{@generated_app.status}"
-
-      puts "DEBUG: Calling generate_rails_app"
       @orchestrator.generate_rails_app
-      puts "DEBUG: App status after generate_rails_app: #{@generated_app.status}"
-
-      puts "DEBUG: Calling apply_ingredients"
       @orchestrator.apply_ingredients
-      puts "DEBUG: App status after apply_ingredients: #{@generated_app.status}"
-
-      # Verify final state
-      puts "DEBUG: Final app status before assertions: #{@generated_app.status}"
       assert_equal "generating_rails_app", @generated_app.status
     end
 
@@ -414,7 +331,6 @@ module AppGeneration
       # Set up app status to be ready for commit
       @generated_app.app_status.start_github_repo_creation!
       @generated_app.app_status.start_rails_app_generation!
-      puts "DEBUG: App status after setup: #{@generated_app.status}"
 
       # Mock repository service
       repository_service = mock("repository_service")
@@ -431,16 +347,9 @@ module AppGeneration
       @logger.expects(:info).with("Creating initial commit").in_sequence(sequence)
       @logger.expects(:info).with("Initial commit created successfully").in_sequence(sequence)
 
-      # Create orchestrator and perform commit
-      puts "DEBUG: Creating orchestrator"
       @orchestrator = Orchestrator.new(@generated_app)
-      puts "DEBUG: App status before create_initial_commit: #{@generated_app.status}"
-
-      puts "DEBUG: Creating initial commit"
       @orchestrator.create_initial_commit
-      puts "DEBUG: App status after create_initial_commit: #{@generated_app.status}"
 
-      # Verify final state
       assert_equal "generating_rails_app", @generated_app.status
     end
 
@@ -460,7 +369,6 @@ module AppGeneration
       # Set up app status to be ready for commit
       @generated_app.app_status.start_github_repo_creation!
       @generated_app.app_status.start_rails_app_generation!
-      puts "DEBUG: App status after setup: #{@generated_app.status}"
 
       # Mock repository service to fail
       repository_service = mock("repository_service")
@@ -480,24 +388,15 @@ module AppGeneration
         backtrace: kind_of(String)
       }).in_sequence(sequence)
 
-      # Create orchestrator and attempt commit
-      puts "DEBUG: Creating orchestrator"
       @orchestrator = Orchestrator.new(@generated_app)
-      puts "DEBUG: App status before create_initial_commit: #{@generated_app.status}"
 
       assert_raises(StandardError) do
-        puts "DEBUG: Creating initial commit"
         @orchestrator.create_initial_commit
       rescue => e
-        puts "DEBUG: Handling error: #{e.message}"
-        puts "DEBUG: App status before handle_error: #{@generated_app.status}"
         @orchestrator.handle_error(e)
-        puts "DEBUG: App status after handle_error: #{@generated_app.status}"
         raise
       end
 
-      # Verify final state
-      puts "DEBUG: Final app status before assertions: #{@generated_app.status}"
       assert_equal "failed", @generated_app.status
       assert_equal error_message, @generated_app.error_message
     end
@@ -510,7 +409,6 @@ module AppGeneration
       # Set up app status to be ready for push
       @generated_app.app_status.start_github_repo_creation!
       @generated_app.app_status.start_rails_app_generation!
-      puts "DEBUG: App status after setup: #{@generated_app.status}"
 
       # Mock repository service
       repository_service = mock("repository_service")
@@ -527,16 +425,9 @@ module AppGeneration
       @logger.expects(:info).with("Starting GitHub push").in_sequence(sequence)
       @logger.expects(:info).with("GitHub push completed successfully").in_sequence(sequence)
 
-      # Create orchestrator and perform push
-      puts "DEBUG: Creating orchestrator"
       @orchestrator = Orchestrator.new(@generated_app)
-      puts "DEBUG: App status before push_to_remote: #{@generated_app.status}"
-
-      puts "DEBUG: Pushing to remote"
       @orchestrator.push_to_remote
-      puts "DEBUG: App status after push_to_remote: #{@generated_app.status}"
 
-      # Verify final state
       assert_equal "pushing_to_github", @generated_app.status
     end
 
@@ -556,7 +447,6 @@ module AppGeneration
       # Set up app status to be ready for push
       @generated_app.app_status.start_github_repo_creation!
       @generated_app.app_status.start_rails_app_generation!
-      puts "DEBUG: App status after setup: #{@generated_app.status}"
 
       # Mock repository service to fail
       repository_service = mock("repository_service")
@@ -576,24 +466,15 @@ module AppGeneration
         backtrace: kind_of(String)
       }).in_sequence(sequence)
 
-      # Create orchestrator and attempt push
-      puts "DEBUG: Creating orchestrator"
       @orchestrator = Orchestrator.new(@generated_app)
-      puts "DEBUG: App status before push_to_remote: #{@generated_app.status}"
 
       assert_raises(StandardError) do
-        puts "DEBUG: Pushing to remote"
         @orchestrator.push_to_remote
       rescue => e
-        puts "DEBUG: Handling error: #{e.message}"
-        puts "DEBUG: App status before handle_error: #{@generated_app.status}"
         @orchestrator.handle_error(e)
-        puts "DEBUG: App status after handle_error: #{@generated_app.status}"
         raise
       end
 
-      # Verify final state
-      puts "DEBUG: Final app status before assertions: #{@generated_app.status}"
       assert_equal "failed", @generated_app.status
       assert_equal error_message, @generated_app.error_message
     end
@@ -607,7 +488,6 @@ module AppGeneration
       @generated_app.app_status.start_github_repo_creation!
       @generated_app.app_status.start_rails_app_generation!
       @generated_app.app_status.start_github_push!
-      puts "DEBUG: App status after setup: #{@generated_app.status}"
 
       # Mock command execution service to prevent Rails new validation
       command_service = mock("command_service")
@@ -623,16 +503,9 @@ module AppGeneration
       @logger.expects(:info).with("Starting CI").in_sequence(sequence)
       @logger.expects(:info).with("CI started successfully").in_sequence(sequence)
 
-      # Create orchestrator and start CI
-      puts "DEBUG: Creating orchestrator"
       @orchestrator = Orchestrator.new(@generated_app)
-      puts "DEBUG: App status before start_ci: #{@generated_app.status}"
-
-      puts "DEBUG: Starting CI"
       @orchestrator.start_ci
-      puts "DEBUG: App status after start_ci: #{@generated_app.status}"
 
-      # Verify final state
       assert_equal "running_ci", @generated_app.status
     end
 
@@ -653,20 +526,15 @@ module AppGeneration
       @generated_app.app_status.start_github_repo_creation!
       @generated_app.app_status.start_rails_app_generation!
       @generated_app.app_status.start_github_push!
-      puts "DEBUG: App status after setup: #{@generated_app.status}"
 
-      # Mock command execution service to prevent Rails new validation
       command_service = mock("command_service")
       CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
 
-      # Mock repository service
       repository_service = mock("repository_service")
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
-      # Mock start_ci to fail
       @generated_app.expects(:start_ci!).raises(error)
 
-      # Expect proper logging
       sequence = sequence("error_logging")
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
       @logger.expects(:info).with("Starting CI").in_sequence(sequence)
@@ -675,24 +543,15 @@ module AppGeneration
         backtrace: kind_of(String)
       }).in_sequence(sequence)
 
-      # Create orchestrator and attempt to start CI
-      puts "DEBUG: Creating orchestrator"
       @orchestrator = Orchestrator.new(@generated_app)
-      puts "DEBUG: App status before start_ci: #{@generated_app.status}"
 
       assert_raises(StandardError) do
-        puts "DEBUG: Starting CI"
         @orchestrator.start_ci
       rescue => e
-        puts "DEBUG: Handling error: #{e.message}"
-        puts "DEBUG: App status before handle_error: #{@generated_app.status}"
         @orchestrator.handle_error(e)
-        puts "DEBUG: App status after handle_error: #{@generated_app.status}"
         raise
       end
 
-      # Verify final state
-      puts "DEBUG: Final app status before assertions: #{@generated_app.status}"
       assert_equal "failed", @generated_app.status
       assert_equal error_message, @generated_app.error_message
     end
@@ -707,7 +566,6 @@ module AppGeneration
       @generated_app.app_status.start_rails_app_generation!
       @generated_app.app_status.start_github_push!
       @generated_app.app_status.start_ci!
-      puts "DEBUG: App status after setup: #{@generated_app.status}"
 
       # Mock command execution service to prevent Rails new validation
       command_service = mock("command_service")
@@ -723,14 +581,8 @@ module AppGeneration
       @logger.expects(:info).with("Completing app generation").in_sequence(sequence)
       @logger.expects(:info).with("App generation completed successfully").in_sequence(sequence)
 
-      # Create orchestrator and complete generation
-      puts "DEBUG: Creating orchestrator"
       @orchestrator = Orchestrator.new(@generated_app)
-      puts "DEBUG: App status before complete_generation: #{@generated_app.status}"
-
-      puts "DEBUG: Completing generation"
       @orchestrator.complete_generation
-      puts "DEBUG: App status after complete_generation: #{@generated_app.status}"
 
       # Verify final state
       assert_equal "completed", @generated_app.status
@@ -754,7 +606,6 @@ module AppGeneration
       @generated_app.app_status.start_rails_app_generation!
       @generated_app.app_status.start_github_push!
       @generated_app.app_status.start_ci!
-      puts "DEBUG: App status after setup: #{@generated_app.status}"
 
       # Mock command execution service to prevent Rails new validation
       command_service = mock("command_service")
@@ -776,24 +627,15 @@ module AppGeneration
         backtrace: kind_of(String)
       }).in_sequence(sequence)
 
-      # Create orchestrator and attempt completion
-      puts "DEBUG: Creating orchestrator"
       @orchestrator = Orchestrator.new(@generated_app)
-      puts "DEBUG: App status before complete_generation: #{@generated_app.status}"
 
       assert_raises(StandardError) do
-        puts "DEBUG: Completing generation"
         @orchestrator.complete_generation
       rescue => e
-        puts "DEBUG: Handling error: #{e.message}"
-        puts "DEBUG: App status before handle_error: #{@generated_app.status}"
         @orchestrator.handle_error(e)
-        puts "DEBUG: App status after handle_error: #{@generated_app.status}"
         raise
       end
 
-      # Verify final state
-      puts "DEBUG: Final app status before assertions: #{@generated_app.status}"
       assert_equal "failed", @generated_app.status
       assert_equal error_message, @generated_app.error_message
     end

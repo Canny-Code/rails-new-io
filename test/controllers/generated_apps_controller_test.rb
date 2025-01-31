@@ -82,4 +82,38 @@ class GeneratedAppsControllerTest < ActionDispatch::IntegrationTest
       }
     }
   end
+
+  test "create fails with validation error when app name is not unique for user" do
+    @recipe.update!(created_by: @user)
+    # First create an app with a specific name
+    GeneratedApp.create!(
+      name: "my-app",
+      user: @user,
+      recipe: @recipe,
+      selected_gems: [],
+      configuration_options: {}
+    )
+
+    assert_no_difference "GeneratedApp.count" do
+      post generated_apps_path, params: {
+        app_name: "my-app",
+        generated_app: { recipe_id: @recipe.id }
+      }
+    end
+
+    assert_redirected_to new_generated_app_path
+    assert_equal "Failed to create generated app: Name has already been taken", flash[:alert]
+  end
+
+  test "create fails when recipe_id is nil" do
+    assert_no_difference "GeneratedApp.count" do
+      post generated_apps_path, params: {
+        app_name: "my-app",
+        generated_app: { recipe_id: nil }
+      }
+    end
+
+    assert_redirected_to new_generated_app_path
+    assert_equal "Recipe not found - you either don't have access to this recipe or it doesn't exist", flash[:alert]
+  end
 end

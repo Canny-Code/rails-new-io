@@ -64,10 +64,6 @@ module GitBackedModel
     true
   end
 
-  def cleanup_after_push?
-    false
-  end
-
   def change_description
     changes.except("created_at", "updated_at").map do |attr, (old_val, new_val)|
       "#{attr}: #{old_val} -> #{new_val}"

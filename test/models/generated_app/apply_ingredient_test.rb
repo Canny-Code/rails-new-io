@@ -58,7 +58,7 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
       [ "." ],
       template: template_path,
       force: true,
-      quiet: false,
+      quiet: true,
       pretend: false,
       skip_bundle: true,
       auth_type: "devise"

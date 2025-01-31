@@ -35,7 +35,7 @@ class GeneratedApp < ApplicationRecord
   include HasGenerationLifecycle
   include GitBackedModel
 
-  attr_writer :logger
+  attr_writer :logger, :repository_service
 
   delegate :ruby_version, :rails_version, to: :recipe
 
@@ -57,13 +57,7 @@ class GeneratedApp < ApplicationRecord
     allow_blank: true
   validates :recipe, presence: true
 
-  def cleanup_after_push?
-    true
-  end
-
   def apply_ingredients
-    repository_service = AppRepositoryService.new(self, @logger)
-
     unless ingredients.any?
       @logger.info("No ingredients to apply - moving on")
       return
@@ -76,17 +70,6 @@ class GeneratedApp < ApplicationRecord
       repository_service.commit_changes_after_applying_ingredient(ingredient)
       @logger.info("Ingredient applied successfully", { name: ingredient.name })
     end
-  end
-
-  def start_ci
-    # future hook for custom CI - right now, it's just a status update
-    # CI run is handled by GitHub Actions
-    app_status.start_ci!
-  end
-
-  def complete
-    # hook to do stuff after app generation is complete
-    app_status.complete!
   end
 
   def command
@@ -165,7 +148,7 @@ class GeneratedApp < ApplicationRecord
           [ "." ],
           template: template_path,
           force: true,
-          quiet: false,
+          quiet: true,
           pretend: false,
           skip_bundle: true,
           **configuration.symbolize_keys

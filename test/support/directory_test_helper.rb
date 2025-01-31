@@ -20,8 +20,8 @@ module DirectoryTestHelper
     # First try to return to original directory
     begin
       Dir.chdir(@original_pwd) if @original_pwd && File.directory?(@original_pwd)
-    rescue SystemCallError => e
-      puts "DEBUG: Failed to chdir back to #{@original_pwd}: #{e.message}"
+    rescue SystemCallError
+
     end
 
     # Then clean up test directories
@@ -29,8 +29,8 @@ module DirectoryTestHelper
       begin
         cleanup_git_locks(dir) if dir && File.directory?(dir)
         FileUtils.rm_rf(dir) if dir && File.directory?(dir)
-      rescue SystemCallError => e
-        puts "DEBUG: Failed to remove directory #{dir}: #{e.message}"
+      rescue SystemCallError
+
       end
     end
   end
@@ -76,13 +76,13 @@ module DirectoryTestHelper
     original_dir = Dir.pwd
     begin
       Dir.chdir(dir)
-      system("git init --quiet")
-      system("git config user.name 'Test User'")
-      system("git config user.email 'test@example.com'")
+      Open3.capture2("git init --quiet")
+      Open3.capture2("git config user.name 'Test User'")
+      Open3.capture2("git config user.email 'test@example.com'")
       # Create an initial commit to avoid "empty repository" issues
       FileUtils.touch(".keep")
-      system("git add .keep")
-      system("git commit -m 'Initial commit' --quiet")
+      Open3.capture2("git add .keep 2>/dev/null")
+      Open3.capture2("git commit -m 'Initial commit' --quiet")
     ensure
       Dir.chdir(original_dir) if File.directory?(original_dir)
     end
@@ -112,10 +112,8 @@ module DirectoryTestHelper
     lock_files.each do |lock_file|
       lock_path = File.join(dir, lock_file)
       begin
-        # Skip existence check in test mode
         File.unlink(lock_path) rescue nil
-      rescue SystemCallError => e
-        puts "DEBUG: Failed to remove git lock file #{lock_path}: #{e.message}"
+      rescue SystemCallError
       end
     end
   end

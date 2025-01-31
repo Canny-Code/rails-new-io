@@ -37,6 +37,21 @@ class GeneratedAppTest < ActiveSupport::TestCase
   def setup
     @user = users(:john)
     @recipe = recipes(:blog_recipe)
+    @generated_app = generated_apps(:pending_app)
+
+    # Create test directories matching the fixture
+    @workspace_path = create_test_directory("test_apps/pending_app")
+    @app_directory = File.join(@workspace_path, @generated_app.name)
+
+    FileUtils.mkdir_p(@app_directory)
+    FileUtils.touch(File.join(@app_directory, "Gemfile"))
+
+    @generated_app.update!(workspace_path: @workspace_path)
+
+    @logger = mock("logger")
+    @logger.stubs(:info)
+    @logger.stubs(:error)
+    @generated_app.logger = @logger
   end
 
   test "creates app status after creation" do
@@ -297,12 +312,6 @@ class GeneratedAppTest < ActiveSupport::TestCase
     assert app.completed?
   end
 
-  test "sets up git backed model methods correctly" do
-    app = GeneratedApp.new(workspace_path: "/tmp/test_path")
-    assert_equal "/tmp/test_path", app.workspace_path
-    assert app.cleanup_after_push?
-  end
-
   test "on_git_error fails app status with error message" do
     app = generated_apps(:pending_app)
     error = StandardError.new("Git repository error occurred")
@@ -311,5 +320,56 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
     assert app.app_status.failed?
     assert_equal "Git repository error occurred", app.app_status.error_message
+  end
+
+  test "apply_ingredients does nothing when there are no ingredients" do
+    app = generated_apps(:no_ingredients_app)
+
+    logger = mock("logger")
+    logger.expects(:info).with("No ingredients to apply - moving on")
+    app.logger = logger
+
+    app.apply_ingredients
+  end
+
+  test "apply_ingredients applies all ingredients in order" do
+    @generated_app.update!(recipe: @recipe)
+
+    repository_service = mock("repository_service")
+    @generated_app.stubs(:repository_service).returns(repository_service)
+
+    @recipe.ingredients.each do |ingredient|
+      @logger.expects(:info).with("Applying ingredient", { name: ingredient.name })
+      @logger.expects(:info).with("Ingredient applied successfully", { name: ingredient.name })
+      @logger.expects(:info).with("Committing ingredient changes")
+      repository_service.expects(:commit_changes_after_applying_ingredient).with(ingredient)
+    end
+
+    @generated_app.apply_ingredients
+  end
+
+  test "to_commit_message for an app without ingredients doesn't contain message about ingredients" do
+    app = generated_apps(:no_ingredients_app)
+    assert_equal "Initial commit by railsnew.io\n\ncommand line flags:\n\n--minimal\n\n\n", app.to_commit_message
+  end
+
+  test "raises error when template path doesn't exist" do
+    repository_service = mock("repository_service")
+    @generated_app.stubs(:repository_service).returns(repository_service)
+
+    DataRepositoryService.any_instance
+      .expects(:template_path)
+      .returns("/nonexistent/path/template.rb")
+
+    @logger.expects(:error).with(
+      "Template file not found",
+      { path: "/nonexistent/path/template.rb" }
+    )
+
+    error = assert_raises(RuntimeError) do
+      @generated_app.apply_ingredients
+    end
+
+    assert_equal "Template file not found: /nonexistent/path/template.rb", error.message
   end
 end

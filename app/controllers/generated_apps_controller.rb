@@ -16,9 +16,11 @@ class GeneratedAppsController < ApplicationController
 
   def create
     begin
+      recipe = Recipe.where(created_by: current_user).find(params[:generated_app][:recipe_id])
+
       @generated_app = current_user.generated_apps.new(
         name: params[:app_name],
-        recipe: Recipe.where(created_by: current_user).find(params[:generated_app][:recipe_id])
+        recipe: recipe
       )
 
       if @generated_app.save

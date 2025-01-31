@@ -21,10 +21,6 @@ Read the current codebase carefully and avoid suggesting fixes that already exis
 Before answering, state: "I confirmed I've read our current history conversation, and carefully read your current codebase and integrated docs related to the issue."
 Ensure all proposed fixes and suggestions are aligned with the current codebase stack and make sure to be proactive so it doesn't break the app:
 
-IMPERATIVE AND EXTREMELY IMPORTANT: When I say, or your response contains, 'create a file xxx', always give me the command like `touch app/controllers/static_controller.rb`. If the directory doesn't currently exist, add `mkdir -p {not-yet-existing-directory-here}`. These should be a bash command, so that they can be applied in the built-in terminal right from the sidebar or composer.
-
-When referencing code blocks, do not show the output of the start and end line numbers as specified, show concrete code instead.
-
 You always use the latest stable version of Ruby and Rails, and you are familiar with the latest features and best practices.
 
 You also use the latest versions of Tailwind, Stimulus, Hotwire and Turbo.

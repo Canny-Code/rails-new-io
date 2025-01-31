@@ -57,12 +57,12 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     # Initialize git repo and set up remote
     Dir.chdir(app_dir) do
-      system("git init --quiet")
-      system("git config user.name 'Test User'")
-      system("git config user.email 'test@example.com'")
-      system("git add .")
-      system("git -c init.defaultBranch=main commit -m 'Initial commit' --quiet")
-      system("git remote add origin #{@generated_app.github_repo_url}")
+      Open3.capture2("git init --quiet")
+      Open3.capture2("git config user.name 'Test User'")
+      Open3.capture2("git config user.email 'test@example.com'")
+      Open3.capture2("git add .")
+      Open3.capture2("git -c init.defaultBranch=main commit -m 'Initial commit' --quiet")
+      Open3.capture2("git remote add origin #{@generated_app.github_repo_url}")
     end
 
     # Create a LocalGitService mock that will be used by AppRepositoryService
@@ -84,7 +84,7 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     begin
       within_test_directory(app_dir) do
-        system("git remote -v")
+        Open3.capture2("git remote -v")
 
         # Verify initial state
         assert File.directory?(app_dir), "App directory should exist"
@@ -151,9 +151,9 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     # Initialize empty git repo
     Dir.chdir(app_dir) do
-      system("git init --quiet")
-      system("git config user.name 'Test User'")
-      system("git config user.email 'test@example.com'")
+      Open3.capture2("git init --quiet")
+      Open3.capture2("git config user.name 'Test User'")
+      Open3.capture2("git config user.email 'test@example.com'")
     end
 
     # Create a LocalGitService mock that will be used by AppRepositoryService
@@ -190,13 +190,13 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     # Initialize git repo with master branch
     Dir.chdir(app_dir) do
-      system("git init --quiet")
-      system("git config user.name 'Test User'")
-      system("git config user.email 'test@example.com'")
-      system("git checkout -b master")  # Explicitly create master branch
-      system("git add .")
-      system("git commit --allow-empty -m 'Initial commit' --quiet")
-      system("git remote add origin #{@generated_app.github_repo_url}")
+      Open3.capture2("git init --quiet")
+      Open3.capture2("git config user.name 'Test User'")
+      Open3.capture2("git config user.email 'test@example.com'")
+      Open3.capture2("git checkout -b master --quiet")  # Explicitly create master branch
+      Open3.capture2("git add . 2>/dev/null")
+      Open3.capture2("git commit --allow-empty -m 'Initial commit' --quiet")
+      Open3.capture2("git remote add origin #{@generated_app.github_repo_url}")
     end
 
     # Create a LocalGitService mock that will be used by AppRepositoryService
@@ -262,9 +262,9 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     # Initialize empty git repo
     Dir.chdir(app_dir) do
-      system("git init --quiet")
-      system("git config user.name 'Test User'")
-      system("git config user.email 'test@example.com'")
+      Open3.capture2("git init --quiet")
+      Open3.capture2("git config user.name 'Test User'")
+      Open3.capture2("git config user.email 'test@example.com'")
     end
 
     # Create a LocalGitService mock that will be used by AppRepositoryService
@@ -305,13 +305,13 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     # Initialize git repo with master branch
     Dir.chdir(app_dir) do
-      system("git init --quiet")
-      system("git config user.name 'Test User'")
-      system("git config user.email 'test@example.com'")
-      system("git checkout -b master")  # Explicitly create master branch
-      system("git add .")
-      system("git commit --allow-empty -m 'Initial commit' --quiet")
-      system("git remote add origin #{@generated_app.github_repo_url}")
+      Open3.capture2("git init --quiet")
+      Open3.capture2("git config user.name 'Test User'")
+      Open3.capture2("git config user.email 'test@example.com'")
+      Open3.capture2("git checkout -b master --quiet")  # Explicitly create master branch
+      Open3.capture2("git add . 2>/dev/null")
+      Open3.capture2("git commit --allow-empty -m 'Initial commit' --quiet")
+      Open3.capture2("git remote add origin #{@generated_app.github_repo_url}")
     end
 
     # Create a LocalGitService mock that will be used by AppRepositoryService
@@ -333,5 +333,20 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     end
 
     assert_match(/Failed to rename branch to main/, error.message)
+  end
+
+  test "#commit_changes_after_applying_ingredient commits changes with ingredient message" do
+    ingredient = mock("ingredient")
+    ingredient.expects(:to_commit_message).returns("Add awesome feature")
+
+    mock_git_service = mock("local_git_service")
+    LocalGitService.expects(:new).with(
+      working_directory: File.join(@generated_app.workspace_path, @generated_app.name),
+      logger: @service.logger
+    ).returns(mock_git_service)
+
+    mock_git_service.expects(:commit_changes).with(message: "Add awesome feature")
+
+    @service.commit_changes_after_applying_ingredient(ingredient)
   end
 end

@@ -106,3 +106,10 @@ pending_app:
   configuration_options:
     database: "postgresql"
   workspace_path: <%= Rails.root.join("tmp", "test_apps", "pending_app") %>
+
+no_ingredients_app:
+  name: "no-ingredients-app"
+  user: john
+  recipe: minimal_recipe
+  selected_gems: []
+  workspace_path: <%= Rails.root.join("tmp", "test_apps", "no_ingredients_app") %>
