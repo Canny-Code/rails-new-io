@@ -89,10 +89,13 @@ class LocalGitService
 
       # Push with credentials
       ENV["GIT_TERMINAL_PROMPT"] = "0" # Ensure git never prompts for input
-      success = system("git -c core.askpass=false push -v -u origin main")
-
-      # Reset URL without token
-      run_command!("git remote set-url origin #{repo_url}")
+      success = nil
+      begin
+        success = system("git -c core.askpass=false push -v -u origin main")
+      ensure
+        # Reset URL without token - ALWAYS do this, even if push fails
+        run_command!("git remote set-url origin #{repo_url}")
+      end
 
       unless success
         git_status = run_command("git status --porcelain")
@@ -123,10 +126,12 @@ class LocalGitService
     end
 
     original_dir = Dir.pwd
-    Dir.chdir(working_directory)
-    yield
-  ensure
-    Dir.chdir(original_dir) if original_dir && File.directory?(original_dir)
+    begin
+      Dir.chdir(working_directory)
+      yield
+    ensure
+      Dir.chdir(original_dir) if original_dir && File.directory?(original_dir)
+    end
   end
 
   def run_command!(command)
