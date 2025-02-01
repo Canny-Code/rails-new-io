@@ -20,8 +20,8 @@ class LocalGitService
 
   ALLOWED_COMMAND_PATTERNS = [
     /\Agit remote (add|set-url) origin https:\/\/[a-zA-Z0-9@\-_.\/]+\z/,
-    /\Agit add \. && git -c init\.defaultBranch=main commit -m '.+'\z/,
-    /\Agit add \. && git commit -m '.+'\z/
+    /\Agit add \. && git -c init\.defaultBranch=main commit -m '[^']*'\z/,
+    /\Agit add \. && git commit -m '[^']*'\z/
   ].freeze
 
   attr_reader :working_directory, :logger
@@ -39,7 +39,7 @@ class LocalGitService
 
     init_repository
     ensure_main_branch
-    set_remote(url: remote_url)
+    set_remote(remote_url:)
   end
 
   def init_repository
@@ -57,25 +57,20 @@ class LocalGitService
   end
 
   def ensure_main_branch
-    in_working_directory do
-      current_branch = run_command("git rev-parse --abbrev-ref HEAD").strip
-      return if current_branch == "main"
-
-      run_command("git branch -M main")
-    end
+    in_working_directory { run_command("git branch -M main") }
   end
 
-  def set_remote(url:)
+  def set_remote(remote_url:)
     in_working_directory do
       remotes = run_command("git remote -v").strip
 
       if remotes.include?("origin")
         current_url = remotes[/origin\s+(\S+)/, 1]
-        return if current_url == url
+        return if current_url == remote_url
 
-        run_command("git remote set-url origin #{url}")
+        run_command("git remote set-url origin #{remote_url}")
       else
-        run_command("git remote add origin #{url}")
+        run_command("git remote add origin #{remote_url}")
       end
     end
   end
@@ -138,6 +133,7 @@ class LocalGitService
 
   def run_command(command)
     validate_command!(command)
+
     output, status = Open3.capture2(command)
     unless status.success?
       # Get git status directly to avoid recursion

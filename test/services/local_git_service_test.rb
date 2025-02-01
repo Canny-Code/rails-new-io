@@ -30,44 +30,29 @@ class LocalGitServiceTest < ActiveSupport::TestCase
     @service.create_initial_commit(message: message)
   end
 
-  test "ensures main branch when on different branch" do
-    @service.expects(:run_command).with("git rev-parse --abbrev-ref HEAD").returns("master\n")
-    @service.expects(:run_command).with("git branch -M main")
-
-    @service.ensure_main_branch
-  end
-
-  test "does not rename branch when already on main" do
-    cmd = "git rev-parse --abbrev-ref HEAD"
-    @service.expects(:run_command).with(cmd).returns("main\n").once
-    @service.expects(:run_command).with { |arg| arg != cmd }.never
-
-    @service.ensure_main_branch
-  end
-
   test "sets remote when no remote exists" do
-    url = "https://github.com/user/repo.git"
+    remote_url = "https://github.com/user/repo.git"
     @service.expects(:run_command).with("git remote -v").returns("")
-    @service.expects(:run_command).with("git remote add origin #{url}")
+    @service.expects(:run_command).with("git remote add origin #{remote_url}")
 
-    @service.set_remote(url: url)
+    @service.set_remote(remote_url:)
   end
 
   test "updates remote when different URL exists" do
-    url = "https://github.com/user/repo.git"
+    remote_url = "https://github.com/user/repo.git"
     @service.expects(:run_command).with("git remote -v").returns("origin\thttps://github.com/user/old-repo.git (fetch)\norigin\thttps://github.com/user/old-repo.git (push)")
-    @service.expects(:run_command).with("git remote set-url origin #{url}")
+    @service.expects(:run_command).with("git remote set-url origin #{remote_url}")
 
-    @service.set_remote(url: url)
+    @service.set_remote(remote_url:)
   end
 
   test "does not update remote when correct URL exists" do
-    url = "https://github.com/user/repo.git"
+    remote_url = "https://github.com/user/repo.git"
     cmd = "git remote -v"
-    @service.expects(:run_command).with(cmd).returns("origin\t#{url} (fetch)\norigin\t#{url} (push)").once
+    @service.expects(:run_command).with(cmd).returns("origin\t#{remote_url} (fetch)\norigin\t#{remote_url} (push)").once
     @service.expects(:run_command).with { |arg| arg != cmd }.never
 
-    @service.set_remote(url: url)
+    @service.set_remote(remote_url:)
   end
 
   test "pushes to remote" do
@@ -79,7 +64,7 @@ class LocalGitServiceTest < ActiveSupport::TestCase
     Open3.expects(:capture2).with("git -c core.askpass=false push -v -u origin main").returns([ "", mock(success?: true) ]).in_sequence(@git_commands)
     @service.expects(:run_command).with("git remote set-url origin #{repo_url}").in_sequence(@git_commands)
 
-    @service.push_to_remote(token: token, repo_url: repo_url)
+    @service.push_to_remote(token: token, repo_url:)
   end
 
   test "raises error when push fails" do
@@ -127,7 +112,7 @@ class LocalGitServiceTest < ActiveSupport::TestCase
 
     # Verify the error is raised with correct message
     error = assert_raises(LocalGitService::Error) do
-      @service.push_to_remote(token: token, repo_url: repo_url)
+      @service.push_to_remote(token:, repo_url:)
     end
 
     assert_equal "Failed to push to GitHub", error.message
@@ -170,9 +155,9 @@ class LocalGitServiceTest < ActiveSupport::TestCase
 
     @service.expects(:init_repository).in_sequence(@git_commands)
     @service.expects(:ensure_main_branch).in_sequence(@git_commands)
-    @service.expects(:set_remote).with(url: remote_url).in_sequence(@git_commands)
+    @service.expects(:set_remote).with(remote_url:).in_sequence(@git_commands)
 
-    @service.prepare_git_repository(remote_url: remote_url)
+    @service.prepare_git_repository(remote_url:)
   end
 
   test "raises error when preparing repository in non-existent directory" do

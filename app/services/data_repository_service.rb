@@ -44,8 +44,9 @@ class DataRepositoryService < GithubRepositoryService
 
     # Create ingredient template file
     template_content = ingredient.template_content
+
     tree_items << {
-      path: "ingredients/#{ingredient.name}/template.rb",
+      path: github_template_path(ingredient),
       mode: "100644",
       type: "blob",
       content: template_content
@@ -88,6 +89,10 @@ class DataRepositoryService < GithubRepositoryService
       message: message,
       tree_items: tree_items
     )
+  end
+
+  def github_template_path(ingredient)
+    File.join("ingredients", ingredient.name, "template.rb")
   end
 
   def template_path(ingredient)
