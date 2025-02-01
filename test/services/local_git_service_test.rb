@@ -207,15 +207,15 @@ class LocalGitServiceTest < ActiveSupport::TestCase
       }
     )
 
-    Dir.chdir(@workspace_path) do
-      error = assert_raises(LocalGitService::Error) do
+    error = assert_raises(LocalGitService::Error) do
+      @service.in_working_directory do
         @service.send(:run_command, command)
       end
-
-      # Assert both the class and message of the error
-      assert_instance_of LocalGitService::Error, error
-      assert_equal "Git command failed: #{command}", error.message
     end
+
+    # Assert both the class and message of the error
+    assert_instance_of LocalGitService::Error, error
+    assert_equal "Git command failed: #{command}", error.message
   end
 
   test "validate_command! raises error for invalid command" do

@@ -56,7 +56,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     @generated_app.update!(workspace_path: workspace_path)
 
     # Initialize git repo and set up remote
-    Dir.chdir(app_dir) do
+    git_service = LocalGitService.new(working_directory: app_dir, logger: @service.logger)
+    git_service.in_working_directory do
       Open3.capture2("git init --quiet")
       Open3.capture2("git config user.name 'Test User'")
       Open3.capture2("git config user.email 'test@example.com'")
@@ -79,22 +80,14 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
       repo_url: @generated_app.github_repo_url
     ).in_sequence(@git_commands)
 
-    # Save the original directory
-    original_dir = Dir.pwd
+    within_test_directory(app_dir) do
+      Open3.capture2("git remote -v")
 
-    begin
-      within_test_directory(app_dir) do
-        Open3.capture2("git remote -v")
+      # Verify initial state
+      assert File.directory?(app_dir), "App directory should exist"
+      assert File.directory?(File.join(app_dir, ".git")), "Git directory should exist"
 
-        # Verify initial state
-        assert File.directory?(app_dir), "App directory should exist"
-        assert File.directory?(File.join(app_dir, ".git")), "Git directory should exist"
-
-        @service.push_to_remote
-      end
-    ensure
-      # Always restore the original directory
-      Dir.chdir(original_dir) if Dir.exist?(original_dir)
+      @service.push_to_remote
     end
   end
 
@@ -150,7 +143,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     )
 
     # Initialize empty git repo
-    Dir.chdir(app_dir) do
+    git_service = LocalGitService.new(working_directory: app_dir, logger: @service.logger)
+    git_service.in_working_directory do
       Open3.capture2("git init --quiet")
       Open3.capture2("git config user.name 'Test User'")
       Open3.capture2("git config user.email 'test@example.com'")
@@ -189,7 +183,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     )
 
     # Initialize git repo with master branch
-    Dir.chdir(app_dir) do
+    git_service = LocalGitService.new(working_directory: app_dir, logger: @service.logger)
+    git_service.in_working_directory do
       Open3.capture2("git init --quiet")
       Open3.capture2("git config user.name 'Test User'")
       Open3.capture2("git config user.email 'test@example.com'")
@@ -261,7 +256,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     )
 
     # Initialize empty git repo
-    Dir.chdir(app_dir) do
+    git_service = LocalGitService.new(working_directory: app_dir, logger: @service.logger)
+    git_service.in_working_directory do
       Open3.capture2("git init --quiet")
       Open3.capture2("git config user.name 'Test User'")
       Open3.capture2("git config user.email 'test@example.com'")
@@ -304,7 +300,8 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     )
 
     # Initialize git repo with master branch
-    Dir.chdir(app_dir) do
+    git_service = LocalGitService.new(working_directory: app_dir, logger: @service.logger)
+    git_service.in_working_directory do
       Open3.capture2("git init --quiet")
       Open3.capture2("git config user.name 'Test User'")
       Open3.capture2("git config user.email 'test@example.com'")

@@ -119,8 +119,6 @@ class LocalGitService
     end
   end
 
-  private
-
   def in_working_directory(&block)
     unless File.directory?(working_directory)
       logger.error("Working directory not found", { path: working_directory })
@@ -135,6 +133,8 @@ class LocalGitService
       Dir.chdir(original_dir)
     end
   end
+
+  private
 
   def run_command(command)
     validate_command!(command)

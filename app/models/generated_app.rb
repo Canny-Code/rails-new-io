@@ -139,7 +139,12 @@ class GeneratedApp < ApplicationRecord
 
       app_directory_path = File.join(workspace_path, name)
 
-      Dir.chdir(app_directory_path) do
+      git_service = LocalGitService.new(
+        working_directory: app_directory_path,
+        logger: @logger
+      )
+
+      git_service.in_working_directory do
         ENV["BUNDLE_GEMFILE"] = File.join(Dir.pwd, "Gemfile")
 
         Rails.application.config.generators.templates += [ File.dirname(template_path) ]
