@@ -338,6 +338,11 @@ class GeneratedAppTest < ActiveSupport::TestCase
     repository_service = mock("repository_service")
     @generated_app.stubs(:repository_service).returns(repository_service)
 
+    # Create the template file
+    template_path = DataRepositoryService.new(user: @user).template_path(@recipe.ingredients.first)
+    FileUtils.mkdir_p(File.dirname(template_path))
+    File.write(template_path, @recipe.ingredients.first.template_content)
+
     @recipe.ingredients.each do |ingredient|
       @logger.expects(:info).with("Applying ingredient", { name: ingredient.name })
       @logger.expects(:info).with("Ingredient applied successfully", { name: ingredient.name })

@@ -3,6 +3,8 @@ require "rails/generators"
 require "rails/generators/rails/app/app_generator"
 
 class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
+  include DisableParallelization
+
   setup do
     @user = users(:john)
     @recipe = recipes(:blog_recipe)
@@ -31,6 +33,11 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
 
   test "successfully applies ingredient" do
     configuration = { "auth_type" => "devise" }
+
+    # Ensure template exists
+    template_path = DataRepositoryService.new(user: @user).template_path(@ingredient)
+    FileUtils.mkdir_p(File.dirname(template_path))
+    File.write(template_path, "# Test template")
 
     assert_difference -> { @recipe.recipe_changes.count }, 1 do
       assert_difference -> { @generated_app.app_changes.count }, 1 do
@@ -74,6 +81,11 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     error_message = "Something went wrong"
     error = StandardError.new(error_message)
 
+    # Ensure template exists
+    template_path = DataRepositoryService.new(user: @user).template_path(@ingredient)
+    FileUtils.mkdir_p(File.dirname(template_path))
+    File.write(template_path, "# Test template")
+
     # Set up the generator to raise error
     Rails::Generators::AppGenerator.stubs(:new).returns(@generator)
     @generator.expects(:apply).raises(error)
@@ -97,16 +109,35 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
   test "uses correct environment variables and paths" do
     configuration = { "auth_type" => "devise" }
 
-    @generator.expects(:apply).once
-    ENV.expects(:[]=).with("BUNDLE_GEMFILE", File.join(@app_directory, "Gemfile"))
+    # Ensure template exists
+    template_path = DataRepositoryService.new(user: @user).template_path(@ingredient)
+    FileUtils.mkdir_p(File.dirname(template_path))
+    File.write(template_path, "# Test template")
 
-    @generated_app.send(:apply_ingredient, @ingredient, configuration)
+    # Track if BUNDLE_GEMFILE was set correctly
+    bundle_gemfile_set = false
+    expected_gemfile_path = File.join(@app_directory, "Gemfile")
+
+    # Use a block to temporarily override ENV
+    original_bundle_gemfile = ENV["BUNDLE_GEMFILE"]
+    begin
+      ENV["BUNDLE_GEMFILE"] = "wrong_path"
+      @generated_app.send(:apply_ingredient, @ingredient, configuration)
+      assert_equal expected_gemfile_path, ENV["BUNDLE_GEMFILE"], "BUNDLE_GEMFILE was not set correctly"
+    ensure
+      ENV["BUNDLE_GEMFILE"] = original_bundle_gemfile
+    end
   end
 
   test "wraps operations in a transaction" do
     configuration = { "auth_type" => "devise" }
     error_message = "Transaction test"
     error = StandardError.new(error_message)
+
+    # Ensure template exists
+    template_path = DataRepositoryService.new(user: @user).template_path(@ingredient)
+    FileUtils.mkdir_p(File.dirname(template_path))
+    File.write(template_path, "# Test template")
 
     # Set up the generator to raise error
     Rails::Generators::AppGenerator.stubs(:new).returns(@generator)
@@ -123,6 +154,7 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
       )
     )
 
+    # Verify that the transaction rolls back by checking no records are created
     assert_no_difference -> { @recipe.recipe_changes.count } do
       assert_no_difference -> { @generated_app.app_changes.count } do
         assert_raises StandardError do
