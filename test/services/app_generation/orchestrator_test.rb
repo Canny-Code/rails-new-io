@@ -34,11 +34,6 @@ module AppGeneration
       @logger = AppGeneration::Logger.new(@generated_app.app_status)
       AppGeneration::Logger.expects(:new).with(@generated_app.app_status).returns(@logger).once
 
-      # Mock command execution
-      command_service = mock("command_service")
-      command_service.expects(:execute).once.returns(true)
-      CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
-
       # Mock repository service
       repository_service = mock("repository_service")
       repository_service.expects(:create_github_repository).once.returns(true).tap do
@@ -46,20 +41,36 @@ module AppGeneration
       end
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
-      # Mock ingredient application
-      ingredient = ingredients(:rails_authentication)
-      @generated_app.stubs(:ingredients).returns([ ingredient ])
-      @generated_app.expects(:apply_ingredients).once
+      # Mock command execution
+      command_service = mock("command_service")
+      command_service.expects(:execute).once.returns(true).tap do
+        @generated_app.app_status.start_rails_app_generation!
+      end
+      CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
 
       # Mock template path verification
       data_repository = mock("data_repository")
       data_repository.stubs(:template_path).returns("path/to/template.rb")
+      data_repository.stubs(:class).returns(DataRepositoryService)
+      data_repository.expects(:write_recipe).with(instance_of(Recipe), repo_name: "rails-new-io-data-test").twice
       DataRepositoryService.stubs(:new).with(user: @generated_app.user).returns(data_repository)
+      File.stubs(:exist?).with("path/to/template.rb").returns(true)
 
-      # Stub all file system interactions
-      File.stubs(:exist?).returns(true)
+      # Clean up any existing ingredients
+      @generated_app.recipe.recipe_ingredients.destroy_all
 
-      # Expect proper logging
+      # Add ingredients to the recipe
+      ingredient1 = ingredients(:rails_authentication)
+      ingredient2 = ingredients(:api_setup)
+      @generated_app.recipe.add_ingredient!(ingredient1)
+      @generated_app.recipe.add_ingredient!(ingredient2)
+
+      # Verify ingredients are added in correct order
+      assert_equal [ ingredient1.id, ingredient2.id ], @generated_app.recipe.ingredients.order(:position).pluck(:id)
+      assert_equal 1, @generated_app.recipe.recipe_ingredients.first.position
+      assert_equal 2, @generated_app.recipe.recipe_ingredients.last.position
+
+      # Set up logging sequence
       sequence = sequence("generation_logging")
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
       @logger.expects(:info).with("Starting GitHub repo creation").in_sequence(sequence)
@@ -69,8 +80,11 @@ module AppGeneration
         command: @generated_app.command,
         app_name: @generated_app.name
       }).in_sequence(sequence)
-      @logger.expects(:info).with("Applying ingredients", { count: 1 }).in_sequence(sequence)
+      @logger.expects(:info).with("Applying ingredients", { count: 2 }).in_sequence(sequence)
       @logger.expects(:info).with("All ingredients applied successfully").in_sequence(sequence)
+
+      # Mock apply_ingredients to succeed
+      @generated_app.expects(:apply_ingredients).once.returns(true)
 
       @orchestrator = Orchestrator.new(@generated_app)
       @orchestrator.create_github_repository
@@ -86,17 +100,17 @@ module AppGeneration
       @logger = AppGeneration::Logger.new(@generated_app.app_status)
       AppGeneration::Logger.expects(:new).with(@generated_app.app_status).returns(@logger).once
 
-      # Mock command execution
-      command_service = mock("command_service")
-      command_service.expects(:execute).once.returns(true)
-      CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
-
       # Mock repository service
       repository_service = mock("repository_service")
       repository_service.expects(:create_github_repository).once.returns(true).tap do
         @generated_app.app_status.start_github_repo_creation!
       end
       AppRepositoryService.stubs(:new).with(@generated_app, @logger).returns(repository_service)
+
+      # Mock command execution
+      command_service = mock("command_service")
+      command_service.expects(:execute).once.returns(true)
+      CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
 
       # Mock ingredient setup
       ingredient = ingredients(:rails_authentication)
@@ -216,16 +230,6 @@ module AppGeneration
 
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
-      # Mock ingredient setup
-      ingredient = ingredients(:rails_authentication)
-      @generated_app.stubs(:ingredients).returns([ ingredient ])
-
-      # Mock template path verification
-      data_repository = mock("data_repository")
-      data_repository.stubs(:template_path).returns("path/to/template.rb")
-      DataRepositoryService.stubs(:new).with(user: @generated_app.user).returns(data_repository)
-      File.stubs(:exist?).with("path/to/template.rb").returns(true)
-
       # Expect proper logging
       sequence = sequence("error_logging")
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
@@ -264,16 +268,18 @@ module AppGeneration
       @logger = AppGeneration::Logger.new(@generated_app.app_status)
       AppGeneration::Logger.expects(:new).with(@generated_app.app_status).returns(@logger).once
 
-      # Mock command execution
-      command_service = mock("command_service")
-      command_service.expects(:execute).once.returns(true)
-      CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
-
       # Mock repository service
       repository_service = mock("repository_service")
       repository_service.expects(:create_github_repository).once.returns(true)
       @generated_app.app_status.start_github_repo_creation!
       AppRepositoryService.stubs(:new).with(@generated_app, @logger).returns(repository_service)
+
+      # Mock command execution
+      command_service = mock("command_service")
+      command_service.expects(:execute).once.returns(true).tap do
+        @generated_app.app_status.start_rails_app_generation!
+      end
+      CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
 
       # Mock template path verification
       data_repository = mock("data_repository")
@@ -296,9 +302,6 @@ module AppGeneration
       assert_equal [ ingredient1.id, ingredient2.id ], @generated_app.recipe.ingredients.order(:position).pluck(:id)
       assert_equal 1, @generated_app.recipe.recipe_ingredients.first.position
       assert_equal 2, @generated_app.recipe.recipe_ingredients.last.position
-
-      # Unstub ingredients to use actual implementation
-      @generated_app.unstub(:ingredients)
 
       # Set up logging sequence
       sequence = sequence("generation_logging")

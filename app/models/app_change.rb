@@ -41,7 +41,7 @@ class AppChange < ApplicationRecord
 
     begin
       transaction do
-        template_path = Rails.root.join("tmp", "templates", id.to_s)
+        template_path = DataRepositoryService.new(user: generated_app.user).template_path(recipe_change.ingredient)
         content = recipe_change.apply_to_app(generated_app, configuration)
 
         FileUtils.mkdir_p(File.dirname(template_path))

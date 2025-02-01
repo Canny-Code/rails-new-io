@@ -17,7 +17,6 @@ module AppGeneration
     end
 
     def generate_rails_app
-      @generated_app.start_rails_app_generation!
       @logger.info("Executing Rails new command")
       @command_execution_service.execute
       @logger.info("Rails app generation process finished successfully", {
