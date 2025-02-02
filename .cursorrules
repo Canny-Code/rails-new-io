@@ -166,3 +166,15 @@ logger.warn takes ONE string parameter - if you want to add data to the message,
 # 2. If jobs are there but not being processed, try restarting the Rails server
 # 3. This usually indicates the Puma plugin for Solid Queue got into a bad state
 # 4. A restart will reinitialize everything cleanly
+
+# When stubbing File.exist? in tests, make sure to stub ALL possible File.exist? calls that could happen
+# during the test execution, not just the ones you're directly testing. Partial stubbing can lead to
+# flaky tests that depend on the filesystem state.
+#
+# Use this pattern:
+# 1. Stub all File.exist? calls to return false by default:
+#    File.stubs(:exist?).returns(false)
+# 2. Then override specific paths you care about:
+#    File.stubs(:exist?).with("specific/path.rb").returns(true)
+# 3. Use regex for paths that might be absolute/relative:
+#    File.stubs(:exist?).with(regexp_matches(/config\/routes\.rb\z/)).returns(true)

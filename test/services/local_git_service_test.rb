@@ -160,6 +160,33 @@ class LocalGitServiceTest < ActiveSupport::TestCase
     @service.prepare_git_repository(remote_url:)
   end
 
+  test "ensure_main_branch renames current branch to main" do
+    @service.expects(:run_command).with("git branch -M main")
+    @service.ensure_main_branch
+  end
+
+  test "ensure_main_branch integration test - actually renames branch to main" do
+    # Initialize a git repo with a non-main branch
+    @service.in_working_directory do
+      Open3.capture2("git init --quiet")
+      Open3.capture2("git config user.name 'Test User'")
+      Open3.capture2("git config user.email 'test@example.com'")
+      Open3.capture2("git checkout -b master --quiet")  # Create master branch
+      Open3.capture2("git commit --allow-empty -m 'Initial commit' --quiet")
+    end
+
+    # Run the actual method
+    @service.ensure_main_branch
+
+    # Verify the branch was renamed
+    current_branch = nil
+    @service.in_working_directory do
+      current_branch = Open3.capture2("git rev-parse --abbrev-ref HEAD")[0].strip
+    end
+
+    assert_equal "main", current_branch
+  end
+
   test "raises error when preparing repository in non-existent directory" do
     service = LocalGitService.new(working_directory: "/nonexistent", logger: @logger)
 

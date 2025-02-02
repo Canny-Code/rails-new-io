@@ -126,7 +126,11 @@ module AppGeneration
       data_repository = mock("data_repository")
       data_repository.stubs(:template_path).returns("/nonexistent/path/template.rb")
       DataRepositoryService.stubs(:new).with(user: @generated_app.user).returns(data_repository)
+      # Stub all File.exist? calls to return false by default
+      File.stubs(:exist?).returns(false)
+      # Then override specific paths we care about
       File.stubs(:exist?).with("/nonexistent/path/template.rb").returns(false)
+      File.stubs(:exist?).with(regexp_matches(/config\/routes\.rb\z/)).returns(false)
 
       # Expect proper logging
       sequence = sequence("error_logging")
