@@ -79,7 +79,7 @@ class AppStatus < ApplicationRecord
     end
 
     event :fail do
-      transitions from: [ :pending, :creating_github_repo, :generating_rails_app, :pushing_to_github, :running_ci ], to: :failed
+      transitions from: [ :pending, :creating_github_repo, :generating_rails_app, :applying_ingredients, :pushing_to_github, :running_ci ], to: :failed
       after do |error_message|
         update(
           completed_at: Time.current,

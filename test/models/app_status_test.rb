@@ -59,6 +59,10 @@ class AppStatusTest < ActiveSupport::TestCase
     assert_equal "generating_rails_app", @app_status.status
     assert_not_nil @app_status.started_at
 
+    # Apply ingredients
+    @app_status.start_ingredient_application!
+    assert_equal "applying_ingredients", @app_status.status
+
     # Push to GitHub
     @app_status.start_github_push!
     assert_equal "pushing_to_github", @app_status.status
@@ -87,6 +91,10 @@ class AppStatusTest < ActiveSupport::TestCase
         invalid_transitions: [ :start_ci!, :complete! ]
       },
       {
+        from: :applying_ingredients,
+        invalid_transitions: [ :start_ci!, :complete! ]
+      },
+      {
         from: :pushing_to_github,
         invalid_transitions: [ :complete! ]
       }
@@ -101,9 +109,14 @@ class AppStatusTest < ActiveSupport::TestCase
         when :generating_rails_app
           @app_status.start_github_repo_creation!
           @app_status.start_rails_app_generation!
+        when :applying_ingredients
+          @app_status.start_github_repo_creation!
+          @app_status.start_rails_app_generation!
+          @app_status.start_ingredient_application!
         when :pushing_to_github
           @app_status.start_github_repo_creation!
           @app_status.start_rails_app_generation!
+          @app_status.start_ingredient_application!
           @app_status.start_github_push!
         end
       end
@@ -117,7 +130,7 @@ class AppStatusTest < ActiveSupport::TestCase
   end
 
   test "can fail from any state" do
-    states = [ :pending, :creating_github_repo, :generating_rails_app, :pushing_to_github, :running_ci ]
+    states = [ :pending, :creating_github_repo, :generating_rails_app, :applying_ingredients, :pushing_to_github, :running_ci ]
     error_message = "Something went wrong"
 
     states.each do |state|
@@ -130,13 +143,19 @@ class AppStatusTest < ActiveSupport::TestCase
       when :generating_rails_app
         @app_status.start_github_repo_creation!
         @app_status.start_rails_app_generation!
+      when :applying_ingredients
+        @app_status.start_github_repo_creation!
+        @app_status.start_rails_app_generation!
+        @app_status.start_ingredient_application!
       when :pushing_to_github
         @app_status.start_github_repo_creation!
         @app_status.start_rails_app_generation!
+        @app_status.start_ingredient_application!
         @app_status.start_github_push!
       when :running_ci
         @app_status.start_github_repo_creation!
         @app_status.start_rails_app_generation!
+        @app_status.start_ingredient_application!
         @app_status.start_github_push!
         @app_status.start_ci!
       end
@@ -174,7 +193,7 @@ class AppStatusTest < ActiveSupport::TestCase
   end
 
   test ".states returns all possible states" do
-    expected_states = %i[pending creating_github_repo generating_rails_app pushing_to_github running_ci completed failed]
+    expected_states = %i[pending creating_github_repo generating_rails_app applying_ingredients pushing_to_github running_ci completed failed]
     assert_equal expected_states, AppStatus.states
   end
 
@@ -270,6 +289,9 @@ class AppStatusTest < ActiveSupport::TestCase
     @app_status.start_rails_app_generation!
     logger.info("Starting generation")
 
+    @app_status.start_ingredient_application!
+    logger.info("Starting ingredient application")
+
     @app_status.start_github_push!
     logger.info("Starting GitHub push")
 
@@ -281,7 +303,7 @@ class AppStatusTest < ActiveSupport::TestCase
 
     # Get unique phases in order of creation
     actual_phases = @pending_app.log_entries.order(:created_at).pluck(:phase).uniq
-    expected_phases = %w[pending creating_github_repo generating_rails_app pushing_to_github running_ci completed]
+    expected_phases = %w[pending creating_github_repo generating_rails_app applying_ingredients pushing_to_github running_ci completed]
 
     assert_equal expected_phases, actual_phases,
       "Log entry phases should match status transitions"
