@@ -33,7 +33,7 @@ module LogEntryIcons
       "🛤️ 🏗️ ✅ "
     when /starting github push/
       "🐙 ⬆️ 🚀 🔄 "
-    when /github push finished successfully/
+    when /github push completed successfully/
       "🐙 ⬆️ 🚀 ✅ "
     when /starting ci run/
       "🐙 ⚙️ ⌛ "

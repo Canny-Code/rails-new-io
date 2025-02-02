@@ -45,13 +45,11 @@ module AppGeneration
     end
 
     def start_ci
-      @logger.info("Starting CI")
+      @logger.info("Starting CI run")
       @generated_app.start_ci!
-      @logger.info("CI started successfully")
     end
 
     def complete_generation
-      @logger.info("Completing app generation")
       @generated_app.complete!
       @logger.info("App generation completed successfully")
     end
