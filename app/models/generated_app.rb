@@ -67,7 +67,7 @@ class GeneratedApp < ApplicationRecord
       apply_ingredient(ingredient)
 
       @logger.info("Committing ingredient changes")
-      repository_service.commit_changes_after_applying_ingredient(ingredient)
+      @repository_service.commit_changes_after_applying_ingredient(ingredient)
       @logger.info("Ingredient applied successfully", { name: ingredient.name })
     end
   end
