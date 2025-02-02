@@ -30,22 +30,34 @@ module AppGeneration
     end
 
     test "successfully performs app generation" do
+      # Reset to initial state
+      @generated_app.app_status.update!(status: "pending")
+
       # Set up logger
       @logger = AppGeneration::Logger.new(@generated_app.app_status)
       AppGeneration::Logger.expects(:new).with(@generated_app.app_status).returns(@logger).once
 
+      # Set up logging sequence
+      sequence = sequence("generation_logging")
+      @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
+      @logger.expects(:info).with("Starting GitHub repo creation").in_sequence(sequence)
+      @logger.expects(:info).with("GitHub repo #{@generated_app.name} created successfully").in_sequence(sequence)
+      @logger.expects(:info).with("Executing Rails new command").in_sequence(sequence)
+      @logger.expects(:info).with("Rails app generation process finished successfully", {
+        command: @generated_app.command,
+        app_name: @generated_app.name
+      }).in_sequence(sequence)
+      @logger.expects(:info).with("Applying ingredients", { count: 2 }).in_sequence(sequence)
+      @logger.expects(:info).with("All ingredients applied successfully").in_sequence(sequence)
+
       # Mock repository service
       repository_service = mock("repository_service")
-      repository_service.expects(:create_github_repository).once.returns(true).tap do
-        @generated_app.app_status.start_github_repo_creation!
-      end
+      repository_service.expects(:create_github_repository).once.returns(true)
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
       # Mock command execution
       command_service = mock("command_service")
-      command_service.expects(:execute).once.returns(true).tap do
-        @generated_app.app_status.start_rails_app_generation!
-      end
+      command_service.expects(:execute).once.returns(true)
       CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
 
       # Mock template path verification
@@ -54,7 +66,11 @@ module AppGeneration
       data_repository.stubs(:class).returns(DataRepositoryService)
       data_repository.expects(:write_recipe).with(instance_of(Recipe), repo_name: "rails-new-io-data-test").twice
       DataRepositoryService.stubs(:new).with(user: @generated_app.user).returns(data_repository)
+
+      # Stub File.exist? for all possible paths
+      File.stubs(:exist?).returns(false)
       File.stubs(:exist?).with("path/to/template.rb").returns(true)
+      File.stubs(:exist?).with(regexp_matches(/config\/routes\.rb\z/)).returns(true)
 
       # Clean up any existing ingredients
       @generated_app.recipe.recipe_ingredients.destroy_all
@@ -70,31 +86,22 @@ module AppGeneration
       assert_equal 1, @generated_app.recipe.recipe_ingredients.first.position
       assert_equal 2, @generated_app.recipe.recipe_ingredients.last.position
 
-      # Set up logging sequence
-      sequence = sequence("generation_logging")
-      @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
-      @logger.expects(:info).with("Starting GitHub repo creation").in_sequence(sequence)
-      @logger.expects(:info).with("GitHub repo #{@generated_app.name} created successfully").in_sequence(sequence)
-      @logger.expects(:info).with("Executing Rails new command").in_sequence(sequence)
-      @logger.expects(:info).with("Rails app generation process finished successfully", {
-        command: @generated_app.command,
-        app_name: @generated_app.name
-      }).in_sequence(sequence)
-      @logger.expects(:info).with("Applying ingredients", { count: 2 }).in_sequence(sequence)
-      @logger.expects(:info).with("All ingredients applied successfully").in_sequence(sequence)
-
-      # Mock apply_ingredients to succeed
+      # Mock apply_ingredients
       @generated_app.expects(:apply_ingredients).once.returns(true)
 
       @orchestrator = Orchestrator.new(@generated_app)
       @orchestrator.create_github_repository
       @orchestrator.generate_rails_app
       @orchestrator.apply_ingredients
-      assert_equal "generating_rails_app", @generated_app.status
+
+      assert_equal "applying_ingredients", @generated_app.status
     end
 
     test "handles missing template files during generation" do
       error_message = "Template file not found: /nonexistent/path/template.rb"
+
+      # Reset to initial state
+      @generated_app.app_status.update!(status: "pending")
 
       # Set up logger
       @logger = AppGeneration::Logger.new(@generated_app.app_status)
@@ -102,10 +109,8 @@ module AppGeneration
 
       # Mock repository service
       repository_service = mock("repository_service")
-      repository_service.expects(:create_github_repository).once.returns(true).tap do
-        @generated_app.app_status.start_github_repo_creation!
-      end
-      AppRepositoryService.stubs(:new).with(@generated_app, @logger).returns(repository_service)
+      repository_service.expects(:create_github_repository).once.returns(true)
+      AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
       # Mock command execution
       command_service = mock("command_service")
@@ -170,8 +175,6 @@ module AppGeneration
       # Mock repository service
       repository_service = mock("repository_service")
       repository_service.expects(:create_github_repository).once.returns(true)
-      @generated_app.app_status.start_github_repo_creation!
-
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
       # Mock command execution to fail
@@ -214,6 +217,9 @@ module AppGeneration
         # Now error has a backtrace
       end
 
+      # Reset to initial state
+      @generated_app.app_status.update!(status: "pending")
+
       # Set up logger
       @logger = AppGeneration::Logger.new(@generated_app.app_status)
       AppGeneration::Logger.expects(:new).with(@generated_app.app_status).returns(@logger).once
@@ -226,8 +232,6 @@ module AppGeneration
       # Mock repository service
       repository_service = mock("repository_service")
       repository_service.expects(:create_github_repository).once.returns(true)
-      @generated_app.app_status.start_github_repo_creation!
-
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
       # Expect proper logging
@@ -264,6 +268,9 @@ module AppGeneration
     end
 
     test "performs generation with actual ingredients" do
+      # Reset to initial state
+      @generated_app.app_status.update!(status: "pending")
+
       # Set up logger
       @logger = AppGeneration::Logger.new(@generated_app.app_status)
       AppGeneration::Logger.expects(:new).with(@generated_app.app_status).returns(@logger).once
@@ -271,14 +278,11 @@ module AppGeneration
       # Mock repository service
       repository_service = mock("repository_service")
       repository_service.expects(:create_github_repository).once.returns(true)
-      @generated_app.app_status.start_github_repo_creation!
       AppRepositoryService.stubs(:new).with(@generated_app, @logger).returns(repository_service)
 
       # Mock command execution
       command_service = mock("command_service")
-      command_service.expects(:execute).once.returns(true).tap do
-        @generated_app.app_status.start_rails_app_generation!
-      end
+      command_service.expects(:execute).once.returns(true)
       CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
 
       # Mock template path verification
@@ -323,40 +327,69 @@ module AppGeneration
       @orchestrator.create_github_repository
       @orchestrator.generate_rails_app
       @orchestrator.apply_ingredients
-      assert_equal "generating_rails_app", @generated_app.status
+      assert_equal "applying_ingredients", @generated_app.status
     end
 
     test "successfully creates initial commit" do
+      # Reset to initial state
+      @generated_app.app_status.update!(status: "pending")
+
+      # Clean up any existing ingredients
+      @generated_app.recipe.recipe_ingredients.destroy_all
+
       # Set up logger
       @logger = AppGeneration::Logger.new(@generated_app.app_status)
       AppGeneration::Logger.expects(:new).with(@generated_app.app_status).returns(@logger).once
 
-      # Set up app status to be ready for commit
-      @generated_app.app_status.start_github_repo_creation!
-      @generated_app.app_status.start_rails_app_generation!
-
-      # Mock repository service
+      # Mock repository service for initial creation
       repository_service = mock("repository_service")
+      repository_service.expects(:create_github_repository).once.returns(true)
       repository_service.expects(:create_initial_commit).once.returns(true)
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
-      # Mock command execution service to prevent Rails new validation
+      # Mock command execution service
       command_service = mock("command_service")
+      command_service.expects(:execute).once.returns(true)
       CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
+
+      # Mock apply_ingredients
+      @generated_app.expects(:apply_ingredients).once.returns(true)
 
       # Expect proper logging
       sequence = sequence("commit_logging")
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
+      @logger.expects(:info).with("Starting GitHub repo creation").in_sequence(sequence)
+      @logger.expects(:info).with("GitHub repo #{@generated_app.name} created successfully").in_sequence(sequence)
+      @logger.expects(:info).with("Executing Rails new command").in_sequence(sequence)
+      @logger.expects(:info).with("Rails app generation process finished successfully", {
+        command: @generated_app.command,
+        app_name: @generated_app.name
+      }).in_sequence(sequence)
+      @logger.expects(:info).with("Applying ingredients", { count: 0 }).in_sequence(sequence)
+      @logger.expects(:info).with("All ingredients applied successfully").in_sequence(sequence)
       @logger.expects(:info).with("Creating initial commit").in_sequence(sequence)
       @logger.expects(:info).with("Initial commit created successfully").in_sequence(sequence)
 
       @orchestrator = Orchestrator.new(@generated_app)
+      @orchestrator.create_github_repository
+      @orchestrator.generate_rails_app
+      @orchestrator.apply_ingredients
       @orchestrator.create_initial_commit
 
-      assert_equal "generating_rails_app", @generated_app.status
+      assert_equal "applying_ingredients", @generated_app.status
     end
 
     test "handles errors during initial commit creation" do
+      # Reset to initial state
+      @generated_app.app_status.update!(status: "pending")
+
+      # Clean up any existing ingredients
+      @generated_app.recipe.recipe_ingredients.destroy_all
+
+      # Set up logger
+      @logger = AppGeneration::Logger.new(@generated_app.app_status)
+      AppGeneration::Logger.expects(:new).with(@generated_app.app_status).returns(@logger).once
+
       error_message = "Failed to create initial commit"
       error = StandardError.new(error_message)
       begin
@@ -365,26 +398,32 @@ module AppGeneration
         # Now error has a backtrace
       end
 
-      # Set up logger
-      @logger = AppGeneration::Logger.new(@generated_app.app_status)
-      AppGeneration::Logger.expects(:new).with(@generated_app.app_status).returns(@logger).once
-
-      # Set up app status to be ready for commit
-      @generated_app.app_status.start_github_repo_creation!
-      @generated_app.app_status.start_rails_app_generation!
-
-      # Mock repository service to fail
+      # Mock repository service
       repository_service = mock("repository_service")
+      repository_service.expects(:create_github_repository).once.returns(true)
       repository_service.expects(:create_initial_commit).raises(error)
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
-      # Mock command execution service to prevent Rails new validation
+      # Mock command execution service
       command_service = mock("command_service")
+      command_service.expects(:execute).once.returns(true)
       CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
+
+      # Mock apply_ingredients
+      @generated_app.expects(:apply_ingredients).once.returns(true)
 
       # Expect proper logging
       sequence = sequence("error_logging")
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
+      @logger.expects(:info).with("Starting GitHub repo creation").in_sequence(sequence)
+      @logger.expects(:info).with("GitHub repo #{@generated_app.name} created successfully").in_sequence(sequence)
+      @logger.expects(:info).with("Executing Rails new command").in_sequence(sequence)
+      @logger.expects(:info).with("Rails app generation process finished successfully", {
+        command: @generated_app.command,
+        app_name: @generated_app.name
+      }).in_sequence(sequence)
+      @logger.expects(:info).with("Applying ingredients", { count: 0 }).in_sequence(sequence)
+      @logger.expects(:info).with("All ingredients applied successfully").in_sequence(sequence)
       @logger.expects(:info).with("Creating initial commit").in_sequence(sequence)
       @logger.expects(:error).with("App generation failed", {
         error: error_message,
@@ -392,6 +431,9 @@ module AppGeneration
       }).in_sequence(sequence)
 
       @orchestrator = Orchestrator.new(@generated_app)
+      @orchestrator.create_github_repository
+      @orchestrator.generate_rails_app
+      @orchestrator.apply_ingredients
 
       assert_raises(StandardError) do
         @orchestrator.create_initial_commit
@@ -412,6 +454,7 @@ module AppGeneration
       # Set up app status to be ready for push
       @generated_app.app_status.start_github_repo_creation!
       @generated_app.app_status.start_rails_app_generation!
+      @generated_app.app_status.start_ingredient_application!
 
       # Mock repository service
       repository_service = mock("repository_service")
@@ -450,6 +493,7 @@ module AppGeneration
       # Set up app status to be ready for push
       @generated_app.app_status.start_github_repo_creation!
       @generated_app.app_status.start_rails_app_generation!
+      @generated_app.app_status.start_ingredient_application!
 
       # Mock repository service to fail
       repository_service = mock("repository_service")
@@ -490,6 +534,7 @@ module AppGeneration
       # Set up app status to be ready for CI
       @generated_app.app_status.start_github_repo_creation!
       @generated_app.app_status.start_rails_app_generation!
+      @generated_app.app_status.start_ingredient_application!
       @generated_app.app_status.start_github_push!
 
       # Mock command execution service to prevent Rails new validation
@@ -503,8 +548,7 @@ module AppGeneration
       # Expect proper logging
       sequence = sequence("ci_logging")
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
-      @logger.expects(:info).with("Starting CI").in_sequence(sequence)
-      @logger.expects(:info).with("CI started successfully").in_sequence(sequence)
+      @logger.expects(:info).with("Starting CI run").in_sequence(sequence)
 
       @orchestrator = Orchestrator.new(@generated_app)
       @orchestrator.start_ci
@@ -528,6 +572,7 @@ module AppGeneration
       # Set up app status to be ready for CI
       @generated_app.app_status.start_github_repo_creation!
       @generated_app.app_status.start_rails_app_generation!
+      @generated_app.app_status.start_ingredient_application!
       @generated_app.app_status.start_github_push!
 
       command_service = mock("command_service")
@@ -540,7 +585,7 @@ module AppGeneration
 
       sequence = sequence("error_logging")
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
-      @logger.expects(:info).with("Starting CI").in_sequence(sequence)
+      @logger.expects(:info).with("Starting CI run").in_sequence(sequence)
       @logger.expects(:error).with("App generation failed", {
         error: error_message,
         backtrace: kind_of(String)
@@ -560,17 +605,14 @@ module AppGeneration
     end
 
     test "successfully completes generation" do
+      # Reset to initial state
+      @generated_app.app_status.update!(status: "running_ci")
+
       # Set up logger
       @logger = AppGeneration::Logger.new(@generated_app.app_status)
       AppGeneration::Logger.expects(:new).with(@generated_app.app_status).returns(@logger).once
 
-      # Set up app status to be ready for completion
-      @generated_app.app_status.start_github_repo_creation!
-      @generated_app.app_status.start_rails_app_generation!
-      @generated_app.app_status.start_github_push!
-      @generated_app.app_status.start_ci!
-
-      # Mock command execution service to prevent Rails new validation
+      # Mock command execution service
       command_service = mock("command_service")
       CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
 
@@ -581,13 +623,11 @@ module AppGeneration
       # Expect proper logging
       sequence = sequence("completion_logging")
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
-      @logger.expects(:info).with("Completing app generation").in_sequence(sequence)
       @logger.expects(:info).with("App generation completed successfully").in_sequence(sequence)
 
       @orchestrator = Orchestrator.new(@generated_app)
       @orchestrator.complete_generation
 
-      # Verify final state
       assert_equal "completed", @generated_app.status
     end
 
@@ -605,10 +645,7 @@ module AppGeneration
       AppGeneration::Logger.expects(:new).with(@generated_app.app_status).returns(@logger).once
 
       # Set up app status to be ready for completion
-      @generated_app.app_status.start_github_repo_creation!
-      @generated_app.app_status.start_rails_app_generation!
-      @generated_app.app_status.start_github_push!
-      @generated_app.app_status.start_ci!
+      @generated_app.app_status.update!(status: "running_ci")
 
       # Mock command execution service to prevent Rails new validation
       command_service = mock("command_service")
@@ -624,7 +661,6 @@ module AppGeneration
       # Expect proper logging
       sequence = sequence("error_logging")
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
-      @logger.expects(:info).with("Completing app generation").in_sequence(sequence)
       @logger.expects(:error).with("App generation failed", {
         error: error_message,
         backtrace: kind_of(String)
