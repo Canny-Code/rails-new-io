@@ -38,6 +38,7 @@ class AppStatus < ApplicationRecord
     state :pending, initial: true
     state :creating_github_repo
     state :generating_rails_app
+    state :applying_ingredients
     state :pushing_to_github
     state :running_ci
     state :completed
@@ -58,8 +59,12 @@ class AppStatus < ApplicationRecord
       end
     end
 
+    event :start_ingredient_application do
+      transitions from: :generating_rails_app, to: :applying_ingredients
+    end
+
     event :start_github_push do
-      transitions from: :generating_rails_app, to: :pushing_to_github
+      transitions from: :applying_ingredients, to: :pushing_to_github
     end
 
     event :start_ci do
