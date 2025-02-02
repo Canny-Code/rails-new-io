@@ -16,42 +16,63 @@ class StatusStepsCalculator
       current_state: @current_state,
       state_sequence: @state_sequence,
       history: @history,
-      current_index: calculate_current_index,
-      steps: calculate_steps
+      current_index: current_index,
+      steps: steps
     }
+  end
+
+  def current_index
+    @current_index ||= calculate_current_index
+  end
+
+  def steps
+    @steps ||= calculate_steps
   end
 
   private
 
   def calculate_current_index
-    if @current_state == :failed
-      last_state = @history.last&.dig("from")&.to_sym
-      @state_sequence.index(last_state)
+    if @current_state.in?(state_sequence)
+      state_sequence.index(@current_state)
+    elsif @current_state == :failed
+      state_sequence.index(@history.last["to"].to_sym)
     else
-      @state_sequence.index(@current_state)
+      state_sequence.index(@current_state)
     end
   end
 
   def calculate_steps
-    AppStatus.states.reject do |state|
-      (state == :failed || state == :completed) && state != @current_state
-    end.each_with_index.map do |state, index|
+    state_sequence.map.with_index do |state, index|
+      completed = step_passed?(state)
+
+      current = if @current_state == :completed
+        false
+      elsif @history.empty?
+        state == :pending
+      else
+        state.to_s == @history.last["to"]
+      end
+
       {
-        state: state,
+        state:,
         number: index + 1,
-        completed: step_passed?(state)
+        completed:,
+        current:
       }
     end
   end
 
   def step_passed?(state)
-    if @current_state == :completed
-      true
-    elsif @current_state == :failed
-      false
-    else
-      @history.any? { |transition| transition["from"] == state.to_s } ||
-        (state == :pending && @current_state != :pending)
+    if @current_state == :failed && state == @history.last["to"].to_sym
+      return false
     end
+
+    return true if @current_state == :completed
+
+    @history.any? { |transition| transition["from"] == state.to_s }
+  end
+
+  def state_sequence
+    @state_sequence ||= AppStatus.state_sequence
   end
 end
