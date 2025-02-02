@@ -61,7 +61,6 @@ class CommandExecutionService
 
   def execute
     @logger.info("Starting app generation")
-    @generated_app.start_rails_app_generation!
 
     setup_environment
 

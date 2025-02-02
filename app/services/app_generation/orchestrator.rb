@@ -12,12 +12,14 @@ module AppGeneration
 
     def create_github_repository
       @logger.info("Starting GitHub repo creation")
+      @generated_app.start_github_repo_creation!
       @repository_service.create_github_repository
       @logger.info("GitHub repo #{@generated_app.name} created successfully")
     end
 
     def generate_rails_app
       @logger.info("Executing Rails new command")
+      @generated_app.start_rails_app_generation!
       @command_execution_service.execute
       @logger.info("Rails app generation process finished successfully", {
         command: @generated_app.command,
@@ -33,6 +35,7 @@ module AppGeneration
 
     def apply_ingredients
       @logger.info("Applying ingredients", { count: @generated_app.ingredients.count })
+      @generated_app.start_ingredient_application!
       @generated_app.apply_ingredients
       @logger.info("All ingredients applied successfully")
     end

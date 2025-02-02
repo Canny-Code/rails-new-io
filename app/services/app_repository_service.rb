@@ -12,8 +12,6 @@ class AppRepositoryService < GithubRepositoryService
   end
 
   def create_github_repository
-    generated_app.start_github_repo_creation!
-
     repo_name = generated_app.name
 
     response = create_repository(
