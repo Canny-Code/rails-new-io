@@ -1,13 +1,12 @@
 module StatusStepsHelper
-  def calculate_status_steps(generated_app)
+  def calculate_status_steps_data(generated_app)
     StatusStepsCalculator.call(generated_app)
   end
-
 
   def class_for_transition(state_sequence, step_from, step_to, current_index)
     from_index = state_sequence.index(step_from)
     to_index = state_sequence.index(step_to)
-    current_index = current_index.to_i  # Convert nil to 0, keep integers as is
+    current_index = current_index.to_i
 
     return "bg-gray-300" if from_index.nil? || to_index.nil?
 

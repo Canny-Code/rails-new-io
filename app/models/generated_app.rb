@@ -178,5 +178,7 @@ class GeneratedApp < ApplicationRecord
       partial: "shared/github_clone_box",
       locals: { generated_app: self }
     )
+    # TODO: This is a hack to broadcast the last step as completed
+    app_status.broadcast_status_steps
   end
 end

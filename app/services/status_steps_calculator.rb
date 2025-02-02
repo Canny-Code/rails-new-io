@@ -42,12 +42,11 @@ class StatusStepsCalculator
   end
 
   def calculate_steps
-    state_sequence.map.with_index do |state, index|
-      completed = step_passed?(state)
+    return completed_steps if @current_state == :completed
 
-      current = if @current_state == :completed
-        false
-      elsif @history.empty?
+    state_sequence.map.with_index do |state, index|
+      completed = @history.any? { |transition| transition["from"] == state.to_s }
+      current = if @history.empty?
         state == :pending
       else
         state.to_s == @history.last["to"]
@@ -62,14 +61,15 @@ class StatusStepsCalculator
     end
   end
 
-  def step_passed?(state)
-    if @current_state == :failed && state == @history.last["to"].to_sym
-      return false
+  def completed_steps
+    state_sequence.map.with_index do |state, index|
+      {
+        state:,
+        number: index + 1,
+        completed: true,
+        current: false
+      }
     end
-
-    return true if @current_state == :completed
-
-    @history.any? { |transition| transition["from"] == state.to_s }
   end
 
   def state_sequence

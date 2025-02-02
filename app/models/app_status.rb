@@ -114,14 +114,13 @@ class AppStatus < ApplicationRecord
     end
   end
 
-
   def broadcast_status_steps
     channel = "#{generated_app.to_gid}:app_status"
 
     Turbo::StreamsChannel.broadcast_replace_to(
       channel,
       target: "status_steps_content",
-      partial: "shared/status_steps",
+      partial: "shared/status_steps_content",
       locals: { generated_app: generated_app }
     )
   end
