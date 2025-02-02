@@ -207,6 +207,12 @@ class GeneratedAppTest < ActiveSupport::TestCase
     end
     assert app.generating_rails_app?
 
+    # Apply ingredients
+    assert_changes -> { app.reload.last_build_at } do
+      app.start_ingredient_application!
+    end
+    assert app.applying_ingredients?
+
     # Push to GitHub
     assert_changes -> { app.reload.last_build_at } do
       app.start_github_push!
@@ -258,6 +264,7 @@ class GeneratedAppTest < ActiveSupport::TestCase
     # Follow the proper state transition sequence
     app.start_github_repo_creation!
     app.start_rails_app_generation!
+    app.start_ingredient_application!
     app.start_github_push!
     app.start_ci!
 
@@ -292,6 +299,12 @@ class GeneratedAppTest < ActiveSupport::TestCase
       app.start_rails_app_generation!
     end
     assert app.generating_rails_app?
+
+    # Apply ingredients
+    assert_changes -> { app.reload.last_build_at } do
+      app.start_ingredient_application!
+    end
+    assert app.applying_ingredients?
 
     # Push to GitHub
     assert_changes -> { app.reload.last_build_at } do
@@ -335,8 +348,10 @@ class GeneratedAppTest < ActiveSupport::TestCase
   test "apply_ingredients applies all ingredients in order" do
     @generated_app.update!(recipe: @recipe)
 
-    repository_service = mock("repository_service")
-    @generated_app.stubs(:repository_service).returns(repository_service)
+    git_service = mock("git_service")
+    repository_service = AppRepositoryService.new(@generated_app, @logger)
+    repository_service.stubs(:git_service).returns(git_service)
+    @generated_app.repository_service = repository_service
 
     # Create the template file
     template_path = DataRepositoryService.new(user: @user).template_path(@recipe.ingredients.first)
@@ -347,7 +362,7 @@ class GeneratedAppTest < ActiveSupport::TestCase
       @logger.expects(:info).with("Applying ingredient", { name: ingredient.name })
       @logger.expects(:info).with("Ingredient applied successfully", { name: ingredient.name })
       @logger.expects(:info).with("Committing ingredient changes")
-      repository_service.expects(:commit_changes_after_applying_ingredient).with(ingredient)
+      git_service.expects(:commit_changes).with(message: ingredient.to_commit_message)
     end
 
     @generated_app.apply_ingredients
