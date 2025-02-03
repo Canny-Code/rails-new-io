@@ -359,8 +359,8 @@ class GeneratedAppTest < ActiveSupport::TestCase
     File.write(template_path, @recipe.ingredients.first.template_content)
 
     @recipe.ingredients.each do |ingredient|
-      @logger.expects(:info).with("Applying ingredient", { name: ingredient.name })
-      @logger.expects(:info).with("Ingredient applied successfully", { name: ingredient.name })
+      @logger.expects(:info).with("Applying ingredient: #{ingredient.name}")
+      @logger.expects(:info).with("Ingredient #{ingredient.name} applied successfully")
       @logger.expects(:info).with("Committing ingredient changes")
       git_service.expects(:commit_changes).with(message: ingredient.to_commit_message)
     end

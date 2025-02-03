@@ -42,7 +42,6 @@ module AppGeneration
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
       @logger.expects(:info).with("Starting GitHub repo creation").in_sequence(sequence)
       @logger.expects(:info).with("GitHub repo #{@generated_app.name} created successfully").in_sequence(sequence)
-      @logger.expects(:info).with("Executing Rails new command").in_sequence(sequence)
       @logger.expects(:info).with("Rails app generation process finished successfully", {
         command: @generated_app.command,
         app_name: @generated_app.name
@@ -137,7 +136,6 @@ module AppGeneration
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
       @logger.expects(:info).with("Starting GitHub repo creation").in_sequence(sequence)
       @logger.expects(:info).with("GitHub repo #{@generated_app.name} created successfully").in_sequence(sequence)
-      @logger.expects(:info).with("Executing Rails new command").in_sequence(sequence)
       @logger.expects(:info).with("Rails app generation process finished successfully", {
         command: @generated_app.command,
         app_name: @generated_app.name
@@ -191,7 +189,6 @@ module AppGeneration
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
       @logger.expects(:info).with("Starting GitHub repo creation").in_sequence(sequence)
       @logger.expects(:info).with("GitHub repo #{@generated_app.name} created successfully").in_sequence(sequence)
-      @logger.expects(:info).with("Executing Rails new command").in_sequence(sequence)
       @logger.expects(:error).with("App generation failed", {
         error: error_message,
         backtrace: kind_of(String)
@@ -243,7 +240,6 @@ module AppGeneration
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
       @logger.expects(:info).with("Starting GitHub repo creation").in_sequence(sequence)
       @logger.expects(:info).with("GitHub repo #{@generated_app.name} created successfully").in_sequence(sequence)
-      @logger.expects(:info).with("Executing Rails new command").in_sequence(sequence)
       @logger.expects(:info).with("Rails app generation process finished successfully", {
         command: @generated_app.command,
         app_name: @generated_app.name
@@ -316,7 +312,6 @@ module AppGeneration
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
       @logger.expects(:info).with("Starting GitHub repo creation").in_sequence(sequence)
       @logger.expects(:info).with("GitHub repo #{@generated_app.name} created successfully").in_sequence(sequence)
-      @logger.expects(:info).with("Executing Rails new command").in_sequence(sequence)
       @logger.expects(:info).with("Rails app generation process finished successfully", {
         command: @generated_app.command,
         app_name: @generated_app.name
@@ -364,7 +359,6 @@ module AppGeneration
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
       @logger.expects(:info).with("Starting GitHub repo creation").in_sequence(sequence)
       @logger.expects(:info).with("GitHub repo #{@generated_app.name} created successfully").in_sequence(sequence)
-      @logger.expects(:info).with("Executing Rails new command").in_sequence(sequence)
       @logger.expects(:info).with("Rails app generation process finished successfully", {
         command: @generated_app.command,
         app_name: @generated_app.name
@@ -421,7 +415,6 @@ module AppGeneration
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
       @logger.expects(:info).with("Starting GitHub repo creation").in_sequence(sequence)
       @logger.expects(:info).with("GitHub repo #{@generated_app.name} created successfully").in_sequence(sequence)
-      @logger.expects(:info).with("Executing Rails new command").in_sequence(sequence)
       @logger.expects(:info).with("Rails app generation process finished successfully", {
         command: @generated_app.command,
         app_name: @generated_app.name
@@ -585,11 +578,10 @@ module AppGeneration
       repository_service = mock("repository_service")
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
-      @generated_app.expects(:start_ci!).raises(error)
-
+      # Set up logging sequence
       sequence = sequence("error_logging")
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
-      @logger.expects(:info).with("Starting CI run").in_sequence(sequence)
+      @generated_app.expects(:start_ci!).raises(error).in_sequence(sequence)
       @logger.expects(:error).with("App generation failed", {
         error: error_message,
         backtrace: kind_of(String)

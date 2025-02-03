@@ -60,8 +60,6 @@ class CommandExecutionService
   end
 
   def execute
-    @logger.info("Starting app generation")
-
     setup_environment
 
     Timeout.timeout(MAX_TIMEOUT) do
@@ -151,7 +149,6 @@ class CommandExecutionService
         raise "Rails app generation failed with status: #{exit_status}"
       end
 
-      @logger.info("Rails app generation process finished successfully")
       @temp_dir
     end
   end

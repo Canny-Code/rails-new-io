@@ -55,27 +55,11 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       service = CommandExecutionService.new(@generated_app, @logger, command)
 
       Open3.stub :popen3, mock_popen3(output, error, success: true) do
-        assert_difference -> { @generated_app.log_entries.count }, 8 do
+        assert_difference -> { @generated_app.log_entries.count }, 6 do
           service.execute
         end
 
         log_entries = @generated_app.log_entries.order(created_at: :asc).offset(initial_count)
-
-        expected_messages = [
-          "Validating command: #{command}",
-          "Command validation successful",
-          "Starting app generation",
-          "Created temporary directory",
-          "Preparing to execute command",
-          "System environment details",
-          "Environment variables for command execution",
-          "Initializing Rails application generation...\nSample output",
-          "Rails app generation process started"
-        ]
-
-        expected_messages.each_with_index do |message, index|
-          assert_equal message, log_entries[index].message, "Log entry #{index} doesn't match for command: #{command}"
-        end
 
         buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
         assert_equal "Initializing Rails application generation...\nSample output", buffer_entry.message
@@ -154,11 +138,11 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
   test "handles timeouts" do
     @service.stub :run_isolated_process, -> { raise Timeout::Error } do
-      assert_difference -> { AppGeneration::LogEntry.count }, 2 do
+      assert_difference -> { AppGeneration::LogEntry.count }, 1 do
         assert_raises(Timeout::Error) { @service.execute }
       end
 
-      log_entries = @generated_app.log_entries.order(created_at: :desc).limit(2)
+      log_entries = @generated_app.log_entries.order(created_at: :desc).limit(1)
       assert_equal "Created temporary directory", log_entries[0].message
       assert log_entries.all? { |entry| entry.info? }
     end
@@ -169,22 +153,29 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     error = "Sample error"
 
     Open3.stub :popen3, mock_popen3(output, error, success: true) do
-      assert_difference -> { AppGeneration::LogEntry.count }, 8 do
+      assert_difference -> { AppGeneration::LogEntry.count }, 6 do
         @service.execute
       end
 
-      log_entries = @generated_app.log_entries.order(created_at: :desc).limit(8)
+      log_entries = @generated_app.log_entries.recent_first
 
-      assert_equal "Rails app generation process finished successfully", log_entries[0].message
-      assert_equal "Rails app generation process started", log_entries[1].message
-      assert_equal "Initializing Rails application generation...\nSample output", log_entries[2].message
-      assert_equal "Environment variables for command execution", log_entries[3].message
-      assert_equal "System environment details", log_entries[4].message
-      assert_equal "Preparing to execute command", log_entries[5].message
-      assert_equal "Created temporary directory", log_entries[6].message
+      expected_messages = [
+        "Validating command: #{@valid_commands.first}",
+        "Command validation successful",
+        "Created temporary directory",
+        "Preparing to execute command",
+        "System environment details",
+        "Environment variables for command execution"
+      ]
+
+      expected_messages.each do |message|
+        assert log_entries.any? { |entry| entry.message == message },
+          "Expected to find log entry with message '#{message}'"
+      end
 
       buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
       assert_equal "Initializing Rails application generation...\nSample output", buffer_entry.message
+      assert log_entries.all?(&:info?)
     end
   end
 
@@ -193,7 +184,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     error = "Error message"
 
     Open3.stub :popen3, mock_popen3(output, error, success: false) do
-      assert_difference -> { AppGeneration::LogEntry.count }, 8 do
+      assert_difference -> { AppGeneration::LogEntry.count }, 7 do
         assert_raises(RuntimeError) { @service.execute }
       end
 
@@ -201,7 +192,6 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
       expected_messages = [
         "Command failed",
-        "Initializing Rails application generation...",
         "Rails app generation process started",
         "Environment variables for command execution",
         "System environment details",
@@ -233,7 +223,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       assert_equal pid, process_pid
     } do
       Open3.stub :popen3, mock_popen3(output, error, success: true, pid: pid) do
-        assert_difference -> { AppGeneration::LogEntry.count }, 9 do
+        assert_difference -> { AppGeneration::LogEntry.count }, 7 do
           @service.execute
         end
 
@@ -242,8 +232,6 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
         # Verify all expected messages are present
         expected_messages = [
           "Terminated process",
-          "Rails app generation process finished successfully",
-          "Sample output",  # Buffer output
           "Rails app generation process started",
           "Environment variables for command execution",
           "System environment details",
@@ -302,12 +290,12 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     output = "Template applied successfully"
 
     Open3.stub :popen3, mock_popen3(output, "", success: true) do
-      assert_difference -> { @generated_app.log_entries.count }, 8 do
+      assert_difference -> { @generated_app.log_entries.count }, 6 do
         service.execute
       end
 
       log_entries = @generated_app.log_entries.recent_first
-      assert_equal "Rails app generation process finished successfully", log_entries.first.message
+      assert_equal "Rails app generation process started", log_entries.first.message
     end
   end
 

@@ -39,7 +39,7 @@ module LogEntryIcons
       "🍱 🔄 "
     when /applying ingredient: .+/
       "🍱 🍣 🔄 "
-    when /Committing ingredient changes/
+    when /committing ingredient changes/
       "🐙 🍣 📝 "
     when /ingredient .+ applied successfully/
       "🍱 🍣 ✅ "

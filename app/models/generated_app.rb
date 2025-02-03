@@ -68,7 +68,7 @@ class GeneratedApp < ApplicationRecord
 
       @logger.info("Committing ingredient changes")
       @repository_service.commit_changes_after_applying_ingredient(ingredient)
-      @logger.info("Ingredient applied successfully", { name: ingredient.name })
+      @logger.info("Ingredient #{ingredient.name} applied successfully")
     end
   end
 
@@ -111,7 +111,7 @@ class GeneratedApp < ApplicationRecord
   private
 
   def apply_ingredient(ingredient, configuration = {})
-    @logger.info("Applying ingredient", { name: ingredient.name })
+    @logger.info("Applying ingredient: #{ingredient.name}")
 
     transaction do
       recipe_change = recipe.recipe_changes.create!(
