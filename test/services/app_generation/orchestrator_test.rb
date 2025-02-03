@@ -688,6 +688,7 @@ module AppGeneration
       repository_service.stubs(:create_github_repository).returns(true)
       repository_service.stubs(:commit_changes_after_applying_ingredient).returns(true)
       repository_service.stubs(:create_initial_commit).returns(true)
+      repository_service.stubs(:push_to_remote).returns(true)
       AppRepositoryService.stubs(:new).returns(repository_service)
       @generated_app.stubs(:repository_service).returns(repository_service)
 
@@ -721,23 +722,25 @@ module AppGeneration
       @generated_app.recipe.add_ingredient!(ingredient1)
       @generated_app.recipe.add_ingredient!(ingredient2)
 
+      File.stubs(:exist?).returns(false)
+      File.stubs(:exist?).with("path/to/template.rb").returns(true)
+
       @orchestrator = Orchestrator.new(@generated_app)
 
       # Execute the workflow
       @orchestrator.create_github_repository
       @orchestrator.generate_rails_app
       @orchestrator.create_initial_commit
-
-      File.stubs(:exist?).returns(false)
-      File.stubs(:exist?).with("path/to/template.rb").returns(true)
-
       @orchestrator.apply_ingredients
+      @orchestrator.push_to_remote
+      @orchestrator.start_ci
+      @orchestrator.complete_generation
 
       # Verify log entries and their icons
       entries = @generated_app.log_entries.order(:created_at)
 
       # Starting workflow
-      assert_match(/🛤️ 🏗️ 🎬 Starting app generation workflow/, entries[0].decorated_message)
+      assert_match(/🛤️ 🏗️ 🔄 Starting app generation workflow/, entries[0].decorated_message)
 
       # GitHub repo creation
       assert_match(/🐙 🏗️ 🔄 Starting GitHub repo creation/, entries[1].decorated_message)
@@ -753,7 +756,7 @@ module AppGeneration
       assert_match(/🐙 📝 ✅ Initial commit created successfully/, entries[5].decorated_message)
 
       # Ingredient application
-      assert_match(/🍱 🔄 Applying ingredients/, entries[6].decorated_message)
+      assert_match(/🍱 🏗️ 🔄 Applying ingredients/, entries[6].decorated_message)
 
       # First ingredient
       assert_match(/🍱 🍣 🔄 Applying ingredient: Rails Authentication/, entries[7].decorated_message)
@@ -766,7 +769,17 @@ module AppGeneration
       assert_match(/🍱 🍣 ✅ Ingredient API Setup applied successfully/, entries[12].decorated_message)
 
       # All ingredients completed
-      assert_match(/🍱 ✅ All ingredients applied successfully/, entries[13].decorated_message)
+      assert_match(/🍱 🏗️ ✅ All ingredients applied successfully/, entries[13].decorated_message)
+
+      # Push to remote
+      assert_match(/🐙 ⬆️ 🔄 Starting GitHub push/, entries[14].decorated_message)
+      assert_match(/🐙 ⬆️ ✅ GitHub push completed successfully/, entries[15].decorated_message)
+
+      # CI run
+      assert_match(/🐙 ⚙️ 🔄 Starting CI run/, entries[16].decorated_message)
+
+      # Generation completed
+      assert_match(/🛤️ 🏗️ ✅ App generation completed successfully/, entries[17].decorated_message)
     end
   end
 end
