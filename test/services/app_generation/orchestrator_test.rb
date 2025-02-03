@@ -687,6 +687,7 @@ module AppGeneration
       repository_service = mock("repository_service")
       repository_service.stubs(:create_github_repository).returns(true)
       repository_service.stubs(:commit_changes_after_applying_ingredient).returns(true)
+      repository_service.stubs(:create_initial_commit).returns(true)
       AppRepositoryService.stubs(:new).returns(repository_service)
       @generated_app.stubs(:repository_service).returns(repository_service)
 
@@ -725,6 +726,7 @@ module AppGeneration
       # Execute the workflow
       @orchestrator.create_github_repository
       @orchestrator.generate_rails_app
+      @orchestrator.create_initial_commit
 
       File.stubs(:exist?).returns(false)
       File.stubs(:exist?).with("path/to/template.rb").returns(true)
@@ -746,21 +748,25 @@ module AppGeneration
       # Rails app generation
       assert_match(/🛤️ 🏗️ ✅ Rails app generation process/, entries[3].decorated_message)
 
+      # Initial commit creation
+      assert_match(/🐙 📝 🔄 Creating initial commit/, entries[4].decorated_message)
+      assert_match(/🐙 📝 ✅ Initial commit created successfully/, entries[5].decorated_message)
+
       # Ingredient application
-      assert_match(/🍱 🔄 Applying ingredients/, entries[4].decorated_message)
+      assert_match(/🍱 🔄 Applying ingredients/, entries[6].decorated_message)
 
       # First ingredient
-      assert_match(/🍱 🍣 🔄 Applying ingredient: Rails Authentication/, entries[5].decorated_message)
-      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[6].decorated_message)
-      assert_match(/🍱 🍣 ✅ Ingredient Rails Authentication applied successfully/, entries[7].decorated_message)
+      assert_match(/🍱 🍣 🔄 Applying ingredient: Rails Authentication/, entries[7].decorated_message)
+      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[8].decorated_message)
+      assert_match(/🍱 🍣 ✅ Ingredient Rails Authentication applied successfully/, entries[9].decorated_message)
 
       # Second ingredient
-      assert_match(/🍱 🍣 🔄 Applying ingredient: API Setup/, entries[8].decorated_message)
-      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[9].decorated_message)
-      assert_match(/🍱 🍣 ✅ Ingredient API Setup applied successfully/, entries[10].decorated_message)
+      assert_match(/🍱 🍣 🔄 Applying ingredient: API Setup/, entries[10].decorated_message)
+      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[11].decorated_message)
+      assert_match(/🍱 🍣 ✅ Ingredient API Setup applied successfully/, entries[12].decorated_message)
 
       # All ingredients completed
-      assert_match(/🍱 ✅ All ingredients applied successfully/, entries[11].decorated_message)
+      assert_match(/🍱 ✅ All ingredients applied successfully/, entries[13].decorated_message)
     end
   end
 end
