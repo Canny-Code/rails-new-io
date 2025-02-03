@@ -674,5 +674,93 @@ module AppGeneration
       assert_equal "failed", @generated_app.status
       assert_equal error_message, @generated_app.error_message
     end
+
+    test "log entries have correct icons throughout the workflow" do
+      # Reset to initial state
+      @generated_app.app_status.update!(status: "pending")
+
+      # Set up logger
+      @logger = AppGeneration::Logger.new(@generated_app.app_status)
+      @generated_app.logger = @logger
+
+      # Mock all services to just return true
+      repository_service = mock("repository_service")
+      repository_service.stubs(:create_github_repository).returns(true)
+      repository_service.stubs(:commit_changes_after_applying_ingredient).returns(true)
+      AppRepositoryService.stubs(:new).returns(repository_service)
+      @generated_app.stubs(:repository_service).returns(repository_service)
+
+      command_service = mock("command_service")
+      command_service.stubs(:execute).returns(true)
+      CommandExecutionService.stubs(:new).returns(command_service)
+
+      github_service = mock("github_service")
+      github_service.stubs(:commit_changes).returns(true)
+      github_service.stubs(:write_recipe).returns(true)
+      github_service.stubs(:template_path).returns("path/to/template.rb")
+      GithubRepositoryService.stubs(:new).returns(github_service)
+
+      # Mock LocalGitService
+      local_git_service = mock("local_git_service")
+      local_git_service.stubs(:in_working_directory).yields
+      local_git_service.stubs(:commit_changes_after_applying_ingredient).returns(true)
+      LocalGitService.stubs(:new).returns(local_git_service)
+
+      # Mock Rails generator
+      require "rails/generators"
+      require "rails/generators/rails/app/app_generator"
+      generator = mock("generator")
+      generator.stubs(:apply).returns(true)
+      Rails::Generators::AppGenerator.stubs(:new).returns(generator)
+
+      # Clean up any existing ingredients and add test ingredients
+      @generated_app.recipe.recipe_ingredients.destroy_all
+      ingredient1 = ingredients(:rails_authentication)
+      ingredient2 = ingredients(:api_setup)
+      @generated_app.recipe.add_ingredient!(ingredient1)
+      @generated_app.recipe.add_ingredient!(ingredient2)
+
+      @orchestrator = Orchestrator.new(@generated_app)
+
+      # Execute the workflow
+      @orchestrator.create_github_repository
+      @orchestrator.generate_rails_app
+
+      File.stubs(:exist?).returns(false)
+      File.stubs(:exist?).with("path/to/template.rb").returns(true)
+
+      @orchestrator.apply_ingredients
+
+      # Verify log entries and their icons
+      entries = @generated_app.log_entries.order(:created_at)
+
+      # Starting workflow
+      assert_match(/🛤️ 🏗️ 🎬 Starting app generation workflow/, entries[0].decorated_message)
+
+      # GitHub repo creation
+      assert_match(/🐙 🏗️ 🔄 Starting GitHub repo creation/, entries[1].decorated_message)
+
+      # GitHub repo success
+      assert_match(/🐙 🏗️ ✅ GitHub repo .+ created successfully/, entries[2].decorated_message)
+
+      # Rails app generation
+      assert_match(/🛤️ 🏗️ ✅ Rails app generation process/, entries[3].decorated_message)
+
+      # Ingredient application
+      assert_match(/🍱 🔄 Applying ingredients/, entries[4].decorated_message)
+
+      # First ingredient
+      assert_match(/🍱 🍣 🔄 Applying ingredient: Rails Authentication/, entries[5].decorated_message)
+      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[6].decorated_message)
+      assert_match(/🍱 🍣 ✅ Ingredient Rails Authentication applied successfully/, entries[7].decorated_message)
+
+      # Second ingredient
+      assert_match(/🍱 🍣 🔄 Applying ingredient: API Setup/, entries[8].decorated_message)
+      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[9].decorated_message)
+      assert_match(/🍱 🍣 ✅ Ingredient API Setup applied successfully/, entries[10].decorated_message)
+
+      # All ingredients completed
+      assert_match(/🍱 ✅ All ingredients applied successfully/, entries[11].decorated_message)
+    end
   end
 end
