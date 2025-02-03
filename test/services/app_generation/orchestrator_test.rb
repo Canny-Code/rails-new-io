@@ -63,7 +63,6 @@ module AppGeneration
       data_repository = mock("data_repository")
       data_repository.stubs(:template_path).returns("path/to/template.rb")
       data_repository.stubs(:class).returns(DataRepositoryService)
-      data_repository.expects(:write_recipe).with(instance_of(Recipe), repo_name: "rails-new-io-data-test").twice
       DataRepositoryService.stubs(:new).with(user: @generated_app.user).returns(data_repository)
 
       # Stub File.exist? for all possible paths
@@ -289,7 +288,6 @@ module AppGeneration
       data_repository = mock("data_repository")
       data_repository.stubs(:template_path).returns("path/to/template.rb")
       data_repository.stubs(:class).returns(DataRepositoryService)
-      data_repository.expects(:write_recipe).with(instance_of(Recipe), repo_name: "rails-new-io-data-test").twice
       DataRepositoryService.stubs(:new).with(user: @generated_app.user).returns(data_repository)
       File.stubs(:exist?).with("path/to/template.rb").returns(true)
 

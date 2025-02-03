@@ -16,13 +16,14 @@ class RecipesController < ApplicationController
       return
     end
 
+    ingredient_ids = recipe_params[:ingredient_ids]&.compact_blank.presence || []
+
     cli_flags = [
       recipe_params[:api_flag],
       recipe_params[:database_choice],
       recipe_params[:rails_flags]
     ].compact.join(" ")
 
-    ingredient_ids = recipe_params[:ingredient_ids]&.compact_blank.presence || []
 
     if existing_recipe = Recipe.find_duplicate(cli_flags, ingredient_ids)
       redirect_to existing_recipe, alert: "A recipe with these settings already exists"
@@ -46,9 +47,7 @@ class RecipesController < ApplicationController
         end
       end
 
-      # Write to Git repository
-      data_repository = DataRepositoryService.new(user: current_user)
-      data_repository.write_recipe(@recipe, repo_name: data_repository.class.name_for_environment)
+      WriteRecipeJob.perform_later(recipe_id: @recipe.id, user_id: current_user.id)
 
       redirect_to @recipe, notice: "Recipe was successfully created."
     else

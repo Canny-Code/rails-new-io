@@ -46,7 +46,7 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "should create ingredient" do
+  test "should create ingredient and enqueue WriteIngredientJob" do
     assert_difference("Ingredient.count") do
       post ingredients_url, params: {
         ingredient: {
@@ -61,7 +61,24 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
+    new_ingredient = @controller.instance_variable_get(:@ingredient)
+    assert new_ingredient.persisted?
+    assert_equal "Test Ingredient", new_ingredient.name
+    assert_equal "A test ingredient", new_ingredient.description
+    assert_equal "gem 'test'", new_ingredient.template_content
+    assert_equal "Testing", new_ingredient.category
+    assert_equal @user.id, new_ingredient.created_by_id
+
+    assert_enqueued_with(
+      job: WriteIngredientJob,
+      args: [ {
+        ingredient_id: new_ingredient.id,
+        user_id: @user.id
+      } ]
+    )
+
     assert_redirected_to ingredient_url(Ingredient.last)
+    assert_equal "Ingredient was successfully created.", flash[:notice]
   end
 
   test "should not create ingredient with duplicate name for same user" do

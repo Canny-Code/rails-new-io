@@ -20,12 +20,9 @@ class IngredientsController < ApplicationController
     @ingredient = current_user.ingredients.build(ingredient_params)
 
     if @ingredient.save
-      # Create UI elements
       IngredientUiCreator.call(@ingredient)
 
-      # Write to Git repository
-      data_repository = DataRepositoryService.new(user: current_user)
-      data_repository.write_ingredient(@ingredient, repo_name: data_repository.class.name_for_environment)
+      WriteIngredientJob.perform_later(ingredient_id: @ingredient.id, user_id: current_user.id)
 
       redirect_to @ingredient, notice: "Ingredient was successfully created."
     else
@@ -35,9 +32,7 @@ class IngredientsController < ApplicationController
 
   def update
     if @ingredient.update(ingredient_params)
-      # Write to Git repository
-      data_repository = DataRepositoryService.new(user: current_user)
-      data_repository.write_ingredient(@ingredient, repo_name: data_repository.class.name_for_environment)
+      WriteIngredientJob.perform_later(ingredient_id: @ingredient.id, user_id: current_user.id)
 
       redirect_to @ingredient, notice: "Ingredient was successfully updated."
     else
