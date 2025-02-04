@@ -40,7 +40,10 @@ export default class extends Controller {
 
     // Update the output with all flags
     if (outputElement) {
-      outputElement.textContent = Array.from(currentFlags).join(" ")
+      const flags = Array.from(currentFlags)
+      outputElement.innerHTML = flags.map(flag =>
+        `<span class="inline-block">${flag}</span>`
+      ).join(" ")
     }
   }
 }
