@@ -21,6 +21,8 @@ class RecipesController < ApplicationController
     cli_flags = [
       recipe_params[:api_flag],
       recipe_params[:database_choice],
+      recipe_params[:javascript_choice],
+      recipe_params[:css_choice],
       recipe_params[:rails_flags]
     ].compact.join(" ")
 
@@ -75,6 +77,8 @@ class RecipesController < ApplicationController
       :id,
       :api_flag,
       :database_choice,
+      :javascript_choice,
+      :css_choice,
       :rails_flags,
       :name,
       :description,
