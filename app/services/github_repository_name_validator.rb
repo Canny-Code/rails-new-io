@@ -6,10 +6,10 @@ class GithubRepositoryNameValidator
     @owner = owner
   end
 
-  def repo_exists?
+  def repo_can_be_created?
     return false unless valid_format?
     return false if double_hyphen?
-    !available?
+    available?
   end
 
   private

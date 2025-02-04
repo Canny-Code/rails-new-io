@@ -67,7 +67,7 @@ export default class extends Controller {
         }
       } else {
         this.disableSubmit()
-        this.showMessage("✗ Name is already taken", this.errorClassValue)
+        this.showMessage("✗ Name is invalid or already taken", this.errorClassValue)
       }
     } catch (error) {
       this.hideSpinner()

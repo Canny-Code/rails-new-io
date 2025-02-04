@@ -9,7 +9,7 @@ class GithubControllerTest < ActionDispatch::IntegrationTest
 
   test "returns success when repository does not exist" do
     validator = mock("validator")
-    validator.expects(:repo_exists?).returns(false)
+    validator.expects(:repo_can_be_created?).returns(true)
     GithubRepositoryNameValidator.expects(:new)
                                 .with("test-repo", "jane_smith")
                                 .returns(validator)
@@ -20,9 +20,9 @@ class GithubControllerTest < ActionDispatch::IntegrationTest
     assert_equal({ "available" => true }, response.parsed_body)
   end
 
-  test "returns success when repository exists" do
+  test "returns failure when repository exists" do
     validator = mock("validator")
-    validator.expects(:repo_exists?).returns(true)
+    validator.expects(:repo_can_be_created?).returns(false)
     GithubRepositoryNameValidator.expects(:new)
                                 .with("existing-repo", "jane_smith")
                                 .returns(validator)
@@ -35,7 +35,7 @@ class GithubControllerTest < ActionDispatch::IntegrationTest
 
   test "handles unauthorized GitHub access" do
     validator = mock("validator")
-    validator.expects(:repo_exists?).raises(Octokit::Unauthorized)
+    validator.expects(:repo_can_be_created?).raises(Octokit::Unauthorized)
     GithubRepositoryNameValidator.expects(:new)
                                 .with("test-repo", "jane_smith")
                                 .returns(validator)
@@ -48,7 +48,7 @@ class GithubControllerTest < ActionDispatch::IntegrationTest
 
   test "handles forbidden GitHub access" do
     validator = mock("validator")
-    validator.expects(:repo_exists?).raises(Octokit::Forbidden)
+    validator.expects(:repo_can_be_created?).raises(Octokit::Forbidden)
     GithubRepositoryNameValidator.expects(:new)
                                 .with("test-repo", "jane_smith")
                                 .returns(validator)
@@ -61,7 +61,7 @@ class GithubControllerTest < ActionDispatch::IntegrationTest
 
   test "handles other GitHub errors" do
     validator = mock("validator")
-    validator.expects(:repo_exists?).raises(Octokit::Error)
+    validator.expects(:repo_can_be_created?).raises(Octokit::Error)
     GithubRepositoryNameValidator.expects(:new)
                                 .with("test-repo", "jane_smith")
                                 .returns(validator)
@@ -85,7 +85,7 @@ class GithubControllerTest < ActionDispatch::IntegrationTest
   test "logs errors when GitHub authentication fails" do
     validator = mock("validator")
     error = Octokit::Unauthorized.new
-    validator.expects(:repo_exists?).raises(error)
+    validator.expects(:repo_can_be_created?).raises(error)
     GithubRepositoryNameValidator.expects(:new)
                                 .with("test-repo", "jane_smith")
                                 .returns(validator)
@@ -98,7 +98,7 @@ class GithubControllerTest < ActionDispatch::IntegrationTest
   test "logs errors for other GitHub validation failures" do
     validator = mock("validator")
     error = Octokit::Error.new
-    validator.expects(:repo_exists?).raises(error)
+    validator.expects(:repo_can_be_created?).raises(error)
     GithubRepositoryNameValidator.expects(:new)
                                 .with("test-repo", "jane_smith")
                                 .returns(validator)
