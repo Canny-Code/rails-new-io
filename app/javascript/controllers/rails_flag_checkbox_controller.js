@@ -11,18 +11,36 @@ export default class extends Controller {
   }
 
   update() {
-    const checkboxes = this.groupElement.querySelectorAll('input[type="checkbox"]')
-    const selectedValues = Array.from(checkboxes)
+    // Get current flags from the output element
+    const outputElement = document.getElementById('rails-flags')
+    const currentFlags = new Set(outputElement?.textContent?.trim().split(/\s+/).filter(Boolean) || [])
+
+    // Remove any existing flags from this group
+    const allCheckboxes = this.groupElement.querySelectorAll('input[type="checkbox"]')
+    allCheckboxes.forEach(checkbox => {
+      if (checkbox.dataset.commandOutput) {
+        currentFlags.delete(checkbox.dataset.commandOutput)
+      }
+    })
+
+    // Add currently selected flags from this group
+    const selectedCheckboxes = Array.from(allCheckboxes)
       .filter(checkbox => {
         const displayWhen = checkbox.dataset.displayWhen || 'checked'
         const isChecked = checkbox.checked
         return (displayWhen === 'checked' && isChecked) ||
                (displayWhen === 'unchecked' && !isChecked)
       })
-      .map(checkbox => checkbox.dataset.commandOutput)
-      .filter(Boolean)
 
-    const outputElement = document.getElementById('rails-flags')
-    outputElement.textContent = selectedValues.join(" ")
+    selectedCheckboxes.forEach(checkbox => {
+      if (checkbox.dataset.commandOutput) {
+        currentFlags.add(checkbox.dataset.commandOutput)
+      }
+    })
+
+    // Update the output with all flags
+    if (outputElement) {
+      outputElement.textContent = Array.from(currentFlags).join(" ")
+    }
   }
 }
