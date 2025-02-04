@@ -58,6 +58,7 @@ llm
 /config/credentials/test.key
 .kamal/secrets
 
+package-lock.json
 .yarn/cache
 .yarn/install-state.gz
 .yarn/build-state.yml
