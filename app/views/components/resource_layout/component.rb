@@ -1,9 +1,10 @@
 class ResourceLayout::Component < ApplicationComponent
-  def initialize(title:, subtitle:, new_button_text: nil, new_button_path: nil, resources:, empty_state: nil, columns:, actions: [ :view, :edit, :delete ], search: false, secondary_actions: nil)
+  def initialize(title:, subtitle:, new_button_text: nil, new_button_path: nil, new_button_html_options: {}, resources:, empty_state: nil, columns:, actions: [ :view, :edit, :delete ], search: false, secondary_actions: nil)
     @title = title
     @subtitle = subtitle
     @new_button_text = new_button_text
     @new_button_path = new_button_path
+    @new_button_html_options = new_button_html_options
     @resources = resources
     @empty_state = empty_state
     @columns = columns
@@ -58,7 +59,8 @@ class ResourceLayout::Component < ApplicationComponent
         div(class: "mt-4 sm:mt-0 sm:ml-16 sm:flex-none") do
           render Buttons::Primary::Component.new(
             text: @new_button_text,
-            path: @new_button_path
+            path: @new_button_path,
+            html_options: @new_button_html_options
           )
         end
       end

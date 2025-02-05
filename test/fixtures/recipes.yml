@@ -62,8 +62,10 @@ basic_recipe:
 
 omakase_recipe:
   name: "Omakase"
-  description: "A basic Rails application setup"
+  description: "The perfect Rails app setup according to DHH"
   cli_flags: ""
+  ruby_version: "3.4.1"
+  rails_version: "8.0.1"
   created_by: trinity_takei
   status: "published"
 
@@ -71,5 +73,7 @@ api_only_recipe:
   name: "API Only"
   description: "Preconfigure smaller stack for API only app"
   cli_flags: "--api"
+  ruby_version: "3.4.1"
+  rails_version: "8.0.1"
   created_by: trinity_takei
   status: "published"
