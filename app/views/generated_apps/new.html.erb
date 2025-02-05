@@ -15,35 +15,47 @@
             <div class="hidden sm:block sm:absolute sm:inset-y-0 sm:h-full sm:w-full pointer-events-none">
               <div class="relative h-full max-w-screen-xl mx-auto"></div>
             </div>
-            <div id="app-name-input" class="flex justify-center items-center bg-deep-azure-zeta pt-10 pb-10 rounded-lg">
-              <div class="flex flex-col items-center w-full max-w-md">
-                <label for="app-name" class="w-full text-center mb-2">
-                  <span class="px-5 my-3 text-gray-500">Enter the name of your awesome app!</span>
-                </label>
-                <div class="flex">
-                  <input id="app-name"
-                       data-app-form-validator-target="input"
-                       name="app_name"
-                       data-action="input->app-form-validator#validateForm"
-                  autocomplete="off"
-                  placeholder="my-next-big-thing"
-                  class="appearance-none w-full min-w-96 px-5 py-2 border-2 border-gray-300 text-base leading-6 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-xl">
-                <div class="ml-1 shrink-0">
-                  <%= button_tag type: "submit",
-                  data: { app_form_validator_target: "submitButton" },
-                  disabled: true,
-                  class: "h-full inline-flex justify-center ml-1 py-2 px-5 items-center border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed" do %>
-                    Generate App
-                  <% end %>
+            <div id="app-name-input" class="bg-deep-azure-zeta pt-10 pb-10 rounded-lg">
+              <div class="flex justify-center items-center">
+                <div class="flex flex-col items-center">
+                  <div class="w-full max-w-md">
+                    <label for="app-name" class="w-full text-center mb-2">
+                      <span class="px-5 my-3 text-gray-500">Enter the name of your awesome app!</span>
+                    </label>
+                    <div class="flex">
+                      <input id="app-name"
+                           data-app-form-validator-target="input"
+                           name="app_name"
+                           data-action="input->app-form-validator#validateForm"
+                      autocomplete="off"
+                      placeholder="my-next-big-thing"
+                      class="appearance-none w-full min-w-96 px-5 py-2 border-2 border-gray-300 text-base leading-6 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-xl">
+                      <div class="ml-1 shrink-0">
+                        <%= button_tag type: "submit",
+                        data: { app_form_validator_target: "submitButton" },
+                        disabled: true,
+                        class: "h-full inline-flex justify-center ml-1 py-2 px-5 items-center border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed" do %>
+                          Generate App
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-sm mx-5">
+                    <div data-app-form-validator-target="message" class="hidden"></div>
+                    <div data-app-form-validator-target="spinner" class="hidden flex justify-center">
+                      <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="text-sm mx-5">
-                <div data-app-form-validator-target="message" class="hidden"></div>
-                <div data-app-form-validator-target="spinner" class="hidden flex justify-center">
-                  <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+
+              <div class="mt-10">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <%= render "pages/terminal_window" %>
+                  <%= render "pages/ingredients_container" %>
                 </div>
               </div>
             </div>
