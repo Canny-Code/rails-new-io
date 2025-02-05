@@ -88,9 +88,10 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "writes ingredient to repository" do
-    ingredient = Data.define(:name, :template_content).new(
+    ingredient = Data.define(:name, :template_content, :created_by).new(
       name: "test_ingredient",
-      template_content: "# Test template"
+      template_content: "# Test template",
+      created_by: @user
     )
 
     repo_full_name = "#{@user.github_username}/#{@repo_name}"
@@ -208,9 +209,10 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "raises error when writing ingredient template to local filesystem fails" do
-    ingredient = Data.define(:name, :template_content).new(
+    ingredient = Data.define(:name, :template_content, :created_by).new(
       name: "test_ingredient",
-      template_content: "# Test template"
+      template_content: "# Test template",
+      created_by: @user
     )
 
     # Simulate a filesystem error

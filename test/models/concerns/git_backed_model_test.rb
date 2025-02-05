@@ -146,11 +146,6 @@ class GitBackedModelTest < ActiveSupport::TestCase
 
     assert @model.should_create_repository?
   end
-
-  test "cleanup_after_push? returns false by default" do
-    assert_not @model.cleanup_after_push?
-  end
-
   test "workspace_path returns attribute value if available" do
     assert_equal Rails.root.join("tmp/test").to_s, @model.workspace_path
   end

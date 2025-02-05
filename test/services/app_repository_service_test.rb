@@ -6,16 +6,19 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
   def setup
     @user = users(:john)
     @user.stubs(:github_token).returns("fake-token")
-    @generated_app = generated_apps(:pending_app)
-    @service = AppRepositoryService.new(@generated_app)
     @repository_name = "test-repo"
-
-    # Mock logger to prevent view-related errors
+    @generated_app = generated_apps(:pending_app)
+    @generated_app.update!(
+      name: @repository_name,
+      github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}"
+    )
     mock_logger = mock("logger")
     mock_logger.stubs(:info).returns(true)
     mock_logger.stubs(:error).returns(true)
     mock_logger.stubs(:create_entry).returns(true)
     @generated_app.stubs(:logger).returns(mock_logger)
+    @service = AppRepositoryService.new(@generated_app, mock_logger)
+    @git_commands = sequence("git_commands")
   end
 
   test "initializes repository and updates generated app" do
@@ -39,49 +42,52 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     # Verify GeneratedApp was updated
     @generated_app.reload
-    assert_equal @repository_name, @generated_app.github_repo_name
+    assert_equal @repository_name, @generated_app.name
     assert_equal response.html_url, @generated_app.github_repo_url
   end
 
   test "pushes app files to repository with existing commits" do
     workspace_path = create_test_directory("test-app")
-    app_dir = File.join(workspace_path, @generated_app.name)
+    app_dir = File.join(workspace_path, @repository_name)
     FileUtils.mkdir_p(app_dir)
     File.write(File.join(app_dir, "test.rb"), "puts 'test'")
-    init_git_repo(app_dir)
 
-    @generated_app.update!(
-      github_repo_name: @repository_name,
-      github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
-      workspace_path: workspace_path
-    )
+    # Update generated_app with the test workspace path
+    @generated_app.update!(workspace_path: workspace_path)
 
-    # Mock directory checks
-    File.stubs(:directory?).returns(true)  # Default for safety
-    File.stubs(:directory?).with(workspace_path).returns(true)
-    File.stubs(:directory?).with(app_dir).returns(true)
-    File.stubs(:directory?).with(".git").returns(true)
+    # Initialize git repo and set up remote
+    git_service = LocalGitService.new(working_directory: app_dir, logger: @service.logger)
+    git_service.in_working_directory do
+      Open3.capture2("git init --quiet")
+      Open3.capture2("git config user.name 'Test User'")
+      Open3.capture2("git config user.email 'test@example.com'")
+      Open3.capture2("git add .")
+      Open3.capture2("git -c init.defaultBranch=main commit -m 'Initial commit' --quiet")
+      Open3.capture2("git remote add origin #{@generated_app.github_repo_url}")
+    end
 
-    # Mock git commands that need output
-    @service.stubs(:run_git_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("existing-sha")  # Has commits
-    @service.stubs(:run_git_command).with("git rev-parse --abbrev-ref HEAD").returns("main\n")
-    @service.stubs(:run_git_command).with("git remote -v").returns("")
-    @service.stubs(:run_git_command).with("git status --porcelain").returns("")
-    @service.stubs(:run_git_command).with("git config --list").returns("")
+    # Create a LocalGitService mock that will be used by AppRepositoryService
+    mock_git_service = mock("local_git_service")
+    LocalGitService.expects(:new).with(
+      working_directory: app_dir,
+      logger: @service.logger
+    ).returns(mock_git_service)
 
-    # Mock system calls - all should succeed
-    @service.stubs(:system).returns(true)  # Default success for safety
-
-    # Expect specific system calls in sequence
-    git_commands = sequence("git_commands")
-    @service.expects(:system).with("git remote add origin #{@generated_app.github_repo_url}").in_sequence(git_commands).returns(true)
-    @service.expects(:system).with("git remote set-url origin https://#{@user.github_token}@github.com/#{@user.github_username}/#{@repository_name}").in_sequence(git_commands).returns(true)
-    @service.expects(:system).with("git push -v -u origin main").in_sequence(git_commands).returns(true)
-    @service.expects(:system).with("git remote set-url origin #{@generated_app.github_repo_url}").in_sequence(git_commands).returns(true)
+    # Set up expectations for the mock in sequence
+    mock_git_service.expects(:ensure_main_branch).in_sequence(@git_commands)
+    mock_git_service.expects(:push_to_remote).with(
+      token: @user.github_token,
+      repo_url: @generated_app.github_repo_url
+    ).in_sequence(@git_commands)
 
     within_test_directory(app_dir) do
-      result = @service.push_app_files
-      assert_nil result
+      Open3.capture2("git remote -v")
+
+      # Verify initial state
+      assert File.directory?(app_dir), "App directory should exist"
+      assert File.directory?(File.join(app_dir, ".git")), "Git directory should exist"
+
+      @service.push_to_remote
     end
   end
 
@@ -89,27 +95,37 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
     # No client should be created since we're skipping
     Octokit::Client.expects(:new).never
 
-    @generated_app.update!(workspace_path: "/nonexistent/path")
-    result = @service.push_app_files
-    assert_nil result
+    workspace_path = "/nonexistent/path"
+    app_dir = File.join(workspace_path, @repository_name)
+    @generated_app.update!(workspace_path: workspace_path)
+
+    # Mock directory checks - be explicit about each path
+    File.stubs(:directory?).returns(false)  # Default to false for safety
+    File.stubs(:directory?).with(workspace_path).returns(false)
+    File.stubs(:directory?).with(app_dir).returns(false)
+
+    # Should raise error about missing workspace path
+    error = assert_raises(RuntimeError) do
+      @service.push_to_remote
+    end
+
+    assert_match(/Rails app directory not found at/, error.message)
   end
 
   test "raises error when app directory is missing" do
     workspace_path = create_test_directory("test-app")
     FileUtils.mkdir_p(workspace_path)
 
-    Turbo::StreamsChannel.stubs(:broadcast_prepend_to)
-    Turbo::StreamsChannel.stubs(:broadcast_replace_to)
-
     @generated_app.update!(workspace_path: workspace_path)
 
+    # Mock directory checks
     File.stubs(:directory?).returns(true)  # Default for safety
     File.stubs(:directory?).with(workspace_path).returns(true)
-    app_dir = File.join(workspace_path, @generated_app.name)
+    app_dir = File.join(workspace_path, @repository_name)
     File.stubs(:directory?).with(app_dir).returns(false)  # This triggers the error
 
     error = assert_raises(RuntimeError) do
-      @service.push_app_files
+      @service.push_to_remote
     end
 
     assert_match(/Rails app directory not found at/, error.message)
@@ -117,155 +133,155 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
   test "creates initial commit when repository has no commits" do
     workspace_path = create_test_directory("test-app")
-    app_dir = File.join(workspace_path, @generated_app.name)
+    app_dir = File.join(workspace_path, @repository_name)
     FileUtils.mkdir_p(app_dir)
-    init_git_repo(app_dir)
 
     @generated_app.update!(
-      github_repo_name: @repository_name,
+      name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
       workspace_path: workspace_path
     )
 
-    # Mock directory checks
-    File.stubs(:directory?).returns(true)  # Default for safety
-    File.stubs(:directory?).with(workspace_path).returns(true)
-    File.stubs(:directory?).with(app_dir).returns(true)
-    File.stubs(:directory?).with(".git").returns(true)
+    # Initialize empty git repo
+    git_service = LocalGitService.new(working_directory: app_dir, logger: @service.logger)
+    git_service.in_working_directory do
+      Open3.capture2("git init --quiet")
+      Open3.capture2("git config user.name 'Test User'")
+      Open3.capture2("git config user.email 'test@example.com'")
+    end
 
-    # Mock git commands that need output
-    @service.stubs(:run_git_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("")  # No commits yet
-    @service.stubs(:run_git_command).with("git rev-parse --abbrev-ref HEAD").returns("main\n")
-    @service.stubs(:run_git_command).with("git remote -v").returns("")
-    @service.stubs(:run_git_command).with("git status --porcelain").returns("")
-    @service.stubs(:run_git_command).with("git config --list").returns("")
+    # Create a LocalGitService mock that will be used by AppRepositoryService
+    mock_git_service = mock("local_git_service")
+    LocalGitService.expects(:new).with(
+      working_directory: app_dir,
+      logger: @service.logger
+    ).returns(mock_git_service)
 
-    # Mock system calls - all should succeed
-    @service.stubs(:system).returns(true)  # Default success for safety
+    # Set up expectations for the mock in sequence
+    mock_git_service.expects(:prepare_git_repository).with(
+      remote_url: @generated_app.github_repo_url
+    ).in_sequence(@git_commands)
 
-    # Expect specific system calls in sequence
-    git_commands = sequence("git_commands")
-    commit_command = "git add . && git -c init.defaultBranch=main commit -m '#{@service.send(:initial_commit_message)}'"
-    @service.expects(:system).with(commit_command).in_sequence(git_commands).returns(true)
-    @service.expects(:system).with("git remote add origin #{@generated_app.github_repo_url}").in_sequence(git_commands).returns(true)
-    @service.expects(:system).with("git remote set-url origin https://#{@user.github_token}@github.com/#{@user.github_username}/#{@repository_name}").in_sequence(git_commands).returns(true)
-    @service.expects(:system).with("git push -v -u origin main").in_sequence(git_commands).returns(true)
-    @service.expects(:system).with("git remote set-url origin #{@generated_app.github_repo_url}").in_sequence(git_commands).returns(true)
+    mock_git_service.expects(:create_initial_commit).with(
+      message: @generated_app.to_commit_message
+    ).in_sequence(@git_commands)
 
     within_test_directory(app_dir) do
-      result = @service.push_app_files
-      assert_nil result
+      @service.create_initial_commit
     end
   end
 
   test "renames branch to main when on different branch" do
     workspace_path = create_test_directory("test-app")
-    app_dir = File.join(workspace_path, @generated_app.name)
+    app_dir = File.join(workspace_path, @repository_name)
     FileUtils.mkdir_p(app_dir)
-    init_git_repo(app_dir)
 
     @generated_app.update!(
-      github_repo_name: @repository_name,
+      name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
       workspace_path: workspace_path
     )
 
-    # Mock directory checks
-    File.stubs(:directory?).returns(true)  # Default for safety
-    File.stubs(:directory?).with(workspace_path).returns(true)
-    File.stubs(:directory?).with(app_dir).returns(true)
-    File.stubs(:directory?).with(".git").returns(true)
+    # Initialize git repo with master branch
+    git_service = LocalGitService.new(working_directory: app_dir, logger: @service.logger)
+    git_service.in_working_directory do
+      Open3.capture2("git init --quiet")
+      Open3.capture2("git config user.name 'Test User'")
+      Open3.capture2("git config user.email 'test@example.com'")
+      Open3.capture2("git checkout -b master --quiet")  # Explicitly create master branch
+      Open3.capture2("git add . 2>/dev/null")
+      Open3.capture2("git commit --allow-empty -m 'Initial commit' --quiet")
+      Open3.capture2("git remote add origin #{@generated_app.github_repo_url}")
+    end
 
-    # Mock git commands that need output
-    @service.stubs(:run_git_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("existing-sha")  # Has commits
-    @service.stubs(:run_git_command).with("git rev-parse --abbrev-ref HEAD").returns("master\n")  # On master branch
-    @service.stubs(:run_git_command).with("git remote -v").returns("")
-    @service.stubs(:run_git_command).with("git status --porcelain").returns("")
-    @service.stubs(:run_git_command).with("git config --list").returns("")
+    # Create a LocalGitService mock that will be used by AppRepositoryService
+    mock_git_service = mock("local_git_service")
+    LocalGitService.expects(:new).with(
+      working_directory: app_dir,
+      logger: @service.logger
+    ).returns(mock_git_service)
 
-    # Mock system calls - all should succeed
-    @service.stubs(:system).returns(true)  # Default success for safety
-
-    # Expect specific system calls in sequence
-    git_commands = sequence("git_commands")
-    @service.expects(:system).with("git branch -M main").in_sequence(git_commands).returns(true)  # Rename branch
-    @service.expects(:system).with("git remote add origin #{@generated_app.github_repo_url}").in_sequence(git_commands).returns(true)
-    @service.expects(:system).with("git remote set-url origin https://#{@user.github_token}@github.com/#{@user.github_username}/#{@repository_name}").in_sequence(git_commands).returns(true)
-    @service.expects(:system).with("git push -v -u origin main").in_sequence(git_commands).returns(true)
-    @service.expects(:system).with("git remote set-url origin #{@generated_app.github_repo_url}").in_sequence(git_commands).returns(true)
+    # Set up expectations for the mock
+    mock_git_service.expects(:ensure_main_branch)
+    mock_git_service.expects(:push_to_remote).with(
+      token: @user.github_token,
+      repo_url: @generated_app.github_repo_url
+    )
 
     within_test_directory(app_dir) do
-      result = @service.push_app_files
-      assert_nil result
+      @service.push_to_remote
     end
   end
 
   test "raises error when directory is not a git repository" do
     workspace_path = create_test_directory("test-app")
-    app_dir = File.join(workspace_path, @generated_app.name)
+    app_dir = File.join(workspace_path, @repository_name)
     FileUtils.mkdir_p(app_dir)
     File.write(File.join(app_dir, "test.rb"), "puts 'test'")  # Add a file to make it a valid directory
 
-    # Stub Turbo broadcasts to prevent view-related errors
-    Turbo::StreamsChannel.stubs(:broadcast_prepend_to)
-    Turbo::StreamsChannel.stubs(:broadcast_replace_to)
-
     @generated_app.update!(
-      github_repo_name: @repository_name,
+      name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
       workspace_path: workspace_path
     )
 
-    # Mock directory checks
-    File.stubs(:directory?).returns(true)  # Default for safety
-    File.stubs(:directory?).with(workspace_path).returns(true)
-    File.stubs(:directory?).with(app_dir).returns(true)
-    File.stubs(:directory?).with(".git").returns(false)  # This is what triggers the error
+    # Create a LocalGitService mock that will be used by AppRepositoryService
+    mock_git_service = mock("local_git_service")
+    LocalGitService.expects(:new).with(
+      working_directory: app_dir,
+      logger: @service.logger
+    ).returns(mock_git_service)
 
-    error = assert_raises(RuntimeError) do
-      @service.push_app_files
+    # Set up expectations for the mock
+    mock_git_service.expects(:ensure_main_branch).raises(LocalGitService::Error.new("Not a git repository"))
+
+    error = assert_raises(LocalGitService::Error) do
+      within_test_directory(app_dir) do
+        @service.push_to_remote
+      end
     end
 
-    assert_match(/Not a git repository at/, error.message)
+    assert_match(/Not a git repository/, error.message)
   end
 
   test "raises error when initial commit creation fails" do
     workspace_path = create_test_directory("test-app")
-    app_dir = File.join(workspace_path, @generated_app.name)
+    app_dir = File.join(workspace_path, @repository_name)
     FileUtils.mkdir_p(app_dir)
-    init_git_repo(app_dir)
-
-    # Stub Turbo broadcasts to prevent view-related errors
-    Turbo::StreamsChannel.stubs(:broadcast_prepend_to)
-    Turbo::StreamsChannel.stubs(:broadcast_replace_to)
 
     @generated_app.update!(
-      github_repo_name: @repository_name,
+      name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
       workspace_path: workspace_path
     )
 
-    # Mock directory checks
-    File.stubs(:directory?).returns(true)  # Default for safety
-    File.stubs(:directory?).with(workspace_path).returns(true)
-    File.stubs(:directory?).with(app_dir).returns(true)
-    File.stubs(:directory?).with(".git").returns(true)
+    # Initialize empty git repo
+    git_service = LocalGitService.new(working_directory: app_dir, logger: @service.logger)
+    git_service.in_working_directory do
+      Open3.capture2("git init --quiet")
+      Open3.capture2("git config user.name 'Test User'")
+      Open3.capture2("git config user.email 'test@example.com'")
+    end
 
-    # Mock git commands
-    @service.stubs(:run_git_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("")  # No commits yet
-    @service.stubs(:run_git_command).with("git status --porcelain").returns("?? test.rb")  # Untracked file
-    @service.stubs(:run_git_command).with("git rev-parse --abbrev-ref HEAD").returns("main\n")
-    @service.stubs(:run_git_command).with("git remote -v").returns("")
-    @service.stubs(:run_git_command).with("git config --list").returns("")
+    # Create a LocalGitService mock that will be used by AppRepositoryService
+    mock_git_service = mock("local_git_service")
+    LocalGitService.expects(:new).with(
+      working_directory: app_dir,
+      logger: @service.logger
+    ).returns(mock_git_service)
 
-    # Mock system calls - make the initial commit fail
-    @service.stubs(:system).returns(true)  # Default success for safety
-    commit_command = "git add . && git -c init.defaultBranch=main commit -m '#{@service.send(:initial_commit_message)}'"
-    @service.stubs(:system).with(commit_command).returns(false)  # This is the failure we're testing
+    # Set up expectations for the mock in sequence
+    mock_git_service.expects(:prepare_git_repository).with(
+      remote_url: @generated_app.github_repo_url
+    ).in_sequence(@git_commands)
 
-    error = assert_raises(RuntimeError) do
+    mock_git_service.expects(:create_initial_commit).with(
+      message: @generated_app.to_commit_message
+    ).raises(LocalGitService::Error.new("Git command failed: Failed to create initial commit")).in_sequence(@git_commands)
+
+    error = assert_raises(LocalGitService::Error) do
       within_test_directory(app_dir) do
-        @service.push_app_files
+        @service.create_initial_commit
       end
     end
 
@@ -274,43 +290,60 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
   test "raises error when branch rename fails" do
     workspace_path = create_test_directory("test-app")
-    app_dir = File.join(workspace_path, @generated_app.name)
+    app_dir = File.join(workspace_path, @repository_name)
     FileUtils.mkdir_p(app_dir)
-    init_git_repo(app_dir)
-
-    # Stub Turbo broadcasts to prevent view-related errors
-    Turbo::StreamsChannel.stubs(:broadcast_prepend_to)
-    Turbo::StreamsChannel.stubs(:broadcast_replace_to)
 
     @generated_app.update!(
-      github_repo_name: @repository_name,
+      name: @repository_name,
       github_repo_url: "https://github.com/#{@user.github_username}/#{@repository_name}",
       workspace_path: workspace_path
     )
 
-    # Mock directory checks
-    File.stubs(:directory?).returns(true)  # Default for safety
-    File.stubs(:directory?).with(workspace_path).returns(true)
-    File.stubs(:directory?).with(app_dir).returns(true)
-    File.stubs(:directory?).with(".git").returns(true)
+    # Initialize git repo with master branch
+    git_service = LocalGitService.new(working_directory: app_dir, logger: @service.logger)
+    git_service.in_working_directory do
+      Open3.capture2("git init --quiet")
+      Open3.capture2("git config user.name 'Test User'")
+      Open3.capture2("git config user.email 'test@example.com'")
+      Open3.capture2("git checkout -b master --quiet")  # Explicitly create master branch
+      Open3.capture2("git add . 2>/dev/null")
+      Open3.capture2("git commit --allow-empty -m 'Initial commit' --quiet")
+      Open3.capture2("git remote add origin #{@generated_app.github_repo_url}")
+    end
 
-    # Mock git commands that need output
-    @service.stubs(:run_git_command).with("git rev-parse --verify HEAD 2>/dev/null").returns("existing-sha")  # Has commits
-    @service.stubs(:run_git_command).with("git rev-parse --abbrev-ref HEAD").returns("master\n")  # On master branch
-    @service.stubs(:run_git_command).with("git remote -v").returns("")
-    @service.stubs(:run_git_command).with("git status --porcelain").returns("")
-    @service.stubs(:run_git_command).with("git config --list").returns("")
+    # Create a LocalGitService mock that will be used by AppRepositoryService
+    mock_git_service = mock("local_git_service")
+    LocalGitService.expects(:new).with(
+      working_directory: app_dir,
+      logger: @service.logger
+    ).returns(mock_git_service)
 
-    # Mock system calls - make the branch rename fail
-    @service.stubs(:system).returns(true)  # Default success for safety
-    @service.stubs(:system).with("git branch -M main").returns(false)  # This is the failure we're testing
+    # Set up expectations for the mock
+    mock_git_service.expects(:ensure_main_branch).raises(
+      LocalGitService::Error.new("Git command failed: Failed to rename branch to main")
+    )
 
-    error = assert_raises(RuntimeError) do
+    error = assert_raises(LocalGitService::Error) do
       within_test_directory(app_dir) do
-        @service.push_app_files
+        @service.push_to_remote
       end
     end
 
     assert_match(/Failed to rename branch to main/, error.message)
+  end
+
+  test "#commit_changes_after_applying_ingredient commits changes with ingredient message" do
+    ingredient = mock("ingredient")
+    ingredient.expects(:to_commit_message).returns("Add awesome feature")
+
+    mock_git_service = mock("local_git_service")
+    LocalGitService.expects(:new).with(
+      working_directory: File.join(@generated_app.workspace_path, @generated_app.name),
+      logger: @service.logger
+    ).returns(mock_git_service)
+
+    mock_git_service.expects(:commit_changes).with(message: "Add awesome feature")
+
+    @service.commit_changes_after_applying_ingredient(ingredient)
   end
 end

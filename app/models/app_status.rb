@@ -31,80 +31,87 @@ class AppStatus < ApplicationRecord
 
   after_update :broadcast_status_change, if: :saved_change_to_status?
   after_save :notify_status_change, if: :saved_change_to_status?
-  after_save :update_generated_app_build_time, if: :saved_change_to_status?
 
   include AASM
 
   aasm column: :status do
     state :pending, initial: true
     state :creating_github_repo
-    state :generating
+    state :generating_rails_app
+    state :applying_ingredients
     state :pushing_to_github
     state :running_ci
     state :completed
     state :failed
 
-    event :start_github_repo_creation do
-      transitions from: :pending, to: :creating_github_repo
-      after { track_transition(:creating_github_repo) }
+    after_all_transitions do
+      track_transition
     end
 
-    event :start_generation do
-      transitions from: :creating_github_repo, to: :generating
+    event :start_github_repo_creation do
+      transitions from: :pending, to: :creating_github_repo
+    end
+
+    event :start_rails_app_generation do
+      transitions from: :creating_github_repo, to: :generating_rails_app
       after do
         update(started_at: Time.current)
-        track_transition(:generating)
       end
+    end
+
+    event :start_ingredient_application do
+      transitions from: :generating_rails_app, to: :applying_ingredients
     end
 
     event :start_github_push do
-      transitions from: :generating, to: :pushing_to_github
-      after do
-        track_transition(:pushing_to_github)
-      end
+      transitions from: :applying_ingredients, to: :pushing_to_github
     end
 
     event :start_ci do
       transitions from: :pushing_to_github, to: :running_ci
-      after do
-        track_transition(:running_ci)
-      end
     end
 
     event :complete do
       transitions from: :running_ci, to: :completed
       after do
         update(completed_at: Time.current)
-        track_transition(:completed)
       end
     end
 
     event :fail do
-      transitions from: [ :pending, :creating_github_repo, :generating, :pushing_to_github, :running_ci ], to: :failed
+      transitions from: [ :pending, :creating_github_repo, :generating_rails_app, :applying_ingredients, :pushing_to_github, :running_ci ], to: :failed
       after do |error_message|
         update(
           completed_at: Time.current,
           error_message: error_message
         )
-        track_transition(:failed)
       end
     end
 
     event :restart do
-      transitions from: [ :generating, :failed ], to: :pending
+      transitions from: [ :generating_rails_app, :failed ], to: :pending
       after do
-        self.error_message = nil
-        track_transition(:pending)
+        update(error_message: nil)
       end
     end
   end
 
-  def self.states
-    aasm.states.map(&:name)
-  end
+  class << self
+    def states
+      aasm.states.map(&:name)
+    end
 
-  def state_sequence
-    [ :pending, :creating_github_repo, :generating, :pushing_to_github, :running_ci, :completed ]
+    def state_sequence
+      states - [ :failed ]
+    end
+
+    def events
+      aasm.events.map { |event| "#{event.name}!" }
+    end
+
+    def state_predicates
+      aasm.states.map { |state| "#{state.name}?" }
+    end
   end
 
   def broadcast_status_steps
@@ -113,20 +120,22 @@ class AppStatus < ApplicationRecord
     Turbo::StreamsChannel.broadcast_replace_to(
       channel,
       target: "status_steps_content",
-      partial: "shared/status_steps",
+      partial: "shared/status_steps_content",
       locals: { generated_app: generated_app }
     )
   end
 
-  def track_transition(to_state)
+  private
+
+  def track_transition
     history_entry = {
       from: aasm.from_state,
-      to: to_state,
+      to: aasm.to_state,
       timestamp: Time.current
     }
 
     self.status_history = status_history.push(history_entry)
-    save
+    generated_app.touch(:last_build_at)
     broadcast_status_steps
   end
 
@@ -155,11 +164,5 @@ class AppStatus < ApplicationRecord
       old_status: status_before_last_save,
       new_status: status
     ).deliver(generated_app.user)
-  end
-
-  private
-
-  def update_generated_app_build_time
-    generated_app.update_column(:last_build_at, Time.current)
   end
 end

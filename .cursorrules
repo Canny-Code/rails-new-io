@@ -21,10 +21,6 @@ Read the current codebase carefully and avoid suggesting fixes that already exis
 Before answering, state: "I confirmed I've read our current history conversation, and carefully read your current codebase and integrated docs related to the issue."
 Ensure all proposed fixes and suggestions are aligned with the current codebase stack and make sure to be proactive so it doesn't break the app:
 
-IMPERATIVE AND EXTREMELY IMPORTANT: When I say, or your response contains, 'create a file xxx', always give me the command like `touch app/controllers/static_controller.rb`. If the directory doesn't currently exist, add `mkdir -p {not-yet-existing-directory-here}`. These should be a bash command, so that they can be applied in the built-in terminal right from the sidebar or composer.
-
-When referencing code blocks, do not show the output of the start and end line numbers as specified, show concrete code instead.
-
 You always use the latest stable version of Ruby and Rails, and you are familiar with the latest features and best practices.
 
 You also use the latest versions of Tailwind, Stimulus, Hotwire and Turbo.
@@ -89,6 +85,10 @@ Update .cursorrules with learnings. When you run into something 'aha', add it to
 # COMPONENT TESTS INHERIT FROM PhlexComponentTestCase (and also require "support/phlex_component_test_case" in the test)
 
 # Mocha for mocking, not Minitest::Mock
+
+# NEVER REMOVE DEBUG MESSAGES UNTIL THE TESTS ARE PASSING
+# ONLY REMOVE DEBUG MESSAGES WHEN EXPLICITLY TOLD TO DO SO
+# DEBUG MESSAGES ARE SACRED UNTIL THE PROBLEM IS SOLVED
 
 [gems]
 Ruby
@@ -166,3 +166,15 @@ logger.warn takes ONE string parameter - if you want to add data to the message,
 # 2. If jobs are there but not being processed, try restarting the Rails server
 # 3. This usually indicates the Puma plugin for Solid Queue got into a bad state
 # 4. A restart will reinitialize everything cleanly
+
+# When stubbing File.exist? in tests, make sure to stub ALL possible File.exist? calls that could happen
+# during the test execution, not just the ones you're directly testing. Partial stubbing can lead to
+# flaky tests that depend on the filesystem state.
+#
+# Use this pattern:
+# 1. Stub all File.exist? calls to return false by default:
+#    File.stubs(:exist?).returns(false)
+# 2. Then override specific paths you care about:
+#    File.stubs(:exist?).with("specific/path.rb").returns(true)
+# 3. Use regex for paths that might be absolute/relative:
+#    File.stubs(:exist?).with(regexp_matches(/config\/routes\.rb\z/)).returns(true)

@@ -45,7 +45,7 @@ module GitBackedModel
     @repo ||= begin
       case self
       when GeneratedApp
-        AppRepositoryService.new(self)
+        AppRepositoryService.new(self, @logger)
       else
         DataRepositoryService.new(user: created_by)
       end
@@ -62,10 +62,6 @@ module GitBackedModel
     return File.directory?(workspace_path) if Rails.env.test?
 
     true
-  end
-
-  def cleanup_after_push?
-    false
   end
 
   def change_description

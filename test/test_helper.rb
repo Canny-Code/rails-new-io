@@ -60,6 +60,12 @@ module ActiveSupport
     unless skip_coverage?
       parallelize_setup do |worker|
         SimpleCov.command_name "#{SimpleCov.command_name}-#{worker}"
+
+        # Clean up test directories at the start of each worker
+        if worker == 1  # Only clean up once
+          FileUtils.rm_rf(Rails.root.join("tmp", "rails-new-io-data-test"))
+          FileUtils.rm_rf(Rails.root.join("tmp", "test_apps"))
+        end
       end
 
       parallelize_teardown do |_|
@@ -72,9 +78,14 @@ module ActiveSupport
     def setup
       DatabaseCleaner.start
 
+      # Create test app directories if they don't exist
+      # Using mkdir_p is safe for parallel execution
       %w[blog_app api_project saas_starter weather_api payment_api].each do |app|
         FileUtils.mkdir_p(Rails.root.join("tmp", "test_apps", app))
       end
+
+      # Ensure data repository directory exists
+      FileUtils.mkdir_p(Rails.root.join("tmp", "rails-new-io-data-test", "ingredients"))
     end
 
     def teardown

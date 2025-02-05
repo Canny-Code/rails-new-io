@@ -35,14 +35,12 @@ class GeneratedApp < ApplicationRecord
   include HasGenerationLifecycle
   include GitBackedModel
 
+  attr_writer :logger, :repository_service
+
   delegate :ruby_version, :rails_version, to: :recipe
 
   belongs_to :user
   belongs_to :recipe
-
-  has_one :app_status, dependent: :destroy
-  has_many :app_changes, dependent: :destroy
-  has_many :log_entries, class_name: "AppGeneration::LogEntry", dependent: :destroy
 
   validates :name, presence: true,
                   uniqueness: { scope: :user_id },
@@ -59,26 +57,63 @@ class GeneratedApp < ApplicationRecord
     allow_blank: true
   validates :recipe, presence: true
 
-  after_update_commit :broadcast_clone_box, if: :completed?
+  def apply_ingredients
+    unless ingredients.any?
+      @logger.info("No ingredients to apply - moving on")
+      return
+    end
 
-  broadcasts_to ->(generated_app) { [ :generated_apps, generated_app.user_id ] }
-  broadcasts_to ->(generated_app) { [ :notification_badge, generated_app.user_id ] }
+    ingredients.each do |ingredient|
+      apply_ingredient(ingredient)
 
-  def cleanup_after_push?
-    true
+      @logger.info("Committing ingredient changes")
+      @repository_service.commit_changes_after_applying_ingredient(ingredient)
+      @logger.info("Ingredient #{ingredient.name} applied successfully")
+    end
   end
 
-  def apply_ingredient!(ingredient, configuration = {})
-    logger = AppGeneration::Logger.new(self)
+  def command
+    "rails new #{name} #{recipe.cli_flags}"
+  end
+
+  def ingredients
+    @_ingredients ||= recipe.recipe_ingredients.includes(:ingredient).map(&:ingredient)
+  end
+
+  def on_git_error(error)
+    app_status.fail!(error.message)
+  end
+
+  def to_commit_message
+    ingredients_message = if recipe.ingredients.any?
+      <<~INGREDIENTS_MESSAGE
+      ============
+      Ingredients:
+      ============
+
+      #{recipe.ingredients.map(&:to_commit_message).join("\n\n")}
+      INGREDIENTS_MESSAGE
+    else
+      ""
+    end
+
+    <<~INITIAL_COMMIT_MESSAGE
+    Initial commit by railsnew.io
+
+    command line flags:
+
+    #{recipe.cli_flags.squish.strip}
+
+    #{ingredients_message}
+    INITIAL_COMMIT_MESSAGE
+  end
+
+  private
+
+  def apply_ingredient(ingredient, configuration = {})
+    @logger.info("Applying ingredient: #{ingredient.name}")
 
     transaction do
-      logger.info("Applying ingredient...", {
-        ingredient: ingredient.name,
-        workspace_path:,
-        pwd: Dir.pwd
-      })
-
-      # Create recipe change first
       recipe_change = recipe.recipe_changes.create!(
         ingredient: ingredient,
         change_type: "add_ingredient",
@@ -91,14 +126,25 @@ class GeneratedApp < ApplicationRecord
         configuration: configuration
       )
 
-      template_path = DataRepositoryService.new(user: user).template_path(ingredient)
+      template_path = DataRepositoryService.new(user:).template_path(ingredient)
+
+      unless File.exist?(template_path)
+        @logger.error("Template file not found", { path: template_path })
+        raise "Template file not found: #{template_path}"
+      end
+
 
       require "rails/generators"
       require "rails/generators/rails/app/app_generator"
 
       app_directory_path = File.join(workspace_path, name)
 
-      Dir.chdir(app_directory_path) do
+      git_service = LocalGitService.new(
+        working_directory: app_directory_path,
+        logger: @logger
+      )
+
+      git_service.in_working_directory do
         ENV["BUNDLE_GEMFILE"] = File.join(Dir.pwd, "Gemfile")
 
         Rails.application.config.generators.templates += [ File.dirname(template_path) ]
@@ -107,7 +153,7 @@ class GeneratedApp < ApplicationRecord
           [ "." ],
           template: template_path,
           force: true,
-          quiet: false,
+          quiet: true,
           pretend: false,
           skip_bundle: true,
           **configuration.symbolize_keys
@@ -117,27 +163,13 @@ class GeneratedApp < ApplicationRecord
       end
     end
   rescue StandardError => e
-    logger.error("Failed to apply ingredient", {
+    @logger.error("Failed to apply ingredient", {
       error: e.message,
       backtrace: e.backtrace.first(20),
       pwd: Dir.pwd
     })
     raise
   end
-
-  def command
-    "rails new #{name} #{recipe.cli_flags}"
-  end
-
-  def ingredients
-    recipe.recipe_ingredients.includes(:ingredient).map(&:ingredient)
-  end
-
-  def on_git_error(error)
-    app_status.fail!(error.message)
-  end
-
-  private
 
   def broadcast_clone_box
     Turbo::StreamsChannel.broadcast_update_to(
@@ -146,5 +178,7 @@ class GeneratedApp < ApplicationRecord
       partial: "shared/github_clone_box",
       locals: { generated_app: self }
     )
+    # TODO: This is a hack to broadcast the last step as completed
+    app_status.broadcast_status_steps
   end
 end

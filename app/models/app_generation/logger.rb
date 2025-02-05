@@ -1,8 +1,8 @@
 module AppGeneration
   class Logger
-    def initialize(generated_app)
-      @generated_app = generated_app
-      raise ArgumentError, "GeneratedApp must have an app_status" unless @generated_app.app_status
+    def initialize(app_status)
+      @app_status = app_status
+      raise ArgumentError, "AppStatus is required" unless @app_status
     end
 
     def info(message, metadata = {})
@@ -21,9 +21,9 @@ module AppGeneration
 
     def create_entry(level, message, metadata)
       LogEntry.create!(
-        generated_app: @generated_app,
+        generated_app: @app_status.generated_app,
         level: level,
-        phase: @generated_app.app_status.status,
+        phase: @app_status.status,
         message: message,
         metadata: metadata
       )

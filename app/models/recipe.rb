@@ -47,7 +47,6 @@ class Recipe < ApplicationRecord
         configuration: configuration
       )
     end
-    DataRepositoryService.new(user: created_by).write_recipe(self, repo_name: DataRepositoryService.name_for_environment)
   end
 
   def remove_ingredient!(ingredient)
@@ -55,7 +54,6 @@ class Recipe < ApplicationRecord
       recipe_ingredients.find_by!(ingredient: ingredient).destroy
       reorder_positions
     end
-    DataRepositoryService.new(user: created_by).write_recipe(self, repo_name: DataRepositoryService.name_for_environment)
   end
 
   def reorder_ingredients!(new_order)
@@ -64,7 +62,6 @@ class Recipe < ApplicationRecord
         ri.update!(position: new_order.index(ri.ingredient_id))
       end
     end
-    DataRepositoryService.new(user: created_by).write_recipe(self, repo_name: DataRepositoryService.name_for_environment)
   end
 
   def self.find_duplicate(cli_flags, ingredient_ids = nil)

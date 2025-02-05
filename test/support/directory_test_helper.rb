@@ -17,20 +17,17 @@ module DirectoryTestHelper
   def cleanup_test_directories
     return unless defined?(@original_pwd) && defined?(@test_directories)
 
-    # First try to return to original directory
-    begin
-      Dir.chdir(@original_pwd) if @original_pwd && File.directory?(@original_pwd)
-    rescue SystemCallError => e
-      puts "DEBUG: Failed to chdir back to #{@original_pwd}: #{e.message}"
-    end
-
-    # Then clean up test directories
-    Array(@test_directories).each do |dir|
-      begin
-        cleanup_git_locks(dir) if dir && File.directory?(dir)
-        FileUtils.rm_rf(dir) if dir && File.directory?(dir)
-      rescue SystemCallError => e
-        puts "DEBUG: Failed to remove directory #{dir}: #{e.message}"
+    # Clean up test directories from within the original directory
+    # This ensures we're not trying to delete directories we're currently in
+    if @original_pwd && File.directory?(@original_pwd)
+      safely_change_directory(@original_pwd) do
+        Array(@test_directories).each do |dir|
+          begin
+            cleanup_git_locks(dir) if dir && File.directory?(dir)
+            FileUtils.rm_rf(dir) if dir && File.directory?(dir)
+          rescue SystemCallError
+          end
+        end
       end
     end
   end
@@ -54,12 +51,8 @@ module DirectoryTestHelper
       raise "Directory #{dir} is outside test root #{@test_root}"
     end
 
-    original_dir = Dir.pwd
-    begin
-      Dir.chdir(dir)
+    safely_change_directory(dir) do
       yield dir if block_given?
-    ensure
-      Dir.chdir(original_dir) if File.directory?(original_dir)
     end
     dir
   end
@@ -73,22 +66,31 @@ module DirectoryTestHelper
     end
 
     cleanup_git_locks(dir)
-    original_dir = Dir.pwd
-    begin
-      Dir.chdir(dir)
-      system("git init --quiet")
-      system("git config user.name 'Test User'")
-      system("git config user.email 'test@example.com'")
+    git_service = LocalGitService.new(working_directory: dir, logger: Rails.logger)
+    git_service.in_working_directory do
+      Open3.capture2("git init --quiet")
+      Open3.capture2("git config user.name 'Test User'")
+      Open3.capture2("git config user.email 'test@example.com'")
       # Create an initial commit to avoid "empty repository" issues
       FileUtils.touch(".keep")
-      system("git add .keep")
-      system("git commit -m 'Initial commit' --quiet")
-    ensure
-      Dir.chdir(original_dir) if File.directory?(original_dir)
+      Open3.capture2("git add .keep 2>/dev/null")
+      Open3.capture2("git commit -m 'Initial commit' --quiet")
     end
   end
 
   private
+
+  def safely_change_directory(dir)
+    return unless dir && File.directory?(dir)
+
+    original_dir = Dir.pwd
+    begin
+      Dir.chdir(dir)
+      yield if block_given?
+    ensure
+      Dir.chdir(original_dir) if File.directory?(original_dir)
+    end
+  end
 
   def create_test_root
     dir = File.join(Rails.root, "tmp", "test", "test_root_#{SecureRandom.hex(4)}")
@@ -112,10 +114,8 @@ module DirectoryTestHelper
     lock_files.each do |lock_file|
       lock_path = File.join(dir, lock_file)
       begin
-        # Skip existence check in test mode
         File.unlink(lock_path) rescue nil
-      rescue SystemCallError => e
-        puts "DEBUG: Failed to remove git lock file #{lock_path}: #{e.message}"
+      rescue SystemCallError
       end
     end
   end

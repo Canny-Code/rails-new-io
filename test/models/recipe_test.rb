@@ -38,11 +38,6 @@ class RecipeTest < ActiveSupport::TestCase
     configuration = { "auth_type" => "devise" }
     initial_position = @recipe.recipe_ingredients.maximum(:position).to_i
 
-    # Stub git syncing
-    data_repository = mock("data_repository")
-    DataRepositoryService.expects(:new).with(user: @recipe.created_by).returns(data_repository)
-    data_repository.expects(:write_recipe).with(@recipe, repo_name: DataRepositoryService.name_for_environment)
-
     @recipe.add_ingredient!(@ingredient, configuration)
 
     recipe_ingredient = @recipe.recipe_ingredients.last
@@ -51,74 +46,10 @@ class RecipeTest < ActiveSupport::TestCase
     assert_equal configuration, recipe_ingredient.configuration
   end
 
-  test "creates a commit when adding ingredient" do
-    # Stub git syncing
-    data_repository = mock("data_repository")
-    DataRepositoryService.expects(:new).with(user: @recipe.created_by).returns(data_repository)
-    data_repository.expects(:write_recipe).with(@recipe, repo_name: DataRepositoryService.name_for_environment)
-
-    @recipe.add_ingredient!(@ingredient, { "auth_type" => "devise" })
-  end
-
-  # test "raises error when adding incompatible ingredient" do
-  #   # Create a conflicting ingredient that conflicts with Rails Authentication
-  #   conflicting = Ingredient.new(
-  #     name: "Conflicting Auth",
-  #     description: "Another auth system",
-  #     template_content: "# Template",
-  #     conflicts_with: [],  # This ingredient doesn't conflict with anything
-  #     requires: [],
-  #     configures_with: { "auth_type" => [ "other" ] },
-  #     created_by: @user
-  #   )
-  #   stub_git_operations(conflicting)
-  #   conflicting.save!
-
-  #   # Modify the existing ingredient to conflict with the new one
-  #   @ingredient.update!(conflicts_with: [ "Conflicting Auth" ])
-
-  #   # Add first ingredient
-  #   @recipe.add_ingredient!(@ingredient, { "auth_type" => "devise" })
-
-  #   # Try to add conflicting ingredient
-  #   assert_raises(Recipe::IncompatibleIngredientError) do
-  #     @recipe.add_ingredient!(conflicting, { "auth_type" => "other" })
-  #   end
-  # end
-
-  # test "raises error when ingredient dependencies not met" do
-  #   # Create an ingredient with unmet dependencies
-  #   dependent = Ingredient.new(
-  #     name: "Dependent Auth",
-  #     description: "Auth requiring something",
-  #     template_content: "# Template",
-  #     conflicts_with: [],
-  #     requires: [ "some_other_ingredient" ],
-  #     configures_with: { "auth_type" => [ "other" ] },
-  #     created_by: @user
-  #   )
-  #   stub_git_operations(dependent)  # Stub git operations before save
-  #   dependent.save!
-
-  #   assert_raises(Recipe::IncompatibleIngredientError) do
-  #     @recipe.add_ingredient!(dependent, { "auth_type" => "other" })
-  #   end
-  # end
-
   test "removes ingredient and reorders positions" do
     initial_count = @recipe.recipe_ingredients.count
 
-    # Stub git syncing for add_ingredient!
-    data_repository1 = mock("data_repository_1")
-    DataRepositoryService.expects(:new).with(user: @recipe.created_by).returns(data_repository1)
-    data_repository1.expects(:write_recipe).with(@recipe, repo_name: DataRepositoryService.name_for_environment)
-
     @recipe.add_ingredient!(@ingredient, { "auth_type" => "devise" })
-
-    # Stub git syncing for remove_ingredient!
-    data_repository2 = mock("data_repository_2")
-    DataRepositoryService.expects(:new).with(user: @recipe.created_by).returns(data_repository2)
-    data_repository2.expects(:write_recipe).with(@recipe, repo_name: DataRepositoryService.name_for_environment)
 
     assert_difference("@recipe.recipe_ingredients.count", -1) do
       @recipe.remove_ingredient!(@ingredient)
@@ -131,20 +62,10 @@ class RecipeTest < ActiveSupport::TestCase
     # First clear existing recipe ingredients to start fresh
     @recipe.recipe_ingredients.destroy_all
 
-    # Stub git syncing for add_ingredient! calls
-    data_repository1 = mock("data_repository_1")
-    DataRepositoryService.expects(:new).with(user: @recipe.created_by).returns(data_repository1).at_least_once
-    data_repository1.expects(:write_recipe).with(@recipe, repo_name: DataRepositoryService.name_for_environment).at_least_once
-
     # Add ingredients in initial order
     ingredient2 = ingredients(:api_setup)
     @recipe.add_ingredient!(@ingredient, { "auth_type" => "devise" })
     @recipe.add_ingredient!(ingredient2, { "versioning" => true })
-
-    # Stub git syncing for reorder_ingredients! call
-    data_repository2 = mock("data_repository_2")
-    DataRepositoryService.expects(:new).with(user: @recipe.created_by).returns(data_repository2)
-    data_repository2.expects(:write_recipe).with(@recipe, repo_name: DataRepositoryService.name_for_environment)
 
     # Reorder ingredients
     new_order = [ ingredient2.id, @ingredient.id ]
@@ -190,11 +111,6 @@ class RecipeTest < ActiveSupport::TestCase
     # First clear existing recipe ingredients to start fresh
     @recipe.recipe_ingredients.destroy_all
 
-    # Stub git syncing
-    data_repository = mock("data_repository")
-    DataRepositoryService.expects(:new).with(user: @recipe.created_by).returns(data_repository)
-    data_repository.expects(:write_recipe).with(@recipe, repo_name: DataRepositoryService.name_for_environment)
-
     assert_equal 1, @recipe.send(:next_position)
     @recipe.add_ingredient!(@ingredient, { "auth_type" => "devise" })
     assert_equal 2, @recipe.send(:next_position)
@@ -203,11 +119,6 @@ class RecipeTest < ActiveSupport::TestCase
   test "reorder positions" do
     # First clear existing recipe ingredients to start fresh
     @recipe.recipe_ingredients.destroy_all
-
-    # Stub git syncing
-    data_repository = mock("data_repository")
-    DataRepositoryService.expects(:new).with(user: @recipe.created_by).returns(data_repository).at_least_once
-    data_repository.expects(:write_recipe).with(@recipe, repo_name: DataRepositoryService.name_for_environment).at_least_once
 
     @recipe.add_ingredient!(@ingredient, { "auth_type" => "devise" })
     ingredient2 = ingredients(:api_setup)
@@ -257,19 +168,9 @@ class RecipeTest < ActiveSupport::TestCase
     recipe1 = recipes(:blog_recipe)
     recipe2 = recipes(:minimal_recipe)
 
-    # Stub git syncing for recipe1's add_ingredient! calls
-    data_repository1 = mock("data_repository_1")
-    DataRepositoryService.expects(:new).with(user: recipe1.created_by).returns(data_repository1).at_least_once
-    data_repository1.expects(:write_recipe).with(recipe1, repo_name: DataRepositoryService.name_for_environment).at_least_once
-
     recipe1.update!(cli_flags: "--api --skip-turbo")
     recipe1.recipe_ingredients.destroy_all  # Clear existing ingredients first
     recipe1.add_ingredient!(ingredient1)
-
-    # Stub git syncing for recipe2's add_ingredient! calls
-    data_repository2 = mock("data_repository_2")
-    DataRepositoryService.expects(:new).with(user: recipe2.created_by).returns(data_repository2).at_least_once
-    data_repository2.expects(:write_recipe).with(recipe2, repo_name: DataRepositoryService.name_for_environment).at_least_once
 
     recipe2.update!(cli_flags: "--api --skip-turbo")
     recipe2.recipe_ingredients.destroy_all  # Clear existing ingredients first
@@ -289,28 +190,14 @@ class RecipeTest < ActiveSupport::TestCase
     # Set up first recipe
     recipe1.update!(cli_flags: "--api --skip-turbo")
     recipe1.recipe_ingredients.destroy_all
-
-    # Stub git syncing for recipe1's add_ingredient! calls
-    data_repository1 = mock("data_repository_1")
-    DataRepositoryService.expects(:new).with(user: recipe1.created_by).returns(data_repository1).at_least_once
-    data_repository1.expects(:write_recipe).with(recipe1, repo_name: DataRepositoryService.name_for_environment).at_least_once
-
     recipe1.add_ingredient!(ingredient1)
     recipe1.add_ingredient!(ingredient2)
 
-    # Set up second recipe
     recipe2.update!(cli_flags: "--api --skip-turbo")
     recipe2.recipe_ingredients.destroy_all
-
-    # Stub git syncing for recipe2's add_ingredient! calls
-    data_repository2 = mock("data_repository_2")
-    DataRepositoryService.expects(:new).with(user: recipe2.created_by).returns(data_repository2).at_least_once
-    data_repository2.expects(:write_recipe).with(recipe2, repo_name: DataRepositoryService.name_for_environment).at_least_once
-
     recipe2.add_ingredient!(ingredient1)
     recipe2.add_ingredient!(ingredient3)
 
-    # Verify that no duplicate is found
     result = Recipe.find_duplicate("--api --skip-turbo")
     assert_nil result, "Expected no duplicate recipe to be found"
   end
@@ -325,21 +212,11 @@ class RecipeTest < ActiveSupport::TestCase
     recipe1.update!(cli_flags: "--api")
     recipe1.recipe_ingredients.destroy_all  # Clear existing ingredients
 
-    # Stub git syncing for recipe1's add_ingredient! calls
-    data_repository1 = mock("data_repository_1")
-    DataRepositoryService.expects(:new).with(user: recipe1.created_by).returns(data_repository1).at_least_once
-    data_repository1.expects(:write_recipe).with(recipe1, repo_name: DataRepositoryService.name_for_environment).at_least_once
-
     recipe1.add_ingredient!(ingredient1)
     recipe1.add_ingredient!(ingredient2)
 
     recipe2.update!(cli_flags: "--api")
     recipe2.recipe_ingredients.destroy_all  # Clear existing ingredients
-
-    # Stub git syncing for recipe2's add_ingredient! calls
-    data_repository2 = mock("data_repository_2")
-    DataRepositoryService.expects(:new).with(user: recipe2.created_by).returns(data_repository2).at_least_once
-    data_repository2.expects(:write_recipe).with(recipe2, repo_name: DataRepositoryService.name_for_environment).at_least_once
 
     recipe2.add_ingredient!(ingredient1)
     recipe2.add_ingredient!(ingredient2)
@@ -354,20 +231,10 @@ class RecipeTest < ActiveSupport::TestCase
     recipe1 = recipes(:blog_recipe)
     recipe2 = recipes(:minimal_recipe)
 
-    # Stub git syncing for recipe1's add_ingredient! calls
-    data_repository1 = mock("data_repository_1")
-    DataRepositoryService.expects(:new).with(user: recipe1.created_by).returns(data_repository1).at_least_once
-    data_repository1.expects(:write_recipe).with(recipe1, repo_name: DataRepositoryService.name_for_environment).at_least_once
-
     recipe1.update!(cli_flags: "--api")
     recipe1.recipe_ingredients.destroy_all  # Clear existing ingredients
     recipe1.add_ingredient!(ingredient1)
     recipe1.add_ingredient!(ingredient2)
-
-    # Stub git syncing for recipe2's add_ingredient! calls
-    data_repository2 = mock("data_repository_2")
-    DataRepositoryService.expects(:new).with(user: recipe2.created_by).returns(data_repository2).at_least_once
-    data_repository2.expects(:write_recipe).with(recipe2, repo_name: DataRepositoryService.name_for_environment).at_least_once
 
     recipe2.update!(cli_flags: "--api")
     recipe2.recipe_ingredients.destroy_all  # Clear existing ingredients
@@ -384,19 +251,9 @@ class RecipeTest < ActiveSupport::TestCase
     recipe1 = recipes(:blog_recipe)
     recipe2 = recipes(:minimal_recipe)
 
-    # Stub git syncing for recipe1's add_ingredient! calls
-    data_repository1 = mock("data_repository_1")
-    DataRepositoryService.expects(:new).with(user: recipe1.created_by).returns(data_repository1).at_least_once
-    data_repository1.expects(:write_recipe).with(recipe1, repo_name: DataRepositoryService.name_for_environment).at_least_once
-
     recipe1.update!(cli_flags: "--api --skip-turbo")
     recipe1.add_ingredient!(ingredient1)
     recipe1.add_ingredient!(ingredient2)
-
-    # Stub git syncing for recipe2's add_ingredient! calls
-    data_repository2 = mock("data_repository_2")
-    DataRepositoryService.expects(:new).with(user: recipe2.created_by).returns(data_repository2).at_least_once
-    data_repository2.expects(:write_recipe).with(recipe2, repo_name: DataRepositoryService.name_for_environment).at_least_once
 
     recipe2.update!(cli_flags: "--minimal")
     recipe2.add_ingredient!(ingredient1)

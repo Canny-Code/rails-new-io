@@ -4,7 +4,7 @@ module AppGeneration
   class LoggerTest < ActiveSupport::TestCase
     def setup
       @generated_app = generated_apps(:blog_app)
-      @logger = Logger.new(@generated_app)
+      @logger = Logger.new(@generated_app.app_status)
     end
 
     test "creates info log entry" do

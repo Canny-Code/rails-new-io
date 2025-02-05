@@ -7,8 +7,7 @@ class GithubController < ApplicationController
       current_user.github_username
     )
     begin
-      exists = validator.repo_exists?
-      render json: { available: !exists }
+      render json: { available: validator.repo_can_be_created? }
     rescue Octokit::Unauthorized, Octokit::Forbidden => e
       Rails.logger.error("GitHub authentication error: #{e.message}")
       render json: { error: "GitHub authentication failed" }, status: :unauthorized

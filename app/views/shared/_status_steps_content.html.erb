@@ -1,39 +1,54 @@
-<div class="container mx-auto px-4">
-  <div class="flex justify-between">
-    <% steps.each_with_index do |step, index| %>
-      <div class="flex-1 flex items-center <%= index == steps.length - 1 ? "flex-initial" : "" %>">
-        <div class="relative">
-          <% if step[:state] == :failed %>
-            <div class="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+<%# Use passed data if available, otherwise calculate it %>
+<% status_steps_data ||= calculate_status_steps_data(generated_app) %>
+<div id="status_steps_content"
+     class="sticky-step-bubbles bg-white/80 py-4 border-b">
+  <div class="container mx-auto px-4">
+    <div class="flex justify-between">
+      <% status_steps_data[:steps].each_with_index do |step, index| %>
+        <div class="flex-1 flex items-center <%= index == status_steps_data[:steps].length - 1 ? "flex-initial" : "" %>">
+          <div class="relative">
+            <% if status_steps_data[:current_state] == :completed %>
+              <%# In completed state, EVERYTHING gets a checkmark %>
+              <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            <% else %>
+              <%# Normal state logic %>
+              <% if step[:state] == :failed %>
+                <div class="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+              <% elsif step[:current] %>
+                <div class="absolute -inset-1 rounded-full border-2 border-blue-500 border-dashed animate-spin"></div>
+                <div class="relative z-10 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center bg-white text-blue-500 font-semibold">
+                  <%= step[:number] %>
+                </div>
+              <% elsif step[:completed] %>
+                <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              <% else %>
+                <div class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-400 font-semibold">
+                  <%= step[:number] %>
+                </div>
+              <% end %>
+            <% end %>
+            <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 min-w-[100px] text-xs text-gray-500 text-center whitespace-nowrap <%= step[:current] && status_steps_data[:current_state] != :completed ? "text-blue-500 font-medium" : "" %>">
+              <%= step[:state].to_s.titleize %>
             </div>
-          <% elsif step[:completed] || (current_state == :completed && step[:state] != :failed) %>
-            <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          <% elsif step[:state] == current_state %>
-            <div class="absolute -inset-1 rounded-full border-2 border-blue-500 border-dashed animate-spin"></div>
-            <div class="relative z-10 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center bg-white text-blue-500 font-semibold">
-              <%= step[:number] %>
-            </div>
-          <% else %>
-            <div class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-400 font-semibold">
-              <%= step[:number] %>
-            </div>
-          <% end %>
-          <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 min-w-[100px] text-xs text-gray-500 text-center whitespace-nowrap <%= step[:state] == current_state ? "text-blue-500 font-medium" : "" %>">
-            <%= step[:state].to_s.titleize %>
           </div>
+          <% if index < status_steps_data[:steps].length - 1 %>
+            <div class="h-[3px] flex-grow mx-2 <%= class_for_transition(status_steps_data[:state_sequence], step[:state], status_steps_data[:steps][index + 1][:state], status_steps_data[:current_index]) %>"></div>
+          <% end %>
         </div>
-        <% if index < steps.length - 1 %>
-          <div class="h-[3px] flex-grow mx-2 <%= class_for_transition(state_sequence, step[:state], steps[index + 1][:state], current_index) %>"></div>
-        <% end %>
-      </div>
-    <% end %>
+      <% end %>
+    </div>
+    <div class="h-8"></div>
   </div>
-  <div class="h-8"></div>
 </div>

@@ -37,6 +37,21 @@ class GeneratedAppTest < ActiveSupport::TestCase
   def setup
     @user = users(:john)
     @recipe = recipes(:blog_recipe)
+    @generated_app = generated_apps(:pending_app)
+
+    # Create test directories matching the fixture
+    @workspace_path = create_test_directory("test_apps/pending_app")
+    @app_directory = File.join(@workspace_path, @generated_app.name)
+
+    FileUtils.mkdir_p(@app_directory)
+    FileUtils.touch(File.join(@app_directory, "Gemfile"))
+
+    @generated_app.update!(workspace_path: @workspace_path)
+
+    @logger = mock("logger")
+    @logger.stubs(:info)
+    @logger.stubs(:error)
+    @generated_app.logger = @logger
   end
 
   test "creates app status after creation" do
@@ -183,28 +198,38 @@ class GeneratedAppTest < ActiveSupport::TestCase
     assert_nil app.error_message
 
     # Create GitHub repo
-    app.create_github_repo!
+    app.start_github_repo_creation!
     assert app.app_status.creating_github_repo?
 
     # Start generation
-    app.generate!
-    assert app.app_status.generating?
-    assert_not_nil app.started_at
-    assert_nil app.completed_at
+    assert_changes -> { app.reload.last_build_at } do
+      app.start_rails_app_generation!
+    end
+    assert app.generating_rails_app?
+
+    # Apply ingredients
+    assert_changes -> { app.reload.last_build_at } do
+      app.start_ingredient_application!
+    end
+    assert app.applying_ingredients?
 
     # Push to GitHub
-    app.push_to_github!
+    assert_changes -> { app.reload.last_build_at } do
+      app.start_github_push!
+    end
     assert app.app_status.pushing_to_github?
 
     # Start CI
-    app.start_ci!
-    assert app.app_status.running_ci?
+    assert_changes -> { app.reload.last_build_at } do
+      app.start_ci!
+    end
+    assert app.running_ci?
 
     # Complete generation
-    app.mark_as_completed!
-    assert app.app_status.completed?
-    assert_not_nil app.completed_at
-    assert_nil app.error_message
+    assert_changes -> { app.reload.last_build_at } do
+      app.complete!
+    end
+    assert app.completed?
 
     # Fail generation (from pending)
     app = GeneratedApp.create!(
@@ -215,7 +240,7 @@ class GeneratedAppTest < ActiveSupport::TestCase
       configuration_options: {}
     )
     error_message = "Something went wrong"
-    app.mark_as_failed!(error_message)
+    app.fail!(error_message)
     assert app.app_status.failed?
 
     assert_equal error_message, app.reload.app_status.reload.error_message
@@ -237,13 +262,14 @@ class GeneratedAppTest < ActiveSupport::TestCase
     )
 
     # Follow the proper state transition sequence
-    app.create_github_repo!
-    app.generate!
-    app.push_to_github!
+    app.start_github_repo_creation!
+    app.start_rails_app_generation!
+    app.start_ingredient_application!
+    app.start_github_push!
     app.start_ci!
 
     assert_broadcasts_to("#{app.to_gid}:app_generation_log_entries") do
-      app.mark_as_completed!
+      app.complete!
     end
   end
 
@@ -264,19 +290,25 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
     # Create GitHub repo
     assert_changes -> { app.reload.last_build_at } do
-      app.create_github_repo!
+      app.start_github_repo_creation!
     end
     assert app.app_status.creating_github_repo?
 
     # Start generation
     assert_changes -> { app.reload.last_build_at } do
-      app.generate!
+      app.start_rails_app_generation!
     end
-    assert app.generating?
+    assert app.generating_rails_app?
+
+    # Apply ingredients
+    assert_changes -> { app.reload.last_build_at } do
+      app.start_ingredient_application!
+    end
+    assert app.applying_ingredients?
 
     # Push to GitHub
     assert_changes -> { app.reload.last_build_at } do
-      app.push_to_github!
+      app.start_github_push!
     end
     assert app.app_status.pushing_to_github?
 
@@ -288,15 +320,9 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
     # Complete generation
     assert_changes -> { app.reload.last_build_at } do
-      app.mark_as_completed!
+      app.complete!
     end
     assert app.completed?
-  end
-
-  test "sets up git backed model methods correctly" do
-    app = GeneratedApp.new(workspace_path: "/tmp/test_path")
-    assert_equal "/tmp/test_path", app.workspace_path
-    assert app.cleanup_after_push?
   end
 
   test "on_git_error fails app status with error message" do
@@ -307,5 +333,63 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
     assert app.app_status.failed?
     assert_equal "Git repository error occurred", app.app_status.error_message
+  end
+
+  test "apply_ingredients does nothing when there are no ingredients" do
+    app = generated_apps(:no_ingredients_app)
+
+    logger = mock("logger")
+    logger.expects(:info).with("No ingredients to apply - moving on")
+    app.logger = logger
+
+    app.apply_ingredients
+  end
+
+  test "apply_ingredients applies all ingredients in order" do
+    @generated_app.update!(recipe: @recipe)
+
+    git_service = mock("git_service")
+    repository_service = AppRepositoryService.new(@generated_app, @logger)
+    repository_service.stubs(:git_service).returns(git_service)
+    @generated_app.repository_service = repository_service
+
+    # Create the template file
+    template_path = DataRepositoryService.new(user: @user).template_path(@recipe.ingredients.first)
+    FileUtils.mkdir_p(File.dirname(template_path))
+    File.write(template_path, @recipe.ingredients.first.template_content)
+
+    @recipe.ingredients.each do |ingredient|
+      @logger.expects(:info).with("Applying ingredient: #{ingredient.name}")
+      @logger.expects(:info).with("Ingredient #{ingredient.name} applied successfully")
+      @logger.expects(:info).with("Committing ingredient changes")
+      git_service.expects(:commit_changes).with(message: ingredient.to_commit_message)
+    end
+
+    @generated_app.apply_ingredients
+  end
+
+  test "to_commit_message for an app without ingredients doesn't contain message about ingredients" do
+    app = generated_apps(:no_ingredients_app)
+    assert_equal "Initial commit by railsnew.io\n\ncommand line flags:\n\n--minimal\n\n\n", app.to_commit_message
+  end
+
+  test "raises error when template path doesn't exist" do
+    repository_service = mock("repository_service")
+    @generated_app.stubs(:repository_service).returns(repository_service)
+
+    DataRepositoryService.any_instance
+      .expects(:template_path)
+      .returns("/nonexistent/path/template.rb")
+
+    @logger.expects(:error).with(
+      "Template file not found",
+      { path: "/nonexistent/path/template.rb" }
+    )
+
+    error = assert_raises(RuntimeError) do
+      @generated_app.apply_ingredients
+    end
+
+    assert_equal "Template file not found: /nonexistent/path/template.rb", error.message
   end
 end

@@ -57,13 +57,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  test "create makes new recipe with all parameters" do
-    # Stub git syncing
-    data_repository = mock("data_repository")
-    data_repository.stubs(:class).returns(DataRepositoryService)
-    DataRepositoryService.expects(:new).with(user: @user).returns(data_repository)
-    data_repository.expects(:write_recipe).with(instance_of(Recipe), repo_name: "rails-new-io-data-test")
-
+  test "create makes new recipe with all parameters and enqueues WriteRecipeJob" do
     assert_difference("Recipe.count") do
       post recipes_path, params: {
         recipe: {
@@ -77,22 +71,26 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    recipe = Recipe.last
-    assert_equal "--api --database=postgresql --skip-test", recipe.cli_flags
-    assert_equal "My API App", recipe.name
-    assert_equal "A cool API app", recipe.description
-    assert_equal "draft", recipe.status
-    assert_redirected_to recipe_path(recipe)
+    new_recipe = @controller.instance_variable_get(:@recipe)
+    assert new_recipe.persisted?
+    assert_equal "--api --database=postgresql --skip-test", new_recipe.cli_flags
+    assert_equal "My API App", new_recipe.name
+    assert_equal "A cool API app", new_recipe.description
+    assert_equal "draft", new_recipe.status
+
+    assert_enqueued_with(
+      job: WriteRecipeJob,
+      args: [ {
+        recipe_id: new_recipe.id,
+        user_id: @user.id
+      } ]
+    )
+
+    assert_redirected_to recipe_path(new_recipe)
     assert_equal "Recipe was successfully created.", flash[:notice]
   end
 
   test "create uses published as default status" do
-    # Stub git syncing
-    data_repository = mock("data_repository")
-    data_repository.stubs(:class).returns(DataRepositoryService)
-    DataRepositoryService.expects(:new).with(user: @user).returns(data_repository)
-    data_repository.expects(:write_recipe).with(instance_of(Recipe), repo_name: "rails-new-io-data-test")
-
     assert_difference("Recipe.count") do
       post recipes_path, params: {
         recipe: {
@@ -109,13 +107,6 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
   test "create prevents duplicate recipes with same CLI flags and ingredients" do
     existing_recipe = recipes(:basic_recipe)
 
-    # Stub git syncing for both attempts
-    data_repository = mock("data_repository")
-    data_repository.stubs(:class).returns(DataRepositoryService)
-    data_repository.expects(:write_recipe).with(instance_of(Recipe), repo_name: "rails-new-io-data-test").twice
-    DataRepositoryService.expects(:new).with(user: @user).returns(data_repository).twice
-
-    # First try with same CLI flags but different ingredients - should succeed
     assert_difference("Recipe.count") do
       post recipes_path, params: {
         recipe: {
@@ -136,7 +127,6 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ ingredients(:rails_authentication).id ], first_recipe.ingredient_ids
     assert_redirected_to recipe_path(first_recipe)
 
-    # Now try with same CLI flags and no ingredients (like basic_recipe) - should fail
     assert_no_difference("Recipe.count") do
       post recipes_path, params: {
         recipe: {
@@ -225,12 +215,6 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
   test "create with custom ingredients adds them to recipe" do
     ingredient = ingredients(:rails_authentication)
 
-    # Stub git syncing for add_ingredient!
-    data_repository = mock("data_repository")
-    data_repository.stubs(:class).returns(DataRepositoryService)
-    DataRepositoryService.expects(:new).with(user: @user).returns(data_repository).at_least_once
-    data_repository.expects(:write_recipe).with(instance_of(Recipe), repo_name: "rails-new-io-data-test").at_least_once
-
     assert_difference("Recipe.count") do
       assert_difference("RecipeIngredient.count") do
         post recipes_path, params: {
@@ -254,12 +238,6 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     auth = ingredients(:rails_authentication)
     basic = ingredients(:basic)
 
-    # Stub git syncing for add_ingredient!
-    data_repository = mock("data_repository")
-    data_repository.stubs(:class).returns(DataRepositoryService)
-    DataRepositoryService.expects(:new).with(user: @user).returns(data_repository).at_least_once
-    data_repository.expects(:write_recipe).with(instance_of(Recipe), repo_name: "rails-new-io-data-test").at_least_once
-
     assert_difference("Recipe.count") do
       assert_difference("RecipeIngredient.count", 2) do
         post recipes_path, params: {
@@ -282,12 +260,6 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
 
   test "create with non-existent custom ingredients ignores them" do
     auth = ingredients(:rails_authentication)
-
-    # Stub git syncing
-    data_repository = mock("data_repository")
-    data_repository.stubs(:class).returns(DataRepositoryService)
-    data_repository.expects(:write_recipe).with(instance_of(Recipe), repo_name: "rails-new-io-data-test").twice
-    DataRepositoryService.expects(:new).with(user: @user).returns(data_repository).twice
 
     assert_difference("Recipe.count") do
       assert_difference("RecipeIngredient.count", 1) do

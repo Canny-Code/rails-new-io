@@ -3,11 +3,12 @@ class Recipes::SectionComponent < Phlex::HTML
   include Phlex::Rails::Helpers::RadioButtonTag
   include Phlex::Rails::Helpers::LabelTag
 
-  def initialize(title:, subtitle:, recipes:, selected_recipe_id:)
+  def initialize(title:, subtitle:, recipes:, selected_recipe_id:, data: {})
     @title = title
     @subtitle = subtitle
     @recipes = recipes
     @selected_recipe_id = selected_recipe_id
+    @data = data
   end
 
   def template
@@ -23,10 +24,7 @@ class Recipes::SectionComponent < Phlex::HTML
                 recipe.id,
                 recipe.id == @selected_recipe_id,
                 class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300",
-                data: {
-                  recipe_selector_target: "radio",
-                  action: "change->recipe-selector#updateUrl"
-                }
+                data: @data
             end
             div(class: "ml-3 text-sm") do
               label_tag(nil, class: "font-semibold text-gray-800") { recipe.name }

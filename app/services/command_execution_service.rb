@@ -50,12 +50,12 @@ class CommandExecutionService
 
   class InvalidCommandError < StandardError; end
 
-  def initialize(generated_app, command)
+  def initialize(generated_app, logger, command = nil)
     @generated_app = generated_app
-    @command = command.to_s.strip
+    @logger = logger
+    @command = command&.to_s&.strip || generated_app.command
     @temp_dir = nil
     @pid = nil
-    @logger = AppGeneration::Logger.new(generated_app)
     validate_command!
   end
 
@@ -141,13 +141,7 @@ class CommandExecutionService
       exit_status = wait_thr&.value
       output = buffer.message || "No output"
 
-      if exit_status&.success?
-        @logger.info("Rails app generation process finished successfully", {
-          command: @command,
-          app_name: @generated_app.name,
-          directory: @temp_dir
-        })
-      else
+      unless exit_status&.success?
         @logger.error("Command failed", {
           status: exit_status,
           output: output

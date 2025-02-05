@@ -44,17 +44,16 @@ class DataRepositoryService < GithubRepositoryService
 
     # Create ingredient template file
     template_content = ingredient.template_content
+
     tree_items << {
-      path: "ingredients/#{ingredient.name}/template.rb",
+      path: github_template_path(ingredient),
       mode: "100644",
       type: "blob",
       content: template_content
     }
 
-    # Write to local filesystem
-    local_path = template_path(ingredient)
     begin
-      File.write(local_path, template_content)
+      File.write(template_path(ingredient), template_content)
     rescue StandardError => e
       raise Error, "Failed to write ingredient template to local filesystem: #{e.message}"
     end
@@ -92,9 +91,13 @@ class DataRepositoryService < GithubRepositoryService
     )
   end
 
+  def github_template_path(ingredient)
+    File.join("ingredients", ingredient.name, "template.rb")
+  end
+
   def template_path(ingredient)
     repo_name = self.class.name_for_environment
-    path = Rails.root.join("tmp", repo_name, "ingredients", ingredient.name, "template.rb")
+    path = Rails.root.join("tmp", repo_name, "ingredients", ingredient.created_by.id.to_s, ingredient.name, "template.rb")
 
     # Ensure directory exists
     FileUtils.mkdir_p(path.dirname)
