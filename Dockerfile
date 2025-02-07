@@ -1,7 +1,7 @@
 # syntax = docker/dockerfile:1
 # check=error=true
 
-ARG RUBY_VERSION=3.3.5
+ARG RUBY_VERSION=3.4.1
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
 WORKDIR /rails
@@ -11,7 +11,7 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libsqlite3-0 \
     build-essential libssl-dev git pkg-config python-is-python3 libgmp-dev ca-certificates gnupg xz-utils \
     libffi-dev libyaml-dev libreadline-dev zlib1g-dev libncurses5-dev libgdbm-dev \
-    libc6-dev && \
+    libc6-dev vim && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Set production environment
