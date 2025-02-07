@@ -5,13 +5,13 @@ class GeneratedAppsController < ApplicationController
   end
 
   def new
-    @pre_cooked_recipes = Recipe.where(
+    @pre_cooked_recipes = Recipe.includes(recipe_ingredients: :ingredient).where(
       created_by: User.find_by(github_username: "trinitytakei"),
       name: [ "Omakase", "API Only" ],
       status: "published"
     )
 
-    @recipes = Recipe.where(created_by: current_user, status: "published") - @pre_cooked_recipes
+    @recipes = Recipe.includes(recipe_ingredients: :ingredient).where(created_by: current_user, status: "published") - @pre_cooked_recipes
   end
 
   def create
