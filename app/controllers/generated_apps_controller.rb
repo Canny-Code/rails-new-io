@@ -16,7 +16,7 @@ class GeneratedAppsController < ApplicationController
 
   def create
     begin
-      recipe = Recipe.where(created_by: current_user).find(params[:generated_app][:recipe_id])
+      recipe = Recipe.where(created_by: User.where(admin: true).or(User.where(id: current_user.id))).find(params[:generated_app][:recipe_id])
 
       @generated_app = current_user.generated_apps.new(
         name: params[:app_name],
