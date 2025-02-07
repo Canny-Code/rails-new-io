@@ -5,9 +5,10 @@ module Buttons
     class Component < ApplicationComponent
       include Phlex::Rails::Helpers::LinkTo
 
-      def initialize(text:, path:, icon: true, disabled: false, data: {}, html_options: {})
+      def initialize(text:, path:, size: :medium, icon: true, disabled: false, data: {}, html_options: {})
         @text = text
         @path = path
+        @size = size
         @icon = icon
         @disabled = disabled
         @data = data
@@ -17,7 +18,7 @@ module Buttons
       def view_template
         link_to(
           @path,
-          class: "#{@disabled ? "opacity-50 cursor-not-allowed" : ""} inline-flex items-center rounded-md bg-[#ac3b61] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#993351] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#993351]",
+          class: button_classes,
           data: @data,
           **@html_options
         ) do
@@ -28,6 +29,15 @@ module Buttons
           end
           plain @text
         end
+      end
+
+      private
+
+      def button_classes
+        base_classes = "inline-flex items-center rounded-md font-semibold text-white shadow-sm transition ease-in-out duration-150"
+        size_classes = @size == :large ? "px-8 py-4 text-lg" : "px-3 py-2 text-sm"
+        state_classes = "bg-[#993351] hover:bg-[#B34766] focus:bg-[#802A44] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#802A44] active:bg-[#731F39] disabled:bg-[#D3A9B6] disabled:cursor-not-allowed"
+        "#{base_classes} #{size_classes} #{state_classes}"
       end
     end
   end
