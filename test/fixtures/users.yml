@@ -5,6 +5,7 @@
 # Table name: users
 #
 #  id              :integer          not null, primary key
+#  admin           :boolean          default(FALSE), not null
 #  email           :string
 #  github_token    :text
 #  github_username :string           not null
@@ -33,6 +34,7 @@ john:
   github_token: "fake-token"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+  admin: false
 
 trinity_takei:
   name: "Trinity Takei"
@@ -44,6 +46,7 @@ trinity_takei:
   github_username: "trinitytakei"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+  admin: true
 
 jane:
   name: "Jane Smith"
@@ -56,3 +59,4 @@ jane:
   github_token: "fake-token"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+  admin: false

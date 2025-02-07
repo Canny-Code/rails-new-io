@@ -3,6 +3,7 @@
 # Table name: users
 #
 #  id              :integer          not null, primary key
+#  admin           :boolean          default(FALSE), not null
 #  email           :string
 #  github_token    :text
 #  github_username :string           not null
