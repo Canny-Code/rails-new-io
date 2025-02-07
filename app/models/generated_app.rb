@@ -145,8 +145,17 @@ class GeneratedApp < ApplicationRecord
       )
 
       git_service.in_working_directory do
-        ENV["BUNDLE_GEMFILE"] = File.join(Dir.pwd, "Gemfile")
+        gemfile_path = File.join(Dir.pwd, "Gemfile")
+        # Verify Bundler environment
+        unless ENV["BUNDLE_GEMFILE"] == gemfile_path && File.exist?(gemfile_path)
+          @logger.error("Bundler environment not properly set", {
+            bundle_gemfile: ENV["BUNDLE_GEMFILE"],
+            gemfile_exists: File.exist?(gemfile_path)
+          })
+          raise "Bundler environment not properly set"
+        end
 
+        ENV["BUNDLE_GEMFILE"] = gemfile_path
         Rails.application.config.generators.templates += [ File.dirname(template_path) ]
 
         generator = Rails::Generators::AppGenerator.new(

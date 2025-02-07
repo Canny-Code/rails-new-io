@@ -29,6 +29,16 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     @generator = mock("generator")
     @generator.stubs(:apply)
     Rails::Generators::AppGenerator.stubs(:new).returns(@generator)
+
+    # Save original BUNDLE_GEMFILE
+    @original_bundle_gemfile = ENV["BUNDLE_GEMFILE"]
+    # Set BUNDLE_GEMFILE to match the test app's Gemfile
+    ENV["BUNDLE_GEMFILE"] = File.join(@app_directory, "Gemfile")
+  end
+
+  teardown do
+    # Restore original BUNDLE_GEMFILE
+    ENV["BUNDLE_GEMFILE"] = @original_bundle_gemfile
   end
 
   test "successfully applies ingredient" do
@@ -71,7 +81,20 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
       auth_type: "devise"
     ).returns(@generator)
 
-    File.expects(:exist?).with(template_path).returns(true)
+    # Mock all File.exist? calls
+    File.stubs(:exist?).returns(true)
+    File.stubs(:exist?).with(template_path).returns(true)
+
+    # Mock LocalGitService to track the working directory
+    git_service = LocalGitService.new(
+      working_directory: @app_directory,
+      logger: @logger
+    )
+    git_service.stubs(:in_working_directory).yields
+    LocalGitService.stubs(:new).returns(git_service)
+
+    # Mock Dir.pwd to return app directory
+    Dir.stubs(:pwd).returns(@app_directory)
 
     @generated_app.send(:apply_ingredient, @ingredient, configuration)
   end
@@ -115,13 +138,24 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     File.write(template_path, "# Test template")
 
     # Track if BUNDLE_GEMFILE was set correctly
-    bundle_gemfile_set = false
     expected_gemfile_path = File.join(@app_directory, "Gemfile")
+
+    # Mock LocalGitService to track the working directory
+    git_service = LocalGitService.new(
+      working_directory: @app_directory,
+      logger: @logger
+    )
+    git_service.stubs(:in_working_directory).yields
+    LocalGitService.stubs(:new).returns(git_service)
+
+    # Mock Dir.pwd to return the app directory
+    Dir.stubs(:pwd).returns(@app_directory)
 
     # Use a block to temporarily override ENV
     original_bundle_gemfile = ENV["BUNDLE_GEMFILE"]
     begin
-      ENV["BUNDLE_GEMFILE"] = "wrong_path"
+      # Set BUNDLE_GEMFILE to the expected path since we now validate before setting
+      ENV["BUNDLE_GEMFILE"] = expected_gemfile_path
       @generated_app.send(:apply_ingredient, @ingredient, configuration)
       assert_equal expected_gemfile_path, ENV["BUNDLE_GEMFILE"], "BUNDLE_GEMFILE was not set correctly"
     ensure
@@ -161,6 +195,95 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
           @generated_app.send(:apply_ingredient, @ingredient, configuration)
         end
       end
+    end
+  end
+
+  test "fails when Gemfile does not exist" do
+    configuration = { "auth_type" => "devise" }
+    template_path = DataRepositoryService.new(user: @user).template_path(@ingredient)
+
+    # Mock all File.exist? calls
+    File.stubs(:exist?).returns(false)
+    File.stubs(:exist?).with(template_path).returns(true)
+
+    # Set up error logging expectations
+    @logger.unstub(:error)
+    @logger.expects(:error).with(
+      "Bundler environment not properly set",
+      has_entries(
+        bundle_gemfile: regexp_matches(/Gemfile\z/),
+        gemfile_exists: false
+      )
+    ).once
+
+    @logger.expects(:error).with(
+      "Failed to apply ingredient",
+      has_entries(
+        error: "Bundler environment not properly set",
+        backtrace: anything,
+        pwd: anything
+      )
+    ).once
+
+    assert_raises(RuntimeError, "Bundler environment not properly set") do
+      @generated_app.send(:apply_ingredient, @ingredient, configuration)
+    end
+  end
+
+  test "fails when BUNDLE_GEMFILE is incorrect" do
+    configuration = { "auth_type" => "devise" }
+    template_path = "/path/to/template.rb"
+    gemfile_path = File.join(@app_directory, "Gemfile")
+    # Mock template path
+    DataRepositoryService.any_instance.stubs(:template_path).returns(template_path)
+
+    # Mock Dir.pwd first to return app directory
+    Dir.stubs(:pwd).returns(@app_directory)
+
+    # Mock all File.exist? calls
+    File.stubs(:exist?).returns(true)
+    File.stubs(:exist?).with(template_path).returns(true)
+    File.stubs(:exist?).with(gemfile_path).returns(true)
+    File.stubs(:exist?).with("Gemfile").returns(true)
+
+    # Mock LocalGitService to track the working directory
+    git_service = LocalGitService.new(
+      working_directory: @app_directory,
+      logger: @logger
+    )
+    git_service.stubs(:in_working_directory).yields
+    LocalGitService.stubs(:new).returns(git_service)
+
+    # Save original BUNDLE_GEMFILE
+    original_bundle_gemfile = ENV["BUNDLE_GEMFILE"]
+    begin
+      # Set wrong BUNDLE_GEMFILE path - use a completely different path
+      wrong_path = "/completely/different/path/Gemfile"
+      ENV["BUNDLE_GEMFILE"] = wrong_path
+
+      @logger.unstub(:error)
+      @logger.expects(:error).with(
+        "Bundler environment not properly set",
+        has_entries(
+          bundle_gemfile: wrong_path,
+          gemfile_exists: true
+        )
+      ).once
+
+      @logger.expects(:error).with(
+        "Failed to apply ingredient",
+        has_entries(
+          error: "Bundler environment not properly set",
+          backtrace: anything,
+          pwd: anything
+        )
+      ).once
+
+      assert_raises(RuntimeError, "Bundler environment not properly set") do
+        @generated_app.send(:apply_ingredient, @ingredient, configuration)
+      end
+    ensure
+      ENV["BUNDLE_GEMFILE"] = original_bundle_gemfile
     end
   end
 end

@@ -722,6 +722,8 @@ module AppGeneration
 
       File.stubs(:exist?).returns(false)
       File.stubs(:exist?).with("path/to/template.rb").returns(true)
+      # Mock the Gemfile existence check
+      File.stubs(:exist?).with(regexp_matches(/Gemfile\z/)).returns(true)
 
       @orchestrator = Orchestrator.new(@generated_app)
 

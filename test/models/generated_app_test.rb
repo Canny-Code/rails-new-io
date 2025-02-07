@@ -358,14 +358,52 @@ class GeneratedAppTest < ActiveSupport::TestCase
     FileUtils.mkdir_p(File.dirname(template_path))
     File.write(template_path, @recipe.ingredients.first.template_content)
 
-    @recipe.ingredients.each do |ingredient|
-      @logger.expects(:info).with("Applying ingredient: #{ingredient.name}")
-      @logger.expects(:info).with("Ingredient #{ingredient.name} applied successfully")
-      @logger.expects(:info).with("Committing ingredient changes")
-      git_service.expects(:commit_changes).with(message: ingredient.to_commit_message)
-    end
+    # Mock LocalGitService to track the working directory
+    local_git_service = LocalGitService.new(
+      working_directory: @generated_app.workspace_path,
+      logger: @logger
+    )
+    local_git_service.stubs(:in_working_directory).yields
+    LocalGitService.stubs(:new).returns(local_git_service)
 
-    @generated_app.apply_ingredients
+    # Mock Dir.pwd to return app directory
+    Dir.stubs(:pwd).returns(@generated_app.workspace_path)
+
+    # Mock File.exist? for both Gemfile and template path
+    File.stubs(:exist?).returns(false)
+    File.stubs(:exist?).with(regexp_matches(/Gemfile\z/)).returns(true)
+    File.stubs(:exist?).with(template_path).returns(true)
+
+    # Mock DataRepositoryService to return our template path
+    DataRepositoryService.any_instance.stubs(:template_path).returns(template_path)
+
+    # Mock Rails generator
+    generator = mock("generator")
+    generator.stubs(:apply)
+    require "rails/generators"
+    require "rails/generators/rails/app/app_generator"
+
+    Rails::Generators::AppGenerator.stubs(:new).returns(generator)
+
+    # Add template directory to Rails generator paths
+    Rails.application.config.generators.templates << File.dirname(template_path)
+
+    # Set BUNDLE_GEMFILE to the correct path
+    original_bundle_gemfile = ENV["BUNDLE_GEMFILE"]
+    begin
+      ENV["BUNDLE_GEMFILE"] = File.join(@generated_app.workspace_path, "Gemfile")
+
+      @recipe.ingredients.each do |ingredient|
+        @logger.expects(:info).with("Applying ingredient: #{ingredient.name}")
+        @logger.expects(:info).with("Ingredient #{ingredient.name} applied successfully")
+        @logger.expects(:info).with("Committing ingredient changes")
+        git_service.expects(:commit_changes).with(message: ingredient.to_commit_message)
+      end
+
+      @generated_app.apply_ingredients
+    ensure
+      ENV["BUNDLE_GEMFILE"] = original_bundle_gemfile
+    end
   end
 
   test "to_commit_message for an app without ingredients doesn't contain message about ingredients" do
