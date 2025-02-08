@@ -55,16 +55,11 @@ class DataRepositoryService < GithubRepositoryService
     begin
       puts "DEBUG: Attempting to write template to path: #{template_path(ingredient)}"
       puts "DEBUG: Template content length: #{template_content.length}"
-      puts "DEBUG: Template content empty? #{template_content.empty?}"
-      puts "DEBUG: Template content encoding: #{template_content.encoding}"
-      puts "DEBUG: Template content first 100 chars: #{template_content[0..100]}"
-      puts "DEBUG: Directory exists? #{File.directory?(File.dirname(template_path(ingredient)))}"
-      puts "DEBUG: Directory permissions: #{File.stat(File.dirname(template_path(ingredient))).mode.to_s(8)}"
-      puts "DEBUG: About to call File.write..."
-      result = File.write(template_path(ingredient), template_content)
-      puts "DEBUG: File.write returned: #{result}"
-      puts "DEBUG: File exists after write? #{File.exist?(template_path(ingredient))}"
-      puts "DEBUG: File size after write: #{File.size(template_path(ingredient))}" if File.exist?(template_path(ingredient))
+      File.open(template_path(ingredient), "w") do |f|
+        f.write(template_content)
+        f.flush
+        f.fsync
+      end
       puts "DEBUG: File written successfully"
     rescue StandardError => e
       puts "DEBUG: Error writing file: #{e.message}"

@@ -162,11 +162,18 @@ class GeneratedApp < ApplicationRecord
           force: true,
           quiet: true,
           pretend: false,
-          skip_bundle: true,
           **configuration.symbolize_keys
         )
 
         generator.apply(template_path)
+
+        # Ensure Gemfile changes are flushed to disk
+        if File.exist?("Gemfile")
+          File.open("Gemfile", "r+") do |f|
+            f.flush
+            f.fsync
+          end
+        end
       end
     end
   rescue StandardError => e
