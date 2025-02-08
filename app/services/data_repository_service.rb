@@ -107,7 +107,7 @@ class DataRepositoryService < GithubRepositoryService
 
   def template_path(ingredient)
     repo_name = self.class.name_for_environment
-    path = Rails.root.join("tmp", repo_name, "ingredients", ingredient.created_by.id.to_s, ingredient.name, "template.rb")
+    path = Rails.root.join("storage", repo_name, "ingredients", ingredient.created_by.id.to_s, ingredient.name, "template.rb")
 
     # Ensure directory exists
     FileUtils.mkdir_p(path.dirname)
