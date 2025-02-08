@@ -113,6 +113,23 @@ class GeneratedApp < ApplicationRecord
   def apply_ingredient(ingredient, configuration = {})
     @logger.info("Applying ingredient: #{ingredient.name}")
 
+    app_directory_path = File.join(workspace_path, name)
+    ENV["BUNDLE_GEMFILE"] = File.join(app_directory_path, "Gemfile")
+
+    git_service = LocalGitService.new(
+      working_directory: app_directory_path,
+      logger: @logger
+    )
+
+    # Verify Bundler environment
+    unless File.exist?(ENV["BUNDLE_GEMFILE"])
+      @logger.error("Bundler environment not properly set", {
+        bundle_gemfile: ENV["BUNDLE_GEMFILE"],
+        gemfile_exists: File.exist?(ENV["BUNDLE_GEMFILE"])
+      })
+      raise "Bundler environment not properly set"
+    end
+
     transaction do
       recipe_change = recipe.recipe_changes.create!(
         ingredient: ingredient,
@@ -133,29 +150,10 @@ class GeneratedApp < ApplicationRecord
         raise "Template file not found: #{template_path}"
       end
 
-
       require "rails/generators"
       require "rails/generators/rails/app/app_generator"
 
-      app_directory_path = File.join(workspace_path, name)
-
-      git_service = LocalGitService.new(
-        working_directory: app_directory_path,
-        logger: @logger
-      )
-
       git_service.in_working_directory do
-        gemfile_path = File.join(Dir.pwd, "Gemfile")
-        # Verify Bundler environment
-        unless ENV["BUNDLE_GEMFILE"] == gemfile_path && File.exist?(gemfile_path)
-          @logger.error("Bundler environment not properly set", {
-            bundle_gemfile: ENV["BUNDLE_GEMFILE"],
-            gemfile_exists: File.exist?(gemfile_path)
-          })
-          raise "Bundler environment not properly set"
-        end
-
-        ENV["BUNDLE_GEMFILE"] = gemfile_path
         Rails.application.config.generators.templates += [ File.dirname(template_path) ]
 
         generator = Rails::Generators::AppGenerator.new(
@@ -175,7 +173,8 @@ class GeneratedApp < ApplicationRecord
     @logger.error("Failed to apply ingredient", {
       error: e.message,
       backtrace: e.backtrace.first(20),
-      pwd: Dir.pwd
+      pwd: Dir.pwd,
+      gemfile: ENV["BUNDLE_GEMFILE"]
     })
     raise
   end

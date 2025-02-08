@@ -233,57 +233,66 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
   test "fails when BUNDLE_GEMFILE is incorrect" do
     configuration = { "auth_type" => "devise" }
     template_path = "/path/to/template.rb"
-    gemfile_path = File.join(@app_directory, "Gemfile")
+    # Set wrong BUNDLE_GEMFILE path before calling apply_ingredient
+    ENV["BUNDLE_GEMFILE"] = "/completely/different/path/Gemfile"
+
     # Mock template path
     DataRepositoryService.any_instance.stubs(:template_path).returns(template_path)
 
-    # Mock Dir.pwd first to return app directory
-    Dir.stubs(:pwd).returns(@app_directory)
-
-    # Mock all File.exist? calls
-    File.stubs(:exist?).returns(true)
+    # Mock all File.exist? calls to return false by default
+    File.stubs(:exist?).returns(false)
+    # Then override specific paths we care about
     File.stubs(:exist?).with(template_path).returns(true)
-    File.stubs(:exist?).with(gemfile_path).returns(true)
-    File.stubs(:exist?).with("Gemfile").returns(true)
 
-    # Mock LocalGitService to track the working directory
-    git_service = LocalGitService.new(
-      working_directory: @app_directory,
-      logger: @logger
-    )
-    git_service.stubs(:in_working_directory).yields
-    LocalGitService.stubs(:new).returns(git_service)
+    @logger.unstub(:error)
+    @logger.expects(:error).with(
+      "Bundler environment not properly set",
+      has_entries(
+        bundle_gemfile: regexp_matches(/personal-blog\/Gemfile\z/),
+        gemfile_exists: false
+      )
+    ).once
 
-    # Save original BUNDLE_GEMFILE
-    original_bundle_gemfile = ENV["BUNDLE_GEMFILE"]
-    begin
-      # Set wrong BUNDLE_GEMFILE path - use a completely different path
-      wrong_path = "/completely/different/path/Gemfile"
-      ENV["BUNDLE_GEMFILE"] = wrong_path
+    @logger.expects(:error).with(
+      "Failed to apply ingredient",
+      has_entries(
+        error: "Bundler environment not properly set",
+        backtrace: anything,
+        pwd: anything
+      )
+    ).once
 
-      @logger.unstub(:error)
-      @logger.expects(:error).with(
-        "Bundler environment not properly set",
-        has_entries(
-          bundle_gemfile: wrong_path,
-          gemfile_exists: true
-        )
-      ).once
-
-      @logger.expects(:error).with(
-        "Failed to apply ingredient",
-        has_entries(
-          error: "Bundler environment not properly set",
-          backtrace: anything,
-          pwd: anything
-        )
-      ).once
-
-      assert_raises(RuntimeError, "Bundler environment not properly set") do
-        @generated_app.send(:apply_ingredient, @ingredient, configuration)
-      end
-    ensure
-      ENV["BUNDLE_GEMFILE"] = original_bundle_gemfile
+    assert_raises(RuntimeError, "Bundler environment not properly set") do
+      @generated_app.send(:apply_ingredient, @ingredient, configuration)
     end
+  end
+
+  test "successfully applies ingredient with correct Bundler environment" do
+    configuration = { "auth_type" => "devise" }
+
+    # Create actual files instead of mocking
+    FileUtils.mkdir_p(@app_directory)
+    FileUtils.touch(File.join(@app_directory, "Gemfile"))
+
+    template_path = DataRepositoryService.new(user: @user).template_path(@ingredient)
+    FileUtils.mkdir_p(File.dirname(template_path))
+    File.write(template_path, "# Test template")
+
+    # Only mock the generator to avoid actual Rails app generation
+    generator = mock("generator")
+    generator.expects(:apply)
+    Rails::Generators::AppGenerator.stubs(:new).returns(generator)
+
+    # Run without mocking File.exist?
+    @generated_app.send(:apply_ingredient, @ingredient, configuration)
+
+    # Verify the changes were created
+    recipe_change = @recipe.recipe_changes.last
+    app_change = @generated_app.app_changes.last
+
+    assert_equal "add_ingredient", recipe_change.change_type
+    assert_equal configuration, recipe_change.change_data["configuration"]
+    assert_equal configuration, app_change.configuration
+    assert_equal recipe_change, app_change.recipe_change
   end
 end
