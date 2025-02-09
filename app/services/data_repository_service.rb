@@ -53,8 +53,18 @@ class DataRepositoryService < GithubRepositoryService
     }
 
     begin
-      File.write(template_path(ingredient), template_content)
+      puts "DEBUG: Attempting to write template to path: #{template_path(ingredient)}"
+      puts "DEBUG: Template content length: #{template_content.length}"
+      File.open(template_path(ingredient), "w") do |f|
+        f.write(template_content)
+        f.flush
+        f.fsync
+      end
+      puts "DEBUG: File written successfully"
     rescue StandardError => e
+      puts "DEBUG: Error writing file: #{e.message}"
+      puts "DEBUG: Error class: #{e.class}"
+      puts "DEBUG: Error backtrace: #{e.backtrace.join("\n")}"
       raise Error, "Failed to write ingredient template to local filesystem: #{e.message}"
     end
 
@@ -97,7 +107,7 @@ class DataRepositoryService < GithubRepositoryService
 
   def template_path(ingredient)
     repo_name = self.class.name_for_environment
-    path = Rails.root.join("tmp", repo_name, "ingredients", ingredient.created_by.id.to_s, ingredient.name, "template.rb")
+    path = Rails.root.join("storage", repo_name, "ingredients", ingredient.created_by.id.to_s, ingredient.name, "template.rb")
 
     # Ensure directory exists
     FileUtils.mkdir_p(path.dirname)

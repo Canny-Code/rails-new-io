@@ -11,7 +11,7 @@ class Recipes::SectionComponent < Phlex::HTML
     @data = data
   end
 
-  def template
+  def view_template
     div(class: "border rounded-lg shadow-sm p-6 mb-6") do
       h3(class: "text-base font-bold text-gray-900") { @title }
       p(class: "text-sm text-gray-600 mb-4") { @subtitle }
@@ -24,7 +24,10 @@ class Recipes::SectionComponent < Phlex::HTML
                 recipe.id,
                 recipe.id == @selected_recipe_id,
                 class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300",
-                data: @data
+                data: @data.merge({
+                  cli_flags: recipe.cli_flags,
+                  ingredients: recipe.recipe_ingredients.joins(:ingredient).pluck(:name).join(",")
+                })
             end
             div(class: "ml-3 text-sm") do
               label_tag(nil, class: "font-semibold text-gray-800") { recipe.name }

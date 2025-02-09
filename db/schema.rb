@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_01_28_140620) do
+ActiveRecord::Schema[8.0].define(version: 2025_02_07_103340) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -442,6 +442,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_01_28_140620) do
     t.string "slug"
     t.text "github_token"
     t.string "github_username", null: false
+    t.boolean "admin", default: false, null: false
     t.index ["github_username"], name: "index_users_on_github_username", unique: true
     t.index ["slug"], name: "index_users_on_slug", unique: true
   end
