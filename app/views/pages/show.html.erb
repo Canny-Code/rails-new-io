@@ -5,12 +5,14 @@
   <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <%= render "terminal_window" %>
     <%= render "ingredients_container" %>
-    <div class="mt-10 sm:flex-wrap md:flex items-center justify-center">
-      <button type="button"
-                data-action="click->modal#open"
-        class="inline-flex items-center rounded-md bg-[#ac3b61] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#993351] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#993351">
-        Done Tweaking
-      </button>
+    <div class="flex mt-4 sm:flex-wrap md:flex items-center justify-center">
+      <%= render Buttons::Primary::Component.new(
+        text: "Done Tweaking",
+        path: "#",
+        size: :large,
+        icon: false,
+        data: { action: "click->modal#open" }
+      ) %>
     </div>
     <%= render "recipe_form_modal" %>
   </div>

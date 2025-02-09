@@ -35,7 +35,7 @@ module Buttons
 
       def button_classes
         base_classes = "inline-flex items-center rounded-md font-semibold text-white shadow-sm transition ease-in-out duration-150"
-        size_classes = @size == :large ? "px-8 py-4 text-lg" : "px-3 py-2 text-sm"
+        size_classes = @size == :large ? "px-8 py-2 text-md" : "px-3 py-2 text-sm"
         state_classes = "bg-[#993351] hover:bg-[#B34766] focus:bg-[#802A44] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#802A44] active:bg-[#731F39] disabled:bg-[#D3A9B6] disabled:cursor-not-allowed"
         "#{base_classes} #{size_classes} #{state_classes}"
       end
