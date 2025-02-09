@@ -159,9 +159,7 @@ class GeneratedApp < ApplicationRecord
 
     @logger.error("Failed to apply ingredient", {
       error: e.message,
-      backtrace: e.backtrace.first(20),
-      pwd: Dir.pwd,
-      gemfile: ENV["BUNDLE_GEMFILE"],
+      backtrace: e.backtrace.join("<br>"),
       **original_metadata
     })
     raise

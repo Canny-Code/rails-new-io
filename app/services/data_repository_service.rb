@@ -53,18 +53,12 @@ class DataRepositoryService < GithubRepositoryService
     }
 
     begin
-      puts "DEBUG: Attempting to write template to path: #{template_path(ingredient)}"
-      puts "DEBUG: Template content length: #{template_content.length}"
       File.open(template_path(ingredient), "w") do |f|
         f.write(template_content)
         f.flush
         f.fsync
       end
-      puts "DEBUG: File written successfully"
     rescue StandardError => e
-      puts "DEBUG: Error writing file: #{e.message}"
-      puts "DEBUG: Error class: #{e.class}"
-      puts "DEBUG: Error backtrace: #{e.backtrace.join("\n")}"
       raise Error, "Failed to write ingredient template to local filesystem: #{e.message}"
     end
 

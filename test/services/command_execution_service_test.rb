@@ -5,7 +5,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
   def setup
     @user = users(:john)
     @recipe = recipes(:blog_recipe)
-    @temp_dir = Dir.mktmpdir
+    @work_dir = Dir.mktmpdir
 
     @logger = mock("logger")
     @logger.stubs(:info).with { |message, metadata = {}| @generated_app.log_entries.create!(message: message, metadata: metadata, level: :info, phase: :generating_rails_app) }
@@ -14,7 +14,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
     # Use an existing app and reset its status
     @generated_app = generated_apps(:pending_app)
-    @generated_app.update!(workspace_path: @temp_dir)
+    @generated_app.update!(workspace_path: @work_dir)
     @app_status = @generated_app.app_status
     @app_status.update!(
       status: "creating_github_repo",
@@ -34,7 +34,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
   end
 
   def teardown
-    FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
+    FileUtils.rm_rf(@work_dir) if @work_dir && Dir.exist?(@work_dir)
   end
 
   test "executes valid rails new command" do

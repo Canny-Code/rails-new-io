@@ -59,7 +59,7 @@ module AppGeneration
     def handle_error(error)
       @logger.error("App generation failed", {
         error: error.message,
-        backtrace: error.backtrace.join("\n")
+        backtrace: error.backtrace.join("<br>")
       })
 
       @generated_app.fail!(error.message) unless @generated_app.failed?
