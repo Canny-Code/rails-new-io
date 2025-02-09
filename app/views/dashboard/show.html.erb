@@ -7,6 +7,8 @@
     subtitle: "What will you build today?",
     new_button_html_options: { data: { turbo_frame: "_top" } },
     resources: @generated_apps,
+    new_button_text:  @generated_apps.any? ? "Generate new app" : nil,
+    new_button_path: @generated_apps.any? ? new_generated_app_path : nil,
     search: true,
     empty_state: EmptyState::Component.new(
       user: current_user,
