@@ -1,7 +1,7 @@
 class EmptyState::Component < ApplicationComponent
   include Phlex::Rails::Helpers::LinkTo
 
-  def initialize(user:, title:, description:, button_text:, button_path:, emoji:, html_options: {})
+  def initialize(user:, title:, description:, button_text:, icon: false, button_path:, emoji:, html_options: {})
     @user = user
     @title = title
     @description = description
@@ -9,6 +9,7 @@ class EmptyState::Component < ApplicationComponent
     @button_path = button_path
     @emoji = emoji
     @html_options = html_options
+    @icon = icon
   end
 
   def view_template
@@ -23,7 +24,8 @@ class EmptyState::Component < ApplicationComponent
             render Buttons::Primary::Component.new(
               text: @button_text,
               path: @button_path,
-              html_options: @html_options
+              html_options: @html_options,
+              icon: @icon
             )
           end
         end

@@ -23,6 +23,7 @@ module Pages
               title: "No ingredients yet",
               description: "Get started by adding your first ingredient.",
               button_text: "Add new ingredient",
+              icon: true,
               button_path: new_ingredient_path,
               emoji: "🧂"
             )
