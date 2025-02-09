@@ -48,7 +48,8 @@ module Buttons
         base_classes = "inline-flex items-center rounded-md font-semibold transition ease-in-out duration-150"
         size_classes = @size == :large ? "px-8 py-4 text-lg" : "px-3 py-2 text-sm"
         state_classes = "text-[#993351] hover:text-[#B34766] focus:underline focus:text-[#993351] active:text-[#731F39] disabled:text-[#D3A9B6] disabled:cursor-not-allowed"
-        "#{base_classes} #{size_classes} #{state_classes}"
+        border_classes = "border border-[#993351] hover:border-[#B34766] active:border-[#731F39] disabled:border-[#D3A9B6]"
+        "#{base_classes} #{size_classes} #{state_classes} #{border_classes}"
       end
     end
   end
