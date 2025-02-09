@@ -50,15 +50,16 @@
           </div>
         </div>
         <div class="mt-6 flex justify-end space-x-3">
-          <button type="button"
-                  data-action="click->modal#close"
-            class="inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-100 bg-deep-azure-gamma border border-transparent rounded-md hover:bg-deep-azure-epsilon focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
-            Cancel
-          </button>
-          <%= button_tag type: "submit",
-                class: "inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500" do %>
-            Create Recipe
-          <% end %>
+          <%= render Buttons::Tertiary::Component.new(
+            text: "Cancel",
+            path: "#",
+            html_options: { class: "bg-white" },
+            data: { action: "click->modal#close" }
+          ) %>
+          <%= render Buttons::Submit::Component.new(
+            text: "Create Recipe",
+            html_options: { class: "ml-3" }
+          ) %>
         </div>
       <% end %>
     </div>

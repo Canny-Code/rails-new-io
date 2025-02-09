@@ -21,7 +21,7 @@ module Buttons
           @path,
           class: button_classes,
           data: @data,
-          **@html_options
+          **@html_options.except(:class)
         ) do
           render_custom_icon if @custom_icon
           plain @text
@@ -49,7 +49,7 @@ module Buttons
         size_classes = @size == :large ? "px-8 py-4 text-lg" : "px-3 py-2 text-sm"
         state_classes = "text-[#993351] hover:text-[#B34766] focus:underline focus:text-[#993351] active:text-[#731F39] disabled:text-[#D3A9B6] disabled:cursor-not-allowed"
         border_classes = "border border-[#993351] hover:border-[#B34766] active:border-[#731F39] disabled:border-[#D3A9B6]"
-        "#{base_classes} #{size_classes} #{state_classes} #{border_classes}"
+        [ base_classes, size_classes, state_classes, border_classes, @html_options[:class] ].reject(&:blank?).join(" ")
       end
     end
   end
