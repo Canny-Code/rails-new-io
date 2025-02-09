@@ -37,7 +37,7 @@
       }
     ],
     actions: [ :view ],
-    secondary_actions: [
+    secondary_actions:  @generated_apps.any? ? [
       render(Buttons::Primary::Component.new(
         text: "My Ingredients",
         path: ingredients_path,
@@ -50,6 +50,6 @@
         icon: false,
         html_options: { data: { turbo_frame: "_top" } }
       ))
-    ]
+    ] : nil
   ) %>
 <% end %>
