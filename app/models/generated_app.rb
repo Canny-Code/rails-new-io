@@ -150,29 +150,14 @@ class GeneratedApp < ApplicationRecord
         raise "Template file not found: #{template_path}"
       end
 
-      require "rails/generators"
-      require "rails/generators/rails/app/app_generator"
+      command = "bin/rails app:template LOCATION=#{template_path}"
+      CommandExecutionService.new(self, @logger, command).execute
 
-      git_service.in_working_directory do
-        Rails.application.config.generators.templates += [ File.dirname(template_path) ]
-
-        generator = Rails::Generators::AppGenerator.new(
-          [ "." ],
-          template: template_path,
-          force: true,
-          quiet: true,
-          pretend: false,
-          **configuration.symbolize_keys
-        )
-
-        generator.apply(template_path)
-
-        # Ensure Gemfile changes are flushed to disk
-        if File.exist?("Gemfile")
-          File.open("Gemfile", "r+") do |f|
-            f.flush
-            f.fsync
-          end
+      # Ensure Gemfile changes are flushed to disk
+      if File.exist?("Gemfile")
+        File.open("Gemfile", "r+") do |f|
+          f.flush
+          f.fsync
         end
       end
     end
