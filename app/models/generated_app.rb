@@ -116,11 +116,6 @@ class GeneratedApp < ApplicationRecord
     app_directory_path = File.join(workspace_path, name)
     ENV["BUNDLE_GEMFILE"] = File.join(app_directory_path, "Gemfile")
 
-    git_service = LocalGitService.new(
-      working_directory: app_directory_path,
-      logger: @logger
-    )
-
     # Verify Bundler environment
     unless File.exist?(ENV["BUNDLE_GEMFILE"])
       @logger.error("Bundler environment not properly set", {
@@ -130,43 +125,44 @@ class GeneratedApp < ApplicationRecord
       raise "Bundler environment not properly set"
     end
 
-    transaction do
-      recipe_change = recipe.recipe_changes.create!(
-        ingredient: ingredient,
-        change_type: "add_ingredient",
-        change_data: { configuration: configuration }
-      )
+    recipe_change = recipe.recipe_changes.create!(
+      ingredient: ingredient,
+      change_type: "add_ingredient",
+      change_data: { configuration: configuration }
+    )
 
-      # Create AppChange linked to the RecipeChange
-      app_changes.create!(
-        recipe_change: recipe_change,
-        configuration: configuration
-      )
+    # Create AppChange linked to the RecipeChange
+    app_changes.create!(
+      recipe_change: recipe_change,
+      configuration: configuration
+    )
 
-      template_path = DataRepositoryService.new(user:).template_path(ingredient)
+    template_path = DataRepositoryService.new(user:).template_path(ingredient)
 
-      unless File.exist?(template_path)
-        @logger.error("Template file not found", { path: template_path })
-        raise "Template file not found: #{template_path}"
-      end
+    unless File.exist?(template_path)
+      @logger.error("Template file not found", { path: template_path })
+      raise "Template file not found: #{template_path}"
+    end
 
-      command = "bin/rails app:template LOCATION=#{template_path}"
-      CommandExecutionService.new(self, @logger, command).execute
+    command = "rails app:template LOCATION=#{template_path}"
+    CommandExecutionService.new(self, @logger, command).execute
 
-      # Ensure Gemfile changes are flushed to disk
-      if File.exist?("Gemfile")
-        File.open("Gemfile", "r+") do |f|
-          f.flush
-          f.fsync
-        end
+    # Ensure Gemfile changes are flushed to disk
+    if File.exist?("Gemfile")
+      File.open("Gemfile", "r+") do |f|
+        f.flush
+        f.fsync
       end
     end
   rescue StandardError => e
+    original_metadata = e.respond_to?(:metadata) ? e.metadata : {}
+
     @logger.error("Failed to apply ingredient", {
       error: e.message,
       backtrace: e.backtrace.first(20),
       pwd: Dir.pwd,
-      gemfile: ENV["BUNDLE_GEMFILE"]
+      gemfile: ENV["BUNDLE_GEMFILE"],
+      **original_metadata
     })
     raise
   end

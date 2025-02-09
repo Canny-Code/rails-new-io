@@ -4,12 +4,12 @@ require "timeout"
 class CommandExecutionService
   ALLOWED_COMMANDS = [
     "rails new",
-    "bin/rails app:template"
+    "rails app:template"
   ].freeze
 
   TEMPLATE_COMMAND_PATTERN = %r{\A
-    bin/rails\s+app:template\s+
-    LOCATION=(?:lib/templates/[a-zA-Z0-9_\-/.]+\.rb)
+    rails\s+app:template\s+
+    LOCATION=.+/template\.rb
   \z}x
 
   COMMAND_PATTERN = /\A
@@ -48,7 +48,14 @@ class CommandExecutionService
   VALID_OPTIONS = /\A--?[a-z][\w-]*\z/  # Must start with letter after dash(es)
   MAX_TIMEOUT = 300 # 5 minutes
 
-  class InvalidCommandError < StandardError; end
+  class InvalidCommandError < StandardError
+    attr_reader :metadata
+
+    def initialize(message, metadata = {})
+      super(message)
+      @metadata = metadata
+    end
+  end
 
   def initialize(generated_app, logger, command = nil)
     @generated_app = generated_app
@@ -90,7 +97,7 @@ class CommandExecutionService
     case command_type
     when "rails new"
       validate_rails_new_command
-    when "bin/rails app:template"
+    when "rails app:template"
       validate_template_command
     end
 
@@ -103,8 +110,8 @@ class CommandExecutionService
       @logger.info("Created temporary directory", { path: @temp_dir })
       @generated_app.update(workspace_path: @temp_dir)
     else
-      @temp_dir = @generated_app.workspace_path
-      @logger.info("Using existing app directory", { path: @temp_dir })
+      generated_app_directory = File.join(@generated_app.workspace_path, @generated_app.name)
+      @logger.info("Using existing app directory", { path: generated_app_directory })
     end
   end
 
@@ -205,8 +212,9 @@ class CommandExecutionService
 
   def validate_template_command
     unless @command.match?(TEMPLATE_COMMAND_PATTERN)
-      @logger.error("Invalid template command format", { command: @command })
-      raise InvalidCommandError, "Invalid template command format"
+      metadata = { command: @command }
+      @logger.error("Invalid template command format", metadata)
+      raise InvalidCommandError.new("Invalid template command format", metadata)
     end
   end
 end
