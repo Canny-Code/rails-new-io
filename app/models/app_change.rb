@@ -48,10 +48,9 @@ class AppChange < ApplicationRecord
         File.write(template_path, content)
 
         command = "bin/rails app:template LOCATION=#{template_path}"
-        execution = CommandExecutionService.new(generated_app, command)
 
         begin
-          execution.execute
+          CommandExecutionService.new(generated_app, command).execute
           update!(
             applied_at: Time.current,
             success: true,

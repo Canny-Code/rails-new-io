@@ -1,16 +1,35 @@
 require "open3"
 require "timeout"
+require "fileutils"
 
 class CommandExecutionService
   ALLOWED_COMMANDS = [
     "rails new",
-    "rails app:template"
+    "rails app:template",
+    "bundle install"
   ].freeze
 
   TEMPLATE_COMMAND_PATTERN = %r{\A
     rails\s+app:template\s+
     LOCATION=.+/template\.rb
   \z}x
+
+  BUNDLE_INSTALL_PATTERN = /\A
+    bundle\s+install    # Command start
+    (?:
+      \s+
+      (?:
+        # Common bundle install options
+        --(?:
+          jobs|retry|path|gemfile|system|deployment|
+          local|frozen|clean|standalone|full-index|
+          conservative|force|prefer-local
+        )
+        (?:=[\w\/.=-]+)?
+        \s*
+      )*
+    )?
+  \z/x
 
   COMMAND_PATTERN = /\A
   rails\s+new\s+                    # Command start
@@ -61,8 +80,14 @@ class CommandExecutionService
     @generated_app = generated_app
     @logger = logger
     @command = command&.to_s&.strip || generated_app.command
-    @temp_dir = nil
+    @work_dir = nil
     @pid = nil
+
+    # Add --skip-bundle to rails new commands
+    if @command.start_with?("rails new") && !@command.include?("--skip-bundle")
+      @command = "#{@command} --skip-bundle"
+    end
+
     validate_command!
   end
 
@@ -79,7 +104,7 @@ class CommandExecutionService
   private
 
   def validate_command!
-    @logger.info("Validating command: #{@command}")
+    @logger.debug("Validating command: #{@command}")
 
     command_type = ALLOWED_COMMANDS.find { |cmd| @command.start_with?(cmd) }
     unless command_type
@@ -99,64 +124,107 @@ class CommandExecutionService
       validate_rails_new_command
     when "rails app:template"
       validate_template_command
+    when "bundle install"
+      validate_bundle_install_command
     end
 
-    @logger.info("Command validation successful", { command: @command })
+    @logger.debug("Command validation successful", { command: @command })
   end
 
   def setup_environment
     if @command.start_with?("rails new")
-      @temp_dir = Dir.mktmpdir
-      @logger.info("Created temporary directory", { path: @temp_dir })
-      @generated_app.update(workspace_path: @temp_dir)
+      @work_dir = Dir.mktmpdir
+      @logger.debug("Created temporary directory", { path: @work_dir })
+      @generated_app.update(workspace_path: @work_dir)
     else
-      generated_app_directory = File.join(@generated_app.workspace_path, @generated_app.name)
-      @logger.info("Using existing app directory", { path: generated_app_directory })
+      @logger.debug("Using existing app directory", { path: @work_dir })
+      @work_dir = File.join(@generated_app.workspace_path, @generated_app.name)
     end
   end
 
   def run_isolated_process
-    @logger.info("Preparing to execute command", { command: @command, directory: @temp_dir })
+    @logger.debug("Preparing to execute command", { command: @command, directory: @work_dir })
     log_system_environment_details
 
     env = {
-      "BUNDLE_GEMFILE" => nil,
-      "BUNDLE_PATH" => File.join(@temp_dir, "vendor/bundle"),
-      "BUNDLE_APP_CONFIG" => File.join(@temp_dir, ".bundle"),
-      "RAILS_ENV" => "development",
-      "NODE_ENV" => "development",
-      "PATH" => ENV["PATH"]
+      "RAILS_ENV" => Rails.env,
+      "NODE_ENV" => Rails.env,
+      "PATH" => ENV["PATH"],
+      "HOME" => @work_dir
     }
+
+    if @command.start_with?("rails new")
+      env.merge!({
+        "BUNDLE_GEMFILE" => nil,
+        "BUNDLE_PATH" => nil,
+        "BUNDLE_APP_CONFIG" => nil,
+        "BUNDLE_BIN" => nil,
+        "BUNDLE_USER_HOME" => nil
+      })
+    else
+      env.merge!({
+        "BUNDLE_GEMFILE" => File.join(@work_dir, "Gemfile"),
+        "BUNDLE_JOBS" => "4",
+        "BUNDLE_RETRY" => "3",
+        "PATH" => "#{File.join(@work_dir, 'bin')}:#{ENV['PATH']}"
+      })
+    end
+
+    bundle_command = @command.include?("app:template") ? @command.sub("rails", "./bin/rails") : @command
+    puts "DEBUG: Using command: #{bundle_command}"
 
     log_environment_variables_for_command_execution(env)
 
     buffer = Buffer.new(@generated_app)
 
-    Open3.popen3(env, @command, chdir: @temp_dir) do |stdin, stdout, stderr, wait_thr|
+    puts "DEBUG: About to execute command with Open3"
+    puts "DEBUG: Command: #{bundle_command}"
+    puts "DEBUG: Working directory: #{@work_dir}"
+    puts "DEBUG: Environment: #{env.inspect}"
+
+    Open3.popen3(env, bundle_command, chdir: @work_dir) do |stdin, stdout, stderr, wait_thr|
       @pid = wait_thr&.pid
-      @logger.info("Rails app generation process started", { pid: @pid })
+      @logger.debug("Process started", {
+          pid: @pid,
+          command: @command,
+          directory: @work_dir
+      })
+
+      puts "DEBUG: Process started with PID: #{@pid}"
 
       stdout_thread = Thread.new do
         stdout.each_line do |line|
+          puts "DEBUG: STDOUT: #{line.strip}"
           buffer.append(line.strip)
         end
       end
 
-      stdout_thread.join
+      stderr_thread = Thread.new do
+        stderr.each_line do |line|
+          puts "DEBUG: STDERR: #{line.strip}"
+        end
+      end
 
+      stdout_thread.join
+      stderr_thread.join
       buffer.complete!
+
       exit_status = wait_thr&.value
       output = buffer.message || "No output"
+
+      puts "DEBUG: Process completed with exit status: #{exit_status.inspect}"
+      puts "DEBUG: Exit status success?: #{exit_status&.success?}"
+      puts "DEBUG: Final buffer output: #{output}"
 
       unless exit_status&.success?
         @logger.error("Command failed", {
           status: exit_status,
           output: output
         })
-        raise "Rails app generation failed with status: #{exit_status}"
+        raise "Command failed with status: #{exit_status}"
       end
 
-      @temp_dir
+      @work_dir
     end
   end
 
@@ -173,7 +241,7 @@ class CommandExecutionService
   end
 
   def log_system_environment_details
-    @logger.info("System environment details", {
+    @logger.debug("System environment details", {
       ruby_version: RUBY_VERSION,
       ruby_platform: RUBY_PLATFORM,
       rails_version: Rails.version,
@@ -186,9 +254,9 @@ class CommandExecutionService
   end
 
   def log_environment_variables_for_command_execution(env)
-    @logger.info("Environment variables for command execution", {
+    @logger.debug("Environment variables for command execution", {
       command: @command,
-      directory: @temp_dir,
+      directory: @work_dir,
       env: env
     })
   end
@@ -215,6 +283,13 @@ class CommandExecutionService
       metadata = { command: @command }
       @logger.error("Invalid template command format", metadata)
       raise InvalidCommandError.new("Invalid template command format", metadata)
+    end
+  end
+
+  def validate_bundle_install_command
+    unless @command.match?(BUNDLE_INSTALL_PATTERN)
+      @logger.error("Invalid bundle install command format", { command: @command })
+      raise InvalidCommandError, "Invalid bundle install command format"
     end
   end
 end
