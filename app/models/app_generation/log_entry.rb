@@ -37,7 +37,7 @@ module AppGeneration
         partial: "app_generation/log_entries/log_entry",
         locals: { log_entry: self }
       )
-    }, on: :create
+    }, on: :create, if: -> { level != "debug" }
 
     after_commit -> {
       stream_name = "#{generated_app.to_gid}:app_generation_log_entries"
@@ -47,11 +47,11 @@ module AppGeneration
         partial: "app_generation/log_entries/log_entry",
         locals: { log_entry: self }
       )
-    }, on: :update
+    }, on: :update, if: -> { level != "debug" }
 
     belongs_to :generated_app
 
-    enum :level, %w[ info warn error ].map { |level| [ level, level.to_s ] }.to_h
+    enum :level, %w[ info warn error debug ].map { |level| [ level, level.to_s ] }.to_h
     enum :phase, AppStatus.states.map { |state| [ state, state.to_s ] }.to_h
 
     validates :message, presence: true
