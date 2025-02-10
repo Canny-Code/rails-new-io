@@ -26,6 +26,17 @@ module AppGeneration
       })
     end
 
+    def install_dependencies
+      @logger.info("Installing app dependencies")
+      @command_execution_service = CommandExecutionService.new(
+        @generated_app,
+        @logger,
+        "bundle install"
+      )
+      @command_execution_service.execute
+      @logger.info("Dependencies installed successfully")
+    end
+
     def create_initial_commit
       @logger.info("Creating initial commit")
       @repository_service.create_initial_commit

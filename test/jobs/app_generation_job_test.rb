@@ -37,6 +37,7 @@ class AppGenerationJobTest < ActiveSupport::TestCase
     orchestrator.expects(:generate_rails_app)
     orchestrator.expects(:create_initial_commit)
     orchestrator.expects(:apply_ingredients)
+    orchestrator.expects(:install_dependencies)
     orchestrator.expects(:push_to_remote)
     orchestrator.expects(:start_ci)
     orchestrator.expects(:complete_generation)

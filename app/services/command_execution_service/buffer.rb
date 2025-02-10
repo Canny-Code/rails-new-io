@@ -2,8 +2,9 @@ class CommandExecutionService
   class Buffer
     FLUSH_INTERVAL = 1.second
 
-    def initialize(generated_app)
+    def initialize(generated_app, command)
       @generated_app = generated_app
+      @command = command
       @mutex = Mutex.new
       @output = []
       @log_entry = create_initial_log_entry
@@ -58,7 +59,7 @@ class CommandExecutionService
       AppGeneration::LogEntry.create!(
         generated_app: @generated_app,
         level: :info,
-        message: "Initializing Rails application generation...",
+        message: "Executing command: `#{@command}`",
         metadata: { stream: :stdout, is_rails_output: true },
         phase: @generated_app.status,
         entry_type: "rails_output"
