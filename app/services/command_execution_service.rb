@@ -171,16 +171,10 @@ class CommandExecutionService
     end
 
     bundle_command = @command.include?("app:template") ? @command.sub("rails", "./bin/rails") : @command
-    puts "DEBUG: Using command: #{bundle_command}"
 
     log_environment_variables_for_command_execution(env)
 
     buffer = Buffer.new(@generated_app, bundle_command)
-
-    puts "DEBUG: About to execute command with Open3"
-    puts "DEBUG: Command: #{bundle_command}"
-    puts "DEBUG: Working directory: #{@work_dir}"
-    puts "DEBUG: Environment: #{env.inspect}"
 
     Open3.popen3(env, bundle_command, chdir: @work_dir) do |stdin, stdout, stderr, wait_thr|
       @pid = wait_thr&.pid
@@ -190,31 +184,24 @@ class CommandExecutionService
           directory: @work_dir
       })
 
-      puts "DEBUG: Process started with PID: #{@pid}"
-
       stdout_thread = Thread.new do
         stdout.each_line do |line|
-          puts "DEBUG: STDOUT: #{line.strip}"
           buffer.append(line.strip)
         end
       end
 
-      stderr_thread = Thread.new do
-        stderr.each_line do |line|
-          puts "DEBUG: STDERR: #{line.strip}"
-        end
-      end
+      # stderr_thread = Thread.new do
+      #   stderr.each_line do |line|
+      #     puts "DEBUG: STDERR: #{line.strip}"
+      #   end
+      # end
 
       stdout_thread.join
-      stderr_thread.join
+      # stderr_thread.join
       buffer.complete!
 
       exit_status = wait_thr&.value
       output = buffer.message || "No output"
-
-      puts "DEBUG: Process completed with exit status: #{exit_status.inspect}"
-      puts "DEBUG: Exit status success?: #{exit_status&.success?}"
-      puts "DEBUG: Final buffer output: #{output}"
 
       unless exit_status&.success?
         @logger.error("Command failed", {
