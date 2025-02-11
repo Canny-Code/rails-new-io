@@ -8,7 +8,7 @@ gem "bootsnap", require: false
 gem "faraday-retry", "~> 2.2.1"
 gem "friendly_id", "~> 5.5.1"
 gem "kamal", "~> 2.5.0", require: false
-gem "thruster", "~> 0.1.10", require: false
+gem "thruster", "~> 0.1.11", require: false
 gem "mission_control-jobs", "~> 1.0.1"
 gem "noticed", "~> 2.6.0"
 gem "litestream", "~> 0.12.0"
