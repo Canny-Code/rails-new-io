@@ -21,11 +21,15 @@ class CommandExecutionService
       (?:
         # Common bundle install options
         --(?:
-          jobs|retry|path|gemfile|system|deployment|
+          jobs|retry|gemfile|system|deployment|
           local|frozen|clean|standalone|full-index|
           conservative|force|prefer-local
         )
-        (?:=[\w\/.=-]+)?
+        (?:=\d+)?
+        \s*
+        |
+        # Path option with restricted values
+        --path(?:=|\s+)(?!.*\.\.)[a-zA-Z0-9][a-zA-Z0-9_\/-]*
         \s*
       )*
     )?
@@ -87,11 +91,11 @@ class CommandExecutionService
     if @command.start_with?("rails new") && !@command.include?("--skip-bundle")
       @command = "#{@command} --skip-bundle"
     end
-
-    validate_command!
   end
 
   def execute
+    validate_command!
+
     setup_environment
 
     Timeout.timeout(MAX_TIMEOUT) do
@@ -106,26 +110,35 @@ class CommandExecutionService
   def validate_command!
     @logger.debug("Validating command: #{@command}")
 
-    command_type = ALLOWED_COMMANDS.find { |cmd| @command.start_with?(cmd) }
+    command_type = ALLOWED_COMMANDS.find do |cmd|
+      @command.start_with?(cmd)
+    end
     unless command_type
-      @logger.error("Invalid command prefix", { command: @command })
+      @logger.error("Command must start with one of: #{ALLOWED_COMMANDS.join(', ')}", { command: @command })
       raise InvalidCommandError, "Command must start with one of: #{ALLOWED_COMMANDS.join(', ')}"
     end
 
     # Check for command injection attempts
     if @command.match?(/[;&|]/)
       @logger.error("Command injection attempt detected", { command: @command })
-      raise InvalidCommandError, "Command contains invalid characters"
+      raise InvalidCommandError, "Command injection attempt detected"
     end
 
-    # Validate based on command type
-    case command_type
-    when "rails new"
-      validate_rails_new_command
-    when "rails app:template"
-      validate_template_command
-    when "bundle install"
-      validate_bundle_install_command
+    begin
+      # Validate based on command type
+      case command_type
+      when "rails new"
+        validate_rails_new_command
+      when "rails app:template"
+        validate_template_command
+      when "bundle install"
+        validate_bundle_install_command
+      end
+    rescue InvalidCommandError => e
+      # If we get here, it means the command passed the initial check but failed format validation
+      # Re-raise the error with the original message
+      @logger.error(e.message, { command: @command })
+      raise
     end
 
     @logger.debug("Command validation successful", { command: @command })

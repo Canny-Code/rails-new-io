@@ -48,16 +48,22 @@ module AppGeneration
       }).in_sequence(sequence)
       @logger.expects(:info).with("Applying ingredients", { count: 2 }).in_sequence(sequence)
       @logger.expects(:info).with("All ingredients applied successfully").in_sequence(sequence)
-
+      @logger.expects(:info).with("Installing app dependencies").in_sequence(sequence)
+      @logger.expects(:info).with("Dependencies installed successfully").in_sequence(sequence)
       # Mock repository service
       repository_service = mock("repository_service")
       repository_service.expects(:create_github_repository).once.returns(true)
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
-      # Mock command execution
+      # Mock command execution for rails new
       command_service = mock("command_service")
       command_service.expects(:execute).once.returns(true)
       CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
+
+      # Mock command execution for bundle install
+      command_service_bundle_install = mock("command_service_bundle_install")
+      command_service_bundle_install.expects(:execute).once.returns(true)
+      CommandExecutionService.expects(:new).with(@generated_app, @logger, "bundle install").returns(command_service_bundle_install)
 
       # Mock template path verification
       data_repository = mock("data_repository")
@@ -91,6 +97,7 @@ module AppGeneration
       @orchestrator.create_github_repository
       @orchestrator.generate_rails_app
       @orchestrator.apply_ingredients
+      @orchestrator.install_dependencies
 
       assert_equal "applying_ingredients", @generated_app.status
     end
@@ -681,18 +688,37 @@ module AppGeneration
       @logger = AppGeneration::Logger.new(@generated_app.app_status)
       @generated_app.logger = @logger
 
-      # Mock all services to just return true
+      # Clean up any existing ingredients and add test ingredients
+      @generated_app.recipe.recipe_ingredients.destroy_all
+      ingredient1 = ingredients(:rails_authentication)
+      ingredient2 = ingredients(:api_setup)
+      @generated_app.recipe.add_ingredient!(ingredient1)
+      @generated_app.recipe.add_ingredient!(ingredient2)
+
+      # Mock repository service
       repository_service = mock("repository_service")
       repository_service.stubs(:create_github_repository).returns(true)
-      repository_service.stubs(:commit_changes_after_applying_ingredient).returns(true)
       repository_service.stubs(:create_initial_commit).returns(true)
       repository_service.stubs(:push_to_remote).returns(true)
+
+      # Set up ingredient application sequence
+      ingredient_sequence = sequence("ingredient_application")
+      @generated_app.expects(:apply_ingredient).with(ingredient1).returns(true).in_sequence(ingredient_sequence)
+      repository_service.expects(:commit_changes_after_applying_ingredient).with(ingredient1).returns(true).in_sequence(ingredient_sequence)
+      @generated_app.expects(:apply_ingredient).with(ingredient2).returns(true).in_sequence(ingredient_sequence)
+      repository_service.expects(:commit_changes_after_applying_ingredient).with(ingredient2).returns(true).in_sequence(ingredient_sequence)
+
       AppRepositoryService.stubs(:new).returns(repository_service)
       @generated_app.stubs(:repository_service).returns(repository_service)
 
       command_service = mock("command_service")
       command_service.stubs(:execute).returns(true)
       CommandExecutionService.stubs(:new).returns(command_service)
+
+      # Mock bundle install command service
+      command_service_bundle_install = mock("command_service_bundle_install")
+      command_service_bundle_install.stubs(:execute).returns(true)
+      CommandExecutionService.stubs(:new).with(@generated_app, @logger, "bundle install").returns(command_service_bundle_install)
 
       github_service = mock("github_service")
       github_service.stubs(:commit_changes).returns(true)
@@ -706,20 +732,6 @@ module AppGeneration
       local_git_service.stubs(:commit_changes_after_applying_ingredient).returns(true)
       LocalGitService.stubs(:new).returns(local_git_service)
 
-      # Mock Rails generator
-      require "rails/generators"
-      require "rails/generators/rails/app/app_generator"
-      generator = mock("generator")
-      generator.stubs(:apply).returns(true)
-      Rails::Generators::AppGenerator.stubs(:new).returns(generator)
-
-      # Clean up any existing ingredients and add test ingredients
-      @generated_app.recipe.recipe_ingredients.destroy_all
-      ingredient1 = ingredients(:rails_authentication)
-      ingredient2 = ingredients(:api_setup)
-      @generated_app.recipe.add_ingredient!(ingredient1)
-      @generated_app.recipe.add_ingredient!(ingredient2)
-
       File.stubs(:exist?).returns(false)
       File.stubs(:exist?).with("path/to/template.rb").returns(true)
       # Mock the Gemfile existence check
@@ -732,12 +744,14 @@ module AppGeneration
       @orchestrator.generate_rails_app
       @orchestrator.create_initial_commit
       @orchestrator.apply_ingredients
+      @orchestrator.install_dependencies
       @orchestrator.push_to_remote
       @orchestrator.start_ci
       @orchestrator.complete_generation
 
       # Verify log entries and their icons
       entries = @generated_app.log_entries.order(:created_at)
+      binding.irb
 
       # Starting workflow
       assert_match(/🛤️ 🏗️ 🔄 Starting app generation workflow/, entries[0].decorated_message)
@@ -771,15 +785,19 @@ module AppGeneration
       # All ingredients completed
       assert_match(/🍱 🏗️ ✅ All ingredients applied successfully/, entries[13].decorated_message)
 
+      # Installing dependencies
+      assert_match(/📦 🏗️ 🔄 Installing app dependencies/, entries[14].decorated_message)
+      assert_match(/📦 🏗️ ✅ Dependencies installed successfully/, entries[15].decorated_message)
+
       # Push to remote
-      assert_match(/🐙 ⬆️ 🔄 Starting GitHub push/, entries[14].decorated_message)
-      assert_match(/🐙 ⬆️ ✅ GitHub push completed successfully/, entries[15].decorated_message)
+      assert_match(/🐙 ⬆️ 🔄 Starting GitHub push/, entries[16].decorated_message)
+      assert_match(/🐙 ⬆️ ✅ GitHub push completed successfully/, entries[17].decorated_message)
 
       # CI run
-      assert_match(/🐙 ⚙️ 🔄 Starting CI run/, entries[16].decorated_message)
+      assert_match(/🐙 ⚙️ 🔄 Starting CI run/, entries[18].decorated_message)
 
       # Generation completed
-      assert_match(/🛤️ 🏗️ ✅ App generation completed successfully/, entries[17].decorated_message)
+      assert_match(/🛤️ 🏗️ ✅ App generation completed successfully/, entries[19].decorated_message)
     end
   end
 end
