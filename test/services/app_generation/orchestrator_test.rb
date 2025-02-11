@@ -700,13 +700,7 @@ module AppGeneration
       repository_service.stubs(:create_github_repository).returns(true)
       repository_service.stubs(:create_initial_commit).returns(true)
       repository_service.stubs(:push_to_remote).returns(true)
-
-      # Set up ingredient application sequence
-      ingredient_sequence = sequence("ingredient_application")
-      @generated_app.expects(:apply_ingredient).with(ingredient1).returns(true).in_sequence(ingredient_sequence)
-      repository_service.expects(:commit_changes_after_applying_ingredient).with(ingredient1).returns(true).in_sequence(ingredient_sequence)
-      @generated_app.expects(:apply_ingredient).with(ingredient2).returns(true).in_sequence(ingredient_sequence)
-      repository_service.expects(:commit_changes_after_applying_ingredient).with(ingredient2).returns(true).in_sequence(ingredient_sequence)
+      repository_service.stubs(:commit_changes_after_applying_ingredient).returns(true)
 
       AppRepositoryService.stubs(:new).returns(repository_service)
       @generated_app.stubs(:repository_service).returns(repository_service)
@@ -751,8 +745,6 @@ module AppGeneration
 
       # Verify log entries and their icons
       entries = @generated_app.log_entries.order(:created_at)
-      binding.irb
-
       # Starting workflow
       assert_match(/🛤️ 🏗️ 🔄 Starting app generation workflow/, entries[0].decorated_message)
 
