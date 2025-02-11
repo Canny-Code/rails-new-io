@@ -42,7 +42,7 @@ end
 group :test do
   gem "capybara"
   gem "capybara-lockstep", "~> 2.2.2"
-  gem "minitest-difftastic", "~> 0.1.2"
+  gem "minitest-difftastic", "~> 0.2.1"
   gem "database_cleaner-active_record"
   gem "selenium-webdriver", "~> 4.28.0"
   gem "mocha", "~> 2.7.1"
