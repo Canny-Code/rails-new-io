@@ -69,6 +69,26 @@ class DataRepositoryService < GithubRepositoryService
     )
   end
 
+  def delete_ingredient(ingredient_name:, github_template_path:, loca_template_path:, repo_name:)
+    tree_items = []
+
+    # Mark file for deletion in the repository
+    tree_items << {
+      path: github_template_path,
+      mode: "100644",
+      type: "blob",
+      sha: nil # Setting SHA to nil marks it for deletion
+    }
+
+    File.delete(loca_template_path) if File.exist?(loca_template_path)
+
+    commit_changes(
+      repo_name:,
+      message: "Delete ingredient: #{ingredient_name}",
+      tree_items: tree_items
+    )
+  end
+
   def write_recipe(recipe, repo_name:)
     tree_items = []
 
