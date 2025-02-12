@@ -9,6 +9,7 @@ class AppGenerationJob < ApplicationJob
       workflow.step(:generate_rails_app)
       workflow.step(:create_initial_commit)
       workflow.step(:apply_ingredients)
+      workflow.step(:install_dependencies)
       workflow.step(:push_to_remote)
       workflow.step(:start_ci)
       workflow.step(:complete_generation)
@@ -24,6 +25,7 @@ class AppGenerationJob < ApplicationJob
 
   def create_github_repository = orchestrator.create_github_repository
   def generate_rails_app = orchestrator.generate_rails_app
+  def install_dependencies = orchestrator.install_dependencies
   def create_initial_commit = orchestrator.create_initial_commit
   def apply_ingredients = orchestrator.apply_ingredients
   def push_to_remote = orchestrator.push_to_remote

@@ -17,6 +17,10 @@ module AppGeneration
       create_entry(:error, message, metadata)
     end
 
+    def debug(message, metadata = {})
+      create_entry(:debug, message, metadata)
+    end
+
     private
 
     def create_entry(level, message, metadata)

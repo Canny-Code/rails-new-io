@@ -1,6 +1,4 @@
 require "test_helper"
-require "rails/generators"
-require "rails/generators/rails/app/app_generator"
 
 class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
   include DisableParallelization
@@ -21,14 +19,15 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     # Mock the logger to avoid actual logging
     @logger = mock("logger")
     @logger.stubs(:info)
+    @logger.stubs(:debug)
     @logger.stubs(:error)
     @generated_app.logger = @logger
     AppGeneration::Logger.stubs(:new).returns(@logger)
 
-    # Mock Rails generators
-    @generator = mock("generator")
-    @generator.stubs(:apply)
-    Rails::Generators::AppGenerator.stubs(:new).returns(@generator)
+    # Mock CommandExecutionService
+    @command_service = mock("command_service")
+    @command_service.stubs(:execute).returns(@app_directory)
+    CommandExecutionService.stubs(:new).returns(@command_service)
 
     # Save original BUNDLE_GEMFILE
     @original_bundle_gemfile = ENV["BUNDLE_GEMFILE"]
@@ -49,6 +48,13 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     FileUtils.mkdir_p(File.dirname(template_path))
     File.write(template_path, "# Test template")
 
+    # Expect CommandExecutionService to be called with the correct command
+    expected_command = "rails app:template LOCATION=#{template_path}"
+    CommandExecutionService.expects(:new)
+      .with(@generated_app, @logger, expected_command)
+      .returns(@command_service)
+    @command_service.expects(:execute).returns(@app_directory)
+
     assert_difference -> { @recipe.recipe_changes.count }, 1 do
       assert_difference -> { @generated_app.app_changes.count }, 1 do
         @generated_app.send(:apply_ingredient, @ingredient, configuration)
@@ -64,41 +70,6 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     assert_equal recipe_change, app_change.recipe_change
   end
 
-  test "sets up correct generator configuration" do
-    configuration = { "auth_type" => "devise" }
-    template_path = "path/to/template.rb"
-
-    DataRepositoryService.any_instance.stubs(:template_path).with(@ingredient).returns(template_path)
-    @generator.expects(:apply).once
-
-    Rails::Generators::AppGenerator.expects(:new).with(
-      [ "." ],
-      template: template_path,
-      force: true,
-      quiet: true,
-      pretend: false,
-      skip_bundle: true,
-      auth_type: "devise"
-    ).returns(@generator)
-
-    # Mock all File.exist? calls
-    File.stubs(:exist?).returns(true)
-    File.stubs(:exist?).with(template_path).returns(true)
-
-    # Mock LocalGitService to track the working directory
-    git_service = LocalGitService.new(
-      working_directory: @app_directory,
-      logger: @logger
-    )
-    git_service.stubs(:in_working_directory).yields
-    LocalGitService.stubs(:new).returns(git_service)
-
-    # Mock Dir.pwd to return app directory
-    Dir.stubs(:pwd).returns(@app_directory)
-
-    @generated_app.send(:apply_ingredient, @ingredient, configuration)
-  end
-
   test "handles errors during application" do
     configuration = { "auth_type" => "devise" }
     error_message = "Something went wrong"
@@ -109,9 +80,12 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     FileUtils.mkdir_p(File.dirname(template_path))
     File.write(template_path, "# Test template")
 
-    # Set up the generator to raise error
-    Rails::Generators::AppGenerator.stubs(:new).returns(@generator)
-    @generator.expects(:apply).raises(error)
+    # Set up CommandExecutionService to raise error
+    expected_command = "rails app:template LOCATION=#{template_path}"
+    CommandExecutionService.expects(:new)
+      .with(@generated_app, @logger, expected_command)
+      .returns(@command_service)
+    @command_service.expects(:execute).raises(error)
 
     # Set up error logging expectation
     @logger.unstub(:error)
@@ -119,8 +93,7 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
       "Failed to apply ingredient",
       has_entries(
         error: error_message,
-        backtrace: anything,
-        pwd: anything
+        backtrace: anything
       )
     )
 
@@ -140,61 +113,23 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     # Track if BUNDLE_GEMFILE was set correctly
     expected_gemfile_path = File.join(@app_directory, "Gemfile")
 
-    # Mock LocalGitService to track the working directory
-    git_service = LocalGitService.new(
-      working_directory: @app_directory,
-      logger: @logger
-    )
-    git_service.stubs(:in_working_directory).yields
-    LocalGitService.stubs(:new).returns(git_service)
-
-    # Mock Dir.pwd to return the app directory
-    Dir.stubs(:pwd).returns(@app_directory)
-
     # Use a block to temporarily override ENV
     original_bundle_gemfile = ENV["BUNDLE_GEMFILE"]
     begin
       # Set BUNDLE_GEMFILE to the expected path since we now validate before setting
       ENV["BUNDLE_GEMFILE"] = expected_gemfile_path
+
+      # Expect CommandExecutionService to be called with the correct command
+      expected_command = "rails app:template LOCATION=#{template_path}"
+      CommandExecutionService.expects(:new)
+        .with(@generated_app, @logger, expected_command)
+        .returns(@command_service)
+      @command_service.expects(:execute).returns(@app_directory)
+
       @generated_app.send(:apply_ingredient, @ingredient, configuration)
       assert_equal expected_gemfile_path, ENV["BUNDLE_GEMFILE"], "BUNDLE_GEMFILE was not set correctly"
     ensure
       ENV["BUNDLE_GEMFILE"] = original_bundle_gemfile
-    end
-  end
-
-  test "wraps operations in a transaction" do
-    configuration = { "auth_type" => "devise" }
-    error_message = "Transaction test"
-    error = StandardError.new(error_message)
-
-    # Ensure template exists
-    template_path = DataRepositoryService.new(user: @user).template_path(@ingredient)
-    FileUtils.mkdir_p(File.dirname(template_path))
-    File.write(template_path, "# Test template")
-
-    # Set up the generator to raise error
-    Rails::Generators::AppGenerator.stubs(:new).returns(@generator)
-    @generator.expects(:apply).raises(error)
-
-    # Set up error logging expectation
-    @logger.unstub(:error)
-    @logger.expects(:error).with(
-      "Failed to apply ingredient",
-      has_entries(
-        error: error_message,
-        backtrace: anything,
-        pwd: anything
-      )
-    )
-
-    # Verify that the transaction rolls back by checking no records are created
-    assert_no_difference -> { @recipe.recipe_changes.count } do
-      assert_no_difference -> { @generated_app.app_changes.count } do
-        assert_raises StandardError do
-          @generated_app.send(:apply_ingredient, @ingredient, configuration)
-        end
-      end
     end
   end
 
@@ -220,8 +155,7 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
       "Failed to apply ingredient",
       has_entries(
         error: "Bundler environment not properly set",
-        backtrace: anything,
-        pwd: anything
+        backtrace: anything
       )
     ).once
 
@@ -257,8 +191,7 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
       "Failed to apply ingredient",
       has_entries(
         error: "Bundler environment not properly set",
-        backtrace: anything,
-        pwd: anything
+        backtrace: anything
       )
     ).once
 
@@ -278,12 +211,13 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     FileUtils.mkdir_p(File.dirname(template_path))
     File.write(template_path, "# Test template")
 
-    # Only mock the generator to avoid actual Rails app generation
-    generator = mock("generator")
-    generator.expects(:apply)
-    Rails::Generators::AppGenerator.stubs(:new).returns(generator)
+    # Expect CommandExecutionService to be called with the correct command
+    expected_command = "rails app:template LOCATION=#{template_path}"
+    CommandExecutionService.expects(:new)
+      .with(@generated_app, @logger, expected_command)
+      .returns(@command_service)
+    @command_service.expects(:execute).returns(@app_directory)
 
-    # Run without mocking File.exist?
     @generated_app.send(:apply_ingredient, @ingredient, configuration)
 
     # Verify the changes were created

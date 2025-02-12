@@ -34,7 +34,7 @@ class EmptyState::ComponentTest < PhlexComponentTestCase
     # Test link
     link = doc.css("a").first
     assert_equal "/items/new", link["href"]
-    assert_includes link["class"], "bg-[#ac3b61]"
+    assert_includes link["class"], "bg-[#993351]"
 
     # Test SVG
     svg = doc.css("svg").first
@@ -70,11 +70,8 @@ class EmptyState::ComponentTest < PhlexComponentTestCase
 
     doc = Nokogiri::HTML.fragment(result)
     link = doc.css("a").first
-    assert_includes link["class"], "hover:bg-[#993351]"
-    assert_includes link["class"], "focus-visible:outline"
-    assert_includes link["class"], "focus-visible:outline-2"
-    assert_includes link["class"], "focus-visible:outline-offset-2"
-    assert_includes link["class"], "focus-visible:outline-[#993351]"
+    assert_includes link["class"], "hover:bg-[#B34766]"
+    assert_includes link["class"], "focus:bg-[#802A44]"
   end
 
   private

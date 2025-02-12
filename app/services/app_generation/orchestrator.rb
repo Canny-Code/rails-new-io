@@ -26,6 +26,29 @@ module AppGeneration
       })
     end
 
+    def install_dependencies
+      @logger.info("Installing app dependencies")
+      CommandExecutionService.new(
+        @generated_app,
+        @logger,
+        "bundle install"
+      ).execute
+
+      # Add Linux platform for CI after everything is installed
+      gemfile_lock = File.join(@generated_app.workspace_path, @generated_app.name, "Gemfile.lock")
+      unless gemfile_lock.include?("x86_64-linux")
+        CommandExecutionService.new(
+          @generated_app,
+          @logger,
+          "bundle lock --add-platform x86_64-linux"
+          ).execute
+
+        @repository_service.commit_changes_after_gemfile_lock_update("Updating Gemfile.lock with CI platform")
+      end
+
+      @logger.info("Dependencies installed successfully")
+    end
+
     def create_initial_commit
       @logger.info("Creating initial commit")
       @repository_service.create_initial_commit
@@ -59,7 +82,7 @@ module AppGeneration
     def handle_error(error)
       @logger.error("App generation failed", {
         error: error.message,
-        backtrace: error.backtrace.join("\n")
+        backtrace: error.backtrace.join("<br>")
       })
 
       @generated_app.fail!(error.message) unless @generated_app.failed?

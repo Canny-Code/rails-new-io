@@ -3,6 +3,7 @@ image: canny-code/rails-new-io
 
 volumes:
   - "/storage:/rails/storage"
+  - "/home/deploy/rails-new-io/workspaces:/var/lib/rails-new-io/workspaces"
 
 ssh:
   user: deploy

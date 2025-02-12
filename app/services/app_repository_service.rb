@@ -54,6 +54,10 @@ class AppRepositoryService < GithubRepositoryService
     git_service.commit_changes(message: ingredient.to_commit_message)
   end
 
+  def commit_changes_after_gemfile_lock_update(message)
+    git_service.commit_changes(message:)
+  end
+
   private
 
   def git_service

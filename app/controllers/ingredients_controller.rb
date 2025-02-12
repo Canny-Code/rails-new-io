@@ -41,7 +41,8 @@ class IngredientsController < ApplicationController
   end
 
   def destroy
-    @ingredient.destroy
+    DeleteIngredientJob.perform_later(ingredient_id: @ingredient.id, user_id: current_user.id)
+
     redirect_to ingredients_url, notice: "Ingredient was successfully deleted."
   end
 

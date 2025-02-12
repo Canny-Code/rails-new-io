@@ -11,7 +11,8 @@ class CommandExecutionService::BufferTest < ActiveSupport::TestCase
       selected_gems: [],
       configuration_options: {}
     )
-    @buffer = CommandExecutionService::Buffer.new(@app)
+    @command = "rails new #{@app.name} -d postgres --skip-bundle"
+    @buffer = CommandExecutionService::Buffer.new(@app, @command)
     @initial_log_count = @app.log_entries.count
   end
 
@@ -21,7 +22,7 @@ class CommandExecutionService::BufferTest < ActiveSupport::TestCase
     @buffer.flush
 
     assert_equal @initial_log_count + 1, @app.log_entries.count
-    assert_equal "Initializing Rails application generation...\ntest output", @app.log_entries.last.message
+    assert_equal "Executing command: `#{@command}`\ntest output", @app.log_entries.last.message
     assert_equal "rails_output", @app.log_entries.last.entry_type
   end
 
@@ -32,7 +33,7 @@ class CommandExecutionService::BufferTest < ActiveSupport::TestCase
     @buffer.flush
 
     assert_equal @initial_log_count, @app.log_entries.count
-    assert_equal "Initializing Rails application generation...\nfirst line\nsecond line", @app.log_entries.last.message
+    assert_equal "Executing command: `#{@command}`\nfirst line\nsecond line", @app.log_entries.last.message
     assert_equal "rails_output", @app.log_entries.last.entry_type
   end
 end

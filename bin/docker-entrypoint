@@ -5,6 +5,10 @@ if [ -z "${LD_PRELOAD+x}" ] && [ -f /usr/lib/*/libjemalloc.so.2 ]; then
   export LD_PRELOAD="$(echo /usr/lib/*/libjemalloc.so.2)"
 fi
 
+# Ensure workspaces directory exists with correct permissions
+sudo mkdir -p /var/lib/rails-new-io/workspaces
+sudo chown rails:rails /var/lib/rails-new-io/workspaces
+
 # If running the rails server then create or migrate existing database
 if [ "${2}" == "./bin/rails" ] && [ "${3}" == "server" ]; then
   ./bin/rails db:prepare

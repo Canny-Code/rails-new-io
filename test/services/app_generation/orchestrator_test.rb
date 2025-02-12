@@ -48,16 +48,22 @@ module AppGeneration
       }).in_sequence(sequence)
       @logger.expects(:info).with("Applying ingredients", { count: 2 }).in_sequence(sequence)
       @logger.expects(:info).with("All ingredients applied successfully").in_sequence(sequence)
-
+      @logger.expects(:info).with("Installing app dependencies").in_sequence(sequence)
+      @logger.expects(:info).with("Dependencies installed successfully").in_sequence(sequence)
       # Mock repository service
       repository_service = mock("repository_service")
       repository_service.expects(:create_github_repository).once.returns(true)
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
-      # Mock command execution
+      # Mock command execution for rails new
       command_service = mock("command_service")
       command_service.expects(:execute).once.returns(true)
       CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
+
+      # Mock command execution for bundle install
+      command_service_bundle_install = mock("command_service_bundle_install")
+      command_service_bundle_install.expects(:execute).once.returns(true)
+      CommandExecutionService.expects(:new).with(@generated_app, @logger, "bundle install").returns(command_service_bundle_install)
 
       # Mock template path verification
       data_repository = mock("data_repository")
@@ -91,6 +97,7 @@ module AppGeneration
       @orchestrator.create_github_repository
       @orchestrator.generate_rails_app
       @orchestrator.apply_ingredients
+      @orchestrator.install_dependencies
 
       assert_equal "applying_ingredients", @generated_app.status
     end
@@ -681,18 +688,36 @@ module AppGeneration
       @logger = AppGeneration::Logger.new(@generated_app.app_status)
       @generated_app.logger = @logger
 
-      # Mock all services to just return true
+      # Clean up any existing ingredients and add test ingredients
+      @generated_app.recipe.recipe_ingredients.destroy_all
+      ingredient1 = ingredients(:rails_authentication)
+      ingredient2 = ingredients(:api_setup)
+      @generated_app.recipe.add_ingredient!(ingredient1)
+      @generated_app.recipe.add_ingredient!(ingredient2)
+
+      # Mock repository service
       repository_service = mock("repository_service")
       repository_service.stubs(:create_github_repository).returns(true)
-      repository_service.stubs(:commit_changes_after_applying_ingredient).returns(true)
       repository_service.stubs(:create_initial_commit).returns(true)
       repository_service.stubs(:push_to_remote).returns(true)
+      repository_service.stubs(:commit_changes_after_applying_ingredient).returns(true)
+
       AppRepositoryService.stubs(:new).returns(repository_service)
       @generated_app.stubs(:repository_service).returns(repository_service)
 
-      command_service = mock("command_service")
-      command_service.stubs(:execute).returns(true)
-      CommandExecutionService.stubs(:new).returns(command_service)
+      output = "Sample output"
+      error = "Sample error"
+
+      # Stub all Open3.popen3 calls for the entire test
+      Open3.stubs(:popen3).yields(
+        StringIO.new,
+        StringIO.new(output),
+        StringIO.new(error),
+        Data.define(:pid, :value).new(
+          pid: 12345,
+          value: Data.define(:success?).new(success?: true)
+        )
+      )
 
       github_service = mock("github_service")
       github_service.stubs(:commit_changes).returns(true)
@@ -706,20 +731,6 @@ module AppGeneration
       local_git_service.stubs(:commit_changes_after_applying_ingredient).returns(true)
       LocalGitService.stubs(:new).returns(local_git_service)
 
-      # Mock Rails generator
-      require "rails/generators"
-      require "rails/generators/rails/app/app_generator"
-      generator = mock("generator")
-      generator.stubs(:apply).returns(true)
-      Rails::Generators::AppGenerator.stubs(:new).returns(generator)
-
-      # Clean up any existing ingredients and add test ingredients
-      @generated_app.recipe.recipe_ingredients.destroy_all
-      ingredient1 = ingredients(:rails_authentication)
-      ingredient2 = ingredients(:api_setup)
-      @generated_app.recipe.add_ingredient!(ingredient1)
-      @generated_app.recipe.add_ingredient!(ingredient2)
-
       File.stubs(:exist?).returns(false)
       File.stubs(:exist?).with("path/to/template.rb").returns(true)
       # Mock the Gemfile existence check
@@ -732,13 +743,13 @@ module AppGeneration
       @orchestrator.generate_rails_app
       @orchestrator.create_initial_commit
       @orchestrator.apply_ingredients
+      @orchestrator.install_dependencies
       @orchestrator.push_to_remote
       @orchestrator.start_ci
       @orchestrator.complete_generation
 
       # Verify log entries and their icons
       entries = @generated_app.log_entries.order(:created_at)
-
       # Starting workflow
       assert_match(/🛤️ 🏗️ 🔄 Starting app generation workflow/, entries[0].decorated_message)
 
@@ -748,38 +759,76 @@ module AppGeneration
       # GitHub repo success
       assert_match(/🐙 🏗️ ✅ GitHub repo .+ created successfully/, entries[2].decorated_message)
 
+      assert_match(/🛤️ 🛡️ 🔄 Validating command/, entries[3].decorated_message)
+      assert_match(/🛤️ 🛡️ ✅ Command validation successful/, entries[4].decorated_message)
+      assert_match(/💻 📂 ✅ Created workspace directory/, entries[5].decorated_message)
+      assert_match(/💻 🛠️ ✅ Preparing to execute command/, entries[6].decorated_message)
+      assert_match(/💻 📈 🔍 System environment details/, entries[7].decorated_message)
+      assert_match(/💻 📈 🔍 Environment variables for command execution/, entries[8].decorated_message)
+
       # Rails app generation
-      assert_match(/🛤️ 🏗️ ✅ Rails app generation process/, entries[3].decorated_message)
+      assert_match(/Executing command: `rails new/, entries[9].decorated_message)
+      assert_match(/🛤️ 🏗️ 🔄 Command execution started/, entries[10].decorated_message)
+      assert_match(/🛤️ 🏗️ ✅ Rails app generation process finished successfully/, entries[11].decorated_message)
 
       # Initial commit creation
-      assert_match(/🐙 📝 🔄 Creating initial commit/, entries[4].decorated_message)
-      assert_match(/🐙 📝 ✅ Initial commit created successfully/, entries[5].decorated_message)
+      assert_match(/🐙 📝 🔄 Creating initial commit/, entries[12].decorated_message)
+      assert_match(/🐙 📝 ✅ Initial commit created successfully/, entries[13].decorated_message)
 
       # Ingredient application
-      assert_match(/🍱 🏗️ 🔄 Applying ingredients/, entries[6].decorated_message)
+      assert_match(/🍱 🏗️ 🔄 Applying ingredients/, entries[14].decorated_message)
 
       # First ingredient
-      assert_match(/🍱 🍣 🔄 Applying ingredient: Rails Authentication/, entries[7].decorated_message)
-      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[8].decorated_message)
-      assert_match(/🍱 🍣 ✅ Ingredient Rails Authentication applied successfully/, entries[9].decorated_message)
+      assert_match(/🍱 🍣 🔄 Applying ingredient: Rails Authentication/, entries[15].decorated_message)
+      assert_match(/🛤️ 🛡️ 🔄 Validating command/, entries[16].decorated_message)
+      assert_match(/🛤️ 🛡️ ✅ Command validation successful/, entries[17].decorated_message)
+      assert_match(/💻 📂 ✅ Using existing app directory/, entries[18].decorated_message)
+      assert_match(/💻 🛠️ ✅ Preparing to execute command/, entries[19].decorated_message)
+      assert_match(/💻 📈 🔍 System environment details/, entries[20].decorated_message)
+      assert_match(/💻 📈 🔍 Environment variables for command execution/, entries[21].decorated_message)
+      assert_match(%r{<p>Executing command: `./bin/rails app:template LOCATION=}, entries[22].decorated_message)
+      assert_match(/🍱 🏗️ 🔄 Command execution started: rails app:template LOCATION/, entries[23].decorated_message)
+      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[24].decorated_message)
+      assert_match(/🍱 🍣 ✅ Ingredient Rails Authentication applied successfully/, entries[25].decorated_message)
 
       # Second ingredient
-      assert_match(/🍱 🍣 🔄 Applying ingredient: API Setup/, entries[10].decorated_message)
-      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[11].decorated_message)
-      assert_match(/🍱 🍣 ✅ Ingredient API Setup applied successfully/, entries[12].decorated_message)
+      assert_match(/🍱 🍣 🔄 Applying ingredient: API Setup/, entries[26].decorated_message)
+      assert_match(/🛤️ 🛡️ 🔄 Validating command/, entries[27].decorated_message)
+      assert_match(/🛤️ 🛡️ ✅ Command validation successful/, entries[28].decorated_message)
+      assert_match(/💻 📂 ✅ Using existing app directory/, entries[29].decorated_message)
+      assert_match(/💻 🛠️ ✅ Preparing to execute command/, entries[30].decorated_message)
+      assert_match(/💻 📈 🔍 System environment details/, entries[31].decorated_message)
+      assert_match(/💻 📈 🔍 Environment variables for command execution/, entries[32].decorated_message)
+      assert_match(%r{<p>Executing command: `./bin/rails app:template LOCATION=}, entries[33].decorated_message)
+      assert_match(/🍱 🏗️ 🔄 Command execution started: rails app:template LOCATION/, entries[34].decorated_message)
+      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[35].decorated_message)
+      assert_match(/🍱 🍣 ✅ Ingredient API Setup applied successfully/, entries[36].decorated_message)
 
       # All ingredients completed
-      assert_match(/🍱 🏗️ ✅ All ingredients applied successfully/, entries[13].decorated_message)
+      assert_match(/🍱 🏗️ ✅ All ingredients applied successfully/, entries[37].decorated_message)
+
+      # Installing dependencies
+      assert_match(/📦 🏗️ 🔄 Installing app dependencies/, entries[38].decorated_message)
+      assert_match(/🛤️ 🛡️ 🔄 Validating command/, entries[39].decorated_message)
+      assert_match(/🛤️ 🛡️ ✅ Command validation successful/, entries[40].decorated_message)
+      assert_match(/💻 📂 ✅ Using existing app directory/, entries[41].decorated_message)
+      assert_match(/💻 🛠️ ✅ Preparing to execute command/, entries[42].decorated_message)
+      assert_match(/💻 📈 🔍 System environment details/, entries[43].decorated_message)
+      assert_match(/💻 📈 🔍 Environment variables for command execution/, entries[44].decorated_message)
+      assert_match(%r{<p>Executing command: `bundle install`}, entries[45].decorated_message)
+      assert_match(/📦 🏗️ 🔄 Command execution started: bundle install/, entries[46].decorated_message)
+
+      assert_match(/📦 🏗️ ✅ Dependencies installed successfully/, entries[47].decorated_message)
 
       # Push to remote
-      assert_match(/🐙 ⬆️ 🔄 Starting GitHub push/, entries[14].decorated_message)
-      assert_match(/🐙 ⬆️ ✅ GitHub push completed successfully/, entries[15].decorated_message)
+      assert_match(/🐙 ⬆️ 🔄 Starting GitHub push/, entries[48].decorated_message)
+      assert_match(/🐙 ⬆️ ✅ GitHub push completed successfully/, entries[49].decorated_message)
 
       # CI run
-      assert_match(/🐙 ⚙️ 🔄 Starting CI run/, entries[16].decorated_message)
+      assert_match(/🐙 ⚙️ 🔄 Starting CI run/, entries[50].decorated_message)
 
       # Generation completed
-      assert_match(/🛤️ 🏗️ ✅ App generation completed successfully/, entries[17].decorated_message)
+      assert_match(/🛤️ 🏗️ ✅ App generation completed successfully/, entries[51].decorated_message)
     end
   end
 end

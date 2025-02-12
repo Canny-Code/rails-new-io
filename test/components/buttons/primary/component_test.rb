@@ -11,7 +11,7 @@ module Buttons
 
         assert_equal "Create App", doc.text.strip
         assert doc.css("svg").any?, "Expected an icon to be present"
-        assert_includes doc.css("a").first["class"], "bg-[#ac3b61]"
+        assert_includes doc.css("a").first["class"], "bg-[#993351]"
         assert_equal "/apps/new", doc.css("a").first["href"]
       end
 
@@ -30,8 +30,8 @@ module Buttons
         doc = Nokogiri::HTML.fragment(result)
 
         link = doc.css("a").first
-        assert_includes link["class"], "opacity-50"
-        assert_includes link["class"], "cursor-not-allowed"
+        assert_includes link["class"], "disabled:bg-[#D3A9B6]"
+        assert_includes link["class"], "disabled:cursor-not-allowed"
       end
 
       test "renders button with custom data attributes" do

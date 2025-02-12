@@ -5,16 +5,17 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
   def setup
     @user = users(:john)
     @recipe = recipes(:blog_recipe)
-    @temp_dir = Dir.mktmpdir
+    @work_dir = Dir.mktmpdir
 
     @logger = mock("logger")
     @logger.stubs(:info).with { |message, metadata = {}| @generated_app.log_entries.create!(message: message, metadata: metadata, level: :info, phase: :generating_rails_app) }
     @logger.stubs(:error).with { |message, metadata = {}| @generated_app.log_entries.create!(message: message, metadata: metadata, level: :error, phase: :generating_rails_app) }
+    @logger.stubs(:debug).with { |message, metadata = {}| @generated_app.log_entries.create!(message: message, metadata: metadata, level: :debug, phase: :generating_rails_app) }
     AppGeneration::Logger.stubs(:new).returns(@logger)
 
     # Use an existing app and reset its status
     @generated_app = generated_apps(:pending_app)
-    @generated_app.update!(workspace_path: @temp_dir)
+    @generated_app.update!(workspace_path: @work_dir)
     @app_status = @generated_app.app_status
     @app_status.update!(
       status: "creating_github_repo",
@@ -34,7 +35,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
   end
 
   def teardown
-    FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
+    FileUtils.rm_rf(@work_dir) if @work_dir && Dir.exist?(@work_dir)
   end
 
   test "executes valid rails new command" do
@@ -55,15 +56,15 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       service = CommandExecutionService.new(@generated_app, @logger, command)
 
       Open3.stub :popen3, mock_popen3(output, error, success: true) do
-        assert_difference -> { @generated_app.log_entries.count }, 6 do
+        assert_difference -> { @generated_app.log_entries.count }, 8 do
           service.execute
         end
 
         log_entries = @generated_app.log_entries.order(created_at: :asc).offset(initial_count)
 
         buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
-        assert_equal "Initializing Rails application generation...\nSample output", buffer_entry.message
-        assert log_entries.all?(&:info?)
+        assert_equal "Executing command: `#{command} --skip-bundle`\nSample output", buffer_entry.message
+        assert log_entries.all? { it.info? || it.debug? }
 
         @generated_app.log_entries.where("id > ?", @generated_app.log_entries.limit(initial_count).pluck(:id).last).destroy_all
       end
@@ -72,79 +73,112 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
   test "validates app name matches GeneratedApp name" do
     wrong_name = "wrong-app-name"
-    invalid_command = "rails new #{wrong_name} -d postgres"
+    invalid_command = "rails new #{wrong_name} -d postgres --skip-bundle"
 
-    assert_difference -> { AppGeneration::LogEntry.count }, 2 do # Expect both validation start and error logs
+    assert_difference -> { AppGeneration::LogEntry.count }, 3 do # Expect validation start, format validation success, and error logs
       error = assert_raises(CommandExecutionService::InvalidCommandError) do
-        CommandExecutionService.new(@generated_app, @logger, invalid_command)
+        CommandExecutionService.new(@generated_app, @logger, invalid_command).execute
       end
       assert_equal "App name in command must match GeneratedApp name", error.message
     end
 
-    log_entries = @generated_app.log_entries.order(created_at: :desc).limit(2)
-    assert log_entries[0].error?
-    assert_equal "Invalid app name", log_entries[0].message
-    assert_equal({
-      "command" => invalid_command,
-      "expected" => @generated_app.name,
-      "actual" => wrong_name
-    }, log_entries[0].metadata)
+    log_entries = @generated_app.log_entries.order(created_at: :asc).last(3)
 
-    assert log_entries[1].info?
-    assert_match /Validating command/, log_entries[1].message
+    assert log_entries[0].debug?
+    assert_match /Validating command/, log_entries[0].message
+
+    assert log_entries[1].error?
+    assert_equal "Invalid app name", log_entries[1].message
+
+    assert log_entries[2].error?
+    assert_equal "App name in command must match GeneratedApp name", log_entries[2].message
+    assert_equal({ "command" => invalid_command }, log_entries[2].metadata)
   end
 
   test "raises error for invalid commands" do
-    assert_difference -> { AppGeneration::LogEntry.count }, 2 do # Expect both validation start and error logs
+    assert_difference -> { AppGeneration::LogEntry.count }, 2 do # Expect validation start and error message
       error = assert_raises(CommandExecutionService::InvalidCommandError) do
-        CommandExecutionService.new(@generated_app, @logger, "rm -rf /")
+        CommandExecutionService.new(@generated_app, @logger, "rm -rf /").execute
       end
-      assert_equal "Command must start with one of: rails new, bin/rails app:template", error.message
+      assert_equal "Command must start with one of: rails new, rails app:template, bundle install", error.message
     end
 
-    log_entries = @generated_app.log_entries.order(created_at: :desc).limit(2)
-    assert log_entries[0].error?
-    assert_equal "Invalid command prefix", log_entries[0].message
+    log_entries = @generated_app.log_entries.order(created_at: :asc).last(2)
+    assert log_entries[0].debug?
+    assert_match /Validating command/, log_entries[0].message
 
-    assert log_entries[1].info?
-    assert_match /Validating command/, log_entries[1].message
+    assert log_entries[1].error?
+    assert_equal "Command must start with one of: rails new, rails app:template, bundle install", log_entries[1].message
+    assert_equal({ "command" => "rm -rf /" }, log_entries[1].metadata)
   end
 
-  test "validates command format" do
-    invalid_commands = {
-      "rails new; rm -rf /" => [ "Command contains invalid characters", "Command injection attempt detected" ],
-      "rails new --invalid-flag" => [ "Invalid rails new command format", "Invalid rails new command format" ],
-      "rails generate model User" => [ "Command must start with one of: rails new, bin/rails app:template", "Invalid command prefix" ],
-      "rails new" => [ "Invalid rails new command format", "Invalid rails new command format" ]
-    }
+  test "validates rails new command format" do
+    command = "rails new --invalid-flag --skip-bundle"
 
-    invalid_commands.each do |cmd, (expected_message, expected_log)|
-      assert_difference -> { AppGeneration::LogEntry.count }, 2 do # Expect both validation start and error logs
-        error = assert_raises(CommandExecutionService::InvalidCommandError) do
-          CommandExecutionService.new(@generated_app, @logger, cmd)
-        end
-        assert_equal expected_message, error.message
-
-        log_entries = @generated_app.log_entries.order(created_at: :desc).limit(2)
-        assert log_entries[0].error?
-        assert_equal expected_log, log_entries[0].message
-        assert_equal cmd, log_entries[0].metadata["command"]
-
-        assert log_entries[1].info?
-        assert_match /Validating command/, log_entries[1].message
+    assert_difference -> { AppGeneration::LogEntry.count }, 3 do
+      error = assert_raises(CommandExecutionService::InvalidCommandError) do
+        CommandExecutionService.new(@generated_app, @logger, command).execute
       end
+      assert_equal "Invalid rails new command format", error.message
     end
+
+    log_entries = @generated_app.log_entries.order(created_at: :asc).last(3)
+    assert log_entries[0].debug?
+    assert_match /Validating command/, log_entries[0].message
+    assert log_entries[1].error?
+    assert_equal "Invalid rails new command format", log_entries[1].message
+    assert_equal({ "command" => command }, log_entries[1].metadata)
+    assert log_entries[2].error?
+    assert_equal "Invalid rails new command format", log_entries[2].message
+    assert_equal({ "command" => command }, log_entries[2].metadata)
+  end
+
+  test "detects command injection attempts" do
+    command = "rails new; rm -rf / --skip-bundle"
+
+    assert_difference -> { AppGeneration::LogEntry.count }, 2 do
+      error = assert_raises(CommandExecutionService::InvalidCommandError) do
+        CommandExecutionService.new(@generated_app, @logger, command).execute
+      end
+      assert_equal "Command injection attempt detected", error.message
+    end
+
+    log_entries = @generated_app.log_entries.order(created_at: :asc).last(2)
+    assert log_entries[0].debug?
+    assert_match /Validating command/, log_entries[0].message
+    assert log_entries[1].error?
+    assert_equal "Command injection attempt detected", log_entries[1].message
+    assert_equal({ "command" => command }, log_entries[1].metadata)
+  end
+
+  test "rejects rails generate commands" do
+    command = "rails generate model User"
+
+    assert_difference -> { AppGeneration::LogEntry.count }, 2 do
+      error = assert_raises(CommandExecutionService::InvalidCommandError) do
+        CommandExecutionService.new(@generated_app, @logger, command).execute
+      end
+      assert_equal "Command must start with one of: rails new, rails app:template, bundle install", error.message
+    end
+
+    log_entries = @generated_app.log_entries.order(created_at: :asc).last(2)
+    assert log_entries[0].debug?
+    assert_match /Validating command/, log_entries[0].message
+    assert log_entries[1].error?
+    assert_equal "Command must start with one of: rails new, rails app:template, bundle install", log_entries[1].message
+    assert_equal({ "command" => command }, log_entries[1].metadata)
   end
 
   test "handles timeouts" do
     @service.stub :run_isolated_process, -> { raise Timeout::Error } do
-      assert_difference -> { AppGeneration::LogEntry.count }, 1 do
+      assert_difference -> { AppGeneration::LogEntry.count }, 3 do
         assert_raises(Timeout::Error) { @service.execute }
       end
 
       log_entries = @generated_app.log_entries.order(created_at: :desc).limit(1)
-      assert_equal "Created temporary directory", log_entries[0].message
-      assert log_entries.all? { |entry| entry.info? }
+
+      assert_equal "Created workspace directory", log_entries[0].message
+      assert log_entries.all? { it.info? || it.debug? }
     end
   end
 
@@ -153,16 +187,16 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     error = "Sample error"
 
     Open3.stub :popen3, mock_popen3(output, error, success: true) do
-      assert_difference -> { AppGeneration::LogEntry.count }, 6 do
+      assert_difference -> { AppGeneration::LogEntry.count }, 8 do
         @service.execute
       end
 
       log_entries = @generated_app.log_entries.recent_first
 
       expected_messages = [
-        "Validating command: #{@valid_commands.first}",
+        "Validating command: #{@valid_commands.first} --skip-bundle",
         "Command validation successful",
-        "Created temporary directory",
+        "Created workspace directory",
         "Preparing to execute command",
         "System environment details",
         "Environment variables for command execution"
@@ -174,8 +208,8 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       end
 
       buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
-      assert_equal "Initializing Rails application generation...\nSample output", buffer_entry.message
-      assert log_entries.all?(&:info?)
+      assert_equal "Executing command: `#{@valid_commands.first} --skip-bundle`\nSample output", buffer_entry.message
+      assert log_entries.all? { it.info? || it.debug? }
     end
   end
 
@@ -184,7 +218,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     error = "Error message"
 
     Open3.stub :popen3, mock_popen3(output, error, success: false) do
-      assert_difference -> { AppGeneration::LogEntry.count }, 7 do
+      assert_difference -> { AppGeneration::LogEntry.count }, 9 do
         assert_raises(RuntimeError) { @service.execute }
       end
 
@@ -192,23 +226,30 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
       expected_messages = [
         "Command failed",
-        "Rails app generation process started",
+        "Command execution started",
         "Environment variables for command execution",
         "System environment details",
         "Preparing to execute command",
-        "Created temporary directory",
+        "Created workspace directory",
         "Command validation successful",
-        "Validating command: #{@command}"
+        "Validating command: #{@valid_commands.first}"
       ]
 
       expected_messages.each do |message|
-        assert log_entries.any? { |entry| entry.message.include?(message) }
+        assert log_entries.any? { |entry| entry.message.include?(message) },
+          "Expected to find log entry containing '#{message}'"
       end
 
       error_log = log_entries.find { |entry| entry.message == "Command failed" }
       assert error_log.error?
-      assert_equal "Initializing Rails application generation...", error_log.metadata["output"]
+
+      assert_equal "Executing command: `#{@valid_commands.first} --skip-bundle`", error_log.metadata["output"]
       assert error_log.metadata["status"]
+
+      log_entries.each do |entry|
+        assert [ :info, :error, :debug ].include?(entry.level.to_sym),
+          "Expected log level to be info, error, or debug but was #{entry.level}"
+      end
     end
   end
 
@@ -223,7 +264,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       assert_equal pid, process_pid
     } do
       Open3.stub :popen3, mock_popen3(output, error, success: true, pid: pid) do
-        assert_difference -> { AppGeneration::LogEntry.count }, 7 do
+        assert_difference -> { AppGeneration::LogEntry.count }, 9 do
           @service.execute
         end
 
@@ -232,13 +273,13 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
         # Verify all expected messages are present
         expected_messages = [
           "Terminated process",
-          "Rails app generation process started",
+          "Command execution started",
           "Environment variables for command execution",
           "System environment details",
           "Preparing to execute command",
-          "Created temporary directory",
+          "Created workspace directory",
           "Command validation successful",
-          "Validating command: #{@command}"
+          "Validating command: #{@valid_commands.first}"
         ]
 
         expected_messages.each do |message|
@@ -285,42 +326,116 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
   end
 
   test "executes valid template command" do
-    template_command = "bin/rails app:template LOCATION=lib/templates/blog.rb"
+    template_command = "rails app:template LOCATION=lib/templates/template.rb"
     service = CommandExecutionService.new(@generated_app, @logger, template_command)
     output = "Template applied successfully"
 
     Open3.stub :popen3, mock_popen3(output, "", success: true) do
-      assert_difference -> { @generated_app.log_entries.count }, 6 do
+      assert_difference -> { @generated_app.log_entries.count }, 8 do
         service.execute
       end
 
       log_entries = @generated_app.log_entries.recent_first
-      assert_equal "Rails app generation process started", log_entries.first.message
+      assert_equal "Command execution started: rails app:template LOCATION=lib/templates/template.rb", log_entries.first.message
     end
   end
 
-  test "validates template command format" do
-    invalid_template_commands = {
-      "bin/rails app:template" => "Invalid template command format",  # Missing LOCATION
-      "bin/rails app:template LOCATION=" => "Invalid template command format",  # Empty LOCATION
-      "bin/rails app:template LOCATION=;rm -rf /" => "Command contains invalid characters",  # Injection attempt
-      "bin/rails app:template LOCATION=../../etc/passwd" => "Invalid template command format",  # Path traversal attempt
-      "bin/rails app:template LOCATION=templates/bad.rb" => "Invalid template command format"  # Not in lib/templates
+  test "validates template command requires LOCATION" do
+    command = "rails app:template"
+
+    assert_difference -> { AppGeneration::LogEntry.count }, 3 do
+      error = assert_raises(CommandExecutionService::InvalidCommandError) do
+        CommandExecutionService.new(@generated_app, @logger, command).execute
+      end
+      assert_equal "Invalid template command format", error.message
+    end
+
+    log_entries = @generated_app.log_entries.order(created_at: :asc).last(3)
+    assert log_entries[0].debug?
+    assert_match /Validating command/, log_entries[0].message
+    assert log_entries[1].error?
+    assert_equal "Invalid template command format", log_entries[1].message
+    assert_equal({ "command" => command }, log_entries[1].metadata)
+    assert log_entries[2].error?
+    assert_equal "Invalid template command format", log_entries[2].message
+    assert_equal({ "command" => command }, log_entries[2].metadata)
+  end
+
+  test "detects template command injection attempts" do
+    command = "rails app:template LOCATION=;rm -rf /"
+
+    assert_difference -> { AppGeneration::LogEntry.count }, 2 do
+      error = assert_raises(CommandExecutionService::InvalidCommandError) do
+        CommandExecutionService.new(@generated_app, @logger, command).execute
+      end
+      assert_equal "Command injection attempt detected", error.message
+    end
+
+    log_entries = @generated_app.log_entries.order(created_at: :asc).last(2)
+    assert log_entries[0].debug?
+    assert_match /Validating command/, log_entries[0].message
+    assert log_entries[1].error?
+    assert_equal "Command injection attempt detected", log_entries[1].message
+    assert_equal({ "command" => command }, log_entries[1].metadata)
+  end
+
+  test "rejects template path traversal attempts" do
+    command = "rails app:template LOCATION=../../etc/passwd"
+
+    assert_difference -> { AppGeneration::LogEntry.count }, 3 do
+      error = assert_raises(CommandExecutionService::InvalidCommandError) do
+        CommandExecutionService.new(@generated_app, @logger, command).execute
+      end
+      assert_equal "Invalid template command format", error.message
+    end
+
+    log_entries = @generated_app.log_entries.order(created_at: :asc).last(3)
+    assert log_entries[0].debug?
+    assert_match /Validating command/, log_entries[0].message
+    assert log_entries[1].error?
+    assert_equal "Invalid template command format", log_entries[1].message
+    assert_equal({ "command" => command }, log_entries[1].metadata)
+    assert log_entries[2].error?
+    assert_equal "Invalid template command format", log_entries[2].message
+    assert_equal({ "command" => command }, log_entries[2].metadata)
+  end
+
+  test "validates bundle install command format" do
+    invalid_bundle_commands = {
+      "bundle" => "Command must start with one of: rails new, rails app:template, bundle install",
+      "bundle install --invalid-flag" => "Invalid bundle install command format",  # Invalid flag
+      "bundle install;rm -rf /" => "Command injection attempt detected",  # Injection attempt
+      "bundle install --path=../etc" => "Invalid bundle install command format",  # Path traversal attempt
+      "bundle exec install" => "Command must start with one of: rails new, rails app:template, bundle install"
     }
 
-    invalid_template_commands.each do |cmd, expected_error|
-      assert_difference -> { AppGeneration::LogEntry.count }, 2 do
+    invalid_bundle_commands.each do |cmd, expected_error|
+      expected_count = cmd.start_with?("bundle install") && !cmd.match?(/[;&|]/) ? 3 : 2
+      assert_difference -> { AppGeneration::LogEntry.count }, expected_count do
         error = assert_raises(CommandExecutionService::InvalidCommandError) do
-          CommandExecutionService.new(@generated_app, @logger, cmd)
+          CommandExecutionService.new(@generated_app, @logger, cmd).execute
         end
         assert_equal expected_error, error.message
 
-        log_entries = @generated_app.log_entries.order(created_at: :desc).limit(2)
+        log_entries = @generated_app.log_entries.order(created_at: :desc).limit(expected_count)
         assert log_entries[0].error?
-        assert_equal expected_error == "Command contains invalid characters" ?
-          "Command injection attempt detected" :
-          "Invalid template command format",
-          log_entries[0].message
+        assert_equal expected_error, log_entries[0].message
+      end
+    end
+
+    # Test valid bundle install commands
+    valid_commands = [
+      "bundle install",
+      "bundle install --jobs=4",
+      "bundle install --retry=3",
+      "bundle install --path vendor/bundle",
+      "bundle install --deployment --jobs=4 --retry=3",
+      "bundle install --local --frozen"
+    ]
+
+    valid_commands.each do |cmd|
+      assert_nothing_raised do
+        CommandExecutionService.new(@generated_app, @logger, cmd)
       end
     end
   end

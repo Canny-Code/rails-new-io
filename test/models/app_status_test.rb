@@ -276,7 +276,7 @@ class AppStatusTest < ActiveSupport::TestCase
     AppGeneration::LogEntry.create!(
       generated_app: @pending_app,
       level: :info,
-      message: "Initializing Rails application generation...",
+      message: "Executing command...",
       metadata: { stream: :stdout },
       phase: @app_status.status,
       entry_type: "rails_output"

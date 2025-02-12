@@ -19,7 +19,7 @@ module LogEntryIcons
       "🛤️ 🛡️ 🔄 "
     when /command validation successful/
       "🛤️ 🛡️ ✅ "
-    when /created temporary directory/
+    when /created workspace directory/, /using existing app directory/
       "💻 📂 ✅ "
     when /preparing to execute command/
       "💻 🛠️ ✅ "
@@ -27,8 +27,14 @@ module LogEntryIcons
       "💻 📈 🔍 "
     when /environment variables for command execution/
       "💻 📈 🔍 "
-    when /rails app generation process started/
-      "🛤️ 🏗️ 🔄 "
+    when /command execution started/
+      if message.include?("rails new")
+        "🛤️ 🏗️ 🔄 "
+      elsif message.include?("bundle install")
+        "📦 🏗️ 🔄 "
+      elsif message.include?("app:template")
+        "🍱 🏗️ 🔄 "
+      end
     when /rails app generation process finished successfully/
       "🛤️ 🏗️ ✅ "
     when /creating initial commit/
@@ -45,6 +51,10 @@ module LogEntryIcons
       "🍱 🍣 ✅ "
     when /all ingredients applied successfully/
       "🍱 🏗️ ✅ "
+    when /installing app dependencies/
+      "📦 🏗️ 🔄 "
+    when /dependencies installed successfully/
+      "📦 🏗️ ✅ "
     when /starting github push/
       "🐙 ⬆️ 🔄 "
     when /github push completed successfully/

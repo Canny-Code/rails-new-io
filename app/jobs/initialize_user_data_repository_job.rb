@@ -17,7 +17,7 @@ class InitializeUserDataRepositoryJob < ApplicationJob
     Rails.logger.info("Data repository creation completed")
   rescue StandardError => e
     Rails.logger.error("Failed to initialize user data repository: #{e.message}")
-    Rails.logger.error(e.backtrace.join("\n"))
+    Rails.logger.error(e.backtrace.join("<br>"))
     raise
   end
 end

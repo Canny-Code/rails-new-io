@@ -215,8 +215,7 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
       created_by: @user
     )
 
-    # Simulate a filesystem error
-    File.expects(:write).raises(Errno::EACCES, "Permission denied")
+    File.expects(:open).raises(Errno::EACCES, "Permission denied")
 
     error = assert_raises(DataRepositoryService::Error) do
       @service.write_ingredient(ingredient, repo_name: @repo_name)

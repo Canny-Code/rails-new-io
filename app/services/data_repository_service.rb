@@ -53,24 +53,38 @@ class DataRepositoryService < GithubRepositoryService
     }
 
     begin
-      puts "DEBUG: Attempting to write template to path: #{template_path(ingredient)}"
-      puts "DEBUG: Template content length: #{template_content.length}"
       File.open(template_path(ingredient), "w") do |f|
         f.write(template_content)
         f.flush
         f.fsync
       end
-      puts "DEBUG: File written successfully"
     rescue StandardError => e
-      puts "DEBUG: Error writing file: #{e.message}"
-      puts "DEBUG: Error class: #{e.class}"
-      puts "DEBUG: Error backtrace: #{e.backtrace.join("\n")}"
       raise Error, "Failed to write ingredient template to local filesystem: #{e.message}"
     end
 
     commit_changes(
       repo_name: repo_name,
       message: "Update ingredient: #{ingredient.name}",
+      tree_items: tree_items
+    )
+  end
+
+  def delete_ingredient(ingredient_name:, github_template_path:, loca_template_path:, repo_name:)
+    tree_items = []
+
+    # Mark file for deletion in the repository
+    tree_items << {
+      path: github_template_path,
+      mode: "100644",
+      type: "blob",
+      sha: nil # Setting SHA to nil marks it for deletion
+    }
+
+    File.delete(loca_template_path) if File.exist?(loca_template_path)
+
+    commit_changes(
+      repo_name:,
+      message: "Delete ingredient: #{ingredient_name}",
       tree_items: tree_items
     )
   end
