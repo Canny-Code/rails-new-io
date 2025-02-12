@@ -28,12 +28,24 @@ module AppGeneration
 
     def install_dependencies
       @logger.info("Installing app dependencies")
-      @command_execution_service = CommandExecutionService.new(
+      CommandExecutionService.new(
         @generated_app,
         @logger,
         "bundle install"
-      )
-      @command_execution_service.execute
+      ).execute
+
+      # Add Linux platform for CI after everything is installed
+      gemfile_lock = File.join(@generated_app.workspace_path, @generated_app.name, "Gemfile.lock")
+      unless gemfile_lock.include?("x86_64-linux")
+        CommandExecutionService.new(
+          @generated_app,
+          @logger,
+          "bundle lock --add-platform x86_64-linux"
+          ).execute
+
+        @repository_service.commit_changes_after_gemfile_lock_update("Updating Gemfile.lock with CI platform")
+      end
+
       @logger.info("Dependencies installed successfully")
     end
 

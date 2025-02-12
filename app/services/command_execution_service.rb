@@ -6,7 +6,8 @@ class CommandExecutionService
   ALLOWED_COMMANDS = [
     "rails new",
     "rails app:template",
-    "bundle install"
+    "bundle install",
+    "bundle lock --add-platform x86_64-linux"
   ].freeze
 
   TEMPLATE_COMMAND_PATTERN = %r{\A
@@ -89,7 +90,7 @@ class CommandExecutionService
 
     # Add --skip-bundle to rails new commands
     if @command.start_with?("rails new") && !@command.include?("--skip-bundle")
-      @command = "#{@command} --skip-bundle && bundle lock --add-platform x86_64-linux"
+      @command = "#{@command} --skip-bundle"
     end
   end
 
@@ -150,8 +151,19 @@ class CommandExecutionService
       @logger.debug("Created temporary directory", { path: @work_dir })
       @generated_app.update(workspace_path: @work_dir)
     else
-      @logger.debug("Using existing app directory", { path: @work_dir })
       @work_dir = File.join(@generated_app.workspace_path, @generated_app.name)
+      @logger.debug("Using existing app directory", { path: @work_dir })
+    end
+
+    puts "DEBUG: Command type: #{@command.split.first(2).join(' ')}"
+    puts "DEBUG: Work directory: #{@work_dir}"
+    puts "DEBUG: Directory exists? #{Dir.exist?(@work_dir)}"
+    puts "DEBUG: Generated app workspace path: #{@generated_app.workspace_path}"
+    puts "DEBUG: Generated app name: #{@generated_app.name}"
+
+    if !@command.start_with?("rails new") && !Dir.exist?(@work_dir)
+      puts "DEBUG: ERROR - Work directory does not exist for non-rails-new command!"
+      raise InvalidCommandError, "Work directory #{@work_dir} does not exist"
     end
   end
 
@@ -166,6 +178,30 @@ class CommandExecutionService
       "HOME" => @work_dir
     }
 
+    puts "\nDEBUG: ====== Command Execution Setup ======"
+    puts "DEBUG: Command: #{@command}"
+    puts "DEBUG: Work directory: #{@work_dir}"
+
+    # Create .bundle directory and config if needed
+    unless @command.start_with?("rails new")
+      bundle_dir = File.join(@work_dir, ".bundle")
+      FileUtils.mkdir_p(bundle_dir)
+      config_path = File.join(bundle_dir, "config")
+
+      # Ensure .bundle/config exists and is a file
+      if File.directory?(config_path)
+        FileUtils.rm_rf(config_path)
+      end
+      File.write(config_path, "") unless File.exist?(config_path)
+
+      # Set explicit bundle config path
+      env["BUNDLE_APP_CONFIG"] = bundle_dir
+      puts "DEBUG: Created bundle config at #{config_path}"
+    end
+
+    puts "DEBUG: Directory contents:"
+    puts `ls -la #{@work_dir}`.lines.map { |l| "DEBUG: #{l.strip}" }
+
     if @command.start_with?("rails new")
       env.merge!({
         "BUNDLE_GEMFILE" => nil,
@@ -174,16 +210,29 @@ class CommandExecutionService
         "BUNDLE_BIN" => nil,
         "BUNDLE_USER_HOME" => nil
       })
+      puts "DEBUG: Rails new command - cleared bundle env vars"
     else
+      gemfile_path = File.join(@work_dir, "Gemfile")
       env.merge!({
-        "BUNDLE_GEMFILE" => File.join(@work_dir, "Gemfile"),
+        "BUNDLE_GEMFILE" => gemfile_path,
         "BUNDLE_JOBS" => "4",
         "BUNDLE_RETRY" => "3",
         "PATH" => "#{File.join(@work_dir, 'bin')}:#{ENV['PATH']}"
       })
+      puts "\nDEBUG: ====== Bundle Environment ======"
+      puts "DEBUG: BUNDLE_GEMFILE=#{env['BUNDLE_GEMFILE']}"
+      puts "DEBUG: Gemfile exists? #{File.exist?(gemfile_path)}"
+      if File.exist?(gemfile_path)
+        puts "DEBUG: Gemfile contents:"
+        puts File.read(gemfile_path).lines.map { |l| "DEBUG: #{l.strip}" }
+      end
+      puts "DEBUG: bin directory exists? #{Dir.exist?(File.join(@work_dir, 'bin'))}"
     end
 
     bundle_command = @command.include?("app:template") ? @command.sub("rails", "./bin/rails") : @command
+    puts "\nDEBUG: ====== Final Execution ======"
+    puts "DEBUG: Final command: #{bundle_command}"
+    puts "DEBUG: In directory: #{@work_dir}"
 
     log_environment_variables_for_command_execution(env)
 
@@ -204,14 +253,14 @@ class CommandExecutionService
         end
       end
 
-      # stderr_thread = Thread.new do
-      #   stderr.each_line do |line|
-      #     puts "DEBUG: STDERR: #{line.strip}"
-      #   end
-      # end
+      stderr_thread = Thread.new do
+        stderr.each_line do |line|
+          puts "DEBUG: STDERR: #{line.strip}"
+        end
+      end
 
       stdout_thread.join
-      # stderr_thread.join
+      stderr_thread.join
       buffer.complete!
 
       exit_status = wait_thr&.value
