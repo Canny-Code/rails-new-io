@@ -761,7 +761,7 @@ module AppGeneration
 
       assert_match(/🛤️ 🛡️ 🔄 Validating command/, entries[3].decorated_message)
       assert_match(/🛤️ 🛡️ ✅ Command validation successful/, entries[4].decorated_message)
-      assert_match(/💻 📂 ✅ Created temporary directory/, entries[5].decorated_message)
+      assert_match(/💻 📂 ✅ Created workspace directory/, entries[5].decorated_message)
       assert_match(/💻 🛠️ ✅ Preparing to execute command/, entries[6].decorated_message)
       assert_match(/💻 📈 🔍 System environment details/, entries[7].decorated_message)
       assert_match(/💻 📈 🔍 Environment variables for command execution/, entries[8].decorated_message)

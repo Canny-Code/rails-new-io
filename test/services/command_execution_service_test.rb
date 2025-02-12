@@ -177,7 +177,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
       log_entries = @generated_app.log_entries.order(created_at: :desc).limit(1)
 
-      assert_equal "Created temporary directory", log_entries[0].message
+      assert_equal "Created workspace directory", log_entries[0].message
       assert log_entries.all? { it.info? || it.debug? }
     end
   end
@@ -196,7 +196,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       expected_messages = [
         "Validating command: #{@valid_commands.first} --skip-bundle",
         "Command validation successful",
-        "Created temporary directory",
+        "Created workspace directory",
         "Preparing to execute command",
         "System environment details",
         "Environment variables for command execution"
@@ -230,7 +230,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
         "Environment variables for command execution",
         "System environment details",
         "Preparing to execute command",
-        "Created temporary directory",
+        "Created workspace directory",
         "Command validation successful",
         "Validating command: #{@valid_commands.first}"
       ]
@@ -277,7 +277,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
           "Environment variables for command execution",
           "System environment details",
           "Preparing to execute command",
-          "Created temporary directory",
+          "Created workspace directory",
           "Command validation successful",
           "Validating command: #{@valid_commands.first}"
         ]

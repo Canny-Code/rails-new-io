@@ -147,8 +147,18 @@ class CommandExecutionService
 
   def setup_environment
     if @command.start_with?("rails new")
-      @work_dir = Dir.mktmpdir
-      @logger.debug("Created temporary directory", { path: @work_dir })
+      @work_dir = if Rails.env.production?
+        # Use persistent directory in production
+        base_dir = "/var/lib/rails-new-io/workspaces"
+        FileUtils.mkdir_p(base_dir)
+        dir = File.join(base_dir, "workspace-#{Time.current.to_i}-#{SecureRandom.hex(4)}")
+        FileUtils.mkdir_p(dir)
+        dir
+      else
+        Dir.mktmpdir
+      end
+
+      @logger.debug("Created workspace directory", { path: @work_dir })
       @generated_app.update(workspace_path: @work_dir)
     else
       @work_dir = File.join(@generated_app.workspace_path, @generated_app.name)
