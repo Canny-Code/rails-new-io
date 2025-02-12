@@ -89,7 +89,7 @@ class CommandExecutionService
 
     # Add --skip-bundle to rails new commands
     if @command.start_with?("rails new") && !@command.include?("--skip-bundle")
-      @command = "#{@command} --skip-bundle"
+      @command = "#{@command} --skip-bundle && bundle lock --add-platform x86_64-linux"
     end
   end
 
