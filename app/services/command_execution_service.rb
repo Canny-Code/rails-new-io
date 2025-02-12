@@ -185,7 +185,8 @@ class CommandExecutionService
       "RAILS_ENV" => Rails.env,
       "NODE_ENV" => Rails.env,
       "PATH" => ENV["PATH"],
-      "HOME" => @work_dir
+      "HOME" => @work_dir,
+      "BUNDLE_DEPLOYMENT" => nil  # Unset deployment mode for app generation
     }
 
     puts "\nDEBUG: ====== Command Execution Setup ======"
