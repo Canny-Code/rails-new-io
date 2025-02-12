@@ -336,7 +336,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       end
 
       log_entries = @generated_app.log_entries.recent_first
-      assert_equal "Command execution started", log_entries.first.message
+      assert_equal "Command execution started: rails app:template LOCATION=lib/templates/template.rb", log_entries.first.message
     end
   end
 

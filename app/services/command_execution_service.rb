@@ -189,13 +189,14 @@ class CommandExecutionService
 
     buffer = Buffer.new(@generated_app, bundle_command)
 
+    @logger.debug("Command execution started: #{@command}", {
+      pid: @pid,
+      command: @command,
+      directory: @work_dir
+    })
+
     Open3.popen3(env, bundle_command, chdir: @work_dir) do |stdin, stdout, stderr, wait_thr|
       @pid = wait_thr&.pid
-      @logger.debug("Command execution started", {
-          pid: @pid,
-          command: @command,
-          directory: @work_dir
-      })
 
       stdout_thread = Thread.new do
         stdout.each_line do |line|
