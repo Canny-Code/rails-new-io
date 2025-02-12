@@ -1,9 +1,10 @@
 class ResourceLayout::Component < ApplicationComponent
-  def initialize(title:, subtitle:, new_button_text: nil, new_button_path: nil, new_button_html_options: {}, resources:, empty_state: nil, columns:, actions: [ :view, :edit, :delete ], search: false, secondary_actions: nil)
+  def initialize(title:, subtitle:, new_button_text: nil, new_button_path: nil, new_button_html_options: {}, resources:, empty_state: nil, columns:, actions: [ :view, :edit, :delete ], search: false, secondary_actions: nil, icon: false)
     @title = title
     @subtitle = subtitle
     @new_button_text = new_button_text
     @new_button_path = new_button_path
+    @icon = icon
     @new_button_html_options = new_button_html_options
     @resources = resources
     @empty_state = empty_state
@@ -60,6 +61,7 @@ class ResourceLayout::Component < ApplicationComponent
           render Buttons::Primary::Component.new(
             text: @new_button_text,
             path: @new_button_path,
+            icon: @icon,
             html_options: @new_button_html_options
           )
         end
