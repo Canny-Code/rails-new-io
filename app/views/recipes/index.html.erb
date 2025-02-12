@@ -1,15 +1,17 @@
 <%= render ResourceLayout::Component.new(
   title: "Recipes",
   subtitle: "Manage your collection of recipes.",
-  new_button_text: "New Recipe",
-  new_button_path: setup_recipes_path(slug: "basic-setup"),
+  new_button_text: @recipes.any? ? "New Recipe" : nil,
+  new_button_path: @recipes.any? ? setup_recipes_path(slug: "basic-setup") : nil,
   resources: @recipes,
+  icon: true,
   empty_state: EmptyState::Component.new(
     user: current_user,
     title: "No recipes yet",
     description: "Get started by creating your first recipe.",
     button_text: "New Recipe",
     button_path: setup_recipes_path(slug: "basic-setup"),
+    icon: true,
     emoji: "📝"
   ),
   columns: [
