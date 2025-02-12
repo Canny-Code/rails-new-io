@@ -11,7 +11,7 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libsqlite3-0 \
     build-essential libssl-dev git pkg-config python-is-python3 libgmp-dev ca-certificates gnupg xz-utils \
     libffi-dev libyaml-dev libreadline-dev zlib1g-dev libncurses5-dev libgdbm-dev \
-    libc6-dev vim && \
+    libc6-dev vim sudo && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Set production environment
@@ -75,7 +75,8 @@ RUN groupadd --system --gid 1000 rails && \
     mkdir -p /var/lib/rails-new-io/workspaces && \
     chown -R rails:rails /rails && \
     chmod -R 755 /rails && \
-    chown -R rails:rails db log storage tmp /usr/local/bundle /var/lib/rails-new-io
+    chown -R rails:rails db log storage tmp /usr/local/bundle /var/lib/rails-new-io && \
+    echo "rails ALL=(ALL) NOPASSWD: /usr/bin/mkdir -p /var/lib/rails-new-io/workspaces, /usr/bin/chown rails\:rails /var/lib/rails-new-io/workspaces" > /etc/sudoers.d/rails
 
 USER rails
 
