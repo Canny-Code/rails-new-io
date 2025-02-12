@@ -73,9 +73,9 @@ COPY --from=build /rails /rails
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash && \
     mkdir -p /var/lib/rails-new-io/workspaces && \
-    chown -R rails:rails /rails /var/lib/rails-new-io && \
-    chmod -R 755 /rails /var/lib/rails-new-io && \
-    chown -R rails:rails db log storage tmp /usr/local/bundle
+    chown -R rails:rails /rails && \
+    chmod -R 755 /rails && \
+    chown -R rails:rails db log storage tmp /usr/local/bundle /var/lib/rails-new-io
 
 USER rails
 
