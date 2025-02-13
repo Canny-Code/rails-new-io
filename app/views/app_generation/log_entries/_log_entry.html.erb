@@ -40,9 +40,9 @@
                             </tbody>
                           </table>
                         <% else %>
-                          <%= raw value.to_s.split('<br>').map { |line|
+                          <%= raw value.to_s.split("<br>").map { |line|
                             line.gsub(/([^<]*rails-new-io\/app\/[^<]*)/) { |match| "<span class='font-medium text-rose-600 bg-indigo-50 px-1 rounded'>#{match}</span>" }
-                          }.join('<br>') %>
+                          }.join("<br>") %>
                         <% end %>
                       </td>
                     </tr>
