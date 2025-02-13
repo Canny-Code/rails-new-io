@@ -45,32 +45,21 @@ module AppGeneration
         "bundle install --gemfile #{gemfile_path}"
       ).execute
 
-      # Add Linux platform for CI after everything is installed
-      # TODO: Make sure this works in both dev/production, after NOT --skip-bundle
-      # gemfile_lock = File.join(@generated_app.workspace_path, @generated_app.name, "Gemfile.lock")
-      # unless gemfile_lock.include?("x86_64-linux")
-      #   CommandExecutionService.new(
-      #     @generated_app,
-      #     @logger,
-      #     "bundle lock --add-platform x86_64-linux"
-      #     ).execute
+      CommandExecutionService.new(
+        @generated_app,
+        @logger,
+        "RAILS_ENV=development ./bin/rails db:create:all"
+      ).execute
 
-      #   @repository_service.commit_changes("Updating Gemfile.lock with CI platform")
-      # end
-
-      unless File.exist?(schema_path)
+      @generated_app.configured_databases.each do |db|
         CommandExecutionService.new(
           @generated_app,
           @logger,
-          "./bin/rails db:create:all"
+          "RAILS_ENV=development ./bin/rails db:schema:dump:#{db}"
         ).execute
-        CommandExecutionService.new(
-          @generated_app,
-          @logger,
-          "./bin/rails db:schema:dump:all"
-        ).execute
-        @repository_service.commit_changes("Running db:create and db:schema:dump to create schema.rb")
       end
+
+      @repository_service.commit_changes("Running db:create and db:schema:dump to create schema.rb")
 
       @logger.info("Dependencies installed successfully")
     end

@@ -108,6 +108,29 @@ class GeneratedApp < ApplicationRecord
     INITIAL_COMMIT_MESSAGE
   end
 
+  def configured_databases(env = "development")
+    database_yml_path = File.join(workspace_path, name, "config", "database.yml")
+    puts "database_yml_path: #{database_yml_path}"
+    return [] unless File.exist?(database_yml_path)
+
+    database_yaml = YAML.load_file(database_yml_path, aliases: true)
+
+    stuff = database_yaml.each_with_object([]) do |(key, value), result|
+      if value.is_a?(Hash)
+        if value.key?("adapter")
+          result << key
+        else
+          # For nested configs like production: { primary: { adapter: ... } }
+          value.each do |subkey, subvalue|
+            if subvalue.is_a?(Hash) && subvalue.key?("adapter")
+              result << "#{key}/#{subkey}"
+            end
+          end
+        end
+      end
+    end.select { it.include?("/") }.map { it.split("/").last }.uniq
+  end
+
   private
 
   def apply_ingredient(ingredient, configuration = {})
