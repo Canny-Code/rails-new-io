@@ -24,6 +24,13 @@ module AppGeneration
         command: @generated_app.command,
         app_name: @generated_app.name
       })
+      if Rails.env.production?
+        CommandExecutionService.new(
+          @generated_app,
+          @logger,
+          "bundle lock --add-platform x86_64-linux"
+        ).execute
+      end
     end
 
     def install_dependencies
