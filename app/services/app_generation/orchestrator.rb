@@ -24,13 +24,14 @@ module AppGeneration
         command: @generated_app.command,
         app_name: @generated_app.name
       })
-      if Rails.env.production?
-        CommandExecutionService.new(
-          @generated_app,
-          @logger,
-          "bundle lock --add-platform x86_64-linux"
-        ).execute
-      end
+      # TODO: Make sure this works in production, after NOT --skip-bundle
+      # if Rails.env.production?
+      #   CommandExecutionService.new(
+      #     @generated_app,
+      #     @logger,
+      #     "bundle lock --add-platform x86_64-linux"
+      #   ).execute
+      # end
     end
 
     def install_dependencies
@@ -42,16 +43,17 @@ module AppGeneration
       ).execute
 
       # Add Linux platform for CI after everything is installed
-      gemfile_lock = File.join(@generated_app.workspace_path, @generated_app.name, "Gemfile.lock")
-      unless gemfile_lock.include?("x86_64-linux")
-        CommandExecutionService.new(
-          @generated_app,
-          @logger,
-          "bundle lock --add-platform x86_64-linux"
-          ).execute
+      # TODO: Make sure this works in both dev/production, after NOT --skip-bundle
+      # gemfile_lock = File.join(@generated_app.workspace_path, @generated_app.name, "Gemfile.lock")
+      # unless gemfile_lock.include?("x86_64-linux")
+      #   CommandExecutionService.new(
+      #     @generated_app,
+      #     @logger,
+      #     "bundle lock --add-platform x86_64-linux"
+      #     ).execute
 
-        @repository_service.commit_changes("Updating Gemfile.lock with CI platform")
-      end
+      #   @repository_service.commit_changes("Updating Gemfile.lock with CI platform")
+      # end
 
       CommandExecutionService.new(
         @generated_app,

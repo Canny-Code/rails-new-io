@@ -63,7 +63,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
         log_entries = @generated_app.log_entries.order(created_at: :asc).offset(initial_count)
 
         buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
-        assert_equal "Executing command: `#{command} --skip-bundle`\nSample output", buffer_entry.message
+        assert_equal "Executing command: `#{command}`\nSample output", buffer_entry.message
         assert log_entries.all? { it.info? || it.debug? }
 
         @generated_app.log_entries.where("id > ?", @generated_app.log_entries.limit(initial_count).pluck(:id).last).destroy_all
@@ -73,7 +73,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
   test "validates app name matches GeneratedApp name" do
     wrong_name = "wrong-app-name"
-    invalid_command = "rails new #{wrong_name} -d postgres --skip-bundle"
+    invalid_command = "rails new #{wrong_name} -d postgres"
 
     assert_difference -> { AppGeneration::LogEntry.count }, 3 do # Expect validation start, format validation success, and error logs
       error = assert_raises(CommandExecutionService::InvalidCommandError) do
@@ -113,7 +113,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
   end
 
   test "validates rails new command format" do
-    command = "rails new --invalid-flag --skip-bundle"
+    command = "rails new --invalid-flag"
 
     assert_difference -> { AppGeneration::LogEntry.count }, 3 do
       error = assert_raises(CommandExecutionService::InvalidCommandError) do
@@ -134,7 +134,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
   end
 
   test "detects command injection attempts" do
-    command = "rails new; rm -rf / --skip-bundle"
+    command = "rails new; rm -rf /"
 
     assert_difference -> { AppGeneration::LogEntry.count }, 2 do
       error = assert_raises(CommandExecutionService::InvalidCommandError) do
@@ -194,7 +194,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       log_entries = @generated_app.log_entries.recent_first
 
       expected_messages = [
-        "Validating command: #{@valid_commands.first} --skip-bundle",
+        "Validating command: #{@valid_commands.first}",
         "Command validation successful",
         "Created workspace directory",
         "Preparing to execute command",
@@ -208,7 +208,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       end
 
       buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
-      assert_equal "Executing command: `#{@valid_commands.first} --skip-bundle`\nSample output", buffer_entry.message
+      assert_equal "Executing command: `#{@valid_commands.first}`\nSample output", buffer_entry.message
       assert log_entries.all? { it.info? || it.debug? }
     end
   end
@@ -243,7 +243,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       error_log = log_entries.find { |entry| entry.message == "Command failed" }
       assert error_log.error?
 
-      assert_equal "Executing command: `#{@valid_commands.first} --skip-bundle`", error_log.metadata["output"]
+      assert_equal "Executing command: `#{@valid_commands.first}`", error_log.metadata["output"]
       assert error_log.metadata["status"]
 
       log_entries.each do |entry|

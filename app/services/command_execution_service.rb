@@ -7,7 +7,8 @@ class CommandExecutionService
     "rails new",
     "rails app:template",
     "bundle install",
-    "bundle lock --add-platform x86_64-linux",
+    # TODO: Make sure this works in production, after NOT --skip-bundle
+    # "bundle lock --add-platform x86_64-linux",
     "rails db:migrate"
   ].freeze
 
@@ -88,11 +89,6 @@ class CommandExecutionService
     @command = command&.to_s&.strip || generated_app.command
     @work_dir = nil
     @pid = nil
-
-    # Add --skip-bundle to rails new commands
-    if @command.start_with?("rails new") && !@command.include?("--skip-bundle")
-      @command = "#{@command} --skip-bundle"
-    end
   end
 
   def execute
