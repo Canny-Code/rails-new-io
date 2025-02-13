@@ -14,6 +14,8 @@ export default class extends Controller {
       if (radio) {
         radio.checked = true
         this.updateTerminalAndIngredients(radio)
+        // Dispatch a change event to notify other controllers
+        radio.dispatchEvent(new Event('change', { bubbles: true }))
       }
     }
   }
