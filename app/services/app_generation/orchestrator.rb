@@ -62,9 +62,14 @@ module AppGeneration
         CommandExecutionService.new(
           @generated_app,
           @logger,
-          "./bin/rails db:migrate"
+          "./bin/rails db:create"
         ).execute
-        @repository_service.commit_changes("Running db:migrate to create schema.rb")
+        CommandExecutionService.new(
+          @generated_app,
+          @logger,
+          "./bin/rails db:schema:dump"
+        ).execute
+        @repository_service.commit_changes("Running db:create and db:schema:dump to create schema.rb")
       end
 
       @logger.info("Dependencies installed successfully")
