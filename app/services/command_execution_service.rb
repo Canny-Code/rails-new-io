@@ -264,6 +264,7 @@ class CommandExecutionService
     log_environment_variables_for_command_execution(env)
 
     buffer = Buffer.new(@generated_app, bundle_command)
+    error_buffer = []
 
     @logger.debug("Command execution started: #{@command}", {
       pid: @pid,
@@ -282,7 +283,8 @@ class CommandExecutionService
 
       stderr_thread = Thread.new do
         stderr.each_line do |line|
-          puts "DEBUG: STDERR: #{line.strip}"
+          # puts "DEBUG: STDERR: #{line.strip}"
+          error_buffer << line.strip
         end
       end
 
@@ -296,7 +298,8 @@ class CommandExecutionService
       unless exit_status&.success?
         @logger.error("Command failed", {
           status: exit_status,
-          output: output
+          output: output,
+          error_buffer: error_buffer.join("<br>")
         })
         raise "Command failed with status: #{exit_status}"
       end
