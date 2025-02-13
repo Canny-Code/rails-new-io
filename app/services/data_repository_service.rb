@@ -1,5 +1,7 @@
 # app/services/data_repository_service.rb
 class DataRepositoryService < GithubRepositoryService
+  require "shellwords"
+
   BASE_NAME = "rails-new-io-data"
 
   class << self
@@ -42,7 +44,6 @@ class DataRepositoryService < GithubRepositoryService
   def write_ingredient(ingredient, repo_name:)
     tree_items = []
 
-    # Create ingredient template file
     template_content = ingredient.template_content
 
     tree_items << {
@@ -121,7 +122,14 @@ class DataRepositoryService < GithubRepositoryService
 
   def template_path(ingredient)
     repo_name = self.class.name_for_environment
-    path = Rails.root.join("storage", repo_name, "ingredients", ingredient.created_by.id.to_s, ingredient.name, "template.rb")
+    path = Rails.root.join(
+      "storage",
+      repo_name,
+      "ingredients",
+      ingredient.created_by.id.to_s,
+      Shellwords.escape(ingredient.name),
+      "template.rb"
+    )
 
     # Ensure directory exists
     FileUtils.mkdir_p(path.dirname)
