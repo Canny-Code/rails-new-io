@@ -139,11 +139,6 @@ class GeneratedApp < ApplicationRecord
 
     template_path = DataRepositoryService.new(user:).template_path(ingredient)
 
-    unless File.exist?(template_path)
-      @logger.error("Template file not found", { path: template_path })
-      raise "Template file not found: #{template_path}"
-    end
-
     command = "rails app:template LOCATION=#{template_path}"
     CommandExecutionService.new(self, @logger, command).execute
 

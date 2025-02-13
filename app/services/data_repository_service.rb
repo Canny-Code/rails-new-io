@@ -70,7 +70,7 @@ class DataRepositoryService < GithubRepositoryService
     )
   end
 
-  def delete_ingredient(ingredient_name:, github_template_path:, loca_template_path:, repo_name:)
+  def delete_ingredient(ingredient_name:, github_template_path:, local_template_path:, repo_name:)
     tree_items = []
 
     # Mark file for deletion in the repository
@@ -81,7 +81,7 @@ class DataRepositoryService < GithubRepositoryService
       sha: nil # Setting SHA to nil marks it for deletion
     }
 
-    File.delete(loca_template_path) if File.exist?(loca_template_path)
+    File.delete(local_template_path) if File.exist?(local_template_path)
 
     commit_changes(
       repo_name:,

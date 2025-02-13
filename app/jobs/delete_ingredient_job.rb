@@ -10,7 +10,7 @@ class DeleteIngredientJob < ApplicationJob
     data_repository.delete_ingredient(
       ingredient_name: ingredient.name,
       github_template_path: data_repository.github_template_path(ingredient),
-      loca_template_path: data_repository.template_path(ingredient),
+      local_template_path: data_repository.template_path(ingredient),
       repo_name: DataRepositoryService.name_for_environment
     )
 
