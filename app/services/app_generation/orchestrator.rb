@@ -53,7 +53,12 @@ module AppGeneration
         @repository_service.commit_changes("Updating Gemfile.lock with CI platform")
       end
 
-
+      CommandExecutionService.new(
+        @generated_app,
+        @logger,
+        "rails db:migrate"
+        ).execute
+      @repository_service.commit_changes("Running db:migrate to create schema.rb")
 
       @logger.info("Dependencies installed successfully")
     end

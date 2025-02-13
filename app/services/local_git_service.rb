@@ -108,7 +108,7 @@ class LocalGitService
     end
   end
 
-  def commit_changes(message:)
+  def commit_changes(message)
     in_working_directory do
       run_command("git add . && git commit -m '#{message}'")
     end

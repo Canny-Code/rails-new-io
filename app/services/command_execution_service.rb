@@ -7,7 +7,8 @@ class CommandExecutionService
     "rails new",
     "rails app:template",
     "bundle install",
-    "bundle lock --add-platform x86_64-linux"
+    "bundle lock --add-platform x86_64-linux",
+    "rails db:migrate"
   ].freeze
 
   TEMPLATE_COMMAND_PATTERN = %r{\A
@@ -186,20 +187,8 @@ class CommandExecutionService
       "NODE_ENV" => Rails.env,
       "PATH" => ENV["PATH"],
       "HOME" => @work_dir,
-      "BUNDLE_DEPLOYMENT" => nil,  # Unset deployment mode for app generation
-      "BUNDLE_APP_CONFIG" => nil,
-      "BUNDLE_PATH" => nil   # Use local bundle path
-    }
-
-    puts "\nDEBUG: ====== Command Execution Setup ======"
-    puts "DEBUG: Command: #{@command}"
-    puts "DEBUG: Work directory: #{@work_dir}"
-    puts "DEBUG: Current ENV BUNDLE_DEPLOYMENT: #{ENV['BUNDLE_DEPLOYMENT']}"
-    puts "DEBUG: Current ENV BUNDLE_GEMFILE: #{ENV['BUNDLE_GEMFILE']}"
-    puts "DEBUG: Current ENV BUNDLE_PATH: #{ENV['BUNDLE_PATH']}"
-    puts "DEBUG: Current ENV BUNDLE_APP_CONFIG: #{ENV['BUNDLE_APP_CONFIG']}"
-    puts "DEBUG: Current ENV BUNDLE_BIN: #{ENV['BUNDLE_BIN']}"
-    puts "DEBUG: Current ENV BUNDLE_USER_HOME: #{ENV['BUNDLE_USER_HOME']}"
+      "BUNDLE_DEPLOYMENT" => nil
+      }
 
     # Create .bundle directory and config if needed
     unless @command.start_with?("rails new")
@@ -236,9 +225,7 @@ class CommandExecutionService
         "BUNDLE_GEMFILE" => gemfile_path,
         "BUNDLE_JOBS" => "4",
         "BUNDLE_RETRY" => "3",
-        "PATH" => "#{File.join(@work_dir, 'bin')}:#{ENV['PATH']}",
-        "BUNDLE_APP_CONFIG" => File.join(@work_dir, "vendor/bundle"),
-        "BUNDLE_PATH" => File.join(@work_dir, "vendor/bundle")
+        "PATH" => "#{File.join(@work_dir, 'bin')}:#{ENV['PATH']}"
       })
       puts "\nDEBUG: ====== Bundle Environment ======"
       puts "DEBUG: BUNDLE_GEMFILE=#{env['BUNDLE_GEMFILE']}"
@@ -251,15 +238,6 @@ class CommandExecutionService
     end
 
     bundle_command = @command.include?("app:template") ? @command.sub("rails", "./bin/rails") : @command
-    puts "\nDEBUG: ====== Final Execution ======"
-    puts "DEBUG: Final command: #{bundle_command}"
-    puts "DEBUG: In directory: #{@work_dir}"
-    puts "DEBUG: Final ENV BUNDLE_DEPLOYMENT: #{env['BUNDLE_DEPLOYMENT']}"
-    puts "DEBUG: Final ENV BUNDLE_GEMFILE: #{env['BUNDLE_GEMFILE']}"
-    puts "DEBUG: Final ENV BUNDLE_PATH: #{env['BUNDLE_PATH']}"
-    puts "DEBUG: Final ENV BUNDLE_APP_CONFIG: #{env['BUNDLE_APP_CONFIG']}"
-    puts "DEBUG: Final ENV BUNDLE_BIN: #{env['BUNDLE_BIN']}"
-    puts "DEBUG: Final ENV BUNDLE_USER_HOME: #{env['BUNDLE_USER_HOME']}"
 
     log_environment_variables_for_command_execution(env)
 
