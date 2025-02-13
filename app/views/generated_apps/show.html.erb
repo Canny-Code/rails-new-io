@@ -1,42 +1,33 @@
-<div class="max-w-3xl mx-auto mt-8">
+<div class="max-w-3xl mx-auto my-8">
   <div class="bg-white shadow rounded-lg p-6">
-    <h1 class="text-2xl font-bold mb-6"><%= @generated_app.name %></h1>
+  <div class="px-4 sm:px-0">
+    <h3 class="text-base/7 font-semibold text-gray-900">App Details</h3>
+    <p class="mt-1 max-w-2xl text-sm/6 text-gray-500">Your freshly baked Rails app, hot out of the oven! 🧑‍🍳✨</p>
     <%= render "shared/github_clone_box", generated_app: @generated_app %>
-    <div class="space-y-4">
-      <div>
-        <h3 class="text-sm font-medium text-gray-500">Description</h3>
-        <p class="mt-1"><%= @generated_app.description %></p>
+  </div>
+  <div class="mt-6 border-t border-gray-100">
+    <dl class="divide-y divide-gray-100">
+      <div class="bg-gray-50 px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-3">
+        <dt class="text-sm/6 font-medium text-gray-900">Name</dt>
+        <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0"> <%= @generated_app.name %></dd>
       </div>
-      <div>
-        <h3 class="text-sm font-medium text-gray-500">Ruby Version</h3>
-        <p class="mt-1"><%= @generated_app.ruby_version %></p>
+      <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-3">
+        <dt class="text-sm/6 font-medium text-gray-900">Description</dt>
+        <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0"><%= @generated_app.description %></dd>
       </div>
-      <div>
-        <h3 class="text-sm font-medium text-gray-500">Rails Version</h3>
-        <p class="mt-1"><%= @generated_app.rails_version %></p>
+      <div class="bg-gray-50 px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-3">
+        <dt class="text-sm/6 font-medium text-gray-900">Ruby Version</dt>
+        <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0"><%= @generated_app.ruby_version %></dd>
       </div>
-      <div>
-        <h3 class="text-sm font-medium text-gray-500">Selected Gems</h3>
-        <div class="mt-1 flex flex-wrap gap-2">
-          <% @generated_app.selected_gems.each do |gem| %>
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              <%= gem %>
-            </span>
-          <% end %>
-        </div>
+
+      <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-3">
+        <dt class="text-sm/6 font-medium text-gray-900">Rails Version</dt>
+        <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0"><%= @generated_app.rails_version %></dd>
       </div>
-      <div>
-        <h3 class="text-sm font-medium text-gray-500">Configuration</h3>
-        <dl class="mt-1 grid grid-cols-2 gap-2 text-sm">
-          <% @generated_app.configuration_options.each do |key, value| %>
-            <dt class="font-medium text-gray-500"><%= key.titleize %></dt>
-            <dd><%= value %></dd>
-          <% end %>
-        </dl>
-      </div>
-      <div>
-        <h3 class="text-sm font-medium text-gray-500">GitHub Repository</h3>
-        <p class="mt-1">
+
+      <div class="bg-gray-50 px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+        <dt class="text-sm font-medium leading-6 text-gray-900">GitHub Repository</dt>
+        <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
           <% if @generated_app.github_repo_url.present? %>
             <%= link_to @generated_app.github_repo_url,
               URI.parse(@generated_app.github_repo_url).to_s,
@@ -44,19 +35,40 @@
               target: "_blank",
               rel: "noopener noreferrer" %>
           <% end %>
-        </p>
+        </dd>
       </div>
-      <div>
-        <h3 class="text-sm font-medium text-gray-500">Visibility</h3>
-        <p class="mt-1"><%= @generated_app.is_public? ? "Public" : "Private" %></p>
+
+      <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+        <dt class="text-sm font-medium leading-6 text-gray-900">Visibility</dt>
+        <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
+          <%= @generated_app.is_public? ? "Public" : "Private" %>
+        </dd>
       </div>
-      <div>
-        <%= link_to generated_app_log_entries_path(@generated_app),
-          class: "text-sm text-blue-600 hover:text-blue-800" do %>
-          View Logs
-          <span class="text-gray-500">(<%= @generated_app.log_entries.count %>)</span>
-        <% end %>
+
+      <div class="bg-gray-50 px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+        <dt class="text-sm font-medium leading-6 text-gray-900">Custom Ingredients</dt>
+        <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
+          <% if @generated_app.ingredients.any? %>
+            <% @generated_app.ingredients.each do |ingredient| %>
+              <%= link_to ingredient_path(ingredient), class: "rounded-xl bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 mr-4" do %>
+                <%= ingredient.name %>
+              <% end %>
+            <% end %>
+          <% else %>
+            <span>No custom ingredients added.</span>
+          <% end %>
+        </dd>
       </div>
-    </div>
+
+      <div class="flex justify-end">
+        <div class="mt-8">
+          <%= render Buttons::Primary::Component.new(
+            text: "View Logs (#{@generated_app.log_entries.count})",
+            path: generated_app_log_entries_path(@generated_app)
+          ) %>
+        </div>
+      </div>
+    </dl>
   </div>
+</div>
 </div>
