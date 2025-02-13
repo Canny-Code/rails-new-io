@@ -179,7 +179,9 @@ class CommandExecutionService
       "RAILS_ENV" => "development",
       "NODE_ENV" => "development",
       "PATH" => ENV["PATH"],
-      "HOME" => @work_dir
+      "HOME" => @work_dir,
+      "BUNDLE_DEPLOYMENT" => "",
+      "BUNDLE_WITHOUT" => ""
     }
 
     if @command.start_with?("rails new")
@@ -188,8 +190,7 @@ class CommandExecutionService
         "BUNDLE_PATH" => nil,
         "BUNDLE_APP_CONFIG" => nil,
         "BUNDLE_BIN" => nil,
-        "BUNDLE_USER_HOME" => nil,
-        "BUNDLE_DEPLOYMENT" => nil
+        "BUNDLE_USER_HOME" => nil
       })
     else
       env.merge!({
