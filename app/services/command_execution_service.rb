@@ -177,15 +177,27 @@ class CommandExecutionService
       "RAILS_ENV" => "development",
       "NODE_ENV" => "development",
       "PATH" => ENV["PATH"],
-      "HOME" => @work_dir,
-      # Clear all bundle-related vars for a fresh environment
-      "BUNDLE_GEMFILE" => nil,
-      "BUNDLE_PATH" => nil,
-      "BUNDLE_APP_CONFIG" => nil,
-      "BUNDLE_BIN" => nil,
-      "BUNDLE_USER_HOME" => nil,
-      "BUNDLE_DEPLOYMENT" => nil
+      "HOME" => @work_dir
     }
+
+    if @command.start_with?("rails new")
+      env.merge!({
+        "BUNDLE_GEMFILE" => nil,
+        "BUNDLE_PATH" => nil,
+        "BUNDLE_APP_CONFIG" => nil,
+        "BUNDLE_BIN" => nil,
+        "BUNDLE_USER_HOME" => nil,
+        "BUNDLE_DEPLOYMENT" => nil
+      })
+    else
+      env.merge!({
+        "BUNDLE_GEMFILE" => File.join(@work_dir, "Gemfile"),
+        "BUNDLE_PATH" => File.join(@work_dir, "vendor/bundle"),
+        "GEM_HOME" => File.join(@work_dir, "vendor/bundle"),
+        "BUNDLE_APP_CONFIG" => File.join(@work_dir, ".bundle"),
+        "PATH" => "#{File.join(@work_dir, 'bin')}:#{env['PATH']}"
+      })
+    end
 
     bundle_command = @command.include?("rails new") ? @command : @command.sub(/^rails/, "./bin/rails")
 
