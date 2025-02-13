@@ -147,10 +147,10 @@
         path: ingredients_path
       ) %>
       <%= render Buttons::Submit::Component.new(
-        text: "Create Ingredient",
+        text: @ingredient.new_record? ? "Create Ingredient" : "Update Ingredient",
         disabled: false,
         data: { app_form_validator_target: "submitButton" },
-        html_options: { class: "ml-2" }
+        html_options: { class: "ml-3" }
       ) %>
     </div>
   </div>
