@@ -2,6 +2,8 @@
 class AppRepositoryService < GithubRepositoryService
   attr_reader :generated_app
 
+  delegate :commit_changes, to: :git_service
+
   def initialize(generated_app, logger)
     @generated_app = generated_app
     @logger = logger
@@ -48,14 +50,6 @@ class AppRepositoryService < GithubRepositoryService
       token: user.github_token,
       repo_url: generated_app.github_repo_url
     )
-  end
-
-  def commit_changes_after_applying_ingredient(ingredient)
-    git_service.commit_changes(message: ingredient.to_commit_message)
-  end
-
-  def commit_changes_after_gemfile_lock_update(message)
-    git_service.commit_changes(message:)
   end
 
   private

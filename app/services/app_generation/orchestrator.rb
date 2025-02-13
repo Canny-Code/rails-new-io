@@ -50,8 +50,10 @@ module AppGeneration
           "bundle lock --add-platform x86_64-linux"
           ).execute
 
-        @repository_service.commit_changes_after_gemfile_lock_update("Updating Gemfile.lock with CI platform")
+        @repository_service.commit_changes("Updating Gemfile.lock with CI platform")
       end
+
+
 
       @logger.info("Dependencies installed successfully")
     end
