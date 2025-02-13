@@ -48,14 +48,14 @@ module AppGeneration
       CommandExecutionService.new(
         @generated_app,
         @logger,
-        "RAILS_ENV=development ./bin/rails db:create:all"
+        "./bin/rails db:create:all"
       ).execute
 
       @generated_app.configured_databases.each do |db|
         CommandExecutionService.new(
           @generated_app,
           @logger,
-          "RAILS_ENV=development ./bin/rails db:schema:dump:#{db}"
+          "./bin/rails db:schema:dump:#{db}"
         ).execute
       end
 

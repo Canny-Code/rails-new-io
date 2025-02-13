@@ -9,11 +9,11 @@ class CommandExecutionService
     "bundle install",
     # TODO: Make sure this works in production, after NOT --skip-bundle
     # "bundle lock --add-platform x86_64-linux",
-    "RAILS_ENV=development ./bin/rails db:create:all",
-    "RAILS_ENV=development ./bin/rails db:schema:dump:primary",
-    "RAILS_ENV=development ./bin/rails db:schema:dump:cache",
-    "RAILS_ENV=development ./bin/rails db:schema:dump:queue",
-    "RAILS_ENV=development ./bin/rails db:schema:dump:cable"
+    "./bin/rails db:create:all",
+    "./bin/rails db:schema:dump:primary",
+    "./bin/rails db:schema:dump:cache",
+    "./bin/rails db:schema:dump:queue",
+    "./bin/rails db:schema:dump:cable"
   ].freeze
 
   TEMPLATE_COMMAND_PATTERN = %r{\A
