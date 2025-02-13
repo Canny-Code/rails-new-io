@@ -39,6 +39,7 @@ module AppGeneration
       schema_path = File.join(@generated_app.workspace_path, @generated_app.name, "db", "schema.rb")
 
       @logger.info("Installing app dependencies")
+
       CommandExecutionService.new(
         @generated_app,
         @logger,
@@ -48,18 +49,35 @@ module AppGeneration
       CommandExecutionService.new(
         @generated_app,
         @logger,
-        "./bin/rails db:create:all"
+        "bundle lock --add-platform x86_64-linux"
       ).execute
 
-      @generated_app.configured_databases.each do |db|
-        CommandExecutionService.new(
-          @generated_app,
-          @logger,
-          "./bin/rails db:schema:dump:#{db}"
-        ).execute
-      end
+      @repository_service.commit_changes("Installing dependencies - updating Gemfile.lock")
 
-      @repository_service.commit_changes("Running db:create and db:schema:dump to create schema.rb")
+      # CommandExecutionService.new(
+      #   @generated_app,
+      #   @logger,
+      #   "rails db:create"
+      # ).execute
+
+      # @generated_app.configured_databases.each do |db|
+      #   db_string = db == "primary" ? "" : ":#{db}"
+
+      #   CommandExecutionService.new(
+      #     @generated_app,
+      #     @logger,
+      #     "rails db:schema:dump#{db_string}"
+      #   ).execute
+      # end
+
+      CommandExecutionService.new(
+        @generated_app,
+        @logger,
+        "rails db:migrate"
+      ).execute
+
+
+      @repository_service.commit_changes("Running db:migrate to create schema.rb")
 
       @logger.info("Dependencies installed successfully")
     end
