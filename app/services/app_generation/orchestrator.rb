@@ -62,12 +62,12 @@ module AppGeneration
         CommandExecutionService.new(
           @generated_app,
           @logger,
-          "./bin/rails db:create"
+          "./bin/rails db:create:all"
         ).execute
         CommandExecutionService.new(
           @generated_app,
           @logger,
-          "./bin/rails db:schema:dump"
+          "./bin/rails db:schema:dump:all"
         ).execute
         @repository_service.commit_changes("Running db:create and db:schema:dump to create schema.rb")
       end
