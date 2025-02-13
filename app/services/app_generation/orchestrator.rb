@@ -62,7 +62,7 @@ module AppGeneration
         CommandExecutionService.new(
           @generated_app,
           @logger,
-          "rails db:migrate"
+          "./bin/rails db:migrate"
         ).execute
         @repository_service.commit_changes("Running db:migrate to create schema.rb")
       end

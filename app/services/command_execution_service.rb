@@ -9,7 +9,7 @@ class CommandExecutionService
     "bundle install",
     # TODO: Make sure this works in production, after NOT --skip-bundle
     # "bundle lock --add-platform x86_64-linux",
-    "rails db:migrate"
+    "./bin/rails db:migrate"
   ].freeze
 
   TEMPLATE_COMMAND_PATTERN = %r{\A
