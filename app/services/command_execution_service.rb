@@ -22,17 +22,17 @@ class CommandExecutionService
     (?:
       \s+
       (?:
-        # Common bundle install options
+        # Options that can have a path value
+        --(?:gemfile|path)(?:=|\s+)[\w\/\.-]+
+        \s*
+        |
+        # Other common bundle install options
         --(?:
-          jobs|retry|gemfile|system|deployment|
+          jobs|retry|system|deployment|
           local|frozen|clean|standalone|full-index|
           conservative|force|prefer-local
         )
         (?:=\d+)?
-        \s*
-        |
-        # Path option with restricted values
-        --path(?:=|\s+)(?!.*\.\.)[a-zA-Z0-9][a-zA-Z0-9_\/-]*
         \s*
       )*
     )?

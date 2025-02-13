@@ -35,11 +35,13 @@ module AppGeneration
     end
 
     def install_dependencies
+      gemfile_path = File.join(@generated_app.workspace_path, @generated_app.name, "Gemfile")
+
       @logger.info("Installing app dependencies")
       CommandExecutionService.new(
         @generated_app,
         @logger,
-        "bundle install"
+        "bundle install --gemfile #{gemfile_path}"
       ).execute
 
       # Add Linux platform for CI after everything is installed
@@ -55,12 +57,12 @@ module AppGeneration
       #   @repository_service.commit_changes("Updating Gemfile.lock with CI platform")
       # end
 
-      CommandExecutionService.new(
-        @generated_app,
-        @logger,
-        "rails db:migrate"
-        ).execute
-      @repository_service.commit_changes("Running db:migrate to create schema.rb")
+      # CommandExecutionService.new(
+      #   @generated_app,
+      #   @logger,
+      #   "rails db:migrate"
+      #   ).execute
+      # @repository_service.commit_changes("Running db:migrate to create schema.rb")
 
       @logger.info("Dependencies installed successfully")
     end
