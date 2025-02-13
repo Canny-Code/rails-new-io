@@ -20,16 +20,17 @@
                 <div class="flex flex-col items-center">
                   <div class="w-full max-w-md">
                     <label for="app-name" class="w-full text-center mb-2">
-                      <span class="px-5 my-3 text-gray-500">Enter the name of your awesome app!</span>
+                      <span class="my-3 text-gray-300" data-app-form-validator-target="inputLabel">Select a recipe from the list below ↓</span>
                     </label>
-                    <div class="flex">
+                    <div class="flex mt-2">
                       <input id="app-name"
                            data-app-form-validator-target="input"
                            name="app_name"
                            data-action="input->app-form-validator#validateForm"
-                      autocomplete="off"
-                      placeholder="my-next-big-thing"
-                      class="appearance-none w-full min-w-96 px-5 py-2 border-2 border-gray-300 text-base leading-6 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-xl">
+                           disabled
+                           autocomplete="off"
+                           placeholder="my-next-big-thing"
+                           class="appearance-none w-full min-w-96 px-5 py-2 border-2 border-gray-300 text-base leading-6 rounded-md text-gray-800 bg-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition duration-150 ease-in-out max-w-xl">
                       <div class="ml-1 shrink-0">
                         <%= render Buttons::Submit::Component.new(
                           text: "Generate App",
@@ -86,7 +87,7 @@
             selected_recipe_id: params[:recipe_id],
             data: {
               recipe_selector_target: "radio",
-              action: "change->recipe-selector#updateUrl change->app-form-validator#validateForm",
+              action: "change->recipe-selector#updateUrl change->app-form-validator#validateForm change->app-form-validator#recipeSelected",
               app_form_validator_target: "recipeRadio"
             }
           ) %>
@@ -98,7 +99,7 @@
             selected_recipe_id: params[:recipe_id],
             data: {
               recipe_selector_target: "radio",
-              action: "change->recipe-selector#updateUrl change->app-form-validator#validateForm",
+              action: "change->recipe-selector#updateUrl change->app-form-validator#validateForm change->app-form-validator#recipeSelected",
               app_form_validator_target: "recipeRadio"
             }
           ) %>

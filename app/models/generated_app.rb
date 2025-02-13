@@ -67,7 +67,7 @@ class GeneratedApp < ApplicationRecord
       apply_ingredient(ingredient)
 
       @logger.info("Committing ingredient changes")
-      @repository_service.commit_changes_after_applying_ingredient(ingredient)
+      @repository_service.commit_changes(ingredient.to_commit_message)
       @logger.info("Ingredient #{ingredient.name} applied successfully")
     end
   end
@@ -138,11 +138,6 @@ class GeneratedApp < ApplicationRecord
     )
 
     template_path = DataRepositoryService.new(user:).template_path(ingredient)
-
-    unless File.exist?(template_path)
-      @logger.error("Template file not found", { path: template_path })
-      raise "Template file not found: #{template_path}"
-    end
 
     command = "rails app:template LOCATION=#{template_path}"
     CommandExecutionService.new(self, @logger, command).execute

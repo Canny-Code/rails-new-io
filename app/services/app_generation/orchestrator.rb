@@ -24,26 +24,52 @@ module AppGeneration
         command: @generated_app.command,
         app_name: @generated_app.name
       })
+      # TODO: Make sure this works in production, after NOT --skip-bundle
+      # if Rails.env.production?
+      #   CommandExecutionService.new(
+      #     @generated_app,
+      #     @logger,
+      #     "bundle lock --add-platform x86_64-linux"
+      #   ).execute
+      # end
     end
 
     def install_dependencies
+      gemfile_path = File.join(@generated_app.workspace_path, @generated_app.name, "Gemfile")
+      schema_path = File.join(@generated_app.workspace_path, @generated_app.name, "db", "schema.rb")
+
       @logger.info("Installing app dependencies")
       CommandExecutionService.new(
         @generated_app,
         @logger,
-        "bundle install"
+        "bundle install --gemfile #{gemfile_path}"
       ).execute
 
       # Add Linux platform for CI after everything is installed
-      gemfile_lock = File.join(@generated_app.workspace_path, @generated_app.name, "Gemfile.lock")
-      unless gemfile_lock.include?("x86_64-linux")
+      # TODO: Make sure this works in both dev/production, after NOT --skip-bundle
+      # gemfile_lock = File.join(@generated_app.workspace_path, @generated_app.name, "Gemfile.lock")
+      # unless gemfile_lock.include?("x86_64-linux")
+      #   CommandExecutionService.new(
+      #     @generated_app,
+      #     @logger,
+      #     "bundle lock --add-platform x86_64-linux"
+      #     ).execute
+
+      #   @repository_service.commit_changes("Updating Gemfile.lock with CI platform")
+      # end
+
+      unless File.exist?(schema_path)
         CommandExecutionService.new(
           @generated_app,
           @logger,
-          "bundle lock --add-platform x86_64-linux"
-          ).execute
-
-        @repository_service.commit_changes_after_gemfile_lock_update("Updating Gemfile.lock with CI platform")
+          "./bin/rails db:create:all"
+        ).execute
+        CommandExecutionService.new(
+          @generated_app,
+          @logger,
+          "./bin/rails db:schema:dump:all"
+        ).execute
+        @repository_service.commit_changes("Running db:create and db:schema:dump to create schema.rb")
       end
 
       @logger.info("Dependencies installed successfully")

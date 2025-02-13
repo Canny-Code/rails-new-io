@@ -7,7 +7,10 @@ class CommandExecutionService
     "rails new",
     "rails app:template",
     "bundle install",
-    "bundle lock --add-platform x86_64-linux"
+    # TODO: Make sure this works in production, after NOT --skip-bundle
+    # "bundle lock --add-platform x86_64-linux",
+    "./bin/rails db:create",
+    "./bin/rails db:schema:dump"
   ].freeze
 
   TEMPLATE_COMMAND_PATTERN = %r{\A
@@ -20,17 +23,17 @@ class CommandExecutionService
     (?:
       \s+
       (?:
-        # Common bundle install options
+        # Options that can have a path value
+        --(?:gemfile|path)(?:=|\s+)[\w\/\.-]+
+        \s*
+        |
+        # Other common bundle install options
         --(?:
-          jobs|retry|gemfile|system|deployment|
+          jobs|retry|system|deployment|
           local|frozen|clean|standalone|full-index|
           conservative|force|prefer-local
         )
         (?:=\d+)?
-        \s*
-        |
-        # Path option with restricted values
-        --path(?:=|\s+)(?!.*\.\.)[a-zA-Z0-9][a-zA-Z0-9_\/-]*
         \s*
       )*
     )?
@@ -87,11 +90,6 @@ class CommandExecutionService
     @command = command&.to_s&.strip || generated_app.command
     @work_dir = nil
     @pid = nil
-
-    # Add --skip-bundle to rails new commands
-    if @command.start_with?("rails new") && !@command.include?("--skip-bundle")
-      @command = "#{@command} --skip-bundle"
-    end
   end
 
   def execute
@@ -186,12 +184,8 @@ class CommandExecutionService
       "NODE_ENV" => Rails.env,
       "PATH" => ENV["PATH"],
       "HOME" => @work_dir,
-      "BUNDLE_DEPLOYMENT" => nil  # Unset deployment mode for app generation
-    }
-
-    puts "\nDEBUG: ====== Command Execution Setup ======"
-    puts "DEBUG: Command: #{@command}"
-    puts "DEBUG: Work directory: #{@work_dir}"
+      "BUNDLE_DEPLOYMENT" => nil
+      }
 
     # Create .bundle directory and config if needed
     unless @command.start_with?("rails new")
@@ -241,13 +235,11 @@ class CommandExecutionService
     end
 
     bundle_command = @command.include?("app:template") ? @command.sub("rails", "./bin/rails") : @command
-    puts "\nDEBUG: ====== Final Execution ======"
-    puts "DEBUG: Final command: #{bundle_command}"
-    puts "DEBUG: In directory: #{@work_dir}"
 
     log_environment_variables_for_command_execution(env)
 
     buffer = Buffer.new(@generated_app, bundle_command)
+    error_buffer = []
 
     @logger.debug("Command execution started: #{@command}", {
       pid: @pid,
@@ -266,7 +258,8 @@ class CommandExecutionService
 
       stderr_thread = Thread.new do
         stderr.each_line do |line|
-          puts "DEBUG: STDERR: #{line.strip}"
+          # puts "DEBUG: STDERR: #{line.strip}"
+          error_buffer << line.strip
         end
       end
 
@@ -280,7 +273,8 @@ class CommandExecutionService
       unless exit_status&.success?
         @logger.error("Command failed", {
           status: exit_status,
-          output: output
+          output: output,
+          error_buffer: error_buffer.join("<br>")
         })
         raise "Command failed with status: #{exit_status}"
       end

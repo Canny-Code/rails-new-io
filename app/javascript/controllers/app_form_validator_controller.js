@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "message", "spinner", "submitButton", "recipeRadio"]
+  static targets = ["input", "message", "spinner", "submitButton", "recipeRadio", "inputLabel"]
   static values = {
     checkUrl: String,
     debounce: { type: Number, default: 500 },
@@ -15,6 +15,7 @@ export default class extends Controller {
   }
 
   connect() {
+    this.updateInputState()
     this.validateForm()
   }
 
@@ -119,5 +120,22 @@ export default class extends Controller {
       button.disabled = false
       button.classList.remove('opacity-50', 'cursor-not-allowed')
     })
+  }
+
+  recipeSelected(event) {
+    this.updateInputState()
+    this.validateForm()
+  }
+
+  updateInputState() {
+    const recipeSelected = Array.from(this.recipeRadioTargets).some(radio => radio.checked)
+
+    if (recipeSelected) {
+      this.inputTarget.disabled = false
+      this.inputLabelTarget.textContent = "Enter the name of your awesome app!"
+    } else {
+      this.inputTarget.disabled = true
+      this.inputLabelTarget.textContent = "Select a recipe from the list below ↓"
+    }
   }
 }

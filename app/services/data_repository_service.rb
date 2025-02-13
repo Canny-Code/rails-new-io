@@ -1,5 +1,7 @@
 # app/services/data_repository_service.rb
 class DataRepositoryService < GithubRepositoryService
+  require "shellwords"
+
   BASE_NAME = "rails-new-io-data"
 
   class << self
@@ -42,7 +44,6 @@ class DataRepositoryService < GithubRepositoryService
   def write_ingredient(ingredient, repo_name:)
     tree_items = []
 
-    # Create ingredient template file
     template_content = ingredient.template_content
 
     tree_items << {
@@ -69,7 +70,7 @@ class DataRepositoryService < GithubRepositoryService
     )
   end
 
-  def delete_ingredient(ingredient_name:, github_template_path:, loca_template_path:, repo_name:)
+  def delete_ingredient(ingredient_name:, github_template_path:, local_template_path:, repo_name:)
     tree_items = []
 
     # Mark file for deletion in the repository
@@ -80,7 +81,7 @@ class DataRepositoryService < GithubRepositoryService
       sha: nil # Setting SHA to nil marks it for deletion
     }
 
-    File.delete(loca_template_path) if File.exist?(loca_template_path)
+    File.delete(local_template_path) if File.exist?(local_template_path)
 
     commit_changes(
       repo_name:,
@@ -121,7 +122,14 @@ class DataRepositoryService < GithubRepositoryService
 
   def template_path(ingredient)
     repo_name = self.class.name_for_environment
-    path = Rails.root.join("storage", repo_name, "ingredients", ingredient.created_by.id.to_s, ingredient.name, "template.rb")
+    path = Rails.root.join(
+      "storage",
+      repo_name,
+      "ingredients",
+      ingredient.created_by.id.to_s,
+      Shellwords.escape(ingredient.name),
+      "template.rb"
+    )
 
     # Ensure directory exists
     FileUtils.mkdir_p(path.dirname)

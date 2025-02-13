@@ -11,7 +11,7 @@ class CommandExecutionService::BufferTest < ActiveSupport::TestCase
       selected_gems: [],
       configuration_options: {}
     )
-    @command = "rails new #{@app.name} -d postgres --skip-bundle"
+    @command = "rails new #{@app.name} -d postgres"
     @buffer = CommandExecutionService::Buffer.new(@app, @command)
     @initial_log_count = @app.log_entries.count
   end
