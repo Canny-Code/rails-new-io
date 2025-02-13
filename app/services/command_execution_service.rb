@@ -149,23 +149,25 @@ class CommandExecutionService
   end
 
   def setup_work_directory
-    if @command.start_with?("rails new")
+    @work_dir = if @command.start_with?("rails new")
       base_dir = "/var/lib/rails-new-io/workspaces"
       FileUtils.mkdir_p(base_dir)
-      @work_dir = File.join(base_dir, "workspace-#{Time.current.to_i}-#{SecureRandom.hex(4)}")
-      FileUtils.mkdir_p(@work_dir)
-      @generated_app.update(workspace_path: @work_dir)
+      workspace_dir_name = "workspace-#{Time.current.to_i}-#{SecureRandom.hex(4)}"
+
+      if Dir.exist?(workspace_dir_name)
+        raise WhatTheFuckError, "Workspace directory #{workspace_dir_name} already exists?!"
+      end
+
+      File.join(base_dir, workspace_dir_name).tap do |dir|
+        FileUtils.mkdir_p(dir)
+        @generated_app.update(workspace_path: dir)
+      end
     else
-      @work_dir = File.join(@generated_app.workspace_path, @generated_app.name)
+      File.join(@generated_app.workspace_path, @generated_app.name)
     end
 
-    puts "DEBUG: Command type: #{@command.split.first(2).join(' ')}"
-    puts "DEBUG: Work directory: #{@work_dir}"
-    puts "DEBUG: Directory exists? #{Dir.exist?(@work_dir)}"
-
-    if !@command.start_with?("rails new") && !Dir.exist?(@work_dir)
-      puts "DEBUG: ERROR - Work directory does not exist for non-rails-new command!"
-      raise InvalidCommandError, "Work directory #{@work_dir} does not exist"
+    if !Dir.exist?(@work_dir)
+      raise InvalidCommandError, "Work directory #{@work_dir} does not exist!"
     end
   end
 
