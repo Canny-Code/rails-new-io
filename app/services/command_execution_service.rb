@@ -196,6 +196,7 @@ class CommandExecutionService
         "BUNDLE_GEMFILE" => File.join(@work_dir, "Gemfile"),
         "BUNDLE_PATH" => File.join(@work_dir, "vendor/bundle"),
         "GEM_HOME" => File.join(@work_dir, "vendor/bundle"),
+        "GEM_PATH" => File.join(@work_dir, "vendor/bundle"),
         "BUNDLE_APP_CONFIG" => File.join(@work_dir, ".bundle"),
         "PATH" => "#{File.join(@work_dir, 'bin')}:#{env['PATH']}"
       })
