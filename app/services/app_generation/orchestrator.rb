@@ -36,6 +36,7 @@ module AppGeneration
 
     def install_dependencies
       gemfile_path = File.join(@generated_app.workspace_path, @generated_app.name, "Gemfile")
+      schema_path = File.join(@generated_app.workspace_path, @generated_app.name, "db", "schema.rb")
 
       @logger.info("Installing app dependencies")
       CommandExecutionService.new(
@@ -57,12 +58,14 @@ module AppGeneration
       #   @repository_service.commit_changes("Updating Gemfile.lock with CI platform")
       # end
 
-      # CommandExecutionService.new(
-      #   @generated_app,
-      #   @logger,
-      #   "rails db:migrate"
-      #   ).execute
-      # @repository_service.commit_changes("Running db:migrate to create schema.rb")
+      unless File.exist?(schema_path)
+        CommandExecutionService.new(
+          @generated_app,
+          @logger,
+          "rails db:migrate"
+        ).execute
+        @repository_service.commit_changes("Running db:migrate to create schema.rb")
+      end
 
       @logger.info("Dependencies installed successfully")
     end
