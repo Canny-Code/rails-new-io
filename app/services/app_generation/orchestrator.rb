@@ -39,38 +39,45 @@ module AppGeneration
       schema_path = File.join(@generated_app.workspace_path, @generated_app.name, "db", "schema.rb")
 
       @logger.info("Installing app dependencies")
+
       CommandExecutionService.new(
         @generated_app,
         @logger,
         "bundle install --gemfile #{gemfile_path}"
       ).execute
 
-      # Add Linux platform for CI after everything is installed
-      # TODO: Make sure this works in both dev/production, after NOT --skip-bundle
-      # gemfile_lock = File.join(@generated_app.workspace_path, @generated_app.name, "Gemfile.lock")
-      # unless gemfile_lock.include?("x86_64-linux")
+      CommandExecutionService.new(
+        @generated_app,
+        @logger,
+        "bundle lock --add-platform x86_64-linux"
+      ).execute
+
+      @repository_service.commit_changes("Installing dependencies - updating Gemfile.lock")
+
+      # CommandExecutionService.new(
+      #   @generated_app,
+      #   @logger,
+      #   "rails db:create"
+      # ).execute
+
+      # @generated_app.configured_databases.each do |db|
+      #   db_string = db == "primary" ? "" : ":#{db}"
+
       #   CommandExecutionService.new(
       #     @generated_app,
       #     @logger,
-      #     "bundle lock --add-platform x86_64-linux"
-      #     ).execute
-
-      #   @repository_service.commit_changes("Updating Gemfile.lock with CI platform")
+      #     "rails db:schema:dump#{db_string}"
+      #   ).execute
       # end
 
-      unless File.exist?(schema_path)
-        CommandExecutionService.new(
-          @generated_app,
-          @logger,
-          "./bin/rails db:create:all"
-        ).execute
-        CommandExecutionService.new(
-          @generated_app,
-          @logger,
-          "./bin/rails db:schema:dump:all"
-        ).execute
-        @repository_service.commit_changes("Running db:create and db:schema:dump to create schema.rb")
-      end
+      CommandExecutionService.new(
+        @generated_app,
+        @logger,
+        "rails db:migrate"
+      ).execute
+
+
+      @repository_service.commit_changes("Running db:migrate to create schema.rb")
 
       @logger.info("Dependencies installed successfully")
     end

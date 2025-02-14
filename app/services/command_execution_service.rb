@@ -7,10 +7,13 @@ class CommandExecutionService
     "rails new",
     "rails app:template",
     "bundle install",
-    # TODO: Make sure this works in production, after NOT --skip-bundle
-    # "bundle lock --add-platform x86_64-linux",
-    "./bin/rails db:create",
-    "./bin/rails db:schema:dump"
+    "rails db:create",
+    "rails db:schema:dump",
+    "rails db:migrate",
+    "rails db:schema:dump:cache",
+    "rails db:schema:dump:queue",
+    "rails db:schema:dump:cable",
+    "bundle lock --add-platform x86_64-linux"
   ].freeze
 
   TEMPLATE_COMMAND_PATTERN = %r{\A
@@ -94,7 +97,6 @@ class CommandExecutionService
 
   def execute
     validate_command!
-
     setup_environment
 
     Timeout.timeout(MAX_TIMEOUT) do
@@ -134,8 +136,6 @@ class CommandExecutionService
         validate_bundle_install_command
       end
     rescue InvalidCommandError => e
-      # If we get here, it means the command passed the initial check but failed format validation
-      # Re-raise the error with the original message
       @logger.error(e.message, { command: @command })
       raise
     end
@@ -144,34 +144,30 @@ class CommandExecutionService
   end
 
   def setup_environment
-    if @command.start_with?("rails new")
-      @work_dir = if Rails.env.production?
-        # Use persistent directory in production
-        base_dir = "/var/lib/rails-new-io/workspaces"
-        FileUtils.mkdir_p(base_dir)
-        dir = File.join(base_dir, "workspace-#{Time.current.to_i}-#{SecureRandom.hex(4)}")
-        FileUtils.mkdir_p(dir)
-        dir
-      else
-        Dir.mktmpdir
+    setup_work_directory
+    @logger.debug("Directory setup complete", { work_dir: @work_dir })
+  end
+
+  def setup_work_directory
+    @work_dir = if @command.start_with?("rails new")
+      base_dir = "/var/lib/rails-new-io/workspaces"
+      FileUtils.mkdir_p(base_dir)
+      workspace_dir_name = "workspace-#{Time.current.to_i}-#{SecureRandom.hex(4)}"
+
+      if Dir.exist?(workspace_dir_name)
+        raise WhatTheFuckError, "Workspace directory #{workspace_dir_name} already exists?!"
       end
 
-      @logger.debug("Created workspace directory", { path: @work_dir })
-      @generated_app.update(workspace_path: @work_dir)
+      File.join(base_dir, workspace_dir_name).tap do |dir|
+        FileUtils.mkdir_p(dir)
+        @generated_app.update(workspace_path: dir)
+      end
     else
-      @work_dir = File.join(@generated_app.workspace_path, @generated_app.name)
-      @logger.debug("Using existing app directory", { path: @work_dir })
+      File.join(@generated_app.workspace_path, @generated_app.name)
     end
 
-    puts "DEBUG: Command type: #{@command.split.first(2).join(' ')}"
-    puts "DEBUG: Work directory: #{@work_dir}"
-    puts "DEBUG: Directory exists? #{Dir.exist?(@work_dir)}"
-    puts "DEBUG: Generated app workspace path: #{@generated_app.workspace_path}"
-    puts "DEBUG: Generated app name: #{@generated_app.name}"
-
-    if !@command.start_with?("rails new") && !Dir.exist?(@work_dir)
-      puts "DEBUG: ERROR - Work directory does not exist for non-rails-new command!"
-      raise InvalidCommandError, "Work directory #{@work_dir} does not exist"
+    if !Dir.exist?(@work_dir)
+      raise InvalidCommandError, "Work directory #{@work_dir} does not exist!"
     end
   end
 
@@ -180,61 +176,35 @@ class CommandExecutionService
     log_system_environment_details
 
     env = {
-      "RAILS_ENV" => Rails.env,
-      "NODE_ENV" => Rails.env,
+      "RAILS_ENV" => "development",
+      "NODE_ENV" => "development",
       "PATH" => ENV["PATH"],
       "HOME" => @work_dir,
-      "BUNDLE_DEPLOYMENT" => nil
-      }
-
-    # Create .bundle directory and config if needed
-    unless @command.start_with?("rails new")
-      bundle_dir = File.join(@work_dir, ".bundle")
-      FileUtils.mkdir_p(bundle_dir)
-      config_path = File.join(bundle_dir, "config")
-
-      # Ensure .bundle/config exists and is a file
-      if File.directory?(config_path)
-        FileUtils.rm_rf(config_path)
-      end
-      File.write(config_path, "") unless File.exist?(config_path)
-
-      # Set explicit bundle config path
-      env["BUNDLE_APP_CONFIG"] = bundle_dir
-      puts "DEBUG: Created bundle config at #{config_path}"
-    end
-
-    puts "DEBUG: Directory contents:"
-    puts `ls -la #{@work_dir}`.lines.map { |l| "DEBUG: #{l.strip}" }
+      "BUNDLE_DEPLOYMENT" => "false",
+      "BUNDLE_WITHOUT" => ""
+    }
 
     if @command.start_with?("rails new")
       env.merge!({
         "BUNDLE_GEMFILE" => nil,
+        "BUNDLE_USER_HOME" => nil,
+        "BUNDLE_GEMFILE" => nil,
         "BUNDLE_PATH" => nil,
         "BUNDLE_APP_CONFIG" => nil,
-        "BUNDLE_BIN" => nil,
-        "BUNDLE_USER_HOME" => nil
+        "BUNDLE_BIN" => nil
       })
-      puts "DEBUG: Rails new command - cleared bundle env vars"
     else
-      gemfile_path = File.join(@work_dir, "Gemfile")
       env.merge!({
-        "BUNDLE_GEMFILE" => gemfile_path,
-        "BUNDLE_JOBS" => "4",
-        "BUNDLE_RETRY" => "3",
-        "PATH" => "#{File.join(@work_dir, 'bin')}:#{ENV['PATH']}"
+        "BUNDLE_GEMFILE" => File.join(@work_dir, "Gemfile"),
+        "PATH" => "#{File.join(@work_dir, 'bin')}:#{env['PATH']}"
       })
-      puts "\nDEBUG: ====== Bundle Environment ======"
-      puts "DEBUG: BUNDLE_GEMFILE=#{env['BUNDLE_GEMFILE']}"
-      puts "DEBUG: Gemfile exists? #{File.exist?(gemfile_path)}"
-      if File.exist?(gemfile_path)
-        puts "DEBUG: Gemfile contents:"
-        puts File.read(gemfile_path).lines.map { |l| "DEBUG: #{l.strip}" }
-      end
-      puts "DEBUG: bin directory exists? #{Dir.exist?(File.join(@work_dir, 'bin'))}"
     end
 
-    bundle_command = @command.include?("app:template") ? @command.sub("rails", "./bin/rails") : @command
+    bundle_command = if @command.start_with?("rails new")
+      @command
+    else
+      @command.sub(/^rails/, "./bin/rails")
+    end
 
     log_environment_variables_for_command_execution(env)
 
@@ -258,7 +228,6 @@ class CommandExecutionService
 
       stderr_thread = Thread.new do
         stderr.each_line do |line|
-          # puts "DEBUG: STDERR: #{line.strip}"
           error_buffer << line.strip
         end
       end
@@ -277,6 +246,38 @@ class CommandExecutionService
           error_buffer: error_buffer.join("<br>")
         })
         raise "Command failed with status: #{exit_status}"
+      end
+
+      if @command.start_with?("rails new")
+        app_dir = File.join(@work_dir, @generated_app.name)
+
+        # Set up bundle config for vendor/bundle
+        Dir.chdir(app_dir) do
+          [
+            "bundle config set --local path vendor/bundle",
+            "bundle config set --local disable_shared_gems true",
+            "bundle config set --local deployment false",
+            "bundle install",  # Reinstall gems to vendor/bundle
+            "bundle config list > bundle_config.txt"  # Show the config for debugging
+          ].each do |cmd|
+            @logger.debug("Running post-rails-new command: #{cmd}")
+
+            # Run in same process context
+            out, err, status = Open3.capture3(env, cmd)
+
+            unless status.success?
+              @logger.error("Post-rails-new command failed", {
+                command: cmd,
+                output: out,
+                error: err
+              })
+              raise "Post-rails-new command failed: #{cmd}"
+            end
+
+            buffer.append(out) unless out.empty?
+            error_buffer << err unless err.empty?
+          end
+        end
       end
 
       @work_dir
