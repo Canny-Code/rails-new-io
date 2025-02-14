@@ -180,30 +180,31 @@ class CommandExecutionService
       "NODE_ENV" => "development",
       "PATH" => ENV["PATH"],
       "HOME" => @work_dir,
-      "BUNDLE_DEPLOYMENT" => "",
+      "BUNDLE_DEPLOYMENT" => "false",
       "BUNDLE_WITHOUT" => ""
     }
 
     if @command.start_with?("rails new")
       env.merge!({
         "BUNDLE_GEMFILE" => nil,
+        "BUNDLE_USER_HOME" => nil,
+        "BUNDLE_GEMFILE" => nil,
         "BUNDLE_PATH" => nil,
         "BUNDLE_APP_CONFIG" => nil,
-        "BUNDLE_BIN" => nil,
-        "BUNDLE_USER_HOME" => nil
+        "BUNDLE_BIN" => nil
       })
     else
       env.merge!({
         "BUNDLE_GEMFILE" => File.join(@work_dir, "Gemfile"),
-        "BUNDLE_PATH" => File.join(@work_dir, "vendor/bundle"),
-        "GEM_HOME" => File.join(@work_dir, "vendor/bundle"),
-        "GEM_PATH" => File.join(@work_dir, "vendor/bundle"),
-        "BUNDLE_APP_CONFIG" => File.join(@work_dir, ".bundle"),
         "PATH" => "#{File.join(@work_dir, 'bin')}:#{env['PATH']}"
       })
     end
 
-    bundle_command = @command.include?("rails new") ? @command : @command.sub(/^rails/, "./bin/rails")
+    bundle_command = if @command.start_with?("rails new")
+      @command
+    else
+      @command.sub(/^rails/, "./bin/rails")
+    end
 
     log_environment_variables_for_command_execution(env)
 
@@ -245,6 +246,38 @@ class CommandExecutionService
           error_buffer: error_buffer.join("<br>")
         })
         raise "Command failed with status: #{exit_status}"
+      end
+
+      if @command.start_with?("rails new")
+        app_dir = File.join(@work_dir, @generated_app.name)
+
+        # Set up bundle config for vendor/bundle
+        Dir.chdir(app_dir) do
+          [
+            "bundle config set --local path vendor/bundle",
+            "bundle config set --local disable_shared_gems true",
+            "bundle config set --local deployment false",
+            "bundle install",  # Reinstall gems to vendor/bundle
+            "bundle config list > bundle_config.txt"  # Show the config for debugging
+          ].each do |cmd|
+            @logger.debug("Running post-rails-new command: #{cmd}")
+
+            # Run in same process context
+            out, err, status = Open3.capture3(env, cmd)
+
+            unless status.success?
+              @logger.error("Post-rails-new command failed", {
+                command: cmd,
+                output: out,
+                error: err
+              })
+              raise "Post-rails-new command failed: #{cmd}"
+            end
+
+            buffer.append(out) unless out.empty?
+            error_buffer << err unless err.empty?
+          end
+        end
       end
 
       @work_dir
