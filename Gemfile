@@ -7,9 +7,9 @@ gem "aasm", "~> 5.5.0"
 gem "bootsnap", require: false
 gem "faraday-retry", "~> 2.2.1"
 gem "friendly_id", "~> 5.5.1"
-gem "kamal", "~> 2.5.0", require: false
-gem "thruster", "~> 0.1.10", require: false
-gem "mission_control-jobs", "~> 1.0.1"
+gem "kamal", "~> 2.5.2", require: false
+gem "thruster", "~> 0.1.11", require: false
+gem "mission_control-jobs", "~> 1.0.2"
 gem "noticed", "~> 2.6.0"
 gem "litestream", "~> 0.12.0"
 gem "octokit", "~> 9.2.0"
@@ -19,10 +19,10 @@ gem "pagy", "~> 9.3.3"
 gem "phlex-rails", "~> 1.2.2"
 gem "propshaft", "~> 1.1.0"
 gem "puma", ">= 6.6.0"
-gem "sentry-ruby", "~> 5.22.3"
-gem "sentry-rails", "~> 5.22.3"
+gem "sentry-ruby", "~> 5.22.4"
+gem "sentry-rails", "~> 5.22.4"
 gem "stackprof", "~> 0.2.27"
-gem "solid_cache", "~> 1.0.6"
+gem "solid_cache", "~> 1.0.7"
 gem "solid_cable", "~> 3.0.7"
 gem "solid_queue", "~> 1.1.3"
 gem "sqlite3", "~> 2.5.0"
@@ -42,7 +42,7 @@ end
 group :test do
   gem "capybara"
   gem "capybara-lockstep", "~> 2.2.2"
-  gem "minitest-difftastic", "~> 0.1.2"
+  gem "minitest-difftastic", "~> 0.2.1"
   gem "database_cleaner-active_record"
   gem "selenium-webdriver", "~> 4.28.0"
   gem "mocha", "~> 2.7.1"

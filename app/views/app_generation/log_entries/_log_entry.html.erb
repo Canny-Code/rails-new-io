@@ -3,7 +3,7 @@
        data-timestamp="<%= log_entry.created_at.to_i %>"
        data-entry-type="<%= log_entry.entry_type %>"
        data-rails-output="<%= rails_output?(log_entry) %>">
-    <div id="log_entry_content_<%= log_entry.id %>" class="p-4 <%= rails_output?(log_entry) ? "bg-black text-green-400" : log_level_color(log_entry.level) %>">
+    <div id="log_entry_content_<%= log_entry.id %>" class="p-4 mb-10 <%= rails_output?(log_entry) ? "bg-black text-green-400" : log_level_color(log_entry.level) %>">
       <div class="flex justify-between items-start">
         <div class="flex-1">
           <div class="text-sm font-medium message-content">
