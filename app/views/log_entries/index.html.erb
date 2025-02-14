@@ -20,7 +20,7 @@
   <div class="shadow overflow-hidden sm:rounded-lg">
     <div data-controller="log-scroll"
          data-log-scroll-target="container"
-         class="divide-y divide-gray-700 h-screen overflow-y-auto"
+         class="divide-y divide-gray-700 h-[calc(100vh-10px)] overflow-y-auto mb-10"
          id="app_generation_log_entries">
       <%= render partial: "app_generation/log_entries/log_entry", collection: @log_entries %>
     </div>
