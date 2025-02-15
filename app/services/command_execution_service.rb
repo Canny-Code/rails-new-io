@@ -178,10 +178,10 @@ class CommandExecutionService
 
   def ruby_platform
     @ruby_platform ||= begin
-      platform_cmd = "#{RAILS_GEN_ROOT}/ruby/bin/ruby -e 'puts RUBY_DESCRIPTION.split.last'"
+      platform_cmd = "#{RAILS_GEN_ROOT}/ruby/bin/ruby -e 'puts RUBY_PLATFORM'"
       platform = `#{platform_cmd}`.strip
 
-      if platform.empty?
+      if platform.blank?
         # Fallback in case the command fails
         case RbConfig::CONFIG["host_os"]
         when /darwin/
@@ -195,10 +195,14 @@ class CommandExecutionService
     end
   end
 
+  def platform_path
+    @platform_path ||= "#{RAILS_GEN_ROOT}/ruby/lib/ruby/3.4.0/#{ruby_platform}"
+  end
+
   def ruby_lib_paths
     [
       "#{RAILS_GEN_ROOT}/ruby/lib/ruby/3.4.0",
-      "#{RAILS_GEN_ROOT}/ruby/lib/ruby/3.4.0/#{ruby_platform}"
+      platform_path
     ].join(":")
   end
 
@@ -221,25 +225,19 @@ class CommandExecutionService
       # Ruby
       "GEM_HOME" => "#{RAILS_GEN_ROOT}/gems",
       "GEM_PATH" => "#{RAILS_GEN_ROOT}/gems",
-      "RUBYOPT" => nil,
-      "RUBYLIB" => nil,
-      "RUBY_ROOT" => ruby_dir,
+      "RUBYOPT" => "--disable-gems",
+      "RUBYLIB" => ruby_lib_paths,
+      "RUBY_ROOT" => "#{RAILS_GEN_ROOT}/ruby",
       "RUBY_ENGINE" => "ruby",
       "RUBY_VERSION" => RUBY_VERSION,
       "RUBY_PATCHLEVEL" => nil,
-      # asdf (extra thorough)
+      # asdf
       "ASDF_DIR" => nil,
       "ASDF_DATA_DIR" => nil,
       "ASDF_CONFIG_FILE" => nil,
       "ASDF_DEFAULT_TOOL_VERSIONS_FILENAME" => nil,
       "ASDF_RUBY_VERSION" => nil,
       "ASDF_GEM_HOME" => nil,
-      "ASDF_RUBY_PATH" => nil,
-      "ASDF_RUBY_HOME" => nil,
-      "ASDF_RUBY_ROOT" => nil,
-      "ASDF_RUBY_GEMS_PATH" => nil,
-      "ASDF_RUBY_GEMS_HOME" => nil,
-      "ASDF_RUBY_GEMS_ROOT" => nil,
       # RVM
       "rvm_bin_path" => nil,
       "rvm_path" => nil,
@@ -251,13 +249,10 @@ class CommandExecutionService
       "RBENV_ROOT" => nil,
       # chruby
       "RUBY_AUTO_VERSION" => nil,
-      # Minimal PATH with only what we need, ensuring our Ruby is first
+      # Minimal PATH with only what we need
       "PATH" => "#{ruby_dir}/bin:#{RAILS_GEN_ROOT}/gems/bin:/usr/local/bin:/usr/bin:/bin",
       # Extra insurance
       "SHELL" => "/bin/bash",
-      # Force Ruby to ignore other gem paths
-      "RUBYOPT" => "--disable-gems",  # Start clean
-      "RUBYLIB" => ruby_lib_paths,  # Only our paths
       # Prevent Ruby from looking in user directories
       "HOME" => "/var/lib/rails-new-io/home",
       # Prevent loading of any user config
@@ -266,6 +261,15 @@ class CommandExecutionService
       "XDG_DATA_HOME" => "/var/lib/rails-new-io/data"
     }
 
+    @logger.debug("Environment before command execution", {
+      gem_home: ENV["GEM_HOME"],
+      gem_path: ENV["GEM_PATH"],
+      bundle_path: ENV["BUNDLE_PATH"],
+      bundle_gemfile: ENV["BUNDLE_GEMFILE"],
+      rubylib: ENV["RUBYLIB"],
+      load_path: $LOAD_PATH
+    })
+
     # Create isolation directories
     FileUtils.mkdir_p("/var/lib/rails-new-io/home")
     FileUtils.mkdir_p("/var/lib/rails-new-io/config")
@@ -273,69 +277,61 @@ class CommandExecutionService
     FileUtils.mkdir_p("/var/lib/rails-new-io/data")
 
     env = if @command.start_with?("rails new")
-      base_env
+      base_env.merge(
+        "GEM_HOME" => "#{RAILS_GEN_ROOT}/gems",
+        "GEM_PATH" => "#{RAILS_GEN_ROOT}/gems",
+        "BUNDLE_USER_HOME" => "#{RAILS_GEN_ROOT}/bundle",
+        "BUNDLE_GEMFILE" => "",
+        "BUNDLE_BIN" => "",
+        "BUNDLE_PATH" => "",
+        "BUNDLE_APP_CONFIG" => "",
+        "RUBYOPT" => "",
+        "RUBYLIB" => ruby_lib_paths,
+        "RUBY_ROOT" => "#{RAILS_GEN_ROOT}/ruby",
+        "RUBY_VERSION" => RUBY_VERSION,
+        "PATH" => "#{RAILS_GEN_ROOT}/ruby/bin:#{RAILS_GEN_ROOT}/gems/bin:/usr/local/bin:/usr/bin:/bin"
+      )
     elsif @command.start_with?("bundle")
       # For bundle commands, be extra explicit about the environment
       base_env.merge(
-        "BUNDLE_GEMFILE" => File.join(@work_dir, "Gemfile"),
-        "BUNDLE_APP_CONFIG" => File.join(@work_dir, ".bundle"),
-        "BUNDLE_USER_HOME" => "#{RAILS_GEN_ROOT}/bundle",
-        "BUNDLE_DISABLE_SHARED_GEMS" => "true",
         "GEM_HOME" => "#{RAILS_GEN_ROOT}/gems",
         "GEM_PATH" => "#{RAILS_GEN_ROOT}/gems",
-        "RUBYOPT" => "--disable-gems",  # Start clean
+        "BUNDLE_USER_HOME" => "#{RAILS_GEN_ROOT}/bundle",
+        "BUNDLE_GEMFILE" => "",
+        "BUNDLE_BIN" => "",
+        "BUNDLE_PATH" => "",
+        "BUNDLE_APP_CONFIG" => "",
+        "RUBYOPT" => "",
         "RUBYLIB" => ruby_lib_paths,
-        "PATH" => "#{ruby_dir}/bin:#{RAILS_GEN_ROOT}/gems/bin:/usr/local/bin:/usr/bin:/bin",
-        # Extra insurance against asdf
-        "ASDF_RUBY_VERSION" => nil,
-        "ASDF_GEM_HOME" => nil,
-        "ASDF_RUBY_PATH" => nil,
-        "ASDF_RUBY_HOME" => nil,
-        "ASDF_RUBY_ROOT" => nil,
-        "ASDF_RUBY_GEMS_PATH" => nil,
-        "ASDF_RUBY_GEMS_HOME" => nil,
-        "ASDF_RUBY_GEMS_ROOT" => nil
-      )
-    elsif @command.start_with?("rails app:template")
-      base_env.merge(
-        "BUNDLE_GEMFILE" => File.join(@work_dir, "Gemfile"),
-        "BUNDLE_APP_CONFIG" => File.join(@work_dir, ".bundle"),
-        "PATH" => "#{ruby_dir}/bin:#{RAILS_GEN_ROOT}/gems/bin:#{File.join(@work_dir, 'bin')}:/usr/local/bin:/usr/bin:/bin"
+        "RUBY_ROOT" => "#{RAILS_GEN_ROOT}/ruby",
+        "RUBY_VERSION" => RUBY_VERSION,
+        "PATH" => "#{RAILS_GEN_ROOT}/ruby/bin:#{RAILS_GEN_ROOT}/gems/bin:/usr/local/bin:/usr/bin:/bin"
       )
     else
       base_env.merge(
-        "BUNDLE_GEMFILE" => File.join(@work_dir, "Gemfile"),
-        "PATH" => "#{ruby_dir}/bin:#{RAILS_GEN_ROOT}/gems/bin:#{File.join(@work_dir, 'bin')}:/usr/local/bin:/usr/bin:/bin"
+        "GEM_HOME" => "#{RAILS_GEN_ROOT}/gems",
+        "GEM_PATH" => "#{RAILS_GEN_ROOT}/gems",
+        "BUNDLE_USER_HOME" => "#{RAILS_GEN_ROOT}/bundle",
+        "BUNDLE_GEMFILE" => "",
+        "BUNDLE_BIN" => "",
+        "BUNDLE_PATH" => "",
+        "BUNDLE_APP_CONFIG" => "",
+        "RUBYOPT" => "",
+        "RUBYLIB" => ruby_lib_paths,
+        "RUBY_ROOT" => "#{RAILS_GEN_ROOT}/ruby",
+        "RUBY_VERSION" => RUBY_VERSION,
+        "PATH" => "#{RAILS_GEN_ROOT}/ruby/bin:#{RAILS_GEN_ROOT}/gems/bin:/usr/local/bin:/usr/bin:/bin"
       )
     end
 
-    bundle_command = if @command.start_with?("rails new")
-      @command
-    elsif @command.start_with?("bundle")
-      # For bundle commands, bypass the bundle executable entirely and run the code directly
-      command_parts = @command.split
-      bundle_args = command_parts[1..-1].join(" ")
-      [
-        "#{RAILS_GEN_ROOT}/ruby/bin/ruby",
-        "-I#{RAILS_GEN_ROOT}/ruby/lib/ruby/3.4.0",
-        "-I#{RAILS_GEN_ROOT}/ruby/lib/ruby/3.4.0/#{ruby_platform}",
-        "-e",
-        "'require \"bundler\"; Bundler::CLI.start([#{bundle_args.split.map { |arg| %Q(\"#{arg}\") }.join(", ")}])'"
-      ].join(" ")
-    else
-      # Instead of using ./bin/rails, explicitly use our Ruby and load bundler from Ruby's installation
-      command_parts = @command.split
-      command_parts[0] = [
-        "#{RAILS_GEN_ROOT}/ruby/bin/ruby",
-        "-I#{RAILS_GEN_ROOT}/ruby/lib/ruby/3.4.0",
-        "-I#{RAILS_GEN_ROOT}/ruby/lib/ruby/3.4.0/#{ruby_platform}",
-        "-I#{RAILS_GEN_ROOT}/gems/gems",
-        "-r bundler/setup",
-        "-e",
-        "'load \"#{RAILS_GEN_ROOT}/gems/bin/rails\"'"
-      ].join(" ")
-      command_parts.join(" ")
-    end
+    @logger.debug("Environment after command execution setup", {
+      gem_home: env["GEM_HOME"],
+      gem_path: env["GEM_PATH"],
+      bundle_path: env["BUNDLE_PATH"],
+      bundle_gemfile: env["BUNDLE_GEMFILE"],
+      rubylib: env["RUBYLIB"],
+      command: bundle_command
+    })
 
     # For non-rails-new commands, we need to run bundle install first
     if !@command.start_with?("rails new") && !@command.start_with?("bundle")
@@ -379,6 +375,7 @@ class CommandExecutionService
       stderr_thread = Thread.new do
         stderr.each_line do |line|
           error_buffer << line.strip
+          @logger.debug("Command stderr: #{line.strip}")
         end
       end
 
@@ -393,7 +390,16 @@ class CommandExecutionService
         @logger.error("Command failed", {
           status: exit_status,
           output: output,
-          error_buffer: error_buffer.join("<br>")
+          error_buffer: error_buffer.join("<br>"),
+          command: bundle_command,
+          directory: @work_dir,
+          load_paths: [
+            "#{RAILS_GEN_ROOT}/ruby/lib/ruby/3.4.0",
+            platform_path,
+            "#{RAILS_GEN_ROOT}/gems/gems",
+            "#{RAILS_GEN_ROOT}/gems/gems/rails-#{RAILS_VERSION}/lib",
+            "#{RAILS_GEN_ROOT}/gems/gems/railties-#{RAILS_VERSION}/lib"
+          ]
         })
         raise "Command failed with status: #{exit_status}"
       end
@@ -474,5 +480,52 @@ class CommandExecutionService
     else
       "/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"
     end
+  end
+
+  def bundle_command
+    @logger.debug("Starting bundle_command construction")
+    @logger.debug("Command is: #{@command}")
+    @logger.debug("Platform path is: #{platform_path}")
+
+    # Debug: Check what's in the gems directory
+    @logger.debug("Checking Rails installation", {
+      rails_cli_path: "#{RAILS_GEN_ROOT}/gems/gems/railties-#{RAILS_VERSION}/lib/rails/cli.rb",
+      rails_cli_exists: File.exist?("#{RAILS_GEN_ROOT}/gems/gems/railties-#{RAILS_VERSION}/lib/rails/cli.rb"),
+      rails_lib_path: "#{RAILS_GEN_ROOT}/gems/gems/railties-#{RAILS_VERSION}/lib",
+      rails_lib_exists: File.exist?("#{RAILS_GEN_ROOT}/gems/gems/railties-#{RAILS_VERSION}/lib"),
+      rails_gem_path: "#{RAILS_GEN_ROOT}/gems/gems/rails-#{RAILS_VERSION}",
+      rails_gem_exists: File.exist?("#{RAILS_GEN_ROOT}/gems/gems/rails-#{RAILS_VERSION}"),
+      gem_home_contents: Dir.glob("#{ENV['GEM_HOME']}/*").join(", "),
+      gem_home_gems: Dir.glob("#{ENV['GEM_HOME']}/gems/*").join(", "),
+      rails_gem_contents: Dir.glob("#{RAILS_GEN_ROOT}/gems/gems/rails-#{RAILS_VERSION}/*").join(", "),
+      railties_gem_contents: Dir.glob("#{RAILS_GEN_ROOT}/gems/gems/railties-#{RAILS_VERSION}/*").join(", ")
+    })
+
+    # Debug: Check load paths
+    @logger.debug("Ruby load paths", {
+      load_path: $LOAD_PATH,
+      gem_path: Gem.path,
+      gem_paths_exist: Gem.path.map { |p| [ p, Dir.exist?(p) ] }.to_h
+    })
+
+    command = if @command.start_with?("rails new")
+      # For rails new, use the rails executable
+      command_parts = @command.split
+      command_parts[0] = "#{RAILS_GEN_ROOT}/gems/bin/rails"
+      command_parts.join(" ").tap { |cmd| @logger.debug("Constructed rails new command: #{cmd}") }
+    elsif @command.start_with?("bundle")
+      # For bundle commands, use the bundle executable
+      command_parts = @command.split
+      command_parts[0] = "#{RAILS_GEN_ROOT}/gems/bin/bundle"
+      command_parts.join(" ").tap { |cmd| @logger.debug("Constructed bundle command: #{cmd}") }
+    else
+      # For other rails commands, use the rails executable
+      command_parts = @command.split
+      command_parts[0] = "#{RAILS_GEN_ROOT}/gems/bin/rails"
+      command_parts.join(" ").tap { |cmd| @logger.debug("Constructed other command: #{cmd}") }
+    end
+
+    @logger.debug("Final command: #{command}")
+    command
   end
 end

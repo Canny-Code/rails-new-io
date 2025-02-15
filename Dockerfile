@@ -18,7 +18,8 @@ RUN apt-get update -qq && \
 ENV RAILS_ENV="production" \
     BUNDLE_WITHOUT="development:test" \
     BUNDLE_DEPLOYMENT="1" \
-    BUNDLE_PATH="/usr/local/bundle"
+    BUNDLE_PATH="/usr/local/bundle" \
+    RAILS_BUILD="1"
 
 FROM base AS nodejs
 
@@ -69,14 +70,70 @@ FROM base
 COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build /rails /rails
 
-# Run and own only the runtime files as a non-root user for security
+# Create the rails user first
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash && \
+    echo "rails ALL=(ALL) NOPASSWD: /usr/bin/mkdir -p /var/lib/rails-new-io/workspaces, /usr/bin/chown rails\:rails /var/lib/rails-new-io/workspaces" > /etc/sudoers.d/rails
+
+# Set up isolated Ruby environment
+RUN mkdir -p /var/lib/rails-new-io/rails-env/ruby && \
+    cp -r /usr/local/* /var/lib/rails-new-io/rails-env/ruby/ && \
+    mkdir -p /var/lib/rails-new-io/rails-env/gems && \
+    mkdir -p /var/lib/rails-new-io/rails-env/bundle && \
     mkdir -p /var/lib/rails-new-io/workspaces && \
+    # Disable documentation installation
+    echo "gem: --no-document" > /var/lib/rails-new-io/rails-env/bundle/gemrc && \
+    # Install bundler with exact same env as setup.rake
+    PATH=/var/lib/rails-new-io/rails-env/ruby/bin:/usr/local/bin:/usr/bin:/bin \
+    GEM_HOME=/var/lib/rails-new-io/rails-env/gems \
+    GEM_PATH=/var/lib/rails-new-io/rails-env/gems \
+    BUNDLE_USER_HOME=/var/lib/rails-new-io/rails-env/bundle \
+    BUNDLE_GEMFILE="" \
+    BUNDLE_BIN="" \
+    BUNDLE_PATH="" \
+    BUNDLE_APP_CONFIG="" \
+    RUBYOPT="" \
+    RUBYLIB="" \
+    RUBY_ROOT=/var/lib/rails-new-io/rails-env/ruby \
+    RUBY_VERSION=${RUBY_VERSION} \
+    ASDF_DIR="" \
+    ASDF_DATA_DIR="" \
+    ASDF_RUBY_VERSION="" \
+    RBENV_VERSION="" \
+    RBENV_ROOT="" \
+    rvm_bin_path="" \
+    rvm_path="" \
+    RUBY_AUTO_VERSION="" \
+    /var/lib/rails-new-io/rails-env/ruby/bin/gem install bundler -v 2.6.3 && \
+    # Install Rails with exact same env as setup.rake
+    PATH=/var/lib/rails-new-io/rails-env/ruby/bin:/usr/local/bin:/usr/bin:/bin \
+    GEM_HOME=/var/lib/rails-new-io/rails-env/gems \
+    GEM_PATH=/var/lib/rails-new-io/rails-env/gems \
+    BUNDLE_USER_HOME=/var/lib/rails-new-io/rails-env/bundle \
+    BUNDLE_GEMFILE="" \
+    BUNDLE_BIN="" \
+    BUNDLE_PATH="" \
+    BUNDLE_APP_CONFIG="" \
+    RUBYOPT="" \
+    RUBYLIB="" \
+    RUBY_ROOT=/var/lib/rails-new-io/rails-env/ruby \
+    RUBY_VERSION=${RUBY_VERSION} \
+    ASDF_DIR="" \
+    ASDF_DATA_DIR="" \
+    ASDF_RUBY_VERSION="" \
+    RBENV_VERSION="" \
+    RBENV_ROOT="" \
+    rvm_bin_path="" \
+    rvm_path="" \
+    RUBY_AUTO_VERSION="" \
+    /var/lib/rails-new-io/rails-env/ruby/bin/gem install rails -v 8.0.1
+
+# Now we can chown everything since the user exists
+RUN chown -R rails:rails /var/lib/rails-new-io && \
+    chmod -R 755 /var/lib/rails-new-io && \
     chown -R rails:rails /rails && \
     chmod -R 755 /rails && \
-    chown -R rails:rails db log storage tmp /usr/local/bundle /var/lib/rails-new-io && \
-    echo "rails ALL=(ALL) NOPASSWD: /usr/bin/mkdir -p /var/lib/rails-new-io/workspaces, /usr/bin/chown rails\:rails /var/lib/rails-new-io/workspaces" > /etc/sudoers.d/rails
+    chown -R rails:rails db log storage tmp /usr/local/bundle
 
 USER rails
 

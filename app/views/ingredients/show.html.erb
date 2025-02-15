@@ -42,11 +42,13 @@
     </div>
     <div class="pt-8">
       <h3 class="text-lg font-medium leading-6 text-gray-900">Screenshots</h3>
-      <div class="mt-4 grid grid-cols-2 gap-4">
-        <div>
+      <div class="mt-4 flex space-x-4">
+        <div class="flex-1">
           <h4 class="text-sm font-medium text-gray-700 mb-2">Before Screenshot</h4>
           <% if @ingredient.before_screenshot.attached? %>
-            <%= image_tag @ingredient.before_screenshot, class: "w-full h-48 object-cover rounded-lg" %>
+            <div class="bg-gray-50 rounded-lg p-1">
+              <%= image_tag @ingredient.before_screenshot, class: "w-full rounded-lg" %>
+            </div>
           <% else %>
             <div class="w-full h-48 bg-gray-100 flex items-center justify-center rounded-lg">
               <span class="text-gray-400">No before screenshot</span>
@@ -61,10 +63,12 @@
           <% end %>
         </div>
 
-        <div>
+        <div class="flex-1">
           <h4 class="text-sm font-medium text-gray-700 mb-2">After Screenshot</h4>
           <% if @ingredient.after_screenshot.attached? %>
-            <%= image_tag @ingredient.after_screenshot, class: "w-full h-48 object-cover rounded-lg" %>
+            <div class="bg-gray-50 rounded-lg p-1">
+              <%= image_tag @ingredient.after_screenshot, class: "w-full rounded-lg" %>
+            </div>
           <% else %>
             <div class="w-full h-48 bg-gray-100 flex items-center justify-center rounded-lg">
               <span class="text-gray-400">No after screenshot</span>
