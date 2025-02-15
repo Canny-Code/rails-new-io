@@ -27,6 +27,9 @@ class Ingredient < ApplicationRecord
   class InvalidConfigurationError < StandardError; end
   include GitBackedModel
 
+  has_one_attached :before_screenshot
+  has_one_attached :after_screenshot
+
   belongs_to :created_by, class_name: "User"
   has_many :recipe_ingredients, dependent: :delete_all
   has_many :recipes, through: :recipe_ingredients

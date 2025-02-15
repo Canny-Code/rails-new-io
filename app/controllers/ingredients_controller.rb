@@ -60,7 +60,9 @@ class IngredientsController < ApplicationController
       :category,
       :conflicts_with,
       :requires,
-      :configures_with
+      :configures_with,
+      :before_screenshot,
+      :after_screenshot
     )
   end
 end
