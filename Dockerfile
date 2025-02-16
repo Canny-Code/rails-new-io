@@ -78,55 +78,32 @@ RUN groupadd --system --gid 1000 rails && \
 # Set up isolated Ruby environment
 RUN mkdir -p /var/lib/rails-new-io/rails-env/ruby && \
     cp -r /usr/local/* /var/lib/rails-new-io/rails-env/ruby/ && \
-    mkdir -p /var/lib/rails-new-io/rails-env/gems && \
+    # Create all isolation directories
+    mkdir -p /var/lib/rails-new-io/rails-env/gems/bin && \
+    mkdir -p /var/lib/rails-new-io/rails-env/gems/specifications && \
+    mkdir -p /var/lib/rails-new-io/rails-env/gems/gems && \
+    mkdir -p /var/lib/rails-new-io/rails-env/gems/extensions && \
     mkdir -p /var/lib/rails-new-io/rails-env/bundle && \
     mkdir -p /var/lib/rails-new-io/workspaces && \
-    # Disable documentation installation
-    echo "gem: --no-document" > /var/lib/rails-new-io/rails-env/bundle/gemrc && \
-    # Install bundler with exact same env as setup.rake
+    mkdir -p /var/lib/rails-new-io/home && \
+    mkdir -p /var/lib/rails-new-io/config && \
+    mkdir -p /var/lib/rails-new-io/cache && \
+    mkdir -p /var/lib/rails-new-io/data && \
+    # Install bundler with minimal env
     PATH=/var/lib/rails-new-io/rails-env/ruby/bin:/usr/local/bin:/usr/bin:/bin \
     GEM_HOME=/var/lib/rails-new-io/rails-env/gems \
-    GEM_PATH=/var/lib/rails-new-io/rails-env/gems \
-    BUNDLE_USER_HOME=/var/lib/rails-new-io/rails-env/bundle \
-    BUNDLE_GEMFILE="" \
-    BUNDLE_BIN="" \
-    BUNDLE_PATH="" \
-    BUNDLE_APP_CONFIG="" \
-    RUBYOPT="" \
-    RUBYLIB="" \
-    RUBY_ROOT=/var/lib/rails-new-io/rails-env/ruby \
-    RUBY_VERSION=${RUBY_VERSION} \
-    ASDF_DIR="" \
-    ASDF_DATA_DIR="" \
-    ASDF_RUBY_VERSION="" \
-    RBENV_VERSION="" \
-    RBENV_ROOT="" \
-    rvm_bin_path="" \
-    rvm_path="" \
-    RUBY_AUTO_VERSION="" \
+    GEM_PATH=/var/lib/rails-new-io/rails-env/gems:/var/lib/rails-new-io/rails-env/ruby/lib/ruby/gems/3.4.0 \
+    HOME=/var/lib/rails-new-io/home \
     /var/lib/rails-new-io/rails-env/ruby/bin/gem install bundler -v 2.6.3 && \
-    # Install Rails with exact same env as setup.rake
+    # Install Rails with minimal env
     PATH=/var/lib/rails-new-io/rails-env/ruby/bin:/usr/local/bin:/usr/bin:/bin \
     GEM_HOME=/var/lib/rails-new-io/rails-env/gems \
-    GEM_PATH=/var/lib/rails-new-io/rails-env/gems \
-    BUNDLE_USER_HOME=/var/lib/rails-new-io/rails-env/bundle \
-    BUNDLE_GEMFILE="" \
-    BUNDLE_BIN="" \
-    BUNDLE_PATH="" \
-    BUNDLE_APP_CONFIG="" \
-    RUBYOPT="" \
-    RUBYLIB="" \
-    RUBY_ROOT=/var/lib/rails-new-io/rails-env/ruby \
-    RUBY_VERSION=${RUBY_VERSION} \
-    ASDF_DIR="" \
-    ASDF_DATA_DIR="" \
-    ASDF_RUBY_VERSION="" \
-    RBENV_VERSION="" \
-    RBENV_ROOT="" \
-    rvm_bin_path="" \
-    rvm_path="" \
-    RUBY_AUTO_VERSION="" \
-    /var/lib/rails-new-io/rails-env/ruby/bin/gem install rails -v 8.0.1
+    GEM_PATH=/var/lib/rails-new-io/rails-env/gems:/var/lib/rails-new-io/rails-env/ruby/lib/ruby/gems/3.4.0 \
+    HOME=/var/lib/rails-new-io/home \
+    /var/lib/rails-new-io/rails-env/ruby/bin/gem install rails -v 8.0.1 && \
+    # Create the rails executable with the correct path and force railties version
+    printf '#!/var/lib/rails-new-io/rails-env/ruby/bin/ruby\nrequire "rubygems"\ngem "railties", "8.0.1"  # Force the specific version\nrequire "rails/cli"\n' > /var/lib/rails-new-io/rails-env/gems/bin/rails && \
+    chmod +x /var/lib/rails-new-io/rails-env/gems/bin/rails
 
 # Now we can chown everything since the user exists
 RUN chown -R rails:rails /var/lib/rails-new-io && \
