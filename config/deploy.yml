@@ -1,6 +1,8 @@
 service: rails-new-io
 image: canny-code/rails-new-io
 
+deploy_timeout: 1200
+
 volumes:
   - "/storage:/rails/storage"
   - "/home/deploy/rails-new-io/workspaces:/var/lib/rails-new-io/workspaces"
@@ -42,6 +44,7 @@ env:
     RAILS_SERVE_STATIC_FILES: true
     RAILS_LOG_LEVEL: debug
     SOLID_QUEUE_IN_PUMA: true
+    FORCE_ISOLATED_RUBY_REINSTALL: true
   secret:
     - RAILS_MASTER_KEY
 

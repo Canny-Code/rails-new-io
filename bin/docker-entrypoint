@@ -1,17 +1,81 @@
 #!/bin/bash -e
 
+echo "DEBUG: Starting docker-entrypoint script"
+
 # Enable jemalloc for reduced memory usage and latency.
 if [ -z "${LD_PRELOAD+x}" ] && [ -f /usr/lib/*/libjemalloc.so.2 ]; then
   export LD_PRELOAD="$(echo /usr/lib/*/libjemalloc.so.2)"
 fi
 
-# Ensure workspaces directory exists with correct permissions
-sudo mkdir -p /var/lib/rails-new-io/workspaces
-sudo chown rails:rails /var/lib/rails-new-io/workspaces
-
 # If running the rails server then create or migrate existing database
 if [ "${2}" == "./bin/rails" ] && [ "${3}" == "server" ]; then
   ./bin/rails db:prepare
+fi
+
+# Ensure workspaces directory exists with correct permissions
+sudo mkdir -p /var/lib/rails-new-io/workspaces
+sudo chown rails:rails /var/lib/rails-new-io/workspaces
+echo "DEBUG: Created and set permissions for workspaces directory"
+
+if [ ! -d "/var/lib/rails-new-io/rails-env/ruby" ] || [ "$FORCE_ISOLATED_RUBY_REINSTALL" = "true" ]; then
+  echo "DEBUG: Will set up isolated Ruby environment"
+  echo "Setting up isolated Ruby environment..."
+
+  # Remove existing Ruby environment if it exists
+  if [ -d "/var/lib/rails-new-io/rails-env/ruby" ]; then
+    echo "DEBUG: Removing existing Ruby environment due to FORCE_ISOLATED_RUBY_REINSTALL=true"
+    rm -rf /var/lib/rails-new-io/rails-env/ruby
+    rm -rf /var/lib/rails-new-io/rails-env/gems
+    rm -rf /var/lib/rails-new-io/rails-env/bundle
+  fi
+
+  # Create all required directories
+  mkdir -p /var/lib/rails-new-io/rails-env/ruby
+  mkdir -p /var/lib/rails-new-io/rails-env/gems/{bin,specifications,gems,extensions}
+  mkdir -p /var/lib/rails-new-io/rails-env/bundle
+  mkdir -p /var/lib/rails-new-io/{home,config,cache,data}
+
+  echo "DEBUG: Copying system Ruby to isolated environment"
+  cp -a /usr/local/* /var/lib/rails-new-io/rails-env/ruby/
+
+  # Run the isolated environment setup in a subshell to avoid polluting the parent environment
+  (
+    # Set up environment for gem installation
+    export PATH=/var/lib/rails-new-io/rails-env/ruby/bin:/usr/local/bin:/usr/bin:/bin
+    export GEM_HOME=/var/lib/rails-new-io/rails-env/gems
+    export GEM_PATH=/var/lib/rails-new-io/rails-env/gems:/var/lib/rails-new-io/rails-env/ruby/lib/ruby/gems/3.4.0
+    export HOME=/var/lib/rails-new-io/home
+    export BUNDLE_PATH=/var/lib/rails-new-io/rails-env/gems  # Ensure bundler uses our isolated gems directory
+    export BUNDLE_APP_CONFIG=/var/lib/rails-new-io/bundle    # Keep bundler config in our isolated environment
+    export BUNDLE_USER_HOME=/var/lib/rails-new-io/bundle     # Keep bundler user config in our isolated environment
+    unset BUNDLE_WITHOUT  # Explicitly unset BUNDLE_WITHOUT to avoid conflicts
+
+    echo "DEBUG: Updating RubyGems to 3.6.3"
+    /var/lib/rails-new-io/rails-env/ruby/bin/gem update --system 3.6.3
+
+    echo "DEBUG: Installing bundler 2.6.3 in our isolated environment"
+    /var/lib/rails-new-io/rails-env/ruby/bin/gem install bundler -v 2.6.3
+
+    echo "DEBUG: Configuring bundler"
+    /var/lib/rails-new-io/rails-env/gems/bin/bundle config set --local app_config /var/lib/rails-new-io/bundle
+    /var/lib/rails-new-io/rails-env/gems/bin/bundle config unset --local without
+    /var/lib/rails-new-io/rails-env/gems/bin/bundle config set --local with 'development test'
+
+    echo "DEBUG: Bundler configured:\n\n$(/var/lib/rails-new-io/rails-env/gems/bin/bundle config list)"
+
+    echo "DEBUG: Installing Rails 8.0.1"
+    /var/lib/rails-new-io/rails-env/ruby/bin/gem install rails -v 8.0.1
+
+    # Create the rails executable
+    cat > /var/lib/rails-new-io/rails-env/gems/bin/rails << 'EOF'
+#!/var/lib/rails-new-io/rails-env/ruby/bin/ruby
+require "rubygems"
+gem "railties", "8.0.1"  # Force the specific version
+require "rails/cli"
+EOF
+
+    chmod +x /var/lib/rails-new-io/rails-env/gems/bin/rails
+  )
 fi
 
 exec "${@}"

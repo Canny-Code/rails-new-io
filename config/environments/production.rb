@@ -82,6 +82,8 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
+  config.active_storage.service = :cloudflare
+
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
 

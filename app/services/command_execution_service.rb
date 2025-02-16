@@ -231,7 +231,12 @@ class CommandExecutionService
     # For other commands, we need Bundler setup
     unless @command.start_with?("rails new")
       env.merge!(
+        "RAILS_ENV" => "development",
+        "BUNDLE_WITHOUT" => "",
+        # "BUNDLE_PATH" => "#{RAILS_GEN_ROOT}/gems",
+        "BUNDLE_DEPLOYMENT" => "0",
         "BUNDLE_GEMFILE" => "#{@work_dir}/Gemfile",
+        # "BUNDLE_BIN" => "#{RAILS_GEN_ROOT}/gems/gems/bundler-#{BUNDLER_VERSION}/exe/bundle",
         "RUBYLIB" => "#{RAILS_GEN_ROOT}/gems/gems/bundler-#{BUNDLER_VERSION}/lib:#{ruby_lib_paths}",
         "RUBYOPT" => "-r#{RAILS_GEN_ROOT}/gems/gems/bundler-#{BUNDLER_VERSION}/lib/bundler/setup",
         "BUNDLE_BIN_PATH" => "#{RAILS_GEN_ROOT}/gems/gems/bundler-#{BUNDLER_VERSION}/exe/bundle",

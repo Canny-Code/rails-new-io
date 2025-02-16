@@ -6,20 +6,26 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
 WORKDIR /rails
 
-# Install base packages
+# Install base packages and build dependencies
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libsqlite3-0 \
+    apt-get install --no-install-recommends -y \
+    curl libjemalloc2 libsqlite3-0 \
     build-essential libssl-dev git pkg-config python-is-python3 libgmp-dev ca-certificates gnupg xz-utils \
     libffi-dev libyaml-dev libreadline-dev zlib1g-dev libncurses5-dev libgdbm-dev \
-    libc6-dev vim sudo && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+    libc6-dev vim sudo \
+    # Additional build dependencies for Ruby
+    autoconf bison rustc patch gawk \
+    && rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Update RubyGems and install the correct Bundler version
+# This ensures we only have Bundler 2.6.3 (which comes with RubyGems 3.6.3)
+RUN gem uninstall -i /usr/local/lib/ruby/gems/3.4.0 bundler && \
+    gem update --system 3.6.3
 
 # Set production environment
 ENV RAILS_ENV="production" \
-    BUNDLE_WITHOUT="development:test" \
-    BUNDLE_DEPLOYMENT="1" \
-    BUNDLE_PATH="/usr/local/bundle" \
-    RAILS_BUILD="1"
+    RAILS_BUILD="1" \
+    BUNDLE_PATH="/usr/local/bundle"
 
 FROM base AS nodejs
 
@@ -41,6 +47,10 @@ RUN case "$(dpkg --print-architecture)" in \
 RUN yarn --version
 
 FROM nodejs AS build
+
+# Set build-specific environment variables for the host app (railsnew.io)
+ENV BUNDLE_WITHOUT="development:test" \
+    BUNDLE_DEPLOYMENT="1"
 
 # Copy package files first
 COPY package.json yarn.lock .yarnrc.yml ./
@@ -67,69 +77,21 @@ RUN rm -rf node_modules
 # Final stage for app image
 FROM base
 
+# Set production environment for the host app (railsnew.io)
+ENV RAILS_ENV="production" \
+    BUNDLE_WITHOUT="development:test"
+
 COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build /rails /rails
 
 # Create the rails user first
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash && \
-    echo "rails ALL=(ALL) NOPASSWD: /usr/bin/mkdir -p /var/lib/rails-new-io/workspaces, /usr/bin/chown rails\:rails /var/lib/rails-new-io/workspaces" > /etc/sudoers.d/rails
-
-# Set up isolated Ruby environment
-RUN mkdir -p /var/lib/rails-new-io/rails-env/ruby && \
-    cp -r /usr/local/* /var/lib/rails-new-io/rails-env/ruby/ && \
-    mkdir -p /var/lib/rails-new-io/rails-env/gems && \
-    mkdir -p /var/lib/rails-new-io/rails-env/bundle && \
+    echo "rails ALL=(ALL) NOPASSWD: /usr/bin/mkdir -p /var/lib/rails-new-io/workspaces, /usr/bin/chown rails\:rails /var/lib/rails-new-io/workspaces" > /etc/sudoers.d/rails && \
+    # Create base directories
     mkdir -p /var/lib/rails-new-io/workspaces && \
-    # Disable documentation installation
-    echo "gem: --no-document" > /var/lib/rails-new-io/rails-env/bundle/gemrc && \
-    # Install bundler with exact same env as setup.rake
-    PATH=/var/lib/rails-new-io/rails-env/ruby/bin:/usr/local/bin:/usr/bin:/bin \
-    GEM_HOME=/var/lib/rails-new-io/rails-env/gems \
-    GEM_PATH=/var/lib/rails-new-io/rails-env/gems \
-    BUNDLE_USER_HOME=/var/lib/rails-new-io/rails-env/bundle \
-    BUNDLE_GEMFILE="" \
-    BUNDLE_BIN="" \
-    BUNDLE_PATH="" \
-    BUNDLE_APP_CONFIG="" \
-    RUBYOPT="" \
-    RUBYLIB="" \
-    RUBY_ROOT=/var/lib/rails-new-io/rails-env/ruby \
-    RUBY_VERSION=${RUBY_VERSION} \
-    ASDF_DIR="" \
-    ASDF_DATA_DIR="" \
-    ASDF_RUBY_VERSION="" \
-    RBENV_VERSION="" \
-    RBENV_ROOT="" \
-    rvm_bin_path="" \
-    rvm_path="" \
-    RUBY_AUTO_VERSION="" \
-    /var/lib/rails-new-io/rails-env/ruby/bin/gem install bundler -v 2.6.3 && \
-    # Install Rails with exact same env as setup.rake
-    PATH=/var/lib/rails-new-io/rails-env/ruby/bin:/usr/local/bin:/usr/bin:/bin \
-    GEM_HOME=/var/lib/rails-new-io/rails-env/gems \
-    GEM_PATH=/var/lib/rails-new-io/rails-env/gems \
-    BUNDLE_USER_HOME=/var/lib/rails-new-io/rails-env/bundle \
-    BUNDLE_GEMFILE="" \
-    BUNDLE_BIN="" \
-    BUNDLE_PATH="" \
-    BUNDLE_APP_CONFIG="" \
-    RUBYOPT="" \
-    RUBYLIB="" \
-    RUBY_ROOT=/var/lib/rails-new-io/rails-env/ruby \
-    RUBY_VERSION=${RUBY_VERSION} \
-    ASDF_DIR="" \
-    ASDF_DATA_DIR="" \
-    ASDF_RUBY_VERSION="" \
-    RBENV_VERSION="" \
-    RBENV_ROOT="" \
-    rvm_bin_path="" \
-    rvm_path="" \
-    RUBY_AUTO_VERSION="" \
-    /var/lib/rails-new-io/rails-env/ruby/bin/gem install rails -v 8.0.1
-
-# Now we can chown everything since the user exists
-RUN chown -R rails:rails /var/lib/rails-new-io && \
+    mkdir -p /var/lib/rails-new-io/rails-env && \
+    chown -R rails:rails /var/lib/rails-new-io && \
     chmod -R 755 /var/lib/rails-new-io && \
     chown -R rails:rails /rails && \
     chmod -R 755 /rails && \
