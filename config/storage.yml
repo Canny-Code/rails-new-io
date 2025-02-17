@@ -5,3 +5,11 @@ local:
 test:
   service: Disk
   root: <%= Rails.root.join("tmp/storage") %>
+
+cloudflare:
+  service: S3
+  endpoint: https://385fa1c1e06afd32a9933f3041e81136.r2.cloudflarestorage.com
+  access_key_id: <%= Rails.application.credentials.dig(:cloudflare, :access_key_id) %>
+  secret_access_key: <%= Rails.application.credentials.dig(:cloudflare, :secret_access_key) %>
+  bucket: <%= Rails.application.credentials.dig(:cloudflare, :bucket) %>
+  region: auto

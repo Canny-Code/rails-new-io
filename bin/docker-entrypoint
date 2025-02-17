@@ -17,6 +17,14 @@ sudo mkdir -p /var/lib/rails-new-io/workspaces
 sudo chown rails:rails /var/lib/rails-new-io/workspaces
 echo "DEBUG: Created and set permissions for workspaces directory"
 
+# Unset any existing bundler environment variables that might interfere
+echo "DEBUG: Unsetting existing bundler environment variables"
+unset BUNDLE_WITHOUT
+unset BUNDLE_DEPLOYMENT
+unset BUNDLE_SILENCE_ROOT_WARNING
+unset BUNDLE_PATH
+unset BUNDLE_APP_CONFIG
+
 if [ ! -d "/var/lib/rails-new-io/rails-env/ruby" ] || [ "$FORCE_ISOLATED_RUBY_REINSTALL" = "true" ]; then
   echo "DEBUG: Will set up isolated Ruby environment"
   echo "Setting up isolated Ruby environment..."
@@ -41,14 +49,14 @@ if [ ! -d "/var/lib/rails-new-io/rails-env/ruby" ] || [ "$FORCE_ISOLATED_RUBY_RE
   # Run the isolated environment setup in a subshell to avoid polluting the parent environment
   (
     # Set up environment for gem installation
-    export PATH=/var/lib/rails-new-io/rails-env/ruby/bin:/usr/local/bin:/usr/bin:/bin
+    export RAILS_ENV=development
+    export NODE_ENV=development
     export GEM_HOME=/var/lib/rails-new-io/rails-env/gems
     export GEM_PATH=/var/lib/rails-new-io/rails-env/gems:/var/lib/rails-new-io/rails-env/ruby/lib/ruby/gems/3.4.0
+    export PATH=/var/lib/rails-new-io/rails-env/gems/bin:/var/lib/rails-new-io/rails-env/ruby/bin:/usr/local/bin:/usr/bin:/bin
     export HOME=/var/lib/rails-new-io/home
-    export BUNDLE_PATH=/var/lib/rails-new-io/rails-env/gems  # Ensure bundler uses our isolated gems directory
-    export BUNDLE_APP_CONFIG=/var/lib/rails-new-io/bundle    # Keep bundler config in our isolated environment
     export BUNDLE_USER_HOME=/var/lib/rails-new-io/bundle     # Keep bundler user config in our isolated environment
-    unset BUNDLE_WITHOUT  # Explicitly unset BUNDLE_WITHOUT to avoid conflicts
+    export BUNDLE_APP_CONFIG=/var/lib/rails-new-io/bundle    # Keep bundler config in our isolated environment
 
     echo "DEBUG: Updating RubyGems to 3.6.3"
     /var/lib/rails-new-io/rails-env/ruby/bin/gem update --system 3.6.3
