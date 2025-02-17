@@ -216,6 +216,7 @@ class CommandExecutionService
       "NODE_ENV" => "development",
       "GEM_HOME" => "#{RAILS_GEN_ROOT}/gems",
       "GEM_PATH" => "#{RAILS_GEN_ROOT}/gems:#{RAILS_GEN_ROOT}/ruby/lib/ruby/gems/3.4.0",
+      "BUNDLE_INSTALL_PATH" => "#{RAILS_GEN_ROOT}/gems",
       "PATH" => "#{RAILS_GEN_ROOT}/gems/bin:#{RAILS_GEN_ROOT}/ruby/bin:/usr/local/bin:/usr/bin:/bin",
       "HOME" => "/var/lib/rails-new-io/home",
       "BUNDLE_USER_HOME" => "#{RAILS_GEN_ROOT}/bundle",

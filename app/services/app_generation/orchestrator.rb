@@ -46,13 +46,13 @@ module AppGeneration
         "bundle install --gemfile #{gemfile_path}"
       ).execute
 
-      CommandExecutionService.new(
-        @generated_app,
-        @logger,
-        "bundle lock --add-platform x86_64-linux"
-      ).execute
+      # CommandExecutionService.new(
+      #   @generated_app,
+      #   @logger,
+      #   "bundle lock --add-platform x86_64-linux"
+      # ).execute
 
-      @repository_service.commit_changes("Installing dependencies - updating Gemfile.lock")
+      # @repository_service.commit_changes("Installing dependencies - updating Gemfile.lock")
 
       # CommandExecutionService.new(
       #   @generated_app,
