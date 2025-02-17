@@ -352,9 +352,9 @@ GEM
     parser (3.3.7.1)
       ast (~> 2.4.1)
       racc
-    phlex (1.11.0)
-    phlex-rails (1.2.2)
-      phlex (>= 1.10, < 2)
+    phlex (2.0.2)
+    phlex-rails (2.0.2)
+      phlex (~> 2.0.2)
       railties (>= 6.1, < 9)
     pp (0.6.2)
       prettyprint
@@ -604,7 +604,7 @@ DEPENDENCIES
   omniauth-rails_csrf_protection
   overcommit
   pagy (~> 9.3.3)
-  phlex-rails (~> 1.2.2)
+  phlex-rails (~> 2.0.2)
   propshaft (~> 1.1.0)
   puma (>= 6.6.0)
   rails (= 8.0.1)
