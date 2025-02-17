@@ -13,3 +13,5 @@ cloudflare:
   secret_access_key: <%= Rails.application.credentials.dig(:cloudflare, :secret_access_key) %>
   bucket: <%= Rails.application.credentials.dig(:cloudflare, :bucket) %>
   region: auto
+  upload:
+    checksum: false
