@@ -300,7 +300,7 @@ class CommandExecutionService
   end
 
   def execute_command(env, command, buffer, error_buffer)
-    Open3.popen3(env, command, chdir: @work_dir) do |stdin, stdout, stderr, wait_thr|
+    Open3.popen3(env, command, chdir: @work_dir, unsetenv_others: true) do |stdin, stdout, stderr, wait_thr|
       @pid = wait_thr&.pid
 
       stdout_thread = Thread.new do
