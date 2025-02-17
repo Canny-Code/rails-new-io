@@ -42,10 +42,10 @@ if [ ! -d "/var/lib/rails-new-io/rails-env/ruby" ] || [ "$FORCE_ISOLATED_RUBY_RE
   (
     # Unset any existing bundler environment variables that might interfere
     echo "DEBUG: Temporarily unsetting existing bundler environment variables"
-    unset BUNDLE_WITHOUT
-    unset BUNDLE_DEPLOYMENT
-    unset BUNDLE_SILENCE_ROOT_WARNING
-    unset BUNDLE_PATH
+    export BUNDLE_WITHOUT=
+    export BUNDLE_DEPLOYMENT=
+    export BUNDLE_SILENCE_ROOT_WARNING=
+    export BUNDLE_PATH=
 
     # Set up environment for gem installation
     export RAILS_ENV=development
