@@ -67,7 +67,11 @@ class GeneratedApp < ApplicationRecord
       apply_ingredient(ingredient)
 
       @logger.info("Committing ingredient changes")
-      @repository_service.commit_changes(ingredient.to_commit_message)
+      @repository_service.commit_changes(<<~COMMIT_MESSAGE)
+      Applied ingredient:
+
+      #{ingredient.to_commit_message}
+      COMMIT_MESSAGE
       @logger.info("Ingredient #{ingredient.name} applied successfully")
     end
   end
@@ -97,12 +101,20 @@ class GeneratedApp < ApplicationRecord
       ""
     end
 
+    cli_flags_list_or_omakase = if recipe.cli_flags.squish.strip.blank?
+      "None (Omakase)"
+    else
+      recipe.cli_flags.squish.strip
+    end
+
     <<~INITIAL_COMMIT_MESSAGE
     Initial commit by railsnew.io
 
-    command line flags:
+    ===================
+    Command line flags:
+    ===================
 
-    #{recipe.cli_flags.squish.strip}
+    #{cli_flags_list_or_omakase}
 
     #{ingredients_message}
     INITIAL_COMMIT_MESSAGE

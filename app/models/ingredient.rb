@@ -90,8 +90,6 @@ class Ingredient < ApplicationRecord
 
   def to_commit_message
     <<~COMMIT_MESSAGE
-    Applied ingredient:
-
     * #{name} (#{AppDomain.url}/ingredients/#{id})
 
       #{description}
