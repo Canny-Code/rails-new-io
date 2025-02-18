@@ -290,14 +290,14 @@ class CommandExecutionService
 
     @logger.debug("Executing command", { command: command })
 
-    # Only use unbundled env for rails new, as other commands need access to the bundled gems
-    if @command.start_with?("rails new")
-      Bundler.with_unbundled_env do
-        execute_command(env, command, buffer, error_buffer)
-      end
-    else
+      # Only use unbundled env for rails new, as other commands need access to the bundled gems
+      # if @command.start_with?("rails new")
+      #   Bundler.with_unbundled_env do
+      #     execute_command(env, command, buffer, error_buffer)
+      #   end
+      # else
       execute_command(env, command, buffer, error_buffer)
-    end
+    # end
 
     @work_dir
   end
