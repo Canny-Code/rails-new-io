@@ -208,52 +208,7 @@ class CommandExecutionService
 
   def run_isolated_process
     @logger.debug("Preparing to execute command", { command: @command, directory: @work_dir })
-
     log_system_environment_details
-
-    env = {
-      "RAILS_ENV" => "development",
-      "NODE_ENV" => "development",
-      "GEM_HOME" => "#{RAILS_GEN_ROOT}/gems",
-      "GEM_PATH" => "#{RAILS_GEN_ROOT}/gems:#{RAILS_GEN_ROOT}/ruby/lib/ruby/gems/3.4.0",
-      "BUNDLE_INSTALL_PATH" => "#{RAILS_GEN_ROOT}/gems",
-      "BUNDLE_PATH" => nil,
-      "BUNDLE_FROZEN" => "false",
-      "BUNDLE_CACHE_ALL" => "false",
-      "PATH" => "#{RAILS_GEN_ROOT}/gems/bin:#{RAILS_GEN_ROOT}/ruby/bin:/usr/local/bin:/usr/bin:/bin",
-      "HOME" => "/var/lib/rails-new-io/home",
-      "BUNDLE_USER_HOME" => "#{RAILS_GEN_ROOT}/bundle",
-      "BUNDLE_APP_CONFIG" => "#{RAILS_GEN_ROOT}/bundle",
-      "BUNDLE_DEBUG" => "1",
-      "RAILS_DEBUG_TEMPLATE" => "1",
-      "ASDF_DIR" => "",
-      "ASDF_DATA_DIR" => "",
-      "ASDF_RUBY_VERSION" => ""
-    }
-
-    # For rails new, we want RubyGems to work directly (not through Bundler)
-    # For other commands, we need Bundler setup
-    unless @command.start_with?("rails new")
-      env.merge!(
-        "RAILS_ENV" => "development",
-        "BUNDLE_WITHOUT" => "",
-        "BUNDLE_LOCAL_INSTALL_ONLY" => "false",
-        "BUNDLE_DEPLOYMENT" => "0",
-        "BUNDLE_GEMFILE" => "#{@work_dir}/Gemfile",
-        "RUBYLIB" => "#{RAILS_GEN_ROOT}/gems/gems/bundler-#{BUNDLER_VERSION}/lib:#{ruby_lib_paths}",
-        "RUBYOPT" => "-r#{RAILS_GEN_ROOT}/gems/gems/bundler-#{BUNDLER_VERSION}/lib/bundler/setup",
-        "BUNDLE_BIN_PATH" => "#{RAILS_GEN_ROOT}/gems/gems/bundler-#{BUNDLER_VERSION}/exe/bundle",
-        "BUNDLER_VERSION" => BUNDLER_VERSION,
-        "BUNDLER_SETUP" => "#{RAILS_GEN_ROOT}/gems/gems/bundler-#{BUNDLER_VERSION}/lib/bundler/setup"
-      )
-    end
-
-    @logger.debug("Environment before command execution", {
-      gem_home: env["GEM_HOME"],
-      gem_path: env["GEM_PATH"],
-      bundle_gemfile: env["BUNDLE_GEMFILE"],
-      path: env["PATH"]
-    })
 
     # Create isolation directories
     FileUtils.mkdir_p("/var/lib/rails-new-io/home")
@@ -265,6 +220,7 @@ class CommandExecutionService
     FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/gems/gems")
     FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/gems/extensions")
 
+    env = env_for_command
     log_environment_variables_for_command_execution(env)
 
     buffer = Buffer.new(@generated_app, @command)
@@ -290,16 +246,34 @@ class CommandExecutionService
 
     @logger.debug("Executing command", { command: command })
 
-      # Only use unbundled env for rails new, as other commands need access to the bundled gems
-      # if @command.start_with?("rails new")
-      #   Bundler.with_unbundled_env do
-      #     execute_command(env, command, buffer, error_buffer)
-      #   end
-      # else
+    Bundler.with_unbundled_env do
       execute_command(env, command, buffer, error_buffer)
-    # end
+    end
 
     @work_dir
+  end
+
+  def env_for_command
+    base_env = {
+      "RAILS_ENV" => "development",
+      "NODE_ENV" => "development",
+      "GEM_HOME" => "#{RAILS_GEN_ROOT}/gems",
+      "GEM_PATH" => "#{RAILS_GEN_ROOT}/gems:#{RAILS_GEN_ROOT}/ruby/lib/ruby/gems/3.4.0",
+      "PATH" => "#{RAILS_GEN_ROOT}/gems/bin:#{RAILS_GEN_ROOT}/ruby/bin:/usr/local/bin:/usr/bin:/bin",
+      "HOME" => "/var/lib/rails-new-io/home",
+      "RAILS_DEBUG_TEMPLATE" => "1"
+    }
+
+    case
+    when @command.start_with?("rails new")
+      base_env # No bundler stuff at all
+    when @command.start_with?("bundle install")
+      base_env.merge("BUNDLE_GEMFILE" => "#{@work_dir}/Gemfile")
+    when @command.start_with?("rails app:template")
+      base_env # No bundler stuff, let Rails handle it
+    else
+      base_env
+    end
   end
 
   def execute_command(env, command, buffer, error_buffer)
