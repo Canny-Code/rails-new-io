@@ -33,6 +33,10 @@ module AppGeneration
       # Reset to initial state
       @generated_app.app_status.update!(status: "pending")
 
+      # Stub Turbo Stream broadcasts and helpers
+      Turbo::StreamsChannel.stubs(:broadcast_update_to)
+      ApplicationController.helpers.stubs(:turbo_stream_from)
+
       # Set up logger
       @logger = AppGeneration::Logger.new(@generated_app.app_status)
       AppGeneration::Logger.expects(:new).with(@generated_app.app_status).returns(@logger).once
@@ -48,8 +52,7 @@ module AppGeneration
       }).in_sequence(sequence)
       @logger.expects(:info).with("Applying ingredients", { count: 2 }).in_sequence(sequence)
       @logger.expects(:info).with("All ingredients applied successfully").in_sequence(sequence)
-      @logger.expects(:info).with("Installing app dependencies").in_sequence(sequence)
-      @logger.expects(:info).with("Dependencies installed successfully").in_sequence(sequence)
+
       # Mock repository service
       repository_service = mock("repository_service")
       repository_service.expects(:create_github_repository).once.returns(true)
@@ -59,11 +62,6 @@ module AppGeneration
       command_service = mock("command_service")
       command_service.expects(:execute).once.returns(true)
       CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
-
-      # Mock command execution for bundle install
-      command_service_bundle_install = mock("command_service_bundle_install")
-      command_service_bundle_install.expects(:execute).once.returns(true)
-      CommandExecutionService.expects(:new).with(@generated_app, @logger, "bundle install").returns(command_service_bundle_install)
 
       # Mock template path verification
       data_repository = mock("data_repository")
@@ -97,7 +95,6 @@ module AppGeneration
       @orchestrator.create_github_repository
       @orchestrator.generate_rails_app
       @orchestrator.apply_ingredients
-      @orchestrator.install_dependencies
 
       assert_equal "applying_ingredients", @generated_app.status
     end

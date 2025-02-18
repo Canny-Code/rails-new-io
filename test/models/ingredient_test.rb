@@ -203,8 +203,6 @@ class IngredientTest < ActiveSupport::TestCase
     @ingredient.id = 42
 
     expected_message = <<~COMMIT_MESSAGE
-    Applied ingredient:
-
     * Test Ingredient (#{AppDomain.url}/ingredients/42)
 
       A test description

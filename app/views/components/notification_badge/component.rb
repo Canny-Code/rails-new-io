@@ -12,7 +12,7 @@ class NotificationBadge::Component < ApplicationComponent
     user = @user || current_user
     return unless user
 
-    turbo_stream_from [ :notification_badge, user.id ]
+    helpers.turbo_stream_from [ :notification_badge, user.id ]
 
     a(id: "#{user.id}_notification_badge", href: "/notifications", class: "relative inline-flex items-center text-gray-400 hover:text-gray-500", data: { turbo_frame: "_top" }) do
       span(class: "sr-only") { "View notifications" }
