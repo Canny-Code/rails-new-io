@@ -10,15 +10,7 @@ class CommandExecutionService
 
   ALLOWED_COMMANDS = [
     "rails new",
-    "rails app:template",
-    "bundle install",
-    "rails db:create",
-    "rails db:schema:dump",
-    "rails db:migrate",
-    "rails db:schema:dump:cache",
-    "rails db:schema:dump:queue",
-    "rails db:schema:dump:cable",
-    "bundle lock --add-platform x86_64-linux"
+    "rails app:template"
   ].freeze
 
   TEMPLATE_COMMAND_PATTERN = %r{\A
@@ -158,10 +150,6 @@ class CommandExecutionService
       base_dir = "/var/lib/rails-new-io/workspaces"
       FileUtils.mkdir_p(base_dir)
       workspace_dir_name = "workspace-#{Time.current.to_i}-#{SecureRandom.hex(4)}"
-
-      if Dir.exist?(workspace_dir_name)
-        raise WhatTheFuckError, "Workspace directory #{workspace_dir_name} already exists?!"
-      end
 
       File.join(base_dir, workspace_dir_name).tap do |dir|
         FileUtils.mkdir_p(dir)
