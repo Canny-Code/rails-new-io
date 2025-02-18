@@ -1,20 +1,15 @@
 class DeleteIngredientJob < ApplicationJob
   queue_as :default
 
-  def perform(ingredient_id:, user_id:)
-    ingredient = Ingredient.find(ingredient_id)
+  def perform(user_id:, ingredient_name:, github_template_path:, local_template_path:)
     user = User.find(user_id)
 
-    data_repository = DataRepositoryService.new(user: user)
-
-    data_repository.delete_ingredient(
-      ingredient_name: ingredient.name,
-      github_template_path: data_repository.github_template_path(ingredient),
-      local_template_path: data_repository.template_path(ingredient),
+    DataRepositoryService.new(user: user).delete_ingredient(
+      ingredient_name: ingredient_name,
+      github_template_path: github_template_path,
+      local_template_path: local_template_path,
       repo_name: DataRepositoryService.name_for_environment
     )
-
-    ingredient.destroy
   rescue ActiveRecord::RecordNotFound => e
     Rails.logger.error("Failed to delete ingredient: #{e.message}")
     raise

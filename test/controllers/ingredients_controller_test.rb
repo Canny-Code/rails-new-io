@@ -176,6 +176,8 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should destroy ingredient" do
+    DeleteIngredientJob.any_instance.stubs(:perform_later)
+
     assert_difference("Ingredient.count", -1) do
       delete ingredient_url(@ingredient)
     end

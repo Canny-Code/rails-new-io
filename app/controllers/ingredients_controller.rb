@@ -41,7 +41,16 @@ class IngredientsController < ApplicationController
   end
 
   def destroy
-    DeleteIngredientJob.perform_later(ingredient_id: @ingredient.id, user_id: current_user.id)
+    data_repository = DataRepositoryService.new(user: current_user)
+
+    DeleteIngredientJob.perform_later(
+      user_id: current_user.id,
+      ingredient_name: @ingredient.name,
+      github_template_path: data_repository.github_template_path(@ingredient),
+      local_template_path: data_repository.template_path(@ingredient)
+    )
+
+    @ingredient.destroy
 
     redirect_to ingredients_url, notice: "Ingredient was successfully deleted."
   end
