@@ -382,8 +382,12 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
         @logger.expects(:info).with("Applying ingredient: #{ingredient.name}")
         @logger.expects(:info).with("Committing ingredient changes")
+        git_service.expects(:commit_changes).with(<<~COMMIT_MESSAGE)
+        Applied ingredient:
+
+        #{ingredient.to_commit_message}
+        COMMIT_MESSAGE
         @logger.expects(:info).with("Ingredient #{ingredient.name} applied successfully")
-        git_service.expects(:commit_changes).with(message: ingredient.to_commit_message)
       end
 
       @generated_app.apply_ingredients
@@ -394,7 +398,19 @@ class GeneratedAppTest < ActiveSupport::TestCase
 
   test "to_commit_message for an app without ingredients doesn't contain message about ingredients" do
     app = generated_apps(:no_ingredients_app)
-    assert_equal "Initial commit by railsnew.io\n\ncommand line flags:\n\n--minimal\n\n\n", app.to_commit_message
+    commit_message = <<~COMMIT_MESSAGE
+    Initial commit by railsnew.io
+
+    ===================
+    Command line flags:
+    ===================
+
+    #{app.recipe.cli_flags.squish.strip}
+
+
+    COMMIT_MESSAGE
+
+    assert_equal commit_message, app.to_commit_message
   end
 
   test "raises error when template path doesn't exist" do
@@ -404,6 +420,12 @@ class GeneratedAppTest < ActiveSupport::TestCase
     DataRepositoryService.any_instance
       .expects(:template_path)
       .returns("/nonexistent/path/template.rb")
+
+    @logger.stubs(:debug)
+
+    # Mock File.exist? to return false for the template path
+    File.stubs(:exist?).returns(true) # default for other files
+    File.stubs(:exist?).with("/nonexistent/path/template.rb").returns(false)
 
     @logger.expects(:error).with(
       "Template file not found",

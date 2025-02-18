@@ -68,4 +68,7 @@ Rails.application.configure do
   config.active_record.encryption.primary_key = "test" * 8
   config.active_record.encryption.deterministic_key = "test" * 8
   config.active_record.encryption.key_derivation_salt = "test" * 8
+
+  # Configure Active Storage to use the test service
+  config.active_storage.service = :test
 end
