@@ -122,7 +122,7 @@ class LocalGitServiceTest < ActiveSupport::TestCase
     message = "Update files"
     @service.expects(:run_command).with("git add . && git commit -m '#{message}'")
 
-    @service.commit_changes(message: message)
+    @service.commit_changes(message)
   end
 
   test "raises error when working directory does not exist" do
