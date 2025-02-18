@@ -15,7 +15,7 @@ class EmptyState::ComponentTest < PhlexComponentTestCase
   end
 
   def test_renders_component_with_all_attributes
-    component = EmptyState::Component.new(**@params)
+    component = EmptyState::Component.new(**@params.merge(icon: true))
     result = component.render_in(view_context)
 
     # Test content

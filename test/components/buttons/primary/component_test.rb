@@ -5,7 +5,7 @@ module Buttons
   module Primary
     class ComponentTest < PhlexComponentTestCase
       test "renders button with icon by default" do
-        component = Component.new(text: "Create App", path: "/apps/new")
+        component = Component.new(text: "Create App", path: "/apps/new", icon: true)
         result = component.render_in(view_context)
         doc = Nokogiri::HTML.fragment(result)
 

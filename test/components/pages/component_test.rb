@@ -31,8 +31,9 @@ module Pages
           user: nil,
           title: "No ingredients yet",
           description: "Get started by adding your first ingredient.",
-          button_text: "Add new ingredient",
+          button_text: "Add new Ingredient",
           button_path: "/ingredients/new",
+          icon: true,
           emoji: "🧂"
         )
         .returns(empty_state_component)
