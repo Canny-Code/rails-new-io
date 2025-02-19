@@ -24,7 +24,6 @@ RUN gem uninstall -i /usr/local/lib/ruby/gems/3.4.0 bundler && \
 
 # Set production environment
 ENV RAILS_ENV="production" \
-    RAILS_BUILD="1" \
     BUNDLE_PATH="/usr/local/bundle"
 
 FROM base AS nodejs
