@@ -127,7 +127,7 @@ class DataRepositoryService < GithubRepositoryService
       repo_name,
       "ingredients",
       ingredient.created_by.id.to_s,
-      Shellwords.escape(ingredient.name),
+      "#{ingredient.name.parameterize}-#{ingredient.id}",
       "template.rb"
     )
 

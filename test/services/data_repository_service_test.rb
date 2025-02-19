@@ -88,10 +88,11 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "writes ingredient to repository" do
-    ingredient = Data.define(:name, :template_content, :created_by).new(
+    ingredient = Data.define(:name, :template_content, :created_by, :id).new(
       name: "test_ingredient",
       template_content: "# Test template",
-      created_by: @user
+      created_by: @user,
+      id: "123"
     )
 
     repo_full_name = "#{@user.github_username}/#{@repo_name}"
@@ -264,10 +265,11 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "raises error when writing ingredient template to local filesystem fails" do
-    ingredient = Data.define(:name, :template_content, :created_by).new(
+    ingredient = Data.define(:name, :template_content, :created_by, :id).new(
       name: "test_ingredient",
       template_content: "# Test template",
-      created_by: @user
+      created_by: @user,
+      id: "123"
     )
 
     File.expects(:open).raises(Errno::EACCES, "Permission denied")

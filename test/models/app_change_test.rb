@@ -38,10 +38,11 @@ class AppChangeTest < ActiveSupport::TestCase
 
   test "applies change successfully" do
     @app_change.configuration = { "auth_type" => "devise" }
-    ingredient = Data.define(:name, :template_content, :created_by).new(
+    ingredient = Data.define(:name, :template_content, :created_by, :id).new(
       name: "test_ingredient",
       template_content: "# Template content",
-      created_by: @generated_app.user
+      created_by: @generated_app.user,
+      id: "123"
     )
     @recipe_change.stubs(:ingredient).returns(ingredient)
 
@@ -67,10 +68,11 @@ class AppChangeTest < ActiveSupport::TestCase
 
   test "handles failed application" do
     @app_change.configuration = { "auth_type" => "devise" }
-    ingredient = Data.define(:name, :template_content, :created_by).new(
+    ingredient = Data.define(:name, :template_content, :created_by, :id).new(
       name: "test_ingredient",
       template_content: "# Bad template",
-      created_by: @generated_app.user
+      created_by: @generated_app.user,
+      id: "123"
     )
     @recipe_change.stubs(:ingredient).returns(ingredient)
 
@@ -97,10 +99,11 @@ class AppChangeTest < ActiveSupport::TestCase
 
   test "cleans up template file after application" do
     @app_change.configuration = { "auth_type" => "devise" }
-    ingredient = Data.define(:name, :template_content, :created_by).new(
+    ingredient = Data.define(:name, :template_content, :created_by, :id).new(
       name: "test_ingredient",
       template_content: "# Template content",
-      created_by: @generated_app.user
+      created_by: @generated_app.user,
+      id: "123"
     )
     @recipe_change.stubs(:ingredient).returns(ingredient)
 
@@ -128,10 +131,11 @@ class AppChangeTest < ActiveSupport::TestCase
     @app_change.configuration = { "auth_type" => "devise" }
     error_message = "Failed to process template"
 
-    ingredient = Data.define(:name, :template_content, :created_by).new(
+    ingredient = Data.define(:name, :template_content, :created_by, :id).new(
       name: "test_ingredient",
       template_content: "# Template content",
-      created_by: @generated_app.user
+      created_by: @generated_app.user,
+      id: "123"
     )
     @recipe_change.stubs(:ingredient).returns(ingredient)
 

@@ -403,4 +403,19 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     assert_equal "Invalid template command format", log_entries[2].message
     assert_equal({ "command" => command }, log_entries[2].metadata)
   end
+
+  test "raises error when work directory creation fails" do
+    Time.stub :current, Time.at(1739965840) do
+      SecureRandom.stub :hex, "1a21373e" do
+        FileUtils.stubs(:mkdir_p).returns(nil)
+        Dir.stubs(:exist?).returns(false)
+
+        error = assert_raises(CommandExecutionService::InvalidCommandError) do
+          @service.execute
+        end
+
+        assert_equal "Work directory /var/lib/rails-new-io/workspaces/workspace-1739965840-1a21373e does not exist!", error.message
+      end
+    end
+  end
 end
