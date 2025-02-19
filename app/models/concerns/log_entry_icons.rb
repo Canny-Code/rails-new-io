@@ -49,10 +49,6 @@ module LogEntryIcons
       "🍱 🍣 ✅ "
     when /all ingredients applied successfully/
       "🍱 🏗️ ✅ "
-    when /installing app dependencies/
-      "📦 🏗️ 🔄 "
-    when /dependencies installed successfully/
-      "📦 🏗️ ✅ "
     when /starting github push/
       "🐙 ⬆️ 🔄 "
     when /github push completed successfully/
