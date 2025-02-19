@@ -678,6 +678,9 @@ module AppGeneration
     end
 
     test "log entries have correct icons throughout the workflow" do
+      Turbo::StreamsChannel.stubs(:broadcast_update_to)
+      ApplicationController.helpers.stubs(:turbo_stream_from)
+
       # Reset to initial state
       @generated_app.app_status.update!(status: "pending")
 
@@ -697,19 +700,27 @@ module AppGeneration
       repository_service.stubs(:create_github_repository).returns(true)
       repository_service.stubs(:create_initial_commit).returns(true)
       repository_service.stubs(:push_to_remote).returns(true)
-      repository_service.stubs(:commit_changes_after_applying_ingredient).returns(true)
+
+      sequence = sequence("commit_changes")
+      repository_service.expects(:commit_changes).with(<<~COMMIT_MESSAGE).in_sequence(sequence)
+      Applied ingredient:
+
+      #{ingredients(:rails_authentication).to_commit_message}
+      COMMIT_MESSAGE
+      repository_service.expects(:commit_changes).with(<<~COMMIT_MESSAGE).in_sequence(sequence)
+      Applied ingredient:
+
+      #{ingredients(:api_setup).to_commit_message}
+      COMMIT_MESSAGE
 
       AppRepositoryService.stubs(:new).returns(repository_service)
       @generated_app.stubs(:repository_service).returns(repository_service)
 
-      output = "Sample output"
-      error = "Sample error"
-
       # Stub all Open3.popen3 calls for the entire test
       Open3.stubs(:popen3).yields(
         StringIO.new,
-        StringIO.new(output),
-        StringIO.new(error),
+        StringIO.new,
+        StringIO.new,
         Data.define(:pid, :value).new(
           pid: 12345,
           value: Data.define(:success?).new(success?: true)
@@ -740,13 +751,13 @@ module AppGeneration
       @orchestrator.generate_rails_app
       @orchestrator.create_initial_commit
       @orchestrator.apply_ingredients
-      @orchestrator.install_dependencies
       @orchestrator.push_to_remote
       @orchestrator.start_ci
       @orchestrator.complete_generation
 
       # Verify log entries and their icons
       entries = @generated_app.log_entries.order(:created_at)
+
       # Starting workflow
       assert_match(/🛤️ 🏗️ 🔄 Starting app generation workflow/, entries[0].decorated_message)
 
@@ -764,68 +775,52 @@ module AppGeneration
       assert_match(/💻 📈 🔍 Environment variables for command execution/, entries[8].decorated_message)
 
       # Rails app generation
-      assert_match(/Executing command: `rails new/, entries[9].decorated_message)
-      assert_match(/🛤️ 🏗️ 🔄 Command execution started/, entries[10].decorated_message)
-      assert_match(/🛤️ 🏗️ ✅ Rails app generation process finished successfully/, entries[11].decorated_message)
+      assert_match(/🛤️ 🏗️ 🔄 Command execution started/, entries[9].decorated_message)
+      assert_match(/🛤️ 🏗️ ✅ Rails app generation process finished successfully/, entries[10].decorated_message)
 
       # Initial commit creation
-      assert_match(/🐙 📝 🔄 Creating initial commit/, entries[12].decorated_message)
-      assert_match(/🐙 📝 ✅ Initial commit created successfully/, entries[13].decorated_message)
+      assert_match(/🐙 📝 🔄 Creating initial commit/, entries[11].decorated_message)
+      assert_match(/🐙 📝 ✅ Initial commit created successfully/, entries[12].decorated_message)
 
       # Ingredient application
-      assert_match(/🍱 🏗️ 🔄 Applying ingredients/, entries[14].decorated_message)
+      assert_match(/🍱 🏗️ 🔄 Applying ingredients/, entries[13].decorated_message)
 
       # First ingredient
-      assert_match(/🍱 🍣 🔄 Applying ingredient: Rails Authentication/, entries[15].decorated_message)
-      assert_match(/🛤️ 🛡️ 🔄 Validating command/, entries[16].decorated_message)
-      assert_match(/🛤️ 🛡️ ✅ Command validation successful/, entries[17].decorated_message)
-      assert_match(/💻 📂 ✅ Using existing app directory/, entries[18].decorated_message)
-      assert_match(/💻 🛠️ ✅ Preparing to execute command/, entries[19].decorated_message)
-      assert_match(/💻 📈 🔍 System environment details/, entries[20].decorated_message)
-      assert_match(/💻 📈 🔍 Environment variables for command execution/, entries[21].decorated_message)
-      assert_match(%r{<p>Executing command: `./bin/rails app:template LOCATION=}, entries[22].decorated_message)
-      assert_match(/🍱 🏗️ 🔄 Command execution started: rails app:template LOCATION/, entries[23].decorated_message)
-      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[24].decorated_message)
-      assert_match(/🍱 🍣 ✅ Ingredient Rails Authentication applied successfully/, entries[25].decorated_message)
+      assert_match(/🍱 🍣 🔄 Applying ingredient: Rails Authentication/, entries[14].decorated_message)
+      assert_match(/🛤️ 🛡️ 🔄 Validating command/, entries[15].decorated_message)
+      assert_match(/🛤️ 🛡️ ✅ Command validation successful/, entries[16].decorated_message)
+      assert_match(/💻 📂 ✅ Using existing workspace directory/, entries[17].decorated_message)
+      assert_match(/💻 🛠️ ✅ Preparing to execute command/, entries[18].decorated_message)
+      assert_match(/💻 📈 🔍 System environment details/, entries[19].decorated_message)
+      assert_match(/💻 📈 🔍 Environment variables for command execution/, entries[20].decorated_message)
+      assert_match(/🍱 🏗️ 🔄 Command execution started: `rails app:template LOCATION/, entries[21].decorated_message)
+      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[22].decorated_message)
+      assert_match(/🍱 🍣 ✅ Ingredient Rails Authentication applied successfully/, entries[23].decorated_message)
 
       # Second ingredient
-      assert_match(/🍱 🍣 🔄 Applying ingredient: API Setup/, entries[26].decorated_message)
-      assert_match(/🛤️ 🛡️ 🔄 Validating command/, entries[27].decorated_message)
-      assert_match(/🛤️ 🛡️ ✅ Command validation successful/, entries[28].decorated_message)
-      assert_match(/💻 📂 ✅ Using existing app directory/, entries[29].decorated_message)
-      assert_match(/💻 🛠️ ✅ Preparing to execute command/, entries[30].decorated_message)
-      assert_match(/💻 📈 🔍 System environment details/, entries[31].decorated_message)
-      assert_match(/💻 📈 🔍 Environment variables for command execution/, entries[32].decorated_message)
-      assert_match(%r{<p>Executing command: `./bin/rails app:template LOCATION=}, entries[33].decorated_message)
-      assert_match(/🍱 🏗️ 🔄 Command execution started: rails app:template LOCATION/, entries[34].decorated_message)
-      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[35].decorated_message)
-      assert_match(/🍱 🍣 ✅ Ingredient API Setup applied successfully/, entries[36].decorated_message)
+      assert_match(/🍱 🍣 🔄 Applying ingredient: API Setup/, entries[24].decorated_message)
+      assert_match(/🛤️ 🛡️ 🔄 Validating command/, entries[25].decorated_message)
+      assert_match(/🛤️ 🛡️ ✅ Command validation successful/, entries[26].decorated_message)
+      assert_match(/💻 📂 ✅ Using existing workspace directory/, entries[27].decorated_message)
+      assert_match(/💻 🛠️ ✅ Preparing to execute command/, entries[28].decorated_message)
+      assert_match(/💻 📈 🔍 System environment details/, entries[29].decorated_message)
+      assert_match(/💻 📈 🔍 Environment variables for command execution/, entries[30].decorated_message)
+      assert_match(/🍱 🏗️ 🔄 Command execution started: `rails app:template LOCATION/, entries[31].decorated_message)
+      assert_match(/🐙 🍣 📝 Committing ingredient changes/, entries[32].decorated_message)
+      assert_match(/🍱 🍣 ✅ Ingredient API Setup applied successfully/, entries[33].decorated_message)
 
       # All ingredients completed
-      assert_match(/🍱 🏗️ ✅ All ingredients applied successfully/, entries[37].decorated_message)
-
-      # Installing dependencies
-      assert_match(/📦 🏗️ 🔄 Installing app dependencies/, entries[38].decorated_message)
-      assert_match(/🛤️ 🛡️ 🔄 Validating command/, entries[39].decorated_message)
-      assert_match(/🛤️ 🛡️ ✅ Command validation successful/, entries[40].decorated_message)
-      assert_match(/💻 📂 ✅ Using existing app directory/, entries[41].decorated_message)
-      assert_match(/💻 🛠️ ✅ Preparing to execute command/, entries[42].decorated_message)
-      assert_match(/💻 📈 🔍 System environment details/, entries[43].decorated_message)
-      assert_match(/💻 📈 🔍 Environment variables for command execution/, entries[44].decorated_message)
-      assert_match(%r{<p>Executing command: `bundle install`}, entries[45].decorated_message)
-      assert_match(/📦 🏗️ 🔄 Command execution started: bundle install/, entries[46].decorated_message)
-
-      assert_match(/📦 🏗️ ✅ Dependencies installed successfully/, entries[47].decorated_message)
+      assert_match(/🍱 🏗️ ✅ All ingredients applied successfully/, entries[34].decorated_message)
 
       # Push to remote
-      assert_match(/🐙 ⬆️ 🔄 Starting GitHub push/, entries[48].decorated_message)
-      assert_match(/🐙 ⬆️ ✅ GitHub push completed successfully/, entries[49].decorated_message)
+      assert_match(/🐙 ⬆️ 🔄 Starting GitHub push/, entries[35].decorated_message)
+      assert_match(/🐙 ⬆️ ✅ GitHub push completed successfully/, entries[36].decorated_message)
 
       # CI run
-      assert_match(/🐙 ⚙️ 🔄 Starting CI run/, entries[50].decorated_message)
+      assert_match(/🐙 ⚙️ 🔄 Starting CI run/, entries[37].decorated_message)
 
       # Generation completed
-      assert_match(/🛤️ 🏗️ ✅ App generation workflow completed successfully/, entries[51].decorated_message)
+      assert_match(/🛤️ 🏗️ ✅ App generation workflow completed successfully/, entries[38].decorated_message)
     end
   end
 end

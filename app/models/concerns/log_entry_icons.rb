@@ -19,7 +19,7 @@ module LogEntryIcons
       "🛤️ 🛡️ 🔄 "
     when /command validation successful/
       "🛤️ 🛡️ ✅ "
-    when /created workspace directory/, /using existing app directory/
+    when /created workspace directory/, /using existing workspace directory/
       "💻 📂 ✅ "
     when /preparing to execute command/
       "💻 🛠️ ✅ "

@@ -22,7 +22,7 @@ class CommandExecutionService::BufferTest < ActiveSupport::TestCase
     @buffer.flush
 
     assert_equal @initial_log_count + 1, @app.log_entries.count
-    assert_equal "Executing command: `#{@command}`\ntest output", @app.log_entries.last.message
+    assert_equal "Command execution started: `#{@command}`\ntest output", @app.log_entries.last.message
     assert_equal "rails_output", @app.log_entries.last.entry_type
   end
 
@@ -33,7 +33,7 @@ class CommandExecutionService::BufferTest < ActiveSupport::TestCase
     @buffer.flush
 
     assert_equal @initial_log_count, @app.log_entries.count
-    assert_equal "Executing command: `#{@command}`\nfirst line\nsecond line", @app.log_entries.last.message
+    assert_equal "Command execution started: `#{@command}`\nfirst line\nsecond line", @app.log_entries.last.message
     assert_equal "rails_output", @app.log_entries.last.entry_type
   end
 end
