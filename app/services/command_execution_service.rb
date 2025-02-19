@@ -1,9 +1,11 @@
 require "open3"
 require "timeout"
 require "fileutils"
+require "pathname"
 
 class CommandExecutionService
   RAILS_GEN_ROOT = "/var/lib/rails-new-io/rails-env".freeze
+  WORKSPACES_ROOT = "/var/lib/rails-new-io/workspaces".freeze
   RUBY_VERSION = "3.4.1".freeze
   RAILS_VERSION = "8.0.1".freeze
   BUNDLER_VERSION = "2.6.3".freeze
@@ -54,6 +56,15 @@ class CommandExecutionService
   VALID_OPTIONS = /\A--?[a-z][\w-]*\z/  # Must start with letter after dash(es)
   MAX_TIMEOUT = 300 # 5 minutes
 
+  ALLOWED_PATHS = [
+    RAILS_GEN_ROOT,
+    WORKSPACES_ROOT,
+    "/var/lib/rails-new-io/home",
+    "/var/lib/rails-new-io/config",
+    "/var/lib/rails-new-io/cache",
+    "/var/lib/rails-new-io/data"
+  ].map { |path| Pathname.new(path).freeze }.freeze
+
   class InvalidCommandError < StandardError
     attr_reader :metadata
 
@@ -73,7 +84,9 @@ class CommandExecutionService
 
   def execute
     validate_command!
+    validate_work_directory! if @work_dir  # Check existing work_dir if set
     setup_work_directory
+    validate_work_directory!  # Validate again after setup
 
     Timeout.timeout(MAX_TIMEOUT) do
       run_isolated_process
@@ -117,25 +130,41 @@ class CommandExecutionService
     @logger.debug("Command validation successful", { command: @command })
   end
 
-  def setup_work_directory
-    @work_dir = if @command.start_with?("rails new")
-      base_dir = "/var/lib/rails-new-io/workspaces"
-      FileUtils.mkdir_p(base_dir)
-      workspace_dir_name = "workspace-#{Time.current.to_i}-#{SecureRandom.hex(4)}"
+  def validate_work_directory!
+    raise InvalidCommandError, "Work directory not set up" unless @work_dir
+    work_dir_path = Pathname.new(@work_dir)
 
-      File.join(base_dir, workspace_dir_name).tap do |dir|
-        FileUtils.mkdir_p(dir)
-        @generated_app.update(workspace_path: dir)
-        @logger.info("Created workspace directory", { workspace_path: @work_dir })
-      end
-    else
-      File.join(@generated_app.workspace_path, @generated_app.name).tap do |dir|
-        @logger.info("Using existing workspace directory", { workspace_path: dir })
-      end
+    # Allow test directories (those under /tmp or /var/folders) in test environment
+    return if Rails.env.test? && (work_dir_path.to_s.start_with?("/tmp/") || work_dir_path.to_s.start_with?("/var/folders/"))
+
+    # Ensure the work directory is under an allowed path
+    unless ALLOWED_PATHS.any? { |allowed| work_dir_path.to_s.start_with?(allowed.to_s) }
+      @logger.error("Invalid work directory path", { work_dir: @work_dir })
+      raise InvalidCommandError, "Invalid work directory path"
     end
 
-    if !Dir.exist?(@work_dir)
-      raise InvalidCommandError, "Work directory #{@work_dir} does not exist!"
+    raise InvalidCommandError, "Work directory does not exist" unless Dir.exist?(@work_dir)
+  end
+
+  def setup_work_directory
+    base_dir = Pathname.new(WORKSPACES_ROOT)
+
+    @work_dir = if @command.start_with?("rails new")
+      FileUtils.mkdir_p(base_dir)
+
+      timestamp = Time.current.to_i.to_s
+      random_hex = SecureRandom.hex(4)
+      workspace_dir_name = [ "workspace", timestamp, random_hex ].join("-")
+
+      dir = base_dir.join(workspace_dir_name)
+      FileUtils.mkdir_p(dir)
+      @generated_app.update(workspace_path: dir.to_s)
+      @logger.info("Created workspace directory", { workspace_path: dir.to_s })
+      dir.to_s
+    else
+      dir = Pathname.new(@generated_app.workspace_path).join(@generated_app.name)
+      @logger.info("Using existing workspace directory", { workspace_path: dir.to_s })
+      dir.to_s
     end
   end
 
@@ -161,16 +190,19 @@ class CommandExecutionService
 
     rails_cmd = "#{RAILS_GEN_ROOT}/gems/bin/rails"
 
-    command = if @command.start_with?("rails new")
-      args = @command.split[2..-1].join(" ")
-      "#{rails_cmd} new #{args}"
+    command_args = if @command.start_with?("rails new")
+      [ "new", *@command.split[2..-1] ]
     else
       # For other rails commands (like app:template), don't include 'rails' in the args
-      "#{rails_cmd} #{@command.split[1..-1].join(' ')}"
+      @command.split[1..-1]
     end
 
+    # Validate work directory one final time before execution
+    validate_work_directory!
+    options = { unsetenv_others: true, chdir: @work_dir }
+
     Bundler.with_unbundled_env do
-      execute_command(env, command, buffer, error_buffer)
+      execute_command(env, [ rails_cmd, *command_args ], buffer, error_buffer, options)
     end
 
     @work_dir
@@ -201,8 +233,8 @@ class CommandExecutionService
     base_env
   end
 
-  def execute_command(env, command, buffer, error_buffer)
-    Open3.popen3(env, command, chdir: @work_dir, unsetenv_others: true) do |stdin, stdout, stderr, wait_thr|
+  def execute_command(env, command_with_args, buffer, error_buffer, options)
+    Open3.popen3(env, *command_with_args, options) do |stdin, stdout, stderr, wait_thr|
       @pid = wait_thr&.pid
 
       stdout_thread = Thread.new do
@@ -230,7 +262,7 @@ class CommandExecutionService
           status: exit_status,
           output: output,
           error_buffer: error_buffer.join("<br>"),
-          command: command,
+          command: command_with_args.join(" "),
           directory: @work_dir,
           env: env
         })

@@ -299,7 +299,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
   private
 
   def mock_popen3(stdout, stderr, success: true, pid: 12345)
-    lambda do |env, command, **options, &block|
+    lambda do |env, *command_with_args, options, &block|
       mock_stdin = StringIO.new
       mock_stdout = StringIO.new(stdout)
       mock_stderr = StringIO.new(stderr)
@@ -414,8 +414,36 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
           @service.execute
         end
 
-        assert_equal "Work directory /var/lib/rails-new-io/workspaces/workspace-1739965840-1a21373e does not exist!", error.message
+        assert_equal "Work directory does not exist", error.message
       end
     end
+  end
+
+  test "raises error when work directory is outside allowed paths" do
+    # Set up a directory outside of allowed paths
+    malicious_path = "/etc/some/path"
+    @generated_app.update!(workspace_path: malicious_path)
+
+    # Override the test environment check to ensure the validation runs
+    Rails.env.stubs(:test?).returns(false)
+
+    # Use a template command since it uses the existing workspace path
+    service = CommandExecutionService.new(@generated_app, @logger, "rails app:template LOCATION=lib/templates/template.rb")
+
+    # Set the work_dir directly to trigger validation
+    service.instance_variable_set(:@work_dir, malicious_path)
+
+    assert_difference -> { AppGeneration::LogEntry.count }, 1 do
+      error = assert_raises(CommandExecutionService::InvalidCommandError) do
+        service.send(:validate_work_directory!)
+      end
+
+      assert_equal "Invalid work directory path", error.message
+    end
+
+    log_entries = @generated_app.log_entries.order(created_at: :asc).last(1)
+    assert log_entries[0].error?
+    assert_equal "Invalid work directory path", log_entries[0].message
+    assert_equal({ "work_dir" => malicious_path }, log_entries[0].metadata)
   end
 end

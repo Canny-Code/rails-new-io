@@ -44,6 +44,11 @@ jobs:
       - name: Install packages
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y google-chrome-stable curl libjemalloc2 libsqlite3-0 libsqlite3-0
 
+      - name: Create required directories
+        run: |
+          sudo mkdir -p /var/lib/rails-new-io/{home,config,cache,data,gems/bin,gems/specifications,gems/gems,gems/extensions,workspaces}
+          sudo chmod -R 777 /var/lib/rails-new-io
+
       - name: Checkout code
         uses: actions/checkout@v4
 
