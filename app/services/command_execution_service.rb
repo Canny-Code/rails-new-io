@@ -177,7 +177,7 @@ class CommandExecutionService
   end
 
   def env_for_command
-    {
+    base_env = {
       "RAILS_ENV" => "development",
       "NODE_ENV" => "development",
       "GEM_HOME" => "#{RAILS_GEN_ROOT}/gems",
@@ -186,6 +186,19 @@ class CommandExecutionService
       "HOME" => "/var/lib/rails-new-io/home",
       "RAILS_DEBUG_TEMPLATE" => "1"
     }
+
+    if RUBY_PLATFORM.include?("darwin")
+      # OS X specific environment variables
+      openssl_dir = "/opt/homebrew/opt/openssl@3"
+      base_env.merge!({
+        "LDFLAGS" => "-L#{openssl_dir}/lib",
+        "CPPFLAGS" => "-I#{openssl_dir}/include",
+        "PKG_CONFIG_PATH" => "#{openssl_dir}/lib/pkgconfig",
+        "CONFIGURE_ARGS" => "--with-openssl-dir=#{openssl_dir}"
+      })
+    end
+
+    base_env
   end
 
   def execute_command(env, command, buffer, error_buffer)
