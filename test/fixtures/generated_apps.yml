@@ -113,3 +113,10 @@ no_ingredients_app:
   recipe: minimal_recipe
   selected_gems: []
   workspace_path: <%= Rails.root.join("tmp", "test_apps", "no_ingredients_app") %>
+
+omakase_app:
+  name: "omakase-app"
+  user: john
+  recipe: omakase_recipe
+  selected_gems: []
+  workspace_path: <%= Rails.root.join("tmp", "test_apps", "omakase_app") %>

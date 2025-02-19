@@ -413,6 +413,23 @@ class GeneratedAppTest < ActiveSupport::TestCase
     assert_equal commit_message, app.to_commit_message
   end
 
+  test "to_commit_message for an app with no CLI flags include Omakase" do
+    app = generated_apps(:omakase_app)
+    commit_message = <<~COMMIT_MESSAGE
+    Initial commit by railsnew.io
+
+    ===================
+    Command line flags:
+    ===================
+
+    None (Omakase)
+
+
+    COMMIT_MESSAGE
+
+    assert_equal commit_message, app.to_commit_message
+  end
+
   test "raises error when template path doesn't exist" do
     repository_service = mock("repository_service")
     @generated_app.stubs(:repository_service).returns(repository_service)

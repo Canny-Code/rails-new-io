@@ -88,3 +88,8 @@ no_ingredients_status:
   generated_app: no_ingredients_app
   status: pending
   status_history: []
+
+omakase_status:
+  generated_app: omakase_app
+  status: pending
+  status_history: []
