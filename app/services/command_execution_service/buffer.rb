@@ -59,7 +59,7 @@ class CommandExecutionService
       AppGeneration::LogEntry.create!(
         generated_app: @generated_app,
         level: :info,
-        message: "Executing command: `#{@command}`",
+        message: "Command execution started: `#{@command}`",
         metadata: { stream: :stdout, is_rails_output: true },
         phase: @generated_app.status,
         entry_type: "rails_output"

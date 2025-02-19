@@ -63,7 +63,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
         log_entries = @generated_app.log_entries.order(created_at: :asc).offset(initial_count)
 
         buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
-        assert_equal "Executing command: `#{command}`\nSample output", buffer_entry.message
+        assert_equal "Command execution started: `#{command}`\nSample output", buffer_entry.message
         assert log_entries.all? { it.info? || it.debug? }
 
         @generated_app.log_entries.where("id > ?", @generated_app.log_entries.limit(initial_count).pluck(:id).last).destroy_all
@@ -100,7 +100,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       error = assert_raises(CommandExecutionService::InvalidCommandError) do
         CommandExecutionService.new(@generated_app, @logger, "rm -rf /").execute
       end
-      assert_equal "Command must start with one of: rails new, rails app:template, bundle install", error.message
+      assert_equal "Command must start with one of: rails new, rails app:template", error.message
     end
 
     log_entries = @generated_app.log_entries.order(created_at: :asc).last(2)
@@ -108,7 +108,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     assert_match /Validating command/, log_entries[0].message
 
     assert log_entries[1].error?
-    assert_equal "Command must start with one of: rails new, rails app:template, bundle install", log_entries[1].message
+    assert_equal "Command must start with one of: rails new, rails app:template", log_entries[1].message
     assert_equal({ "command" => "rm -rf /" }, log_entries[1].metadata)
   end
 
@@ -158,14 +158,14 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       error = assert_raises(CommandExecutionService::InvalidCommandError) do
         CommandExecutionService.new(@generated_app, @logger, command).execute
       end
-      assert_equal "Command must start with one of: rails new, rails app:template, bundle install", error.message
+      assert_equal "Command must start with one of: rails new, rails app:template", error.message
     end
 
     log_entries = @generated_app.log_entries.order(created_at: :asc).last(2)
     assert log_entries[0].debug?
     assert_match /Validating command/, log_entries[0].message
     assert log_entries[1].error?
-    assert_equal "Command must start with one of: rails new, rails app:template, bundle install", log_entries[1].message
+    assert_equal "Command must start with one of: rails new, rails app:template", log_entries[1].message
     assert_equal({ "command" => command }, log_entries[1].metadata)
   end
 
@@ -208,7 +208,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       end
 
       buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
-      assert_equal "Executing command: `#{@valid_commands.first}`\nSample output", buffer_entry.message
+      assert_equal "Command execution started: `#{@valid_commands.first}`\nSample output", buffer_entry.message
       assert log_entries.all? { it.info? || it.debug? }
     end
   end
@@ -226,7 +226,8 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
       expected_messages = [
         "Command failed",
-        "Command execution started",
+        "Command stderr: Error message",
+        "Command execution started: `#{@valid_commands.first}`",
         "Environment variables for command execution",
         "System environment details",
         "Preparing to execute command",
@@ -243,7 +244,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       error_log = log_entries.find { |entry| entry.message == "Command failed" }
       assert error_log.error?
 
-      assert_equal "Executing command: `#{@valid_commands.first}`", error_log.metadata["output"]
+      assert_equal "Command execution started: `#{@valid_commands.first}`", error_log.metadata["output"]
       assert error_log.metadata["status"]
 
       log_entries.each do |entry|
@@ -327,16 +328,19 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
   test "executes valid template command" do
     template_command = "rails app:template LOCATION=lib/templates/template.rb"
-    service = CommandExecutionService.new(@generated_app, @logger, template_command)
-    output = "Template applied successfully"
 
-    Open3.stub :popen3, mock_popen3(output, "", success: true) do
-      assert_difference -> { @generated_app.log_entries.count }, 8 do
+    Dir.mkdir(File.join(@generated_app.workspace_path, @generated_app.name))
+
+    service = CommandExecutionService.new(@generated_app, @logger, template_command)
+
+    Open3.stub :popen3, mock_popen3("", "", success: true) do
+      assert_difference -> { @generated_app.log_entries.count }, 7 do
         service.execute
       end
 
       log_entries = @generated_app.log_entries.recent_first
-      assert_equal "Command execution started: rails app:template LOCATION=lib/templates/template.rb", log_entries.first.message
+
+      assert_equal "Command execution started: `#{template_command}`", log_entries.first.message
     end
   end
 
@@ -398,45 +402,5 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
     assert log_entries[2].error?
     assert_equal "Invalid template command format", log_entries[2].message
     assert_equal({ "command" => command }, log_entries[2].metadata)
-  end
-
-  test "validates bundle install command format" do
-    invalid_bundle_commands = {
-      "bundle" => "Command must start with one of: rails new, rails app:template, bundle install",
-      "bundle install --invalid-flag" => "Invalid bundle install command format",  # Invalid flag
-      "bundle install;rm -rf /" => "Command injection attempt detected",  # Injection attempt
-      "bundle install --path=../etc" => "Invalid bundle install command format",  # Path traversal attempt
-      "bundle exec install" => "Command must start with one of: rails new, rails app:template, bundle install"
-    }
-
-    invalid_bundle_commands.each do |cmd, expected_error|
-      expected_count = cmd.start_with?("bundle install") && !cmd.match?(/[;&|]/) ? 3 : 2
-      assert_difference -> { AppGeneration::LogEntry.count }, expected_count do
-        error = assert_raises(CommandExecutionService::InvalidCommandError) do
-          CommandExecutionService.new(@generated_app, @logger, cmd).execute
-        end
-        assert_equal expected_error, error.message
-
-        log_entries = @generated_app.log_entries.order(created_at: :desc).limit(expected_count)
-        assert log_entries[0].error?
-        assert_equal expected_error, log_entries[0].message
-      end
-    end
-
-    # Test valid bundle install commands
-    valid_commands = [
-      "bundle install",
-      "bundle install --jobs=4",
-      "bundle install --retry=3",
-      "bundle install --path vendor/bundle",
-      "bundle install --deployment --jobs=4 --retry=3",
-      "bundle install --local --frozen"
-    ]
-
-    valid_commands.each do |cmd|
-      assert_nothing_raised do
-        CommandExecutionService.new(@generated_app, @logger, cmd)
-      end
-    end
   end
 end

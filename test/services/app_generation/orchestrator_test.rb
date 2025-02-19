@@ -621,7 +621,7 @@ module AppGeneration
       # Expect proper logging
       sequence = sequence("completion_logging")
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
-      @logger.expects(:info).with("App generation completed successfully").in_sequence(sequence)
+      @logger.expects(:info).with("App generation workflow completed successfully").in_sequence(sequence)
 
       @orchestrator = Orchestrator.new(@generated_app)
       @orchestrator.complete_generation
@@ -825,7 +825,7 @@ module AppGeneration
       assert_match(/🐙 ⚙️ 🔄 Starting CI run/, entries[50].decorated_message)
 
       # Generation completed
-      assert_match(/🛤️ 🏗️ ✅ App generation completed successfully/, entries[51].decorated_message)
+      assert_match(/🛤️ 🏗️ ✅ App generation workflow completed successfully/, entries[51].decorated_message)
     end
   end
 end

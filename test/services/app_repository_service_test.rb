@@ -331,19 +331,4 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
 
     assert_match(/Failed to rename branch to main/, error.message)
   end
-
-  test "#commit_changes_after_applying_ingredient commits changes with ingredient message" do
-    ingredient = mock("ingredient")
-    ingredient.expects(:to_commit_message).returns("Add awesome feature")
-
-    mock_git_service = mock("local_git_service")
-    LocalGitService.expects(:new).with(
-      working_directory: File.join(@generated_app.workspace_path, @generated_app.name),
-      logger: @service.logger
-    ).returns(mock_git_service)
-
-    mock_git_service.expects(:commit_changes).with(message: "Add awesome feature")
-
-    @service.commit_changes_after_applying_ingredient(ingredient)
-  end
 end

@@ -30,8 +30,6 @@ module LogEntryIcons
     when /command execution started/
       if message.include?("rails new")
         "🛤️ 🏗️ 🔄 "
-      elsif message.include?("bundle install")
-        "📦 🏗️ 🔄 "
       elsif message.include?("app:template")
         "🍱 🏗️ 🔄 "
       end
@@ -61,7 +59,7 @@ module LogEntryIcons
       "🐙 ⬆️ ✅ "
     when /starting ci run/
       "🐙 ⚙️ 🔄 "
-    when /app generation completed successfully/
+    when /app generation workflow completed successfully/
       "🛤️ 🏗️ ✅ "
     else
       ""

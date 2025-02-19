@@ -54,7 +54,7 @@ module AppGeneration
 
     def complete_generation
       @generated_app.complete!
-      @logger.info("App generation completed successfully")
+      @logger.info("App generation workflow completed successfully")
     end
 
     def handle_error(error)

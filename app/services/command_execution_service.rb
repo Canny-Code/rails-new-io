@@ -94,7 +94,7 @@ class CommandExecutionService
 
   def execute
     validate_command!
-    setup_environment
+    setup_work_directory
 
     Timeout.timeout(MAX_TIMEOUT) do
       run_isolated_process
@@ -140,11 +140,6 @@ class CommandExecutionService
     @logger.debug("Command validation successful", { command: @command })
   end
 
-  def setup_environment
-    setup_work_directory
-    @logger.debug("Directory setup complete", { work_dir: @work_dir })
-  end
-
   def setup_work_directory
     @work_dir = if @command.start_with?("rails new")
       base_dir = "/var/lib/rails-new-io/workspaces"
@@ -154,9 +149,12 @@ class CommandExecutionService
       File.join(base_dir, workspace_dir_name).tap do |dir|
         FileUtils.mkdir_p(dir)
         @generated_app.update(workspace_path: dir)
+        @logger.info("Created workspace directory", { workspace_path: @work_dir })
       end
     else
-      File.join(@generated_app.workspace_path, @generated_app.name)
+      File.join(@generated_app.workspace_path, @generated_app.name).tap do |dir|
+        @logger.info("Using existing workspace directory", { workspace_path: dir })
+      end
     end
 
     if !Dir.exist?(@work_dir)
@@ -214,25 +212,15 @@ class CommandExecutionService
     buffer = Buffer.new(@generated_app, @command)
     error_buffer = []
 
-    @logger.debug("Command execution started: #{@command}", {
-      pid: @pid,
-      command: @command,
-      directory: @work_dir
-    })
-
     rails_cmd = "#{RAILS_GEN_ROOT}/gems/bin/rails"
 
     command = if @command.start_with?("rails new")
       args = @command.split[2..-1].join(" ")
       "#{rails_cmd} new #{args}"
-    elsif @command.start_with?("bundle")
-      "#{RAILS_GEN_ROOT}/gems/bin/bundle #{@command.split[1..-1].join(' ')}"
     else
       # For other rails commands (like app:template), don't include 'rails' in the args
       "#{rails_cmd} #{@command.split[1..-1].join(' ')}"
     end
-
-    @logger.debug("Executing command", { command: command })
 
     Bundler.with_unbundled_env do
       execute_command(env, command, buffer, error_buffer)
