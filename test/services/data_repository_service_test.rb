@@ -134,6 +134,61 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
     assert_equal "new_sha", result.sha
   end
 
+  test "deletes ingredient from repository and local filesystem" do
+    repo_full_name = "#{@user.github_username}/#{@repo_name}"
+    github_template_path = "ingredients/test_ingredient/template.rb"
+    local_template_path = "/tmp/test_template.rb"
+
+    # Create a temporary file to test deletion
+    FileUtils.touch(local_template_path)
+    assert File.exist?(local_template_path), "Test file should exist before deletion"
+
+    # Mock the GitHub API calls in sequence
+    @mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(@first_ref_mock)
+    @mock_client.expects(:commit).with(repo_full_name, "old_sha").returns(@commit_mock)
+    @mock_client.expects(:create_tree).with(
+      repo_full_name,
+      [
+        {
+          path: github_template_path,
+          mode: "100644",
+          type: "blob",
+          sha: nil
+        }
+      ],
+      base_tree: "tree_sha"
+    ).returns(@tree_mock)
+    @mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(@first_ref_mock)
+    @mock_client.expects(:create_commit).with(
+      repo_full_name,
+      "Delete ingredient: test_ingredient",
+      "new_tree_sha",
+      "old_sha",
+      author: {
+        name: @user.name,
+        email: @user.email
+      }
+    ).returns(@new_commit_mock)
+    @mock_client.expects(:update_ref).with(
+      repo_full_name,
+      "heads/main",
+      "new_sha"
+    )
+
+    result = @service.delete_ingredient(
+      ingredient_name: "test_ingredient",
+      github_template_path: github_template_path,
+      local_template_path: local_template_path,
+      repo_name: @repo_name
+    )
+
+    assert_equal "new_sha", result.sha
+    assert_not File.exist?(local_template_path), "Local file should be deleted"
+  ensure
+    # Clean up test file if it still exists
+    File.delete(local_template_path) if File.exist?(local_template_path)
+  end
+
   test "writes recipe to repository" do
     recipe = Data.define(:name, :to_yaml).new(
       name: "test_recipe",
