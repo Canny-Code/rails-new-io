@@ -18,27 +18,6 @@ class CommandExecutionService
     LOCATION=.+/template\.rb
   \z}x
 
-  BUNDLE_INSTALL_PATTERN = /\A
-    bundle\s+install    # Command start
-    (?:
-      \s+
-      (?:
-        # Options that can have a path value
-        --(?:gemfile|path)(?:=|\s+)[\w\/\.-]+
-        \s*
-        |
-        # Other common bundle install options
-        --(?:
-          jobs|retry|system|deployment|
-          local|frozen|clean|standalone|full-index|
-          conservative|force|prefer-local
-        )
-        (?:=\d+)?
-        \s*
-      )*
-    )?
-  \z/x
-
   COMMAND_PATTERN = /\A
   rails\s+new\s+                    # Command start
   [a-zA-Z]                         # App name must start with a letter
@@ -129,8 +108,6 @@ class CommandExecutionService
         validate_rails_new_command
       when "rails app:template"
         validate_template_command
-      when "bundle install"
-        validate_bundle_install_command
       end
     rescue InvalidCommandError => e
       @logger.error(e.message, { command: @command })
@@ -160,36 +137,6 @@ class CommandExecutionService
     if !Dir.exist?(@work_dir)
       raise InvalidCommandError, "Work directory #{@work_dir} does not exist!"
     end
-  end
-
-  def ruby_platform
-    @ruby_platform ||= begin
-      platform_cmd = "#{RAILS_GEN_ROOT}/ruby/bin/ruby -e 'puts RUBY_PLATFORM'"
-      platform = `#{platform_cmd}`.strip
-
-      if platform.blank?
-        # Fallback in case the command fails
-        case RbConfig::CONFIG["host_os"]
-        when /darwin/
-          "arm64-darwin24"
-        else
-          "x86_64-linux"
-        end
-      else
-        platform
-      end
-    end
-  end
-
-  def platform_path
-    @platform_path ||= "#{RAILS_GEN_ROOT}/ruby/lib/ruby/3.4.0/#{ruby_platform}"
-  end
-
-  def ruby_lib_paths
-    [
-      "#{RAILS_GEN_ROOT}/ruby/lib/ruby/3.4.0",
-      platform_path
-    ].join(":")
   end
 
   def run_isolated_process
@@ -230,7 +177,7 @@ class CommandExecutionService
   end
 
   def env_for_command
-    base_env = {
+    {
       "RAILS_ENV" => "development",
       "NODE_ENV" => "development",
       "GEM_HOME" => "#{RAILS_GEN_ROOT}/gems",
@@ -239,17 +186,6 @@ class CommandExecutionService
       "HOME" => "/var/lib/rails-new-io/home",
       "RAILS_DEBUG_TEMPLATE" => "1"
     }
-
-    case
-    when @command.start_with?("rails new")
-      base_env # No bundler stuff at all
-    when @command.start_with?("bundle install")
-      base_env.merge("BUNDLE_GEMFILE" => "#{@work_dir}/Gemfile")
-    when @command.start_with?("rails app:template")
-      base_env # No bundler stuff, let Rails handle it
-    else
-      base_env
-    end
   end
 
   def execute_command(env, command, buffer, error_buffer)
@@ -346,25 +282,5 @@ class CommandExecutionService
       @logger.error("Invalid template command format", metadata)
       raise InvalidCommandError.new("Invalid template command format", metadata)
     end
-  end
-
-  def validate_bundle_install_command
-    unless @command.match?(BUNDLE_INSTALL_PATTERN)
-      @logger.error("Invalid bundle install command format", { command: @command })
-      raise InvalidCommandError, "Invalid bundle install command format"
-    end
-  end
-
-  def jemalloc_lib_path
-    case RbConfig::CONFIG["host_os"]
-    when /darwin/
-      "/usr/local/opt/jemalloc/lib/libjemalloc.dylib"
-    else
-      "/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"
-    end
-  end
-
-  def bundle_command
-    @command
   end
 end
