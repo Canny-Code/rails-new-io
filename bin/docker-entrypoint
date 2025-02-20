@@ -38,6 +38,28 @@ if [ ! -d "/var/lib/rails-new-io/rails-env/ruby" ] || [ "$FORCE_ISOLATED_RUBY_RE
   echo "DEBUG: Copying system Ruby to isolated environment"
   cp -a /usr/local/* /var/lib/rails-new-io/rails-env/ruby/
 
+  # Overwrite Node.js stuff with our properly configured versions
+  echo "DEBUG: Overwriting Node.js binaries with symlinks to our configured versions"
+  rm -f /var/lib/rails-new-io/rails-env/ruby/bin/{node,npm,npx,corepack,yarn,yarnpkg}
+  rm -rf /var/lib/rails-new-io/rails-env/ruby/lib/node_modules
+  ln -sf /usr/local/bin/node /var/lib/rails-new-io/rails-env/ruby/bin/
+  ln -sf /usr/local/bin/npm /var/lib/rails-new-io/rails-env/ruby/bin/
+  ln -sf /usr/local/bin/npx /var/lib/rails-new-io/rails-env/ruby/bin/
+  ln -sf /usr/local/bin/corepack /var/lib/rails-new-io/rails-env/ruby/bin/
+
+  # Create our own yarn wrapper that bypasses Corepack
+  echo '#!/bin/bash
+echo "DEBUG: yarn called from $(pwd) with args: $@"
+echo "DEBUG: PATH=$PATH"
+echo "DEBUG: which yarn=$(which yarn)"
+echo "DEBUG: readlink -f $(which yarn)=$(readlink -f $(which yarn))"
+export COREPACK_ENABLE=0
+export NODE_OPTIONS="--no-corepack"
+exec "/usr/local/lib/node_modules/yarn/bin/yarn.js" "$@"
+' > /var/lib/rails-new-io/rails-env/ruby/bin/yarn
+  chmod +x /var/lib/rails-new-io/rails-env/ruby/bin/yarn
+  ln -sf /var/lib/rails-new-io/rails-env/ruby/bin/yarn /var/lib/rails-new-io/rails-env/ruby/bin/yarnpkg
+
   # Run the isolated environment setup in a subshell to avoid polluting the parent environment
   (
     # Unset any existing bundler environment variables that might interfere
@@ -56,6 +78,9 @@ if [ ! -d "/var/lib/rails-new-io/rails-env/ruby" ] || [ "$FORCE_ISOLATED_RUBY_RE
     export HOME=/var/lib/rails-new-io/home
     export BUNDLE_USER_HOME=/var/lib/rails-new-io/rails-env/bundle     # Fix: Update path to match CommandExecutionService
     export BUNDLE_APP_CONFIG=/var/lib/rails-new-io/rails-env/bundle    # Fix: Update path to match CommandExecutionService
+
+    # Install Yarn globally first
+    npm install -g yarn@4.6.0
 
     echo "DEBUG: Updating RubyGems to 3.6.3"
     /var/lib/rails-new-io/rails-env/ruby/bin/gem update --system 3.6.3
