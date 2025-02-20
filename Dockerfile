@@ -39,13 +39,14 @@ RUN case "$(dpkg --print-architecture)" in \
       arm64) ARCH='arm64' ;; \
       *) echo "Unsupported architecture"; exit 1 ;; \
     esac \
-    && curl -v -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${ARCH}.tar.xz" | tar -xJ -C /usr/local --strip-components=1 \
+    && curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${ARCH}.tar.xz" | tar -xJ -C /usr/local --strip-components=1 \
     && npm install -g npm@latest \
+    && mkdir -p /root/.cache/corepack \
     && corepack enable \
-    && corepack prepare yarn@${YARN_VERSION} --activate
+    && COREPACK_HOME=/root/.cache/corepack corepack prepare yarn@${YARN_VERSION} --activate
 
 # Verify Yarn installation
-RUN yarn --version
+RUN COREPACK_HOME=/root/.cache/corepack yarn --version
 
 FROM nodejs AS build
 
@@ -79,6 +80,7 @@ RUN rm -rf node_modules
 FROM base
 
 ARG NODE_VERSION=23.7.0
+ARG YARN_VERSION=4.6.0
 
 # Set production environment for the host app (railsnew.io)
 ENV RAILS_ENV="production" \
@@ -87,10 +89,11 @@ ENV RAILS_ENV="production" \
     PATH=/usr/local/bin:$PATH
 
 # Copy Node.js from nodejs stage
-COPY --from=nodejs /usr/local/bin/node /usr/local/bin/
-COPY --from=nodejs /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
-COPY --from=nodejs /usr/local/bin/npm /usr/local/bin/
-COPY --from=nodejs /usr/local/bin/npx /usr/local/bin/
+COPY --from=nodejs /usr/local/bin/ /usr/local/bin/
+COPY --from=nodejs /usr/local/lib/ /usr/local/lib/
+COPY --from=nodejs /usr/local/include/ /usr/local/include/
+COPY --from=nodejs /usr/local/share/ /usr/local/share/
+COPY --from=nodejs /root/.cache/corepack/ /root/.cache/corepack/
 
 COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build /rails /rails
@@ -106,7 +109,13 @@ RUN groupadd --system --gid 1000 rails && \
     chmod -R 755 /var/lib/rails-new-io && \
     chown -R rails:rails /rails && \
     chmod -R 755 /rails && \
-    chown -R rails:rails db log storage tmp /usr/local/bundle
+    chown -R rails:rails db log storage tmp /usr/local/bundle && \
+    # Set up Yarn for rails user
+    mkdir -p /home/rails/.cache/corepack && \
+    cp -r /root/.cache/corepack/* /home/rails/.cache/corepack/ && \
+    chown -R rails:rails /home/rails/.cache && \
+    COREPACK_HOME=/home/rails/.cache/corepack corepack enable && \
+    COREPACK_HOME=/home/rails/.cache/corepack corepack prepare yarn@${YARN_VERSION} --activate
 
 USER rails
 
