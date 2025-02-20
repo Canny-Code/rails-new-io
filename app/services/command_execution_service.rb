@@ -214,7 +214,7 @@ class CommandExecutionService
       "NODE_ENV" => "development",
       "GEM_HOME" => "#{RAILS_GEN_ROOT}/gems",
       "GEM_PATH" => "#{RAILS_GEN_ROOT}/gems:#{RAILS_GEN_ROOT}/ruby/lib/ruby/gems/3.4.0",
-      "PATH" => "#{RAILS_GEN_ROOT}/gems/bin:#{RAILS_GEN_ROOT}/ruby/bin:/usr/local/bin:/usr/bin:/bin",
+      "PATH" => "#{RAILS_GEN_ROOT}/gems/bin:#{RAILS_GEN_ROOT}/ruby/bin:/opt/homebrew/bin:/usr/local/lib/nodejs/bin:/usr/local/bin:/usr/bin:/bin",
       "HOME" => "/var/lib/rails-new-io/home",
       "RAILS_DEBUG_TEMPLATE" => "1"
     }
@@ -245,9 +245,11 @@ class CommandExecutionService
 
       stderr_thread = Thread.new do
         stderr.each_line do |line|
+          next if line.strip.match?(/^.*warning: .*$/)
+          next if line.strip.blank?
           error_buffer << line.strip
-          @logger.debug("Command stderr: #{line.strip}")
         end
+        @logger.debug("Command stderr:<br>#{error_buffer.join("<br>")}")
       end
 
       stdout_thread.join
@@ -255,13 +257,11 @@ class CommandExecutionService
       buffer.complete!
 
       exit_status = wait_thr&.value
-      output = buffer.message || "No output"
 
-      unless exit_status&.success?
+      if !exit_status&.success? || error_buffer.any? { |line| line.include?("aborted!") }
         @logger.error("Command failed", {
           status: exit_status,
-          output: output,
-          error_buffer: error_buffer.join("<br>"),
+          stack_trace: error_buffer.join("<br>"),
           command: command_with_args.join(" "),
           directory: @work_dir,
           env: env
