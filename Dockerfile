@@ -87,9 +87,10 @@ ENV RAILS_ENV="production" \
     PATH=/usr/local/bin:$PATH
 
 # Copy Node.js from nodejs stage
-COPY --from=nodejs /usr/local/bin/node /usr/local/bin/
-COPY --from=nodejs /usr/local/bin/npm /usr/local/bin/
-COPY --from=nodejs /usr/local/bin/npx /usr/local/bin/
+COPY --from=nodejs /usr/local/bin/ /usr/local/bin/
+COPY --from=nodejs /usr/local/lib/ /usr/local/lib/
+COPY --from=nodejs /usr/local/include/ /usr/local/include/
+COPY --from=nodejs /usr/local/share/ /usr/local/share/
 
 COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build /rails /rails
