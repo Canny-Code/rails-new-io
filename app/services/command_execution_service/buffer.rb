@@ -32,25 +32,20 @@ class CommandExecutionService
       synchronize do
         return if @output.empty?
 
-        if @log_entry.nil?
-          @log_entry = create_initial_log_entry
+        new_content = @output.join("\n")
+
+        appended_message = String.new(capacity: @log_entry.message.bytesize + new_content.bytesize + 1).tap do |buffer|
+          buffer << @log_entry.message << "\n" << new_content
         end
 
-        new_content = @output.join("\n")
-        message = @log_entry.message.present? ? "#{@log_entry.message}\n#{new_content}" : new_content
-
         @log_entry.update!(
-          message: message,
+          message: appended_message,
           phase: @generated_app.status
         )
 
         @output.clear
         @last_flush = Time.current
       end
-    end
-
-    def message
-      @log_entry&.message
     end
 
     private
