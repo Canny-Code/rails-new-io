@@ -2,7 +2,8 @@
 # check=error=true
 
 ARG RUBY_VERSION=3.4.1
-FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
+
+FROM docker.io/library/ruby:${RUBY_VERSION}-slim AS base
 
 WORKDIR /rails
 
@@ -29,18 +30,19 @@ ENV RAILS_ENV="production" \
 FROM base AS nodejs
 
 # Install Node.js and Yarn
-ARG NODE_VERSION=22.3.0
-ARG YARN_VERSION=4.5.3
-ENV PATH=/usr/local/node/bin:/usr/local/bin:$PATH
+ARG NODE_VERSION=23.7.0
+ARG YARN_VERSION=4.6.0
+ENV PATH=/usr/local/bin:$PATH
 
 RUN case "$(dpkg --print-architecture)" in \
       amd64) ARCH='x64' ;; \
       arm64) ARCH='arm64' ;; \
       *) echo "Unsupported architecture"; exit 1 ;; \
     esac \
-    && curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${ARCH}.tar.xz | tar -xJ -C /usr/local --strip-components=1 \
+    && curl -v -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${ARCH}.tar.xz" | tar -xJ -C /usr/local --strip-components=1 \
+    && npm install -g npm@latest \
     && corepack enable \
-    && corepack prepare yarn@4.5.3 --activate
+    && corepack prepare yarn@${YARN_VERSION} --activate
 
 # Verify Yarn installation
 RUN yarn --version
@@ -76,9 +78,18 @@ RUN rm -rf node_modules
 # Final stage for app image
 FROM base
 
+ARG NODE_VERSION=23.7.0
+
 # Set production environment for the host app (railsnew.io)
 ENV RAILS_ENV="production" \
-    BUNDLE_WITHOUT="development:test"
+    BUNDLE_WITHOUT="development:test" \
+    NODE_VERSION=${NODE_VERSION} \
+    PATH=/usr/local/bin:$PATH
+
+# Copy Node.js from nodejs stage
+COPY --from=nodejs /usr/local/bin/node /usr/local/bin/
+COPY --from=nodejs /usr/local/bin/npm /usr/local/bin/
+COPY --from=nodejs /usr/local/bin/npx /usr/local/bin/
 
 COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build /rails /rails
