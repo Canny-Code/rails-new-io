@@ -88,6 +88,7 @@ ENV RAILS_ENV="production" \
 
 # Copy Node.js from nodejs stage
 COPY --from=nodejs /usr/local/bin/node /usr/local/bin/
+COPY --from=nodejs /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
 COPY --from=nodejs /usr/local/bin/npm /usr/local/bin/
 COPY --from=nodejs /usr/local/bin/npx /usr/local/bin/
 
