@@ -11,11 +11,6 @@
 #  created_at   :datetime         not null
 #  updated_at   :datetime         not null
 #
-skip_git:
-  default: false
-  checked: false
-  display_when: "checked"
-
 skip_docker:
   default: true
   checked: false
