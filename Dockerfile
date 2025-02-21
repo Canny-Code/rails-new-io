@@ -108,6 +108,14 @@ RUN groupadd --system --gid 1000 rails && \
     chmod -R 755 /rails && \
     chown -R rails:rails db log storage tmp /usr/local/bundle
 
+# Clean up any existing Yarn and set up 4.6.0
+RUN apt-get remove -y yarn || true && \
+    rm -f /usr/local/bin/yarn /usr/local/bin/yarnpkg && \
+    corepack enable && \
+    corepack prepare yarn@4.6.0 --activate && \
+    # Make sure corepack directories are owned by rails user (will be created next)
+    chown -R rails:rails /usr/local/share/.corepack /usr/local/share/nvm
+
 USER rails
 
 # Entrypoint prepares the database.
