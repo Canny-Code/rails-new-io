@@ -71,6 +71,10 @@ if [ ! -d "/var/lib/rails-new-io/rails-env/ruby" ] || [ "$FORCE_ISOLATED_RUBY_RE
     export BUNDLE_USER_HOME=/var/lib/rails-new-io/rails-env/bundle     # Fix: Update path to match CommandExecutionService
     export BUNDLE_APP_CONFIG=/var/lib/rails-new-io/rails-env/bundle    # Fix: Update path to match CommandExecutionService
 
+    echo "DEBUG: Setting up corepack"
+    /var/lib/rails-new-io/rails-env/node/bin/corepack enable
+    /var/lib/rails-new-io/rails-env/node/bin/corepack prepare yarn@4.6.0 --activate
+
     echo "DEBUG: Updating RubyGems to 3.6.3"
     /var/lib/rails-new-io/rails-env/ruby/bin/gem update --system 3.6.3
 
