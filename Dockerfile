@@ -95,6 +95,15 @@ COPY --from=nodejs /usr/local/share/ /usr/local/share/
 COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build /rails /rails
 
+# Clean up any existing Yarn and set up 4.6.0
+RUN apt-get remove -y yarn || true && \
+    rm -f /usr/local/bin/yarn /usr/local/bin/yarnpkg && \
+    corepack enable && \
+    corepack prepare yarn@4.6.0 --activate && \
+    # Make sure corepack directories are owned by rails user (will be created next)
+    mkdir -p /usr/local/share/.corepack /usr/local/share/nvm && \
+    chown -R 1000:1000 /usr/local/share/.corepack /usr/local/share/nvm || true
+
 # Create the rails user first
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash && \
@@ -107,14 +116,6 @@ RUN groupadd --system --gid 1000 rails && \
     chown -R rails:rails /rails && \
     chmod -R 755 /rails && \
     chown -R rails:rails db log storage tmp /usr/local/bundle
-
-# Clean up any existing Yarn and set up 4.6.0
-RUN apt-get remove -y yarn || true && \
-    rm -f /usr/local/bin/yarn /usr/local/bin/yarnpkg && \
-    corepack enable && \
-    corepack prepare yarn@4.6.0 --activate && \
-    # Make sure corepack directories are owned by rails user (will be created next)
-    chown -R rails:rails /usr/local/share/.corepack /usr/local/share/nvm
 
 USER rails
 
