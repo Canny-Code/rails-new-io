@@ -214,9 +214,13 @@ class CommandExecutionService
       "NODE_ENV" => "development",
       "GEM_HOME" => "#{RAILS_GEN_ROOT}/gems",
       "GEM_PATH" => "#{RAILS_GEN_ROOT}/gems:#{RAILS_GEN_ROOT}/ruby/lib/ruby/gems/3.4.0",
-      "PATH" => "#{RAILS_GEN_ROOT}/gems/bin:#{RAILS_GEN_ROOT}/ruby/bin:/opt/homebrew/bin:/usr/local/lib/nodejs/bin:/usr/local/bin:/usr/bin:/bin",
+      "PATH" => "#{RAILS_GEN_ROOT}/gems/bin:#{RAILS_GEN_ROOT}/ruby/bin:#{RAILS_GEN_ROOT}/node/bin:/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin",
       "HOME" => "/var/lib/rails-new-io/home",
-      "RAILS_DEBUG_TEMPLATE" => "1"
+      "RAILS_DEBUG_TEMPLATE" => "1",
+      # Node.js environment for new Rails apps
+      "npm_config_prefix" => "#{RAILS_GEN_ROOT}/node",
+      "NODE_PATH" => "#{RAILS_GEN_ROOT}/node_modules",
+      "COREPACK_HOME" => "#{RAILS_GEN_ROOT}/.corepack"
     }
 
     if RUBY_PLATFORM.include?("darwin")

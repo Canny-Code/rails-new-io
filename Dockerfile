@@ -92,9 +92,7 @@ COPY --from=nodejs /usr/local/lib/ /usr/local/lib/
 COPY --from=nodejs /usr/local/include/ /usr/local/include/
 COPY --from=nodejs /usr/local/share/ /usr/local/share/
 
-# Install tailwindcss CLI globally
-RUN npm install -g tailwindcss
-
+# Copy the entire bundle including native extensions
 COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build /rails /rails
 
