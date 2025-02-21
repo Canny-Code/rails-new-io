@@ -182,6 +182,29 @@ class CommandExecutionService
     FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/gems/gems")
     FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/gems/extensions")
 
+    # Create Node.js directories
+    FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/node/bin")
+    FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/node_modules")
+    FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/.corepack")
+    FileUtils.chown_R("rails", "rails", RAILS_GEN_ROOT)
+
+    # Debug Node.js setup
+    @logger.debug("Node.js environment check", {
+      node_bin: `ls -la #{RAILS_GEN_ROOT}/node/bin`.strip,
+      node_modules: `ls -la #{RAILS_GEN_ROOT}/node_modules`.strip,
+      corepack: `ls -la #{RAILS_GEN_ROOT}/.corepack`.strip,
+      which_node: `which node`.strip,
+      which_npm: `which npm`.strip,
+      which_npx: `which npx`.strip,
+      which_yarn: `which yarn`.strip,
+      which_corepack: `which corepack`.strip,
+      node_version: `node --version`.strip,
+      npm_version: `npm --version`.strip,
+      yarn_version: `yarn --version`.strip,
+      corepack_enabled: `corepack enable 2>&1`.strip,
+      esbuild_version: `npx esbuild --version 2>&1`.strip
+    })
+
     env = env_for_command
     log_environment_variables_for_command_execution(env)
 

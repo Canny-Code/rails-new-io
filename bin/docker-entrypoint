@@ -49,6 +49,8 @@ if [ ! -d "/var/lib/rails-new-io/rails-env/ruby" ] || [ "$FORCE_ISOLATED_RUBY_RE
   ln -sf /usr/local/bin/npm /var/lib/rails-new-io/rails-env/node/bin/
   ln -sf /usr/local/bin/npx /var/lib/rails-new-io/rails-env/node/bin/
   ln -sf /usr/local/bin/corepack /var/lib/rails-new-io/rails-env/node/bin/
+  ln -sf /usr/local/bin/yarn /var/lib/rails-new-io/rails-env/node/bin/
+  ln -sf /usr/local/bin/yarnpkg /var/lib/rails-new-io/rails-env/node/bin/
 
   # Run the isolated environment setup in a subshell to avoid polluting the parent environment
   (
