@@ -189,10 +189,19 @@ class CommandExecutionService
     FileUtils.chown_R("rails", "rails", RAILS_GEN_ROOT)
 
     # Debug Node.js setup
-    @logger.debug("Node.js environment check", {
+    @logger.debug("Node.js environment check before corepack setup", {
       node_bin: `ls -la #{RAILS_GEN_ROOT}/node/bin`.strip,
       node_modules: `ls -la #{RAILS_GEN_ROOT}/node_modules`.strip,
-      corepack: `ls -la #{RAILS_GEN_ROOT}/.corepack`.strip,
+      corepack: `ls -la #{RAILS_GEN_ROOT}/.corepack`.strip
+    })
+
+    # Set up corepack in the environment where we'll run rails new
+    @logger.debug("Setting up corepack")
+    system({ "COREPACK_HOME" => "#{RAILS_GEN_ROOT}/.corepack" }, "#{RAILS_GEN_ROOT}/node/bin/corepack enable")
+    system({ "COREPACK_HOME" => "#{RAILS_GEN_ROOT}/.corepack" }, "#{RAILS_GEN_ROOT}/node/bin/corepack prepare yarn@4.6.0 --activate")
+
+    # Debug Node.js setup again after corepack
+    @logger.debug("Node.js environment check after corepack setup", {
       which_node: `which node`.strip,
       which_npm: `which npm`.strip,
       which_npx: `which npx`.strip,
