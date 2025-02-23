@@ -172,48 +172,6 @@ class CommandExecutionService
     @logger.debug("Preparing to execute command", { command: @command, directory: @work_dir })
     log_system_environment_details
 
-    # Create isolation directories
-    FileUtils.mkdir_p("/var/lib/rails-new-io/home")
-    FileUtils.mkdir_p("/var/lib/rails-new-io/config")
-    FileUtils.mkdir_p("/var/lib/rails-new-io/cache")
-    FileUtils.mkdir_p("/var/lib/rails-new-io/data")
-    FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/gems/bin")
-    FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/gems/specifications")
-    FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/gems/gems")
-    FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/gems/extensions")
-
-    # Create Node.js directories
-    FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/node/bin")
-    FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/node_modules")
-    FileUtils.mkdir_p("#{RAILS_GEN_ROOT}/.corepack")
-    FileUtils.chown_R("rails", "rails", RAILS_GEN_ROOT)
-
-    # Debug Node.js setup
-    @logger.debug("Node.js environment check before corepack setup", {
-      node_bin: `ls -la #{RAILS_GEN_ROOT}/node/bin`.strip,
-      node_modules: `ls -la #{RAILS_GEN_ROOT}/node_modules`.strip,
-      corepack: `ls -la #{RAILS_GEN_ROOT}/.corepack`.strip
-    })
-
-    # Set up corepack in the environment where we'll run rails new
-    @logger.debug("Setting up corepack")
-    system({ "COREPACK_HOME" => "#{RAILS_GEN_ROOT}/.corepack" }, "#{RAILS_GEN_ROOT}/node/bin/corepack enable")
-    system({ "COREPACK_HOME" => "#{RAILS_GEN_ROOT}/.corepack" }, "#{RAILS_GEN_ROOT}/node/bin/corepack prepare yarn@4.6.0 --activate")
-
-    # Debug Node.js setup again after corepack
-    @logger.debug("Node.js environment check after corepack setup", {
-      which_node: `which node`.strip,
-      which_npm: `which npm`.strip,
-      which_npx: `which npx`.strip,
-      which_yarn: `which yarn`.strip,
-      which_corepack: `which corepack`.strip,
-      node_version: `node --version`.strip,
-      npm_version: `npm --version`.strip,
-      yarn_version: `yarn --version`.strip,
-      corepack_enabled: `corepack enable 2>&1`.strip,
-      esbuild_version: `npx esbuild --version 2>&1`.strip
-    })
-
     env = env_for_command
     log_environment_variables_for_command_execution(env)
 
