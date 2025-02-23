@@ -14,10 +14,9 @@ export default class extends Controller {
   connect() {
     // Listen for back/forward navigation:
     this.handlePopstate = this.handlePopstate.bind(this)
+    this.lastSelectedRadio = null;
     window.addEventListener("popstate", this.handlePopstate)
 
-    console.log("Page loaded. History length:", history.length)
-    // On page load, sync the radio with the existing recipe_id (if any)
     this.syncRadioFromUrl()
   }
 
@@ -38,28 +37,38 @@ export default class extends Controller {
       return
     }
 
-    console.log("PUSHING state. old=", window.location.href, "new=", newUrl.href)
     history.pushState({ recipeId }, "", newUrl.href)
+
+    if (this.lastSelectedRadio && this.lastSelectedRadio !== radio) {
+      this.lastSelectedRadio.blur()
+    }
+
+    this.lastSelectedRadio = radio
 
     this.updateTerminalAndIngredients(radio)
   }
 
-  // Called on popstate (i.e. Back/Forward) and also initial page load
   syncRadioFromUrl() {
     const recipeId = new URLSearchParams(window.location.search).get("recipe_id")
 
-    // If a recipe_id was provided, check the matching radio
     if (recipeId) {
       const radio = this.radioTargets.find(r => r.value === recipeId)
+
+      if (this.lastSelectedRadio && this.lastSelectedRadio !== radio) {
+        this.lastSelectedRadio.blur()
+      }
+
       if (radio) {
         radio.checked = true
         this.updateTerminalAndIngredients(radio)
-        // Fire a change event so other parts of your code can react
+        this.lastSelectedRadio = radio
+
         radio.dispatchEvent(new Event('change', { bubbles: true }))
       }
     } else {
-      // No recipe_id in URL => uncheck all or do nothing
       this.radioTargets.forEach(r => (r.checked = false))
+      if (this.lastSelectedRadio) this.lastSelectedRadio.blur()
+      this.lastSelectedRadio = null
     }
   }
 
@@ -71,7 +80,6 @@ export default class extends Controller {
     const cliFlags = radio.dataset.cliFlags || ''
     const ingredients = (radio.dataset.ingredients || '').split(',').filter(Boolean)
 
-    // Parse CLI flags
     const flags = {
       database: cliFlags.match(/-d\s+\S+/) || cliFlags.match(/--database=\S+/),
       javascript: cliFlags.match(/-j\s+\S+/) || cliFlags.match(/--javascript=\S+/),
