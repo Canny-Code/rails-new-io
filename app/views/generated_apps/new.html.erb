@@ -8,7 +8,7 @@
     <div data-controller="app-form-validator"
          data-app-form-validator-check-url-value="<%= check_github_name_path %>"
          data-app-form-validator-debounce-value="500">
-      <%= form_tag generated_apps_path, method: :post, class: "space-y-8 divide-y divide-gray-200" do %>
+      <%= form_tag generated_apps_path, method: :post, class: "space-y-8 divide-y divide-gray-200", data: { turbo: false } do %>
         <div class="space-y-6 sm:space-y-5">
           <div class="relative overflow-hidden">
             <!-- TODO check if we need this -->
@@ -79,7 +79,7 @@
           </div>
         </div>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-controller="recipe-selector">
           <%= render Recipes::SectionComponent.new(
             title: "Pre-cooked meals",
             subtitle: "Choose from our pre-cooked meals or craft your own recipe from scratch",

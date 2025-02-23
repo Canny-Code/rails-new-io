@@ -19,7 +19,7 @@ class Recipes::SectionComponent < Phlex::HTML
       @recipes.each do |recipe|
         div(class: "border-b last:border-0 py-2") do
           label(class: "flex items-start cursor-pointer") do
-            div(class: "flex items-center h-5", data: { controller: "recipe-selector" }) do
+            div(class: "flex items-center h-5") do
               radio_button_tag "generated_app[recipe_id]",
                 recipe.id,
                 recipe.id == @selected_recipe_id,
