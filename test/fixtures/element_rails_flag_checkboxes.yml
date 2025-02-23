@@ -10,12 +10,6 @@
 #  updated_at   :datetime         not null
 #
 
-skip_git:
-  checked: false
-  default: false
-  created_at: <%= Time.current %>
-  updated_at: <%= Time.current %>
-
 skip_docker:
   checked: false
   default: false
