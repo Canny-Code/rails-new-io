@@ -4,7 +4,7 @@ gem "rails", "8.0.1"
 
 gem "acidic_job", "= 1.0.0.rc1"
 gem "aasm", "~> 5.5.0"
-gem "aws-sdk-s3", "~> 1.177.0", require: false
+gem "aws-sdk-s3", "~> 1.182.0", require: false
 gem "bootsnap", require: false
 gem "faraday-retry", "~> 2.2.1"
 gem "friendly_id", "~> 5.5.1"
