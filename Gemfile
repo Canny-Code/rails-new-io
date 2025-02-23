@@ -46,7 +46,7 @@ group :test do
   gem "capybara-lockstep", "~> 2.2.2"
   gem "minitest-difftastic", "~> 0.2.1"
   gem "database_cleaner-active_record"
-  gem "selenium-webdriver", "~> 4.28.0"
+  gem "selenium-webdriver", "~> 4.29.1"
   gem "mocha", "~> 2.7.1"
 end
 
