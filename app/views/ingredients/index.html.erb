@@ -23,7 +23,7 @@
     },
     {
       header: "Description",
-      content: ->(ingredient) { truncate(ingredient.description, length: 140) }
+      content: ->(ingredient) { truncate(ingredient.description, length: 80) }
     }
   ],
   actions: [ :view, :edit, :delete ]
