@@ -16,7 +16,9 @@ module Pages
               @command_line_value = command_line_value
               @checked = checked
               @display_when = display_when
-              @data = data
+              @data = data.merge({
+                "display-when": display_when
+              })
             end
 
             def view_template

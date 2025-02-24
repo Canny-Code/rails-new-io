@@ -65,6 +65,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
           description: "A cool API app",
           status: "draft",
           api_flag: "--api",
+          ui_state: "{}",
           database_choice: "--database=postgresql",
           rails_flags: "--skip-test"
         }
@@ -96,7 +97,8 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
         recipe: {
           name: "My API App",
           description: "A cool API app",
-          api_flag: "--api --skip-turbo"
+          api_flag: "--api --skip-turbo",
+          ui_state: "{}"
         }
       }
     end
@@ -116,7 +118,8 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
           api_flag: "--api",
           database_choice: "--database=mysql",
           rails_flags: nil,
-          ingredient_ids: [ ingredients(:rails_authentication).id ]
+          ingredient_ids: [ ingredients(:rails_authentication).id ],
+          ui_state: "{}"
         }
       }
     end
@@ -165,7 +168,8 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
           name: "My App",
           description: "A description",
           status: "invalid_status",
-          api_flag: "--api --skip-turbo"
+          api_flag: "--api --skip-turbo",
+          ui_state: "{}"
         }
       }
     end
@@ -222,7 +226,8 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
             name: "Auth Recipe",
             description: "Recipe with authentication",
             api_flag: "--api",
-            ingredient_ids: [ ingredient.id ]
+            ingredient_ids: [ ingredient.id ],
+            ui_state: "{}"
           }
         }
       end
@@ -245,6 +250,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
             name: "Multi-ingredient Recipe",
             description: "Recipe with multiple ingredients",
             api_flag: "--api",
+            ui_state: "{}",
             ingredient_ids: [ auth.id, basic.id ]
           }
         }
@@ -268,6 +274,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
             name: "Mixed Recipe",
             description: "Recipe with mix of real and fake ingredients",
             api_flag: "--api",
+            ui_state: "{}",
             ingredient_ids: [ auth.id, 999999 ]
           }
         }

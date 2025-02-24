@@ -14,17 +14,15 @@ module Pages
               result = component.render_in(view_context)
               doc = Nokogiri::HTML.fragment(result)
 
-              # Test Stimulus setup
-              li_element = doc.css("li").first
-              assert_equal "rails-flag-checkbox", li_element["data-controller"]
-              assert_equal "#rails-flags", li_element["data-rails-flag-checkbox-generated-output-outlet"]
-
               # Test checkbox attributes
               checkbox = doc.css("input[type='checkbox']").first
-              assert_equal "--skip-git", checkbox["data-command-output"]
               assert_equal "checked", checkbox["data-display-when"]
               assert_equal "skip_git", checkbox["name"]
               assert_equal "--skip-git", checkbox["value"]
+              assert_equal "rails-flag-checkbox", checkbox["data-controller"]
+              assert_equal "#rails-flags", checkbox["data-rails-flag-checkbox-generated-output-outlet"]
+              assert_equal "change->rails-flag-checkbox#update change->recipe-ui-state-store#railsFlagChanged", checkbox["data-action"]
+              assert_equal "12345", checkbox["data-element-id"]
             end
 
             def test_renders_checkbox_with_custom_outlet
@@ -32,8 +30,8 @@ module Pages
               result = Component.new(**params).render_in(view_context)
               doc = Nokogiri::HTML.fragment(result)
 
-              li_element = doc.css("li").first
-              assert_equal "#custom_ingredients", li_element["data-rails-flag-checkbox-generated-output-outlet"]
+              input_element = doc.css("input[type='checkbox']").first
+              assert_equal "#custom_ingredients", input_element["data-rails-flag-checkbox-generated-output-outlet"]
             end
 
             def test_renders_checkbox_with_custom_data_attributes
@@ -58,7 +56,12 @@ module Pages
                 command_line_value: "--skip-git",
                 checked: false,
                 display_when: "checked",
-                data: {}
+                data: {
+                  controller: "rails-flag-checkbox",
+                  "rails-flag-checkbox-generated-output-outlet": "#rails-flags",
+                  action: "change->rails-flag-checkbox#update change->recipe-ui-state-store#railsFlagChanged",
+                  element_id: "12345"
+                }
               }.merge(options)
             end
 
