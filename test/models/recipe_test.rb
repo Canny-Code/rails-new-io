@@ -10,6 +10,7 @@
 #  rails_version   :string
 #  ruby_version    :string
 #  status          :string           default("draft")
+#  ui_state        :json
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
 #  created_by_id   :integer          not null

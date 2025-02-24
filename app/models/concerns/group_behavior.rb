@@ -27,16 +27,6 @@ module GroupBehavior
         "radio-button-choice-generated-output-outlet": "#css-choice",
         "output-prefix": "-c"
       }
-    when "generic_checkbox"
-      {
-        controller: "rails-flag-checkbox",
-        "rails-flag-checkbox-generated-output-outlet": "#rails-flags"
-      }
-    when "custom_ingredient_checkbox"
-      {
-        controller: "custom-ingredient-checkbox",
-        "custom-ingredient-checkbox-generated-output-outlet": "#custom_ingredients"
-      }
     else
       {}
     end

@@ -21,7 +21,8 @@ module Pages
                 data: {
                   checked: element.position == 0,
                   is_default: element.position == 0 ? "true" : "false",
-                  action: "change->radio-button-choice#update"
+                  element_id: element.id,
+                  action: "change->radio-button-choice#update change->recipe-ui-state-store#radioSelected"
                 }
               )
             when "Element::RailsFlagCheckbox"
@@ -34,8 +35,10 @@ module Pages
                 command_line_value: element.command_line_value,
                 display_when: element.variant.display_when,
                 data: {
-                  action: "change->rails-flag-checkbox#update",
-                  **group_stimulus_attributes
+                  action: "change->rails-flag-checkbox#update change->recipe-ui-state-store#railsFlagChanged",
+                  element_id: element.id,
+                  controller: "rails-flag-checkbox",
+                  "rails-flag-checkbox-generated-output-outlet": "#rails-flags"
                 }
               )
             when "Element::CustomIngredientCheckbox"
@@ -48,7 +51,10 @@ module Pages
                 command_line_value: element.label,
                 ingredient_id: element.variant.ingredient.id,
                 data: {
-                  **group_stimulus_attributes
+                  action: "change->custom-ingredient-checkbox#update change->recipe-ui-state-store#ingredientChanged",
+                  element_id: element.id,
+                  controller: "custom-ingredient-checkbox",
+                  "custom-ingredient-checkbox-generated-output-outlet": "#custom_ingredients"
                 }
               )
             else
@@ -59,17 +65,6 @@ module Pages
           private
 
           attr_reader :element
-
-          def group_stimulus_attributes
-            element.sub_group.group.stimulus_attributes.transform_keys do |key|
-              case key
-              when "controller"
-                "action"
-              else
-                key
-              end
-            end
-          end
         end
       end
     end

@@ -11,6 +11,8 @@
                 controller: "form-values",
                 action: "generated-output:valueChanged@window->form-values#updateFromDisplay"
               } do %>
+        <%= hidden_field_tag "recipe[ui_state]", nil,
+                data: { recipe_ui_state_store_target: "storage" } %>
         <%= hidden_field_tag "recipe[api_flag]", nil,
                 data: { form_values_target: "apiFlag" } %>
         <%= hidden_field_tag "recipe[database_choice]", nil,

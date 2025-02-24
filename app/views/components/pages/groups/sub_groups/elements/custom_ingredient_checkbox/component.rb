@@ -16,7 +16,7 @@ module Pages
               @command_line_value = command_line_value
               @checked = checked
               @ingredient_id = ingredient_id
-              @data = data.dup
+              @data = data
             end
 
             def view_template
@@ -47,11 +47,10 @@ module Pages
                     input(
                       type: "checkbox",
                       id: "custom-ingredient-#{@label.downcase.gsub(' ', '-')}",
-                      data: {
+                      data: @data.merge({
                         command_output: @command_line_value,
-                        ingredient_id: @ingredient_id,
-                        action: "change->custom-ingredient-checkbox#update"
-                      },
+                        ingredient_id: @ingredient_id
+                      }),
                       name: @name,
                       value: @command_line_value,
                       checked: @checked,

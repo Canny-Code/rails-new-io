@@ -36,6 +36,7 @@ class RecipesController < ApplicationController
       name: recipe_params[:name],
       description: recipe_params[:description],
       cli_flags: cli_flags,
+      ui_state: JSON.parse(recipe_params[:ui_state]),
       status: recipe_params[:status] || "published",
       ruby_version: RailsNewConfig.ruby_version_for_new_apps,
       rails_version: RailsNewConfig.rails_version_for_new_apps
@@ -83,7 +84,8 @@ class RecipesController < ApplicationController
       :name,
       :description,
       :status,
-      ingredient_ids: []
+      :ui_state,
+      ingredient_ids: [],
     )
   end
 end

@@ -15,20 +15,12 @@ module Pages
               @name = name
               @command_line_value = command_line_value
               @checked = checked
-              @data = data.dup
               @display_when = display_when
-
-              # Extract the outlet from data if present, defaulting to #rails-flags
-              @outlet = @data.delete("rails-flag-checkbox-generated-output-outlet") || "#rails-flags"
+              @data = data
             end
 
             def view_template
-              li(data_controller: "rails-flag-checkbox",
-                 data: {
-                   "rails-flag-checkbox-generated-output-outlet": @outlet,
-                   **@data.except("action")
-                 },
-                 class: "menu-card-row text-ruby") do
+              li(class: "menu-card-row text-ruby") do
                 whitespace
                 label(
                   class: "flex items-center px-4 py-4 sm:px-6"
@@ -55,11 +47,7 @@ module Pages
                     input(
                       type: "checkbox",
                       id: "main-tab-mains-#{@label.downcase.gsub(' ', '-')}",
-                      data: {
-                        display_when: @display_when,
-                        command_output: @command_line_value,
-                        action: @data["action"]
-                      },
+                      data: @data,
                       name: @name,
                       value: @command_line_value,
                       checked: @checked,

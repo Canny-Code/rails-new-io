@@ -10,13 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_02_15_061536) do
+ActiveRecord::Schema[8.0].define(version: 2025_02_24_121917) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
 
   create_table "_litestream_seq", force: :cascade do |t|
     t.integer "seq"
+  end
+
+  create_table "_litestream_verification", force: :cascade do |t|
+    t.binary "uuid"
   end
 
   create_table "acidic_job_entries", force: :cascade do |t|
@@ -326,6 +330,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_02_15_061536) do
     t.integer "created_by_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.json "ui_state", default: {}
     t.index ["created_by_id"], name: "index_recipes_on_created_by_id"
   end
 
