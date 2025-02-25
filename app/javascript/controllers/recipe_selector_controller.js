@@ -12,11 +12,15 @@ export default class extends Controller {
   static targets = ["radio"]
 
   connect() {
+    if (this.element.id === "recipe-rehydration-radio") {
+      this.updateTerminalAndIngredients(this.element)
+      return
+    }
+
     // Listen for back/forward navigation:
     this.handlePopstate = this.handlePopstate.bind(this)
     this.lastSelectedRadio = null;
     window.addEventListener("popstate", this.handlePopstate)
-
     this.syncRadioFromUrl()
   }
 
@@ -49,6 +53,7 @@ export default class extends Controller {
   }
 
   syncRadioFromUrl() {
+    if(document.getElementById('recipe-rehydration-radio')) return;
     const recipeId = new URLSearchParams(window.location.search).get("recipe_id")
 
     if (recipeId) {
@@ -79,7 +84,6 @@ export default class extends Controller {
   updateTerminalAndIngredients(radio) {
     const cliFlags = radio.dataset.cliFlags || ''
     const ingredients = (radio.dataset.ingredients || '').split(',').filter(Boolean)
-
     const flags = {
       database: cliFlags.match(/-d\s+\S+/) || cliFlags.match(/--database=\S+/),
       javascript: cliFlags.match(/-j\s+\S+/) || cliFlags.match(/--javascript=\S+/),
@@ -95,7 +99,6 @@ export default class extends Controller {
     document.getElementById('css-choice').textContent =
       flags.css ? flags.css[0] : ''
 
-    // Filter out the special flags from 'other'
     const otherFlags = flags.other.filter(flag =>
       !flag.startsWith('--database=') &&
       !flag.startsWith('--javascript=') &&

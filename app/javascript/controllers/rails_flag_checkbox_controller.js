@@ -6,7 +6,9 @@ export default class extends Controller {
 
   connect() {
     this.groupElement = this.element.closest('ul')
-    if (!this.groupElement) return
+    // Skip update if we're in rehydration mode
+    if(document.getElementById('recipe-rehydration-radio')) return;
+
     this.update()
   }
 

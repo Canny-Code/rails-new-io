@@ -4,9 +4,12 @@ export default class extends Controller {
   static outlets = ["generated-output"]
 
   connect() {
-    if (this.hasDatabaseChoiceOutlet) {
-      this.update()
-    }
+    // Skip update if we're in rehydration mode
+    if(document.getElementById('recipe-rehydration-radio')) return;
+
+    // update() is needed because a radio button group's default selection
+    // might add a flag to the terminal output
+    this.update()
   }
 
   update(event) {
