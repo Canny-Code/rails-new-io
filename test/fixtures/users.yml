@@ -46,7 +46,7 @@ trinity_takei:
   github_username: "trinitytakei"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
-  admin: true
+  admin: false
 
 jane:
   name: "Jane Smith"
@@ -60,3 +60,15 @@ jane:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
   admin: false
+
+rails_new_io:
+  name: "railsnew.io"
+  email: "trinity@railsnew.io"
+  image: "https://avatars.githubusercontent.com/u/200790811?v=4"
+  provider: "github"
+  uid: "200790811"
+  slug: "rails-new-io"
+  github_username: "rails-new-io"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  admin: true
