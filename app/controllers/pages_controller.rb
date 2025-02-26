@@ -1,5 +1,6 @@
 class PagesController < ApplicationController
   before_action :authenticate_user!
+
   def new
     @page = Page.includes(
       groups: {

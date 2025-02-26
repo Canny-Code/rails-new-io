@@ -32,14 +32,15 @@ class CheckboxInteractionTest < ApplicationSystemTestCase
     end
 
     assert_selector "#rails-flags", visible: :all
-    assert_no_text "--skip-git"
     assert_no_text "--skip-docker"
     assert_no_text "--skip-action-mailer"
 
-    check "main-tab-mains-skip-git"
-    assert_text "--skip-git"
+    # Now check the checkbox which should trigger the rails-flag-checkbox controller
+    check "main-tab-mains-skip-docker"
 
-    uncheck "main-tab-mains-skip-git"
-    assert_no_text "--skip-git"
+    assert_text "--skip-docker"
+
+    uncheck "main-tab-mains-skip-docker"
+    assert_no_text "--skip-docker"
   end
 end

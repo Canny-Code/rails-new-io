@@ -216,6 +216,80 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "update successfully updates recipe attributes" do
+    patch recipe_path(@recipe), params: {
+      recipe: {
+        name: "Updated Recipe Name",
+        description: "Updated description",
+        status: "archived",
+        api_flag: "--api",
+        database_choice: "--database=postgresql",
+        javascript_choice: "--javascript=esbuild",
+        css_choice: "--css=tailwind",
+        rails_flags: "--skip-test",
+        ui_state: '{"some":"updated_value"}'
+      }
+    }
+
+    @recipe.reload
+    assert_equal "Updated Recipe Name", @recipe.name
+    assert_equal "Updated description", @recipe.description
+    assert_equal "archived", @recipe.status
+    assert_equal "--api --database=postgresql --javascript=esbuild --css=tailwind --skip-test", @recipe.cli_flags
+    assert_equal({ "some" => "updated_value" }, @recipe.ui_state)
+
+    assert_redirected_to recipe_path(@recipe)
+    assert_equal "Recipe was successfully updated.", flash[:notice]
+  end
+
+  test "update enqueues WriteRecipeJob" do
+    assert_enqueued_with(job: WriteRecipeJob) do
+      patch recipe_path(@recipe), params: {
+        recipe: {
+          name: "Job Test Recipe",
+          description: "Testing job enqueuing",
+          ui_state: "{}"
+        }
+      }
+    end
+
+    # Verify the job is enqueued with the correct parameters
+    assert_enqueued_with(
+      job: WriteRecipeJob,
+      args: [ {
+        recipe_id: @recipe.id,
+        user_id: @user.id
+      } ]
+    )
+  end
+
+  test "update requires authentication" do
+    sign_out @user
+    patch recipe_path(@recipe), params: {
+      recipe: {
+        name: "Should Not Update",
+        ui_state: "{}"
+      }
+    }
+    assert_redirected_to root_path
+
+    @recipe.reload
+    assert_not_equal "Should Not Update", @recipe.name
+  end
+
+  test "update prevents modifying other user's recipes" do
+    patch recipe_path(@other_users_recipe), params: {
+      recipe: {
+        name: "Should Not Update",
+        ui_state: "{}"
+      }
+    }
+    assert_response :not_found
+
+    @other_users_recipe.reload
+    assert_not_equal "Should Not Update", @other_users_recipe.name
+  end
+
   test "create with custom ingredients adds them to recipe" do
     ingredient = ingredients(:rails_authentication)
 

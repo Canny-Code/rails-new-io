@@ -83,6 +83,7 @@ skip_docker_element:
   variant: skip_docker (Element::RailsFlagCheckbox)
   description: Skip Docker setup
   position: 0
+  command_line_value: --skip-docker
 
 skip_kamal_element:
   label: Skip Kamal
