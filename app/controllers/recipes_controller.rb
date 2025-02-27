@@ -12,14 +12,14 @@ class RecipesController < ApplicationController
 
   def create
     unless recipe_params[:name].present?
-      redirect_to setup_recipes_path(slug: "basic-setup"), alert: "A recipe with these settings already exists", status: :unprocessable_entity
+      redirect_to setup_recipes_path(slug: "basic-setup"), alert: "You must specify a name for your recipe", status: :see_other
       return
     end
 
     ingredient_ids = recipe_params[:ingredient_ids]&.compact_blank.presence || []
 
     if existing_recipe = Recipe.find_duplicate(cli_flags, ingredient_ids)
-      redirect_to existing_recipe, alert: "A recipe with these settings already exists"
+      redirect_to existing_recipe, alert: "A recipe with these settings already exists", status: :see_other
       return
     end
 
