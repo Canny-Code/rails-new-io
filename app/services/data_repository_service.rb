@@ -101,11 +101,13 @@ class DataRepositoryService < GithubRepositoryService
       content: recipe.to_yaml
     }
 
-    commit_changes(
+    commit = commit_changes(
       repo_name: repo_name,
       message: "Update recipe: #{recipe.name}",
       tree_items: tree_items
     )
+
+    recipe.update(head_commit_sha: commit.sha)
   end
 
   def commit_changes(message:, tree_items:, repo_name: nil)

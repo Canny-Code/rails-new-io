@@ -2,21 +2,22 @@
 #
 # Table name: generated_apps
 #
-#  id                    :integer          not null, primary key
-#  build_log_url         :string
-#  configuration_options :json             not null
-#  description           :text
-#  github_repo_name      :string
-#  github_repo_url       :string
-#  is_public             :boolean          default(TRUE)
-#  last_build_at         :datetime
-#  name                  :string           not null
-#  selected_gems         :json             not null
-#  workspace_path        :string
-#  created_at            :datetime         not null
-#  updated_at            :datetime         not null
-#  recipe_id             :integer          not null
-#  user_id               :integer          not null
+#  id                            :integer          not null, primary key
+#  build_log_url                 :string
+#  configuration_options         :json             not null
+#  description                   :text
+#  generated_with_recipe_version :string           default("unknown"), not null
+#  github_repo_name              :string
+#  github_repo_url               :string
+#  is_public                     :boolean          default(TRUE)
+#  last_build_at                 :datetime
+#  name                          :string           not null
+#  selected_gems                 :json             not null
+#  workspace_path                :string
+#  created_at                    :datetime         not null
+#  updated_at                    :datetime         not null
+#  recipe_id                     :integer          not null
+#  user_id                       :integer          not null
 #
 # Indexes
 #
@@ -56,6 +57,7 @@ class GeneratedApp < ApplicationRecord
     },
     allow_blank: true
   validates :recipe, presence: true
+  validates :generated_with_recipe_version, presence: true
 
   def apply_ingredients
     unless ingredients.any?
