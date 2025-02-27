@@ -18,7 +18,7 @@ class RecipesController < ApplicationController
 
     ingredient_ids = recipe_params[:ingredient_ids]&.compact_blank.presence || []
 
-    if existing_recipe = Recipe.find_duplicate(cli_flags, ingredient_ids)
+    if existing_recipe = Recipe.find_duplicate(current_user.id, cli_flags, ingredient_ids)
       redirect_to existing_recipe, alert: "A recipe with these settings already exists", status: :see_other
       return
     end
@@ -45,7 +45,8 @@ class RecipesController < ApplicationController
 
       redirect_to @recipe, notice: "Recipe was successfully created."
     else
-      redirect_to setup_recipes_path(slug: "basic-setup"), status: :unprocessable_entity
+      error_messages = @recipe.errors.full_messages.join(", ")
+      redirect_to setup_recipes_path(slug: "basic-setup"), alert: "Failed to save recipe: #{error_messages}", status: :see_other
     end
   end
 
