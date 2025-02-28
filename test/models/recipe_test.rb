@@ -159,7 +159,7 @@ class RecipeTest < ActiveSupport::TestCase
   test "find_duplicate returns nil when no recipes with matching cli_flags exist" do
     recipe = recipes(:blog_recipe)
     recipe.update!(cli_flags: "--api")
-    assert_nil Recipe.find_duplicate("--some-flag-that-does-not-exist")
+    assert_nil Recipe.find_duplicate(recipe.created_by_id, "--some-flag-that-does-not-exist")
   end
 
   test "find_duplicate returns nil when recipes have same cli_flags but different ingredients" do
@@ -168,6 +168,9 @@ class RecipeTest < ActiveSupport::TestCase
 
     recipe1 = recipes(:blog_recipe)
     recipe2 = recipes(:minimal_recipe)
+    recipe1_user_id = recipe1.created_by.id
+    recipe2_user_id = recipe2.created_by.id
+    assert_equal recipe1_user_id, recipe2_user_id
 
     recipe1.update!(cli_flags: "--api --skip-turbo")
     recipe1.recipe_ingredients.destroy_all  # Clear existing ingredients first
@@ -177,7 +180,7 @@ class RecipeTest < ActiveSupport::TestCase
     recipe2.recipe_ingredients.destroy_all  # Clear existing ingredients first
     recipe2.add_ingredient!(ingredient2)
 
-    assert_nil Recipe.find_duplicate("--api --skip-turbo")
+    assert_nil Recipe.find_duplicate(recipe1_user_id, "--api --skip-turbo")
   end
 
   test "find_duplicate returns nil when recipes have same cli_flags and some common ingredients" do
@@ -187,6 +190,9 @@ class RecipeTest < ActiveSupport::TestCase
 
     recipe1 = recipes(:blog_recipe)
     recipe2 = recipes(:minimal_recipe)
+    recipe1_user_id = recipe1.created_by.id
+    recipe2_user_id = recipe2.created_by.id
+    assert_equal recipe1_user_id, recipe2_user_id
 
     # Set up first recipe
     recipe1.update!(cli_flags: "--api --skip-turbo")
@@ -199,7 +205,7 @@ class RecipeTest < ActiveSupport::TestCase
     recipe2.add_ingredient!(ingredient1)
     recipe2.add_ingredient!(ingredient3)
 
-    result = Recipe.find_duplicate("--api --skip-turbo")
+    result = Recipe.find_duplicate(recipe1_user_id, "--api --skip-turbo")
     assert_nil result, "Expected no duplicate recipe to be found"
   end
 
@@ -209,6 +215,9 @@ class RecipeTest < ActiveSupport::TestCase
 
     recipe1 = recipes(:blog_recipe)
     recipe2 = recipes(:minimal_recipe)
+    recipe1_user_id = recipe1.created_by.id
+    recipe2_user_id = recipe2.created_by.id
+    assert_equal recipe1_user_id, recipe2_user_id
 
     recipe1.update!(cli_flags: "--api")
     recipe1.recipe_ingredients.destroy_all  # Clear existing ingredients
@@ -222,7 +231,7 @@ class RecipeTest < ActiveSupport::TestCase
     recipe2.add_ingredient!(ingredient1)
     recipe2.add_ingredient!(ingredient2)
 
-    assert_equal recipe1, Recipe.find_duplicate("--api")
+    assert_equal recipe1, Recipe.find_duplicate(recipe1_user_id, "--api")
   end
 
   test "find_duplicate matches ingredients regardless of their order" do
@@ -231,6 +240,9 @@ class RecipeTest < ActiveSupport::TestCase
 
     recipe1 = recipes(:blog_recipe)
     recipe2 = recipes(:minimal_recipe)
+    recipe1_user_id = recipe1.created_by.id
+    recipe2_user_id = recipe2.created_by.id
+    assert_equal recipe1_user_id, recipe2_user_id
 
     recipe1.update!(cli_flags: "--api")
     recipe1.recipe_ingredients.destroy_all  # Clear existing ingredients
@@ -242,7 +254,7 @@ class RecipeTest < ActiveSupport::TestCase
     recipe2.add_ingredient!(ingredient2)
     recipe2.add_ingredient!(ingredient1)
 
-    assert_equal recipe1, Recipe.find_duplicate("--api", [ ingredient1.id, ingredient2.id ])
+    assert_equal recipe1, Recipe.find_duplicate(recipe1_user_id, "--api", [ ingredient1.id, ingredient2.id ])
   end
 
   test "find_duplicate returns nil when recipes have same ingredients but different cli_flags" do
@@ -251,6 +263,9 @@ class RecipeTest < ActiveSupport::TestCase
 
     recipe1 = recipes(:blog_recipe)
     recipe2 = recipes(:minimal_recipe)
+    recipe1_user_id = recipe1.created_by.id
+    recipe2_user_id = recipe2.created_by.id
+    assert_equal recipe1_user_id, recipe2_user_id
 
     recipe1.update!(cli_flags: "--api --skip-turbo")
     recipe1.add_ingredient!(ingredient1)
@@ -260,12 +275,15 @@ class RecipeTest < ActiveSupport::TestCase
     recipe2.add_ingredient!(ingredient1)
     recipe2.add_ingredient!(ingredient2)
 
-    assert_nil Recipe.find_duplicate("--api --skip-turbo")
+    assert_nil Recipe.find_duplicate(recipe1_user_id, "--api --skip-turbo")
   end
 
   test "find_duplicate works with recipes that have no ingredients" do
     recipe1 = recipes(:blog_recipe)
     recipe2 = recipes(:minimal_recipe)
+    recipe1_user_id = recipe1.created_by.id
+    recipe2_user_id = recipe2.created_by.id
+    assert_equal recipe1_user_id, recipe2_user_id
 
     recipe1.update!(cli_flags: "--api")
     recipe1.recipe_ingredients.destroy_all
@@ -273,12 +291,15 @@ class RecipeTest < ActiveSupport::TestCase
     recipe2.update!(cli_flags: "--api")
     recipe2.recipe_ingredients.destroy_all
 
-    assert_equal recipe1, Recipe.find_duplicate("--api")
+    assert_equal recipe1, Recipe.find_duplicate(recipe1_user_id, "--api")
   end
 
   test "find_duplicate returns existing recipe when both have no ingredients but same flags" do
     recipe1 = recipes(:blog_recipe)
     recipe2 = recipes(:minimal_recipe)
+    recipe1_user_id = recipe1.created_by.id
+    recipe2_user_id = recipe2.created_by.id
+    assert_equal recipe1_user_id, recipe2_user_id
 
     # Create first recipe with no ingredients
     recipe1.update!(cli_flags: "--api")
@@ -288,6 +309,6 @@ class RecipeTest < ActiveSupport::TestCase
     recipe2.update!(cli_flags: "--api")
     recipe2.recipe_ingredients.destroy_all
 
-    assert_equal recipe1, Recipe.find_duplicate("--api")
+    assert_equal recipe1, Recipe.find_duplicate(recipe1_user_id, "--api")
   end
 end
