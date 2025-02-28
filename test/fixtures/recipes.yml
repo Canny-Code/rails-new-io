@@ -32,6 +32,7 @@ blog_recipe:
   ruby_version: "3.4.1"
   rails_version: "8.0.1"
   created_by: john
+  head_commit_sha: "def456abc789"
   status: "published"
 
 api_recipe:
@@ -49,6 +50,7 @@ minimal_recipe:
   description: "Basic Rails setup with minimal dependencies"
   cli_flags: "--minimal"
   created_by: john
+  head_commit_sha: "def456abc789"
   status: "published"
 
 basic_recipe:
