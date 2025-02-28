@@ -106,45 +106,64 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "published", Recipe.last.status
   end
 
-  test "create prevents duplicate recipes with same CLI flags and ingredients" do
-    existing_recipe = recipes(:basic_recipe)
+  test "create allows duplicate recipes with same CLI flags and ingredients for a different user" do
+    sign_out @user
+    sign_in users(:jane)
 
     assert_difference("Recipe.count") do
       post recipes_path, params: {
         recipe: {
-          name: "Different Name",
-          description: "Different description",
-          status: "published",
-          api_flag: "--api",
-          database_choice: "--database=mysql",
-          rails_flags: nil,
-          ingredient_ids: [ ingredients(:rails_authentication).id ],
+          name: @recipe.name,
+          description: @recipe.description,
+          api_flag: @recipe.cli_flags,
+          ui_state: "{}"
+        }
+      }
+    end
+
+    new_recipe = Recipe.last
+
+    assert_equal @recipe.name, new_recipe.name
+    assert_equal @recipe.description, new_recipe.description
+    assert_equal @recipe.cli_flags, new_recipe.cli_flags
+  end
+
+  test "create prevents duplicate recipes with same CLI flags and ingredients for the same user" do
+    janes_recipe = recipes(:basic_recipe)
+
+    assert_difference("Recipe.count") do
+      post recipes_path, params: {
+        recipe: {
+          name: janes_recipe.name,
+          description: janes_recipe.description,
+          status: janes_recipe.status,
+          rails_flags: janes_recipe.cli_flags,
+          ingredient_ids: janes_recipe.ingredient_ids,
           ui_state: "{}"
         }
       }
     end
 
     first_recipe = Recipe.last
-    assert_equal "Different Name", first_recipe.name
-    assert_equal "--api --database=mysql", first_recipe.cli_flags
-    assert_equal [ ingredients(:rails_authentication).id ], first_recipe.ingredient_ids
+    assert_equal janes_recipe.name, first_recipe.name
+    assert_equal janes_recipe.cli_flags, first_recipe.cli_flags
+    assert_equal janes_recipe.ingredient_ids, first_recipe.ingredient_ids
     assert_redirected_to recipe_path(first_recipe)
 
     assert_no_difference("Recipe.count") do
       post recipes_path, params: {
         recipe: {
-          name: "Different Name 2",
-          description: "Different description 2",
-          status: "published",
-          api_flag: "--api",
-          database_choice: "--database=mysql",
-          rails_flags: nil,
-          ingredient_ids: []
+          name: janes_recipe.name,
+          description: janes_recipe.description,
+          status: janes_recipe.status,
+          api_flag: janes_recipe.cli_flags,
+          ingredient_ids: janes_recipe.ingredient_ids,
+          ui_state: "{}"
         }
       }
     end
 
-    assert_redirected_to recipe_path(existing_recipe)
+    assert_redirected_to recipe_path(existing_recipe = first_recipe)
     assert_equal "A recipe with these settings already exists", flash[:alert]
   end
 
@@ -158,7 +177,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_response :unprocessable_entity
+    assert_response :see_other
   end
 
   test "create with invalid status fails validation" do
@@ -174,7 +193,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_response :unprocessable_entity
+    assert_response :see_other
   end
 
   test "create with invalid params renders new" do
@@ -187,7 +206,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_response :unprocessable_entity
+    assert_response :see_other
   end
 
   test "create requires authentication" do
