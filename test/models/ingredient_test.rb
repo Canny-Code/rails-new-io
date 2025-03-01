@@ -9,6 +9,7 @@
 #  description      :text
 #  name             :string           not null
 #  requires         :text
+#  snippets         :json
 #  template_content :text             not null
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
@@ -210,5 +211,56 @@ class IngredientTest < ActiveSupport::TestCase
     COMMIT_MESSAGE
 
     assert_equal expected_message, @ingredient.to_commit_message
+  end
+
+  test "has default empty array for snippets" do
+    ingredient = Ingredient.new
+    assert_equal [], ingredient.snippets
+  end
+
+  test "processes multiple snippets when saving" do
+    ingredient = Ingredient.new(
+      name: "Test Multiple Snippets",
+      template_content: "test content",
+      created_by: @user
+    )
+
+    # Set multiple snippets via the accessor
+    ingredient.new_snippets = [ "puts 'Hello World'", "Rails.logger.info('Testing')" ]
+    ingredient.save!
+
+    # Check that the snippets were added to the snippets array
+    assert_equal [ "puts 'Hello World'", "Rails.logger.info('Testing')" ], ingredient.snippets
+  end
+
+  test "does not add blank snippets" do
+    ingredient = Ingredient.new(
+      name: "Test Blank Snippets",
+      template_content: "test content",
+      created_by: @user
+    )
+
+    # Set snippets with some blank values
+    ingredient.new_snippets = [ "puts 'Hello'", "", "  ", nil, "puts 'World'" ]
+    ingredient.save!
+
+    # Check that only non-blank snippets were added
+    assert_equal [ "puts 'Hello'", "puts 'World'" ], ingredient.snippets
+  end
+
+  test "does not modify snippets if new_snippets is empty" do
+    ingredient = Ingredient.new(
+      name: "Test Empty Snippets",
+      template_content: "test content",
+      created_by: @user,
+      snippets: [ "existing snippet" ]
+    )
+
+    # Set an empty new_snippets array
+    ingredient.new_snippets = []
+    ingredient.save!
+
+    # Snippets should remain unchanged
+    assert_equal [ "existing snippet" ], ingredient.snippets
   end
 end

@@ -71,7 +71,8 @@ class IngredientsController < ApplicationController
       :requires,
       :configures_with,
       :before_screenshot,
-      :after_screenshot
+      :after_screenshot,
+      new_snippets: []
     )
   end
 end

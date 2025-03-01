@@ -9,6 +9,7 @@
 #  description      :text
 #  name             :string           not null
 #  requires         :text
+#  snippets         :json
 #  template_content :text             not null
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
@@ -41,10 +42,17 @@ class Ingredient < ApplicationRecord
 
   before_destroy :cleanup_ui_elements
   after_update :update_ui_elements, if: :ui_relevant_attributes_changed?
+  before_save :process_snippets
 
   serialize :conflicts_with, coder: YAML
   serialize :requires, coder: YAML
   serialize :configures_with, coder: YAML
+
+  attr_writer :new_snippets
+
+  def new_snippets
+    @new_snippets ||= []
+  end
 
   def compatible_with?(other_ingredient)
     (conflicts_with & [ other_ingredient.name ]).empty?
@@ -109,5 +117,14 @@ class Ingredient < ApplicationRecord
 
   def ui_relevant_attributes_changed?
     saved_changes.keys.any? { |attr| %w[name description category].include?(attr) }
+  end
+
+  def process_snippets
+    return if new_snippets.blank?
+
+    self.snippets ||= []
+    filtered_snippets = new_snippets.reject(&:blank?)
+    # Only add snippets that aren't already in the list
+    self.snippets += filtered_snippets.reject { |s| snippets.include?(s) }
   end
 end
