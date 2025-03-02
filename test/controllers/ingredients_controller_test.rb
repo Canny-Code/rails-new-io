@@ -146,6 +146,7 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
         ingredient: {
           name: "Ingredient With Snippets",
           template_content: "gem 'test'",
+          category: "Testing",
           new_snippets: [ "puts 'First snippet'", "puts 'Second snippet'" ]
         }
       }
@@ -214,5 +215,21 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to ingredients_url
+  end
+
+  test "should not create ingredient without category" do
+    assert_no_difference("Ingredient.count") do
+      post ingredients_url, params: {
+        ingredient: {
+          name: "Test Ingredient",
+          description: "A test ingredient",
+          template_content: "gem 'test'"
+          # category intentionally omitted
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes @response.body, "Category can&#39;t be blank"
   end
 end

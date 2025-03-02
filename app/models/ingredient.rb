@@ -39,6 +39,7 @@ class Ingredient < ApplicationRecord
 
   validates :name, presence: true, uniqueness: { scope: :created_by_id }
   validates :template_content, presence: true
+  validates :category, presence: true
 
   before_destroy :cleanup_ui_elements
   after_update :update_ui_elements, if: :ui_relevant_attributes_changed?

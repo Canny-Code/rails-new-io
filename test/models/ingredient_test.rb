@@ -222,6 +222,7 @@ class IngredientTest < ActiveSupport::TestCase
     ingredient = Ingredient.new(
       name: "Test Multiple Snippets",
       template_content: "test content",
+      category: "Testing",
       created_by: @user
     )
 
@@ -237,6 +238,7 @@ class IngredientTest < ActiveSupport::TestCase
     ingredient = Ingredient.new(
       name: "Test Blank Snippets",
       template_content: "test content",
+      category: "Testing",
       created_by: @user
     )
 
@@ -252,6 +254,7 @@ class IngredientTest < ActiveSupport::TestCase
     ingredient = Ingredient.new(
       name: "Test Empty Snippets",
       template_content: "test content",
+      category: "Testing",
       created_by: @user,
       snippets: [ "existing snippet" ]
     )
