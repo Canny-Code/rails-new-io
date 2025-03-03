@@ -88,7 +88,11 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "writes ingredient to repository" do
-    ingredient = Data.define(:name, :template_content, :created_by, :id).new(
+    ingredient = Data.define(:name, :template_content, :created_by, :id) do
+      def template_with_interpolated_snippets
+        template_content
+      end
+    end.new(
       name: "test_ingredient",
       template_content: "# Test template",
       created_by: @user,
@@ -274,7 +278,11 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "raises error when writing ingredient template to local filesystem fails" do
-    ingredient = Data.define(:name, :template_content, :created_by, :id).new(
+    ingredient = Data.define(:name, :template_content, :created_by, :id) do
+      def template_with_interpolated_snippets
+        template_content
+      end
+    end.new(
       name: "test_ingredient",
       template_content: "# Test template",
       created_by: @user,

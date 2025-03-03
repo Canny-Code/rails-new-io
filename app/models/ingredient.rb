@@ -63,11 +63,6 @@ class Ingredient < ApplicationRecord
     requires.all? { |dep| recipe.ingredients.any? { |i| i.name == dep } }
   end
 
-  def template_with_interpolated_snippets
-    interpolate_snippets
-    template_content
-  end
-
   def configuration_for(configuration)
     # Validate configuration against configures_with schema
     configures_with.each do |key, validator|

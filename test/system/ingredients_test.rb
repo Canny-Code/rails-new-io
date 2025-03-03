@@ -57,7 +57,7 @@ class IngredientsTest < ApplicationSystemTestCase
     fill_in "Description", with: "A test ingredient description"
 
     page.execute_script(<<~JS)
-      document.querySelector('.CodeMirror').CodeMirror.setValue("gem 'test_gem'")
+      document.querySelector('textarea[name="ingredient[template_content]"] + div[class*="CodeMirror"]').CodeMirror.setValue("gem 'test_gem'")
     JS
 
     fill_in "Category", with: "Authentication"
