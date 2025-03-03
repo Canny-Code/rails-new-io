@@ -26,6 +26,7 @@ class IngredientsController < ApplicationController
 
       redirect_to @ingredient, notice: "Ingredient was successfully created."
     else
+      @ingredient.snippets = params.dig(:ingredient, :new_snippets) || []
       render :new, status: :unprocessable_entity
     end
   end
