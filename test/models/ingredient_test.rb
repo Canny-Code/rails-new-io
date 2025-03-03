@@ -266,4 +266,46 @@ class IngredientTest < ActiveSupport::TestCase
     # Snippets should remain unchanged
     assert_equal [ "existing snippet" ], ingredient.snippets
   end
+
+  test "interpolates snippets into template content" do
+    ingredient = Ingredient.new(
+      name: "Test Ingredient",
+      category: "Testing",
+      template_content: 'say "This is my template"\ncreate_file "myfile.rb", {{1}}\ncreate_file "my_other_file.rb", {{2}}',
+      created_by: users(:john)
+    )
+    ingredient.new_snippets = [ '"foo"', '"bar"' ]
+    ingredient.save!
+
+    expected_content = 'say "This is my template"\ncreate_file "myfile.rb", "foo"\ncreate_file "my_other_file.rb", "bar"'
+    assert_equal expected_content, ingredient.template_content
+  end
+
+  test "handles missing snippets gracefully" do
+    ingredient = Ingredient.new(
+      name: "Test Ingredient",
+      category: "Testing",
+      template_content: 'say "This is my template"\ncreate_file "myfile.rb", {{1}}\ncreate_file "my_other_file.rb", {{2}}',
+      created_by: users(:john)
+    )
+    ingredient.new_snippets = [ '"foo"' ]  # Only one snippet provided
+    ingredient.save!
+
+    # The second placeholder should remain unchanged
+    expected_content = 'say "This is my template"\ncreate_file "myfile.rb", "foo"\ncreate_file "my_other_file.rb", {{2}}'
+    assert_equal expected_content, ingredient.template_content
+  end
+
+  test "handles template without placeholders" do
+    ingredient = Ingredient.new(
+      name: "Test Ingredient",
+      category: "Testing",
+      template_content: 'say "This is my template"',
+      created_by: users(:john)
+    )
+    ingredient.new_snippets = [ '"foo"', '"bar"' ]
+    ingredient.save!
+
+    assert_equal 'say "This is my template"', ingredient.template_content
+  end
 end

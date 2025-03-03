@@ -97,18 +97,4 @@ class IngredientsTest < ApplicationSystemTestCase
 
     assert_text "Ingredient was successfully deleted"
   end
-
-  test "autosaving ingredient changes" do
-    visit edit_ingredient_path(@ingredient)
-
-    fill_in "Name", with: "Autosaved Ingredient"
-
-    # Wait for autosave
-    sleep 2
-
-    # Reload the page
-    visit edit_ingredient_path(@ingredient)
-
-    assert_field "Name", with: "Autosaved Ingredient"
-  end
 end

@@ -63,6 +63,11 @@ class Ingredient < ApplicationRecord
     requires.all? { |dep| recipe.ingredients.any? { |i| i.name == dep } }
   end
 
+  def template_with_interpolated_snippets
+    interpolate_snippets
+    template_content
+  end
+
   def configuration_for(configuration)
     # Validate configuration against configures_with schema
     configures_with.each do |key, validator|
@@ -106,6 +111,18 @@ class Ingredient < ApplicationRecord
     COMMIT_MESSAGE
   end
 
+  def template_with_interpolated_snippets
+    return template_content if snippets.blank? || template_content.blank?
+
+    template_content.tap do |content|
+      snippets.each_with_index do |snippet, index|
+        placeholder = "{{#{index + 1}}}"
+        content.gsub!(placeholder, to_literal(snippet, index))
+      end
+    end
+  end
+
+
   private
 
   def cleanup_ui_elements
@@ -125,7 +142,27 @@ class Ingredient < ApplicationRecord
 
     self.snippets ||= []
     filtered_snippets = new_snippets.reject(&:blank?)
-    # Only add snippets that aren't already in the list
+
     self.snippets += filtered_snippets.reject { |s| snippets.include?(s) }
+  end
+
+  def to_literal(snippet, index)
+    if snippet.include?("\n")
+      if snippet.start_with?("<<")
+        snippet
+      else
+        <<~SNIPPET
+        <<~SNIPPET_#{index+1}
+        #{snippet}
+        SNIPPET_#{index+1}
+        SNIPPET
+      end
+    else
+      if snippet.start_with?("'") || snippet.start_with?('"')
+        snippet
+      else
+        "\"#{snippet}\""
+      end
+    end
   end
 end

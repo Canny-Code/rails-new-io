@@ -44,7 +44,7 @@ class DataRepositoryService < GithubRepositoryService
   def write_ingredient(ingredient, repo_name:)
     tree_items = []
 
-    template_content = ingredient.template_content
+    template_content = ingredient.template_with_interpolated_snippets
 
     tree_items << {
       path: github_template_path(ingredient),
