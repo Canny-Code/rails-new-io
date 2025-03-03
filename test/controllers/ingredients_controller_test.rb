@@ -163,7 +163,7 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     patch ingredient_url(@ingredient), params: {
       ingredient: {
         template_content: @ingredient.template_content,
-        new_snippets: [ "additional snippet" ]
+        new_snippets: [ "existing snippet", "additional snippet" ]
       }
     }
 

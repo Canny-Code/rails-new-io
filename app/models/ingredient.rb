@@ -135,10 +135,7 @@ class Ingredient < ApplicationRecord
   def process_snippets
     return if new_snippets.blank?
 
-    self.snippets ||= []
-    filtered_snippets = new_snippets.reject(&:blank?)
-
-    self.snippets += filtered_snippets.reject { |s| snippets.include?(s) }
+    self.snippets = new_snippets.compact_blank
   end
 
   def to_literal(snippet, index)
