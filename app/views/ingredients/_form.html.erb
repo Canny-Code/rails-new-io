@@ -134,41 +134,6 @@
         <% end %>
       </div>
     </div>
-    <div class="pt-8">
-      <div>
-        <h3 class="text-lg font-medium leading-6 text-gray-900">Dependencies</h3>
-        <p class="mt-1 text-sm text-gray-500">Configure how this ingredient interacts with others.</p>
-      </div>
-      <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-        <div class="sm:col-span-6">
-          <%= f.label :conflicts_with, "Conflicts With", class: "block text-sm font-medium text-gray-700" %>
-          <div class="mt-1">
-            <%= f.text_area :conflicts_with, rows: 3,
-                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
-                placeholder: "Enter ingredient names (one per line)" %>
-          </div>
-          <p class="mt-2 text-sm text-gray-500">List of ingredients that cannot be used together with this one.</p>
-        </div>
-        <div class="sm:col-span-6">
-          <%= f.label :requires, class: "block text-sm font-medium text-gray-700" %>
-          <div class="mt-1">
-            <%= f.text_area :requires, rows: 3,
-                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
-                placeholder: "Enter ingredient names (one per line)" %>
-          </div>
-          <p class="mt-2 text-sm text-gray-500">List of ingredients that must be present for this one to work.</p>
-        </div>
-        <div class="sm:col-span-6">
-          <%= f.label :configures_with, "Configuration Schema", class: "block text-sm font-medium text-gray-700" %>
-          <div class="mt-1">
-            <%= f.text_area :configures_with, rows: 5,
-                class: "block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
-                placeholder: "Enter YAML configuration schema" %>
-          </div>
-          <p class="mt-2 text-sm text-gray-500">YAML schema defining the configuration options for this ingredient.</p>
-        </div>
-      </div>
-    </div>
   </div>
   <div class="pt-5">
     <div class="flex justify-end">
