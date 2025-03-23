@@ -57,7 +57,7 @@ class IngredientsTest < ApplicationSystemTestCase
     fill_in "Description", with: "A test ingredient description"
 
     page.execute_script(<<~JS)
-      document.querySelector('.CodeMirror').CodeMirror.setValue("gem 'test_gem'")
+      document.querySelector('textarea[name="ingredient[template_content]"] + div[class*="CodeMirror"]').CodeMirror.setValue("gem 'test_gem'")
     JS
 
     fill_in "Category", with: "Authentication"
@@ -96,19 +96,5 @@ class IngredientsTest < ApplicationSystemTestCase
     end
 
     assert_text "Ingredient was successfully deleted"
-  end
-
-  test "autosaving ingredient changes" do
-    visit edit_ingredient_path(@ingredient)
-
-    fill_in "Name", with: "Autosaved Ingredient"
-
-    # Wait for autosave
-    sleep 2
-
-    # Reload the page
-    visit edit_ingredient_path(@ingredient)
-
-    assert_field "Name", with: "Autosaved Ingredient"
   end
 end

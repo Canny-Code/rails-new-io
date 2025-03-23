@@ -140,6 +140,38 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Updated Name", @ingredient.name
   end
 
+  test "should create ingredient with multiple snippets" do
+    assert_difference("Ingredient.count") do
+      post ingredients_url, params: {
+        ingredient: {
+          name: "Ingredient With Snippets",
+          template_content: "gem 'test'",
+          category: "Testing",
+          new_snippets: [ "puts 'First snippet'", "puts 'Second snippet'" ]
+        }
+      }
+    end
+
+    new_ingredient = Ingredient.find_by(name: "Ingredient With Snippets")
+    assert_equal [ "puts 'First snippet'", "puts 'Second snippet'" ], new_ingredient.snippets
+    assert_redirected_to ingredient_url(new_ingredient)
+  end
+
+  test "should update ingredient with new snippets" do
+    @ingredient.update(snippets: [ "existing snippet" ])
+
+    patch ingredient_url(@ingredient), params: {
+      ingredient: {
+        template_content: @ingredient.template_content,
+        new_snippets: [ "existing snippet", "additional snippet" ]
+      }
+    }
+
+    @ingredient.reload
+    assert_equal [ "existing snippet", "additional snippet" ], @ingredient.snippets
+    assert_redirected_to ingredient_url(@ingredient)
+  end
+
   test "should not update ingredient with invalid params" do
     original_name = @ingredient.name
 
@@ -183,5 +215,21 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to ingredients_url
+  end
+
+  test "should not create ingredient without category" do
+    assert_no_difference("Ingredient.count") do
+      post ingredients_url, params: {
+        ingredient: {
+          name: "Test Ingredient",
+          description: "A test ingredient",
+          template_content: "gem 'test'"
+          # category intentionally omitted
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes @response.body, "Category can&#39;t be blank"
   end
 end

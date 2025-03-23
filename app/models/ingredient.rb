@@ -9,6 +9,7 @@
 #  description      :text
 #  name             :string           not null
 #  requires         :text
+#  snippets         :json
 #  template_content :text             not null
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
@@ -38,13 +39,21 @@ class Ingredient < ApplicationRecord
 
   validates :name, presence: true, uniqueness: { scope: :created_by_id }
   validates :template_content, presence: true
+  validates :category, presence: true
 
   before_destroy :cleanup_ui_elements
   after_update :update_ui_elements, if: :ui_relevant_attributes_changed?
+  before_save :process_snippets
 
   serialize :conflicts_with, coder: YAML
   serialize :requires, coder: YAML
   serialize :configures_with, coder: YAML
+
+  attr_writer :new_snippets
+
+  def new_snippets
+    @new_snippets ||= []
+  end
 
   def compatible_with?(other_ingredient)
     (conflicts_with & [ other_ingredient.name ]).empty?
@@ -97,6 +106,18 @@ class Ingredient < ApplicationRecord
     COMMIT_MESSAGE
   end
 
+  def template_with_interpolated_snippets
+    return template_content if snippets.blank? || template_content.blank?
+
+    template_content.tap do |content|
+      snippets.each_with_index do |snippet, index|
+        placeholder = "{{#{index + 1}}}"
+        content.gsub!(placeholder, to_literal(snippet, index))
+      end
+    end
+  end
+
+
   private
 
   def cleanup_ui_elements
@@ -109,5 +130,31 @@ class Ingredient < ApplicationRecord
 
   def ui_relevant_attributes_changed?
     saved_changes.keys.any? { |attr| %w[name description category].include?(attr) }
+  end
+
+  def process_snippets
+    return if new_snippets.blank?
+
+    self.snippets = new_snippets.compact_blank
+  end
+
+  def to_literal(snippet, index)
+    if snippet.include?("\n")
+      if snippet.start_with?("<<")
+        snippet
+      else
+        <<~SNIPPET
+        <<~SNIPPET_#{index+1}
+        #{snippet}
+        SNIPPET_#{index+1}
+        SNIPPET
+      end
+    else
+      if snippet.start_with?("'") || snippet.start_with?('"')
+        snippet
+      else
+        "\"#{snippet}\""
+      end
+    end
   end
 end

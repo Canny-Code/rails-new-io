@@ -29,14 +29,6 @@
 #  sub_group_id  (sub_group_id => sub_groups.id)
 #
 
-skip_git_element:
-  label: Skip Git
-  description: Skip Git files
-  position: 0
-  sub_group: basic_setup_misc_default
-  variant: skip_git (Element::RailsFlagCheckbox)
-  command_line_value: "--skip-git"
-
 database_sqlite3:
   label: SQLite3
   sub_group: databases_default
@@ -91,6 +83,7 @@ skip_docker_element:
   variant: skip_docker (Element::RailsFlagCheckbox)
   description: Skip Docker setup
   position: 0
+  command_line_value: --skip-docker
 
 skip_kamal_element:
   label: Skip Kamal

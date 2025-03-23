@@ -8,4 +8,8 @@ module ApplicationHelper
       Rails.application.config.application_name
     end
   end
+
+  def recipe_page_path(page, recipe_id: nil)
+    params[:action] == "edit" ? edit_recipes_path(recipe_id: recipe_id, slug: page.slug) : setup_recipes_path(slug: page.slug)
+  end
 end

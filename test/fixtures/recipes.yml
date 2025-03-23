@@ -12,6 +12,7 @@
 #  rails_version   :string
 #  ruby_version    :string
 #  status          :string           default("draft")
+#  ui_state        :json
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
 #  created_by_id   :integer          not null
@@ -31,6 +32,7 @@ blog_recipe:
   ruby_version: "3.4.1"
   rails_version: "8.0.1"
   created_by: john
+  head_commit_sha: "def456abc789"
   status: "published"
 
 api_recipe:
@@ -48,6 +50,7 @@ minimal_recipe:
   description: "Basic Rails setup with minimal dependencies"
   cli_flags: "--minimal"
   created_by: john
+  head_commit_sha: "def456abc789"
   status: "published"
 
 basic_recipe:
@@ -66,7 +69,7 @@ omakase_recipe:
   cli_flags: ""
   ruby_version: "3.4.1"
   rails_version: "8.0.1"
-  created_by: trinity_takei
+  created_by: rails_new_io
   status: "published"
 
 api_only_recipe:
@@ -75,5 +78,5 @@ api_only_recipe:
   cli_flags: "--api"
   ruby_version: "3.4.1"
   rails_version: "8.0.1"
-  created_by: trinity_takei
+  created_by: rails_new_io
   status: "published"

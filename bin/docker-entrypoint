@@ -34,9 +34,25 @@ if [ ! -d "/var/lib/rails-new-io/rails-env/ruby" ] || [ "$FORCE_ISOLATED_RUBY_RE
   mkdir -p /var/lib/rails-new-io/rails-env/gems/{bin,specifications,gems,extensions}
   mkdir -p /var/lib/rails-new-io/rails-env/bundle
   mkdir -p /var/lib/rails-new-io/{home,config,cache,data}
+  # Create Node.js directories with proper structure
+  mkdir -p /var/lib/rails-new-io/rails-env/node/{bin,lib,share}
+  mkdir -p /var/lib/rails-new-io/rails-env/node_modules
+  mkdir -p /var/lib/rails-new-io/rails-env/.corepack
+  # Ensure all directories have correct ownership
+  chown -R rails:rails /var/lib/rails-new-io/rails-env
+  chown -R rails:rails /var/lib/rails-new-io/{home,config,cache,data}
 
   echo "DEBUG: Copying system Ruby to isolated environment"
   cp -a /usr/local/* /var/lib/rails-new-io/rails-env/ruby/
+
+  # Set up Node.js symlinks in their own directory
+  echo "DEBUG: Setting up Node.js symlinks"
+  ln -sf /usr/local/bin/node /var/lib/rails-new-io/rails-env/node/bin/
+  ln -sf /usr/local/bin/npm /var/lib/rails-new-io/rails-env/node/bin/
+  ln -sf /usr/local/bin/npx /var/lib/rails-new-io/rails-env/node/bin/
+  ln -sf /usr/local/bin/corepack /var/lib/rails-new-io/rails-env/node/bin/
+  ln -sf /usr/local/bin/yarn /var/lib/rails-new-io/rails-env/node/bin/
+  ln -sf /usr/local/bin/yarnpkg /var/lib/rails-new-io/rails-env/node/bin/
 
   # Run the isolated environment setup in a subshell to avoid polluting the parent environment
   (

@@ -6,11 +6,17 @@
   <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-deep-azure-zeta">
     <div class="mt-3">
       <h3 class="text-lg leading-6 font-medium text-gray-100 mb-6">Save Your Recipe</h3>
-      <%= form_tag recipes_path, method: :post, class: "space-y-4", id: "new-recipe",
+      <%= form_tag params[:action] == "edit" ? recipe_path(@recipe) : recipes_path,
+              method: params[:action] == "edit" ? :patch : :post,
+              class: "space-y-4",
+              id: "new-recipe",
               data: {
                 controller: "form-values",
-                action: "generated-output:valueChanged@window->form-values#updateFromDisplay"
+                action: "generated-output:valueChanged@window->form-values#updateFromDisplay",
+                recipe_ui_state_store_target: "updateForm"
               } do %>
+        <%= hidden_field_tag "recipe[ui_state]", params[:action] == "edit" ? @recipe.ui_state.to_json : nil,
+                data: { recipe_ui_state_store_target: "storage", recipe_ui_state_restore_target: "storage" } %>
         <%= hidden_field_tag "recipe[api_flag]", nil,
                 data: { form_values_target: "apiFlag" } %>
         <%= hidden_field_tag "recipe[database_choice]", nil,
@@ -24,7 +30,7 @@
         <div>
           <%= label_tag "recipe[name]", "Recipe Name", class: "block text-sm font-medium text-gray-100" %>
           <div class="mt-1">
-            <%= text_field_tag "recipe[name]", nil,
+            <%= text_field_tag "recipe[name]", params[:action] == "edit" ? @recipe.name : nil,
                 class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md",
                 placeholder: "My Rails App Recipe",
                 required: true %>
@@ -33,7 +39,7 @@
         <div>
           <%= label_tag "recipe[description]", "Description", class: "block text-sm font-medium text-gray-100" %>
           <div class="mt-1">
-            <%= text_area_tag "recipe[description]", nil,
+            <%= text_area_tag "recipe[description]", params[:action] == "edit" ? @recipe.description : nil,
                 class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md",
                 rows: 3,
                 placeholder: "Describe what this recipe does..." %>
@@ -41,7 +47,7 @@
         </div>
         <div class="relative flex items-start">
           <div class="flex items-center h-5">
-            <%= check_box_tag "recipe[status]", "published", true,
+            <%= check_box_tag "recipe[status]", "published", params[:action] == "edit" ? @recipe.status == "published" : true,
                 class: "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded" %>
           </div>
           <div class="ml-3 text-sm">
@@ -57,7 +63,7 @@
             data: { action: "click->modal#close" }
           ) %>
           <%= render Buttons::Submit::Component.new(
-            text: "Create Recipe",
+            text: params[:action] == "edit" ? "Update Recipe" : "Create Recipe",
             html_options: { class: "ml-3" }
           ) %>
         </div>

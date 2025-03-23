@@ -19,6 +19,12 @@
         <dt class="text-sm/6 font-medium text-gray-900">Recipe</dt>
         <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0 underline"><%= link_to @generated_app.recipe.name, recipe_path(@generated_app.recipe) %></dd>
       </div>
+      <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-3">
+        <dt class="text-sm/6 font-medium text-gray-900">Recipe Version</dt>
+        <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0 underline">
+          <%= link_to @generated_app.generated_with_recipe_version, "https://github.com/#{current_user.github_username}/#{DataRepositoryService.name_for_environment}/commit/#{@generated_app.generated_with_recipe_version}", target: "_blank", rel: "noopener noreferrer" %>
+        </dd>
+      </div>
       <div class="bg-gray-50 px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-3">
         <dt class="text-sm/6 font-medium text-gray-900">Ruby Version</dt>
         <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0"><%= @generated_app.ruby_version %></dd>

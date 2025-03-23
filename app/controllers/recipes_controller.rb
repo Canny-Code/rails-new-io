@@ -1,7 +1,7 @@
 class RecipesController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :not_found
   before_action :authenticate_user!
-  before_action :set_recipe, only: [ :show, :destroy ]
+  before_action :set_recipe, only: [ :show, :destroy, :update ]
 
   def index
     @recipes = current_user.recipes.where(status: "published").order(created_at: :desc)
@@ -12,23 +12,14 @@ class RecipesController < ApplicationController
 
   def create
     unless recipe_params[:name].present?
-      redirect_to setup_recipes_path(slug: "basic-setup"), alert: "A recipe with these settings already exists", status: :unprocessable_entity
+      redirect_to setup_recipes_path(slug: "basic-setup"), alert: "You must specify a name for your recipe", status: :see_other
       return
     end
 
     ingredient_ids = recipe_params[:ingredient_ids]&.compact_blank.presence || []
 
-    cli_flags = [
-      recipe_params[:api_flag],
-      recipe_params[:database_choice],
-      recipe_params[:javascript_choice],
-      recipe_params[:css_choice],
-      recipe_params[:rails_flags]
-    ].compact.join(" ")
-
-
-    if existing_recipe = Recipe.find_duplicate(cli_flags, ingredient_ids)
-      redirect_to existing_recipe, alert: "A recipe with these settings already exists"
+    if existing_recipe = Recipe.find_duplicate(current_user.id, cli_flags, ingredient_ids)
+      redirect_to existing_recipe, alert: "A recipe with these settings already exists", status: :see_other
       return
     end
 
@@ -36,6 +27,7 @@ class RecipesController < ApplicationController
       name: recipe_params[:name],
       description: recipe_params[:description],
       cli_flags: cli_flags,
+      ui_state: JSON.parse(recipe_params[:ui_state]),
       status: recipe_params[:status] || "published",
       ruby_version: RailsNewConfig.ruby_version_for_new_apps,
       rails_version: RailsNewConfig.rails_version_for_new_apps
@@ -53,8 +45,25 @@ class RecipesController < ApplicationController
 
       redirect_to @recipe, notice: "Recipe was successfully created."
     else
-      redirect_to setup_recipes_path(slug: "basic-setup"), status: :unprocessable_entity
+      error_messages = @recipe.errors.full_messages.join(", ")
+      redirect_to setup_recipes_path(slug: "basic-setup"), alert: "Failed to save recipe: #{error_messages}", status: :see_other
     end
+  end
+
+  def update
+    @recipe.update(
+      name: recipe_params[:name],
+      description: recipe_params[:description],
+      cli_flags:,
+      ui_state: JSON.parse(recipe_params[:ui_state]),
+      status: recipe_params[:status],
+      ruby_version: RailsNewConfig.ruby_version_for_new_apps,
+      rails_version: RailsNewConfig.rails_version_for_new_apps
+    )
+
+    WriteRecipeJob.perform_later(recipe_id: @recipe.id, user_id: current_user.id)
+
+    redirect_to @recipe, notice: "Recipe was successfully updated."
   end
 
   def destroy
@@ -63,6 +72,16 @@ class RecipesController < ApplicationController
   end
 
   private
+
+  def cli_flags
+    @_cli_flags ||= [
+      recipe_params[:api_flag],
+      recipe_params[:database_choice],
+      recipe_params[:javascript_choice],
+      recipe_params[:css_choice],
+      recipe_params[:rails_flags]
+    ].compact.join(" ")
+  end
 
   def not_found
     head :not_found
@@ -83,7 +102,8 @@ class RecipesController < ApplicationController
       :name,
       :description,
       :status,
-      ingredient_ids: []
+      :ui_state,
+      ingredient_ids: [],
     )
   end
 end

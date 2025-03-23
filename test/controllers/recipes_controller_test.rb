@@ -65,6 +65,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
           description: "A cool API app",
           status: "draft",
           api_flag: "--api",
+          ui_state: "{}",
           database_choice: "--database=postgresql",
           rails_flags: "--skip-test"
         }
@@ -96,7 +97,8 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
         recipe: {
           name: "My API App",
           description: "A cool API app",
-          api_flag: "--api --skip-turbo"
+          api_flag: "--api --skip-turbo",
+          ui_state: "{}"
         }
       }
     end
@@ -104,44 +106,64 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "published", Recipe.last.status
   end
 
-  test "create prevents duplicate recipes with same CLI flags and ingredients" do
-    existing_recipe = recipes(:basic_recipe)
+  test "create allows duplicate recipes with same CLI flags and ingredients for a different user" do
+    sign_out @user
+    sign_in users(:jane)
 
     assert_difference("Recipe.count") do
       post recipes_path, params: {
         recipe: {
-          name: "Different Name",
-          description: "Different description",
-          status: "published",
-          api_flag: "--api",
-          database_choice: "--database=mysql",
-          rails_flags: nil,
-          ingredient_ids: [ ingredients(:rails_authentication).id ]
+          name: @recipe.name,
+          description: @recipe.description,
+          api_flag: @recipe.cli_flags,
+          ui_state: "{}"
+        }
+      }
+    end
+
+    new_recipe = Recipe.last
+
+    assert_equal @recipe.name, new_recipe.name
+    assert_equal @recipe.description, new_recipe.description
+    assert_equal @recipe.cli_flags, new_recipe.cli_flags
+  end
+
+  test "create prevents duplicate recipes with same CLI flags and ingredients for the same user" do
+    janes_recipe = recipes(:basic_recipe)
+
+    assert_difference("Recipe.count") do
+      post recipes_path, params: {
+        recipe: {
+          name: janes_recipe.name,
+          description: janes_recipe.description,
+          status: janes_recipe.status,
+          rails_flags: janes_recipe.cli_flags,
+          ingredient_ids: janes_recipe.ingredient_ids,
+          ui_state: "{}"
         }
       }
     end
 
     first_recipe = Recipe.last
-    assert_equal "Different Name", first_recipe.name
-    assert_equal "--api --database=mysql", first_recipe.cli_flags
-    assert_equal [ ingredients(:rails_authentication).id ], first_recipe.ingredient_ids
+    assert_equal janes_recipe.name, first_recipe.name
+    assert_equal janes_recipe.cli_flags, first_recipe.cli_flags
+    assert_equal janes_recipe.ingredient_ids, first_recipe.ingredient_ids
     assert_redirected_to recipe_path(first_recipe)
 
     assert_no_difference("Recipe.count") do
       post recipes_path, params: {
         recipe: {
-          name: "Different Name 2",
-          description: "Different description 2",
-          status: "published",
-          api_flag: "--api",
-          database_choice: "--database=mysql",
-          rails_flags: nil,
-          ingredient_ids: []
+          name: janes_recipe.name,
+          description: janes_recipe.description,
+          status: janes_recipe.status,
+          api_flag: janes_recipe.cli_flags,
+          ingredient_ids: janes_recipe.ingredient_ids,
+          ui_state: "{}"
         }
       }
     end
 
-    assert_redirected_to recipe_path(existing_recipe)
+    assert_redirected_to recipe_path(existing_recipe = first_recipe)
     assert_equal "A recipe with these settings already exists", flash[:alert]
   end
 
@@ -155,7 +177,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_response :unprocessable_entity
+    assert_response :see_other
   end
 
   test "create with invalid status fails validation" do
@@ -165,12 +187,13 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
           name: "My App",
           description: "A description",
           status: "invalid_status",
-          api_flag: "--api --skip-turbo"
+          api_flag: "--api --skip-turbo",
+          ui_state: "{}"
         }
       }
     end
 
-    assert_response :unprocessable_entity
+    assert_response :see_other
   end
 
   test "create with invalid params renders new" do
@@ -183,7 +206,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_response :unprocessable_entity
+    assert_response :see_other
   end
 
   test "create requires authentication" do
@@ -212,6 +235,80 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "update successfully updates recipe attributes" do
+    patch recipe_path(@recipe), params: {
+      recipe: {
+        name: "Updated Recipe Name",
+        description: "Updated description",
+        status: "archived",
+        api_flag: "--api",
+        database_choice: "--database=postgresql",
+        javascript_choice: "--javascript=esbuild",
+        css_choice: "--css=tailwind",
+        rails_flags: "--skip-test",
+        ui_state: '{"some":"updated_value"}'
+      }
+    }
+
+    @recipe.reload
+    assert_equal "Updated Recipe Name", @recipe.name
+    assert_equal "Updated description", @recipe.description
+    assert_equal "archived", @recipe.status
+    assert_equal "--api --database=postgresql --javascript=esbuild --css=tailwind --skip-test", @recipe.cli_flags
+    assert_equal({ "some" => "updated_value" }, @recipe.ui_state)
+
+    assert_redirected_to recipe_path(@recipe)
+    assert_equal "Recipe was successfully updated.", flash[:notice]
+  end
+
+  test "update enqueues WriteRecipeJob" do
+    assert_enqueued_with(job: WriteRecipeJob) do
+      patch recipe_path(@recipe), params: {
+        recipe: {
+          name: "Job Test Recipe",
+          description: "Testing job enqueuing",
+          ui_state: "{}"
+        }
+      }
+    end
+
+    # Verify the job is enqueued with the correct parameters
+    assert_enqueued_with(
+      job: WriteRecipeJob,
+      args: [ {
+        recipe_id: @recipe.id,
+        user_id: @user.id
+      } ]
+    )
+  end
+
+  test "update requires authentication" do
+    sign_out @user
+    patch recipe_path(@recipe), params: {
+      recipe: {
+        name: "Should Not Update",
+        ui_state: "{}"
+      }
+    }
+    assert_redirected_to root_path
+
+    @recipe.reload
+    assert_not_equal "Should Not Update", @recipe.name
+  end
+
+  test "update prevents modifying other user's recipes" do
+    patch recipe_path(@other_users_recipe), params: {
+      recipe: {
+        name: "Should Not Update",
+        ui_state: "{}"
+      }
+    }
+    assert_response :not_found
+
+    @other_users_recipe.reload
+    assert_not_equal "Should Not Update", @other_users_recipe.name
+  end
+
   test "create with custom ingredients adds them to recipe" do
     ingredient = ingredients(:rails_authentication)
 
@@ -222,7 +319,8 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
             name: "Auth Recipe",
             description: "Recipe with authentication",
             api_flag: "--api",
-            ingredient_ids: [ ingredient.id ]
+            ingredient_ids: [ ingredient.id ],
+            ui_state: "{}"
           }
         }
       end
@@ -245,6 +343,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
             name: "Multi-ingredient Recipe",
             description: "Recipe with multiple ingredients",
             api_flag: "--api",
+            ui_state: "{}",
             ingredient_ids: [ auth.id, basic.id ]
           }
         }
@@ -268,6 +367,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
             name: "Mixed Recipe",
             description: "Recipe with mix of real and fake ingredients",
             api_flag: "--api",
+            ui_state: "{}",
             ingredient_ids: [ auth.id, 999999 ]
           }
         }

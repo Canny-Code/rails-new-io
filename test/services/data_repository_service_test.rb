@@ -88,7 +88,11 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "writes ingredient to repository" do
-    ingredient = Data.define(:name, :template_content, :created_by, :id).new(
+    ingredient = Data.define(:name, :template_content, :created_by, :id) do
+      def template_with_interpolated_snippets
+        template_content
+      end
+    end.new(
       name: "test_ingredient",
       template_content: "# Test template",
       created_by: @user,
@@ -191,9 +195,18 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "writes recipe to repository" do
-    recipe = Data.define(:name, :to_yaml).new(
+    recipe = Data.define(:name, :to_yaml, :head_commit_sha) do
+      def update(head_commit_sha: nil)
+        Data.define(:name, :to_yaml, :head_commit_sha).new(
+          name: name,
+          to_yaml: to_yaml,
+          head_commit_sha: head_commit_sha
+        )
+      end
+    end.new(
       name: "test_recipe",
-      to_yaml: "# Test recipe YAML"
+      to_yaml: "# Test recipe YAML",
+      head_commit_sha: "old_sha"
     )
 
     repo_full_name = "#{@user.github_username}/#{@repo_name}"
@@ -233,7 +246,7 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
     )
 
     result = @service.write_recipe(recipe, repo_name: @repo_name)
-    assert_equal "new_sha", result.sha
+    assert_equal "new_sha", result.head_commit_sha
   end
 
   test "name_for_environment returns base name with dev suffix in development" do
@@ -265,7 +278,11 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
   end
 
   test "raises error when writing ingredient template to local filesystem fails" do
-    ingredient = Data.define(:name, :template_content, :created_by, :id).new(
+    ingredient = Data.define(:name, :template_content, :created_by, :id) do
+      def template_with_interpolated_snippets
+        template_content
+      end
+    end.new(
       name: "test_ingredient",
       template_content: "# Test template",
       created_by: @user,

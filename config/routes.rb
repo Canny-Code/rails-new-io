@@ -21,9 +21,10 @@ Rails.application.routes.draw do
 
   resources :notifications, only: [ :index, :update ]
 
-  resources :recipes, only: [ :index, :show, :create, :destroy ] do
+  resources :recipes, only: [ :index, :show, :create, :destroy, :update ] do
     collection do
-      get "new/:slug", to: "pages#show", as: :setup
+      get "new/:slug", action: :new, controller: :pages, as: :setup
+      get "edit/:recipe_id/:slug", action: :edit, controller: :pages, as: :edit
     end
   end
 

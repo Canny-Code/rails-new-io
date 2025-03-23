@@ -10,6 +10,7 @@
 #  rails_version   :string
 #  ruby_version    :string
 #  status          :string           default("draft")
+#  ui_state        :json
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
 #  created_by_id   :integer          not null
@@ -64,7 +65,7 @@ class Recipe < ApplicationRecord
     end
   end
 
-  def self.find_duplicate(cli_flags, ingredient_ids = nil)
+  def self.find_duplicate(user_id, cli_flags, ingredient_ids = nil)
     # A recipe is a duplicate if it has:
     # 1. The same cli_flags AND
     # 2. The same ingredients (or both have no ingredients)
@@ -80,6 +81,7 @@ class Recipe < ApplicationRecord
         ) AS rig ON rig.recipe_id = recipes.id
       SQL
       .where(cli_flags: cli_flags)
+      .where(created_by_id: user_id)
       .where(<<~SQL)
         (
           COALESCE(rig.ingredient_count, 0) = 0
@@ -113,6 +115,7 @@ class Recipe < ApplicationRecord
         ) AS rig ON rig.recipe_id = recipes.id
       SQL
       .where(cli_flags: cli_flags)
+      .where(created_by_id: user_id)
       .where("COALESCE(rig.ingredient_count, 0) = ?", ingredient_ids.size)
       .where(RecipeIngredient.where("recipe_ingredients.recipe_id = recipes.id")
                             .where.not(ingredient_id: ingredient_ids)

@@ -6,7 +6,9 @@ export default class extends Controller {
 
   connect() {
     this.groupElement = this.element.closest('ul')
-    if (!this.groupElement) return
+    // Skip update if we're in rehydration mode
+    if(document.getElementById('recipe-rehydration-radio')) return;
+
     this.update()
   }
 
@@ -18,8 +20,8 @@ export default class extends Controller {
     // Remove any existing flags from this group
     const allCheckboxes = this.groupElement.querySelectorAll('input[type="checkbox"]')
     allCheckboxes.forEach(checkbox => {
-      if (checkbox.dataset.commandOutput) {
-        currentFlags.delete(checkbox.dataset.commandOutput)
+      if (checkbox.value) {
+        currentFlags.delete(checkbox.value)
       }
     })
 
@@ -33,8 +35,8 @@ export default class extends Controller {
       })
 
     selectedCheckboxes.forEach(checkbox => {
-      if (checkbox.dataset.commandOutput) {
-        currentFlags.add(checkbox.dataset.commandOutput)
+      if (checkbox.value) {
+        currentFlags.add(checkbox.value)
       }
     })
 

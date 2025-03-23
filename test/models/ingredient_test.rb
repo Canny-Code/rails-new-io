@@ -9,6 +9,7 @@
 #  description      :text
 #  name             :string           not null
 #  requires         :text
+#  snippets         :json
 #  template_content :text             not null
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
@@ -210,5 +211,134 @@ class IngredientTest < ActiveSupport::TestCase
     COMMIT_MESSAGE
 
     assert_equal expected_message, @ingredient.to_commit_message
+  end
+
+  test "has default empty array for snippets" do
+    ingredient = Ingredient.new
+    assert_equal [], ingredient.snippets
+  end
+
+  test "processes multiple snippets when saving" do
+    ingredient = Ingredient.new(
+      name: "Test Multiple Snippets",
+      template_content: "test content",
+      category: "Testing",
+      created_by: @user
+    )
+
+    # Set multiple snippets via the accessor
+    ingredient.new_snippets = [ "puts 'Hello World'", "Rails.logger.info('Testing')" ]
+    ingredient.save!
+
+    # Check that the snippets were added to the snippets array
+    assert_equal [ "puts 'Hello World'", "Rails.logger.info('Testing')" ], ingredient.snippets
+  end
+
+  test "does not add blank snippets" do
+    ingredient = Ingredient.new(
+      name: "Test Blank Snippets",
+      template_content: "test content",
+      category: "Testing",
+      created_by: @user
+    )
+
+    # Set snippets with some blank values
+    ingredient.new_snippets = [ "puts 'Hello'", "", "  ", nil, "puts 'World'" ]
+    ingredient.save!
+
+    # Check that only non-blank snippets were added
+    assert_equal [ "puts 'Hello'", "puts 'World'" ], ingredient.snippets
+  end
+
+  test "does not modify snippets if new_snippets is empty" do
+    ingredient = Ingredient.new(
+      name: "Test Empty Snippets",
+      template_content: "test content",
+      category: "Testing",
+      created_by: @user,
+      snippets: [ "existing snippet" ]
+    )
+
+    # Set an empty new_snippets array
+    ingredient.new_snippets = []
+    ingredient.save!
+
+    # Snippets should remain unchanged
+    assert_equal [ "existing snippet" ], ingredient.snippets
+  end
+
+  test "Does not interpolate snippets into template content" do
+    ingredient = Ingredient.new(
+      name: "Test Ingredient",
+      category: "Testing",
+      template_content: 'say "This is my template"\ncreate_file "myfile.rb", {{1}}\ncreate_file "my_other_file.rb", {{2}}',
+      created_by: users(:john)
+    )
+    ingredient.new_snippets = [ '"foo"', '"bar"' ]
+    ingredient.save!
+
+    expected_content = 'say "This is my template"\ncreate_file "myfile.rb", {{1}}\ncreate_file "my_other_file.rb", {{2}}'
+    assert_equal expected_content, ingredient.template_content
+  end
+
+  test "handles template without placeholders" do
+    ingredient = Ingredient.new(
+      name: "Test Ingredient",
+      category: "Testing",
+      template_content: 'say "This is my template"',
+      created_by: users(:john)
+    )
+    ingredient.new_snippets = [ '"foo"', '"bar"' ]
+    ingredient.save!
+
+    assert_equal 'say "This is my template"', ingredient.template_content
+  end
+
+  test "template_with_interpolated_snippets with no snippets returns original template" do
+    ingredient = Ingredient.new(template_content: "some template", snippets: [])
+    assert_equal "some template", ingredient.template_with_interpolated_snippets
+  end
+
+  test "template_with_interpolated_snippets interpolates single-line snippets" do
+    ingredient = Ingredient.new(
+      template_content: "First {{1}} and then {{2}}",
+      snippets: [ "hello", "world" ]
+    )
+    assert_equal "First \"hello\" and then \"world\"", ingredient.template_with_interpolated_snippets
+  end
+
+  test "template_with_interpolated_snippets interpolates multi-line snippets" do
+    ingredient = Ingredient.new(
+      template_content: "Code:\n{{1}}\nMore code:\n{{2}}",
+      snippets: [ "def foo\n  puts 'bar'\nend", "x = 1" ]
+    )
+    expected = <<~EXPECTED
+      Code:
+      <<~SNIPPET_1
+      def foo
+        puts 'bar'
+      end
+      SNIPPET_1
+
+      More code:
+      "x = 1"
+    EXPECTED
+    assert_equal expected.chomp, ingredient.template_with_interpolated_snippets
+  end
+
+  test "template_with_interpolated_snippets preserves heredoc snippets" do
+    ingredient = Ingredient.new(
+      template_content: "Code: {{1}}",
+      snippets: [ "<<~SQL\nSELECT * FROM users\nSQL" ]
+    )
+    assert_equal "Code: <<~SQL\nSELECT * FROM users\nSQL", ingredient.template_with_interpolated_snippets
+  end
+
+  test "template_with_interpolated_snippets preserves quoted snippets" do
+    ingredient = Ingredient.new(
+      template_content: "Text: {{1}}",
+      snippets: [ "'already quoted'" ]
+    )
+    assert_equal "Text: 'already quoted'", ingredient.template_with_interpolated_snippets
   end
 end

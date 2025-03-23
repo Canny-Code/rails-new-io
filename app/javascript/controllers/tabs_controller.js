@@ -7,7 +7,6 @@ export default class extends Controller {
   }
 
   connect() {
-    console.log("Tabs controller connected!")
     // Set initial state for the current page
     const currentTab = this.tabTargets.find(tab => tab.classList.contains("tab-active"))
     if (currentTab) {

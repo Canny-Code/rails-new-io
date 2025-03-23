@@ -20,7 +20,8 @@ class GeneratedAppsController < ApplicationController
 
       @generated_app = current_user.generated_apps.new(
         name: params[:app_name],
-        recipe: recipe
+        generated_with_recipe_version: recipe.head_commit_sha,
+        recipe: recipe,
       )
 
       if @generated_app.save

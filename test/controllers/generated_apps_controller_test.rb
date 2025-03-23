@@ -134,9 +134,19 @@ class GeneratedAppsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can create app with recipe belonging to admin user" do
-    admin_user = users(:trinity_takei)
     recipe = recipes(:api_recipe)
-    recipe.update!(created_by: admin_user)
+
+    assert_no_difference "GeneratedApp.count" do
+      post generated_apps_path, params: {
+        app_name: "test-app",
+        generated_app: { recipe_id: recipe.id }
+      }
+    end
+
+    assert_redirected_to new_generated_app_path
+    assert_equal "Recipe not found - you either don't have access to this recipe or it doesn't exist", flash[:alert]
+
+    recipe.created_by.update!(admin: true)
 
     assert_difference "GeneratedApp.count" do
       post generated_apps_path, params: {

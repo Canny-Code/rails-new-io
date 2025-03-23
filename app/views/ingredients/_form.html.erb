@@ -1,8 +1,4 @@
-<%= form_with(model: ingredient, class: "space-y-8 divide-y divide-gray-200",
-    data: {
-      controller: "autosave",
-      autosave_target: "form"
-    }) do |f| %>
+<%= form_with(model: ingredient, class: "space-y-8 divide-y divide-gray-200") do |f| %>
   <% if ingredient.errors.any? %>
     <div class="rounded-md bg-red-50 p-4">
       <div class="flex">
@@ -39,11 +35,7 @@
           <% end %>
           <div class="mt-1">
             <%= f.text_field :name,
-                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm #{'border-red-300' if ingredient.errors[:name].any?}",
-                data: {
-                  autosave_target: "field",
-                  action: "input->autosave#fieldChanged"
-                } %>
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm #{'border-red-300' if ingredient.errors[:name].any?}" %>
             <% if ingredient.errors[:name].any? %>
               <p class="mt-2 text-sm text-red-600"><%= ingredient.errors[:name].join(", ") %></p>
             <% end %>
@@ -55,24 +47,76 @@
           <% end %>
           <div class="mt-1">
             <%= f.text_field :category,
-                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
-                data: {
-                  autosave_target: "field",
-                  action: "input->autosave#fieldChanged"
-                } %>
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
           </div>
         </div>
         <div class="sm:col-span-6">
           <%= f.label :description, class: "block text-sm font-medium text-gray-700" %>
           <div class="mt-1">
             <%= f.text_area :description, rows: 3,
-                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
-                data: {
-                  autosave_target: "field",
-                  action: "input->autosave#fieldChanged"
-                } %>
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
           </div>
           <p class="mt-2 text-sm text-gray-500">Write a few sentences about what this ingredient does.</p>
+        </div>
+
+        <div class="sm:col-span-6" data-controller="snippets">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-medium text-gray-700">Code Snippets</h4>
+            <button type="button" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              data-action="snippets#addSnippet">
+              Add Snippet
+            </button>
+          </div>
+
+          <div data-snippets-target="container" class="mt-2 space-y-4">
+            <% if ingredient.snippets.present? %>
+              <% ingredient.snippets.each_with_index do |snippet, index| %>
+                <div class="relative">
+                  <textarea name="ingredient[new_snippets][]" rows="3"
+                      class="block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      data-controller="codemirror"
+                      data-codemirror-mode-value="ruby"
+                      placeholder="Enter code snippet"><%= snippet %></textarea>
+                  <% if index > 0 %>
+                    <button type="button" class="absolute inset-y-0 right-0 my-auto flex items-center justify-center w-6 h-6 mr-2 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      data-action="snippets#removeSnippet">
+                      <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  <% end %>
+                </div>
+              <% end %>
+            <% end %>
+
+            <template data-snippets-target="template">
+              <div class="relative">
+                <textarea name="ingredient[new_snippets][]" rows="3"
+                    class="block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    data-controller="codemirror"
+                    data-codemirror-mode-value="ruby"
+                    placeholder="Enter code snippet"></textarea>
+                <button type="button" class="absolute inset-y-0 right-0 my-auto flex items-center justify-center w-6 h-6 mr-2 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  data-action="snippets#removeSnippet">
+                  <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </template>
+
+            <% if ingredient.snippets.blank? %>
+              <div class="relative">
+                <%= text_area_tag "ingredient[new_snippets][]",
+                    "",
+                    placeholder: "Enter code snippet",
+                    rows: 3,
+                    data: { controller: "codemirror", codemirror_mode_value: "ruby" },
+                    style: "display: none;" %>
+              </div>
+            <% end %>
+          </div>
+          <p class="mt-2 text-sm text-gray-500">Add code snippets for this ingredient.</p>
         </div>
       </div>
     </div>
@@ -87,60 +131,11 @@
             class: "block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 #{'border-red-300' if ingredient.errors[:template_content].any?}",
             data: {
               controller: "codemirror",
-              codemirror_mode_value: "ruby",
-              autosave_target: "field",
-              action: "input->autosave#fieldChanged"
+              codemirror_mode_value: "ruby"
             } %>
         <% if ingredient.errors[:template_content].any? %>
           <p class="mt-2 text-sm text-red-600"><%= ingredient.errors[:template_content].join(", ") %></p>
         <% end %>
-      </div>
-    </div>
-    <div class="pt-8">
-      <div>
-        <h3 class="text-lg font-medium leading-6 text-gray-900">Dependencies</h3>
-        <p class="mt-1 text-sm text-gray-500">Configure how this ingredient interacts with others.</p>
-      </div>
-      <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-        <div class="sm:col-span-6">
-          <%= f.label :conflicts_with, "Conflicts With", class: "block text-sm font-medium text-gray-700" %>
-          <div class="mt-1">
-            <%= f.text_area :conflicts_with, rows: 3,
-                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
-                placeholder: "Enter ingredient names (one per line)",
-                data: {
-                  autosave_target: "field",
-                  action: "input->autosave#fieldChanged"
-                } %>
-          </div>
-          <p class="mt-2 text-sm text-gray-500">List of ingredients that cannot be used together with this one.</p>
-        </div>
-        <div class="sm:col-span-6">
-          <%= f.label :requires, class: "block text-sm font-medium text-gray-700" %>
-          <div class="mt-1">
-            <%= f.text_area :requires, rows: 3,
-                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
-                placeholder: "Enter ingredient names (one per line)",
-                data: {
-                  autosave_target: "field",
-                  action: "input->autosave#fieldChanged"
-                } %>
-          </div>
-          <p class="mt-2 text-sm text-gray-500">List of ingredients that must be present for this one to work.</p>
-        </div>
-        <div class="sm:col-span-6">
-          <%= f.label :configures_with, "Configuration Schema", class: "block text-sm font-medium text-gray-700" %>
-          <div class="mt-1">
-            <%= f.text_area :configures_with, rows: 5,
-                class: "block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
-                placeholder: "Enter YAML configuration schema",
-                data: {
-                  autosave_target: "field",
-                  action: "input->autosave#fieldChanged"
-                } %>
-          </div>
-          <p class="mt-2 text-sm text-gray-500">YAML schema defining the configuration options for this ingredient.</p>
-        </div>
       </div>
     </div>
   </div>

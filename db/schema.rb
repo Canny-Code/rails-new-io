@@ -10,13 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_02_15_061536) do
+ActiveRecord::Schema[8.0].define(version: 2025_03_01_203533) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
 
   create_table "_litestream_seq", force: :cascade do |t|
     t.integer "seq"
+  end
+
+  create_table "_litestream_verification", force: :cascade do |t|
+    t.binary "uuid"
   end
 
   create_table "acidic_job_entries", force: :cascade do |t|
@@ -206,6 +210,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_02_15_061536) do
     t.datetime "updated_at", null: false
     t.string "workspace_path"
     t.integer "recipe_id", null: false
+    t.string "generated_with_recipe_version", default: "unknown", null: false
     t.index ["github_repo_url"], name: "index_generated_apps_on_github_repo_url", unique: true
     t.index ["name"], name: "index_generated_apps_on_name"
     t.index ["recipe_id"], name: "index_generated_apps_on_recipe_id"
@@ -248,6 +253,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_02_15_061536) do
     t.string "category"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.json "snippets", default: []
     t.index ["created_by_id"], name: "index_ingredients_on_created_by_id"
     t.index ["name", "created_by_id"], name: "index_ingredients_on_name_and_created_by_id", unique: true
   end
@@ -326,6 +332,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_02_15_061536) do
     t.integer "created_by_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.json "ui_state", default: {}
     t.index ["created_by_id"], name: "index_recipes_on_created_by_id"
   end
 

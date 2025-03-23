@@ -40,6 +40,28 @@
         </div>
       </div>
     </div>
+
+    <% if @ingredient.snippets.present? && @ingredient.snippets.any? %>
+      <div class="pt-8">
+        <h3 class="text-lg font-medium leading-6 text-gray-900">Code Snippets</h3>
+        <div class="mt-2">
+          <div class="space-y-4">
+            <% @ingredient.snippets.each_with_index do |snippet, index| %>
+              <div>
+                <h4 class="text-sm font-medium text-gray-700 mb-2">Snippet <%= index + 1 %></h4>
+                <div class="font-mono text-sm border rounded-md"
+                    data-controller="codemirror"
+                    data-codemirror-mode-value="ruby"
+                    data-codemirror-readonly-value="true">
+                  <%= snippet %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
     <div class="pt-8">
       <h3 class="text-lg font-medium leading-6 text-gray-900">Screenshots</h3>
       <div class="mt-4 flex space-x-4">
