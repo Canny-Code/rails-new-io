@@ -10,7 +10,22 @@
       ) %>
     </div>
   </div>
-  <div class="mt-8">
-    <%= render "form", ingredient: @ingredient %>
-  </div>
+
+  <% if params[:onboarding_step].present? %>
+    <div class="mt-8 flex w-full gap-12">
+
+      <!-- Left sidebar (1/3) -->
+      <%= render "shared/onboarding_sidebar" %>
+
+      <!-- Main content (2/3) -->
+      <div class="w-2/3">
+        <%= render "form", ingredient: @ingredient %>
+      </div>
+    </div>
+
+  <% else %>
+    <div class="mt-8 ">
+      <%= render "form", ingredient: @ingredient %>
+    </div>
+  <% end %>
 </div>
