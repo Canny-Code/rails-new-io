@@ -1,24 +1,24 @@
 <div class="w-1/3 min-h-[calc(100vh-10rem)] mt-8 px-4 pt-16 bg-gray-50">
   <nav aria-label="Progress">
     <ol role="list" class="overflow-hidden">
-      <%= render OnboardingSidebarStep.new(
+      <%= render OnboardingSidebarStep::Component.new(
         title: "Name your ingredient",
         description: "Type 'Rails authentication' in the name field, and move on to the 'Category' field",
         current: true
       ) %>
-      <%= render OnboardingSidebarStep.new(
+      <%= render OnboardingSidebarStep::Component.new(
         title: "Add a category",
         description: "Type 'Authentication' in the 'Category' field, and move on to the 'Description' field",
       ) %>
-      <%= render OnboardingSidebarStep.new(
+      <%= render OnboardingSidebarStep::Component.new(
         title: "Business information",
         description: "Penatibus eu quis ante.",
       ) %>
-      <%= render OnboardingSidebarStep.new(
+      <%= render OnboardingSidebarStep::Component.new(
         title: "Theme",
         description: "Faucibus nec enim leo et.",
       ) %>
-      <%= render OnboardingSidebarStep.new(
+      <%= render OnboardingSidebarStep::Component.new(
         title: "Preview",
         description: "Iusto et officia maiores porro ad non quas.",
       ) %>
