@@ -1,13 +1,14 @@
 class OnboardingSidebarStep::Component < ApplicationComponent
-  def initialize(title:, description:, completed: false, current: false)
+  def initialize(title:, description:, completed: false, current: false, html_options: {})
     @title = title
     @description = description
     @completed = completed
     @current = current
+    @html_options = html_options
   end
 
   def view_template
-    li(class: "relative pb-10") do
+    li(class: "relative pb-10", **@html_options) do
       div(class: "absolute left-4 top-4 -ml-px mt-0.5 h-full w-0.5 #{@completed ? 'bg-[#008A05]' : 'bg-gray-300'}", aria: { hidden: true })
 
       div(class: "group relative flex items-start") do
