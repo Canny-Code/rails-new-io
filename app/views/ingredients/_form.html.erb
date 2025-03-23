@@ -34,7 +34,9 @@
       </div>
       <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
         <div class="sm:col-span-4">
-          <%= f.label :name, class: "block text-sm font-medium text-gray-700" %>
+          <%= f.label :name, class: "block text-sm font-medium text-gray-700" do %>
+            Name<span class="text-red-500 ml-1">*</span>
+          <% end %>
           <div class="mt-1">
             <%= f.text_field :name,
                 class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm #{'border-red-300' if ingredient.errors[:name].any?}",
@@ -48,7 +50,9 @@
           </div>
         </div>
         <div class="sm:col-span-4">
-          <%= f.label :category, class: "block text-sm font-medium text-gray-700" %>
+          <%= f.label :category, class: "block text-sm font-medium text-gray-700" do %>
+            Category<span class="text-red-500 ml-1">*</span>
+          <% end %>
           <div class="mt-1">
             <%= f.text_field :category,
                 class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
