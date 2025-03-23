@@ -63,7 +63,7 @@
             class="<%= page == @page ? "" : "hidden" %>"
             data-tabs-target="panel"
             data-recipe-ui-state-store-page-id-value="<%= page.slug %>">
-          <%= render Pages::Component.new(page: page) %>
+          <%= render Pages::Component.new(page: page, onboarding_step: params[:onboarding_step]) %>
         </div>
       <% end %>
     </div>
