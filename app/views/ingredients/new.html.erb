@@ -15,7 +15,11 @@
     <div class="mt-8 flex w-full gap-12">
 
       <!-- Left sidebar (1/3) -->
-      <%= render "shared/onboarding_sidebar" %>
+      <div class="w-1/3">
+        <%= turbo_frame_tag "onboarding_sidebar" do %>
+          <%= render "shared/onboarding_sidebar" %>
+        <% end %>
+      </div>
 
       <!-- Main content (2/3) -->
       <div class="w-2/3">

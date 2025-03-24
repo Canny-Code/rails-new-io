@@ -1,27 +1,46 @@
-<div class="w-1/3 min-h-[calc(100vh-10rem)] mt-8 px-4 pt-16 bg-gray-50">
-  <nav aria-label="Progress">
-    <ol role="list" class="overflow-hidden">
+<div data-controller="onboarding-sidebar">
+  <div class="min-h-[calc(100vh-10rem)] mt-8 px-4 pt-16 bg-gray-50">
+    <nav aria-label="Progress">
+      <ol role="list" class="overflow-hidden">
+        <%= render OnboardingSidebarStep::Component.new(
+          title: "Name your ingredient",
+          description: "Type 'Rails authentication' in the name field, and move on to the 'Category' field",
+          current: true,
+          step_index: 1
+        ) %>
+        <%= render OnboardingSidebarStep::Component.new(
+          title: "Add a category",
+          description: "Type 'Authentication' in the 'Category' field, and move on to the 'Description' field",
+          step_index: 2
+        ) %>
+        <%= render OnboardingSidebarStep::Component.new(
+          title: "Add a description",
+          description: "This is technically optional, but strongly recommended. Add something like 'Using the build-in Rails authentication gem'.",
+          step_index: 3
+        ) %>
+        <%= render OnboardingSidebarStep::Component.new(
+          title: "Theme",
+          description: "Faucibus nec enim leo et.",
+          step_index: 4
+        ) %>
+        <%= render OnboardingSidebarStep::Component.new(
+          title: "Preview",
+          description: "Iusto et officia maiores porro ad non quas.",
+          step_index: 5
+        ) %>
+      </ol>
+    </nav>
+
+    <template data-onboarding-sidebar-target="nextStepTemplate">
       <%= render OnboardingSidebarStep::Component.new(
         title: "Name your ingredient",
         description: "Type 'Rails authentication' in the name field, and move on to the 'Category' field",
-        current: true
+        completed: true,
+        current: false,
+        step_index: 1
       ) %>
-      <%= render OnboardingSidebarStep::Component.new(
-        title: "Add a category",
-        description: "Type 'Authentication' in the 'Category' field, and move on to the 'Description' field",
-      ) %>
-      <%= render OnboardingSidebarStep::Component.new(
-        title: "Business information",
-        description: "Penatibus eu quis ante.",
-      ) %>
-      <%= render OnboardingSidebarStep::Component.new(
-        title: "Theme",
-        description: "Faucibus nec enim leo et.",
-      ) %>
-      <%= render OnboardingSidebarStep::Component.new(
-        title: "Preview",
-        description: "Iusto et officia maiores porro ad non quas.",
-      ) %>
-    </ol>
-  </nav>
+    </template>
+
+    <%= hidden_field_tag "current_step", 1 %>
+  </div>
 </div>
