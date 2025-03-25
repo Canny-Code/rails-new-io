@@ -3,33 +3,29 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["step", "nextStepTemplate"]
 
+  static values = {
+    steps: Object
+  }
+
   connect() {
-    const categoryField = document.querySelector('input[name="ingredient[category]"]')
-    categoryField.addEventListener('focus', () => this.checkNameFieldAndUpdateSteps())
-
-    const descriptionField = document.querySelector('textarea[name="ingredient[description]"]')
-    descriptionField.addEventListener('focus', () => this.checkCategoryFieldAndUpdateSteps())
+    Object.entries(this.stepsValue).forEach(([selector, config]) => {
+      const field = document.querySelector(selector)
+      if (field) {
+        field.addEventListener('blur', () => this.checkFieldAndUpdateSteps(selector, config))
+      }
+    })
   }
 
-  async checkNameFieldAndUpdateSteps() {
+  checkFieldAndUpdateSteps(selector, config) {
     const currentStepInput = document.querySelector('input[name="current_step"]')
-    if (parseInt(currentStepInput.value) !== 1) return
+    const currentStep = parseInt(currentStepInput.value)
 
-    const nameField = document.querySelector('input[name="ingredient[name]"]')
+    if (currentStep !== config.currentStep) return
 
-    if (nameField.value.trim() === 'Rails authentication') {
-      this.updateStep(1)
-    }
-  }
+    const field = document.querySelector(selector)
 
-  async checkCategoryFieldAndUpdateSteps() {
-    const currentStepInput = document.querySelector('input[name="current_step"]')
-    if (parseInt(currentStepInput.value) !== 2) return
-
-    const categoryField = document.querySelector('input[name="ingredient[category]"]')
-
-    if (categoryField.value.trim() === 'Authentication') {
-      this.updateStep(2)
+    if (field.value.trim() === config.expectedValue || config.expectedValue === "") {
+      this.updateStep(config.currentStep)
     }
   }
 
@@ -39,16 +35,17 @@ export default class extends Controller {
       parseInt(step.dataset.stepIndex) === stepIndex
     )
 
-    if (!currentStep) return
+    const title = currentStep.querySelector('.text-sm.font-medium').textContent
+    const description = currentStep.querySelector('.text-sm.text-gray-500').textContent
 
-    // Get the template content
     const templateContent = this.nextStepTemplateTarget.content.cloneNode(true)
     const templateStep = templateContent.querySelector('[data-onboarding-sidebar-target="step"]')
 
-    // Update the current step with the template content
+    templateStep.querySelector('.text-sm.font-medium').textContent = title
+    templateStep.querySelector('.text-sm.text-gray-500').textContent = description
+
     currentStep.innerHTML = templateStep.innerHTML
 
-    // Update the current step indicator
     this.stepTargets.forEach(step => {
       const stepIndex = parseInt(step.dataset.stepIndex)
       if (stepIndex === stepIndex + 1) {
@@ -59,7 +56,6 @@ export default class extends Controller {
       }
     })
 
-    // Update the hidden form's current step
     const currentStepInput = document.querySelector('input[name="current_step"]')
     currentStepInput.value = stepIndex + 1
   }

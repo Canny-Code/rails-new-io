@@ -1,4 +1,9 @@
-<div data-controller="onboarding-sidebar">
+<div data-controller="onboarding-sidebar"
+     data-onboarding-sidebar-steps-value="<%= {
+       'input[name="ingredient[name]"]' => { currentStep: 1, expectedValue: 'Rails authentication' },
+       'input[name="ingredient[category]"]' => { currentStep: 2, expectedValue: 'Authentication' },
+       'textarea[name="ingredient[description]"]' => { currentStep: 3, expectedValue: '' }
+     }.to_json %>">
   <div class="min-h-[calc(100vh-10rem)] mt-8 px-4 pt-16 bg-gray-50">
     <nav aria-label="Progress">
       <ol role="list" class="overflow-hidden">
