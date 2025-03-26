@@ -11,9 +11,11 @@ class IngredientsController < ApplicationController
 
   def new
     @ingredient = current_user.ingredients.build
+    @onboarding_step = params[:onboarding_step]
   end
 
   def edit
+    @onboarding_step = params[:onboarding_step]
   end
 
   def create
@@ -24,9 +26,17 @@ class IngredientsController < ApplicationController
 
       WriteIngredientJob.perform_later(ingredient_id: @ingredient.id, user_id: current_user.id)
 
-      redirect_to @ingredient, notice: "Ingredient was successfully created."
+      redirect_path = if params[:onboarding_step].present?
+        next_step = params[:onboarding_step].to_i + 1
+        ingredient_path(@ingredient, onboarding_step: next_step)
+      else
+        ingredient_path(@ingredient)
+      end
+
+      redirect_to redirect_path, notice: "Ingredient was successfully created."
     else
       @ingredient.snippets = params.dig(:ingredient, :new_snippets) || []
+      @onboarding_step = params[:onboarding_step]
       render :new, status: :unprocessable_entity
     end
   end
@@ -35,8 +45,16 @@ class IngredientsController < ApplicationController
     if @ingredient.update(ingredient_params)
       WriteIngredientJob.perform_later(ingredient_id: @ingredient.id, user_id: current_user.id)
 
-      redirect_to @ingredient, notice: "Ingredient was successfully updated."
+      redirect_path = if params[:onboarding_step].present?
+        next_step = params[:onboarding_step].to_i + 1
+        ingredient_path(@ingredient, onboarding_step: next_step)
+      else
+        ingredient_path(@ingredient)
+      end
+
+      redirect_to redirect_path, notice: "Ingredient was successfully updated."
     else
+      @onboarding_step = params[:onboarding_step]
       render :edit, status: :unprocessable_entity
     end
   end

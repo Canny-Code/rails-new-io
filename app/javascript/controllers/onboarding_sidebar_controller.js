@@ -8,12 +8,59 @@ export default class extends Controller {
   }
 
   connect() {
-    Object.entries(this.stepsValue).forEach(([selector, config]) => {
-      const field = document.querySelector(selector)
-      if (field) {
-        field.addEventListener('blur', () => this.checkFieldAndUpdateSteps(selector, config))
-      }
-    })
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.initializeSteps())
+    } else {
+      this.initializeSteps()
+    }
+  }
+
+  initializeSteps() {
+    console.log("DEBUG: Starting initializeSteps")
+    console.log("DEBUG: Document readyState:", document.readyState)
+    console.log("DEBUG: Document body:", document.body)
+
+    // Give a small delay to ensure everything is ready
+    setTimeout(() => {
+      Object.entries(this.stepsValue).forEach(([selector, config]) => {
+        console.log("DEBUG: Trying to find selector:", selector)
+        const field = document.querySelector(selector)
+        console.log("DEBUG: Query result:", field)
+
+        if (field) {
+          if (selector.includes('CodeMirror')) {
+            let attempts = 0
+            const maxAttempts = 50 // 5 seconds total
+            const checkCodeMirror = setInterval(() => {
+              attempts++
+              console.log("DEBUG: Checking CodeMirror initialization attempt:", attempts)
+
+              if (field.CodeMirror) {
+                console.log("DEBUG: CodeMirror initialized")
+                field.CodeMirror.on('change', () => {
+                  console.log("DEBUG: CodeMirror change event fired")
+                  this.checkFieldAndUpdateSteps(selector, config)
+                })
+                clearInterval(checkCodeMirror)
+                return
+              }
+
+              if (attempts >= maxAttempts) {
+                console.log("DEBUG: Failed to initialize CodeMirror after", maxAttempts, "attempts")
+                clearInterval(checkCodeMirror)
+              }
+            }, 100)
+          } else {
+            field.addEventListener('input', () => {
+              console.log("DEBUG: Input event fired for selector:", selector)
+              this.checkFieldAndUpdateSteps(selector, config)
+            })
+          }
+        } else {
+          console.log("DEBUG: No field found for selector:", selector)
+        }
+      })
+    }, 100)
   }
 
   checkFieldAndUpdateSteps(selector, config) {
@@ -22,9 +69,15 @@ export default class extends Controller {
 
     if (currentStep !== config.currentStep) return
 
-    const field = document.querySelector(selector)
+    let field = document.querySelector(selector)
+    let field_value = field?.value?.trim()
 
-    if (field.value.trim() === config.expectedValue || config.expectedValue === "") {
+    if (selector.includes('CodeMirror')) {
+      field = field.CodeMirror.getValue()
+      field_value = field.trim()
+    }
+
+    if (field_value === config.expectedValue || config.expectedValue === "") {
       this.updateStep(config.currentStep)
     }
   }

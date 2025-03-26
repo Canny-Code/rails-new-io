@@ -1,11 +1,12 @@
 class OnboardingSidebarStep::Component < ApplicationComponent
-  def initialize(title:, description:, completed: false, current: false, html_options: {}, step_index: nil)
+  def initialize(title:, description:, completed: false, current: false, html_options: {}, step_index: nil, last_step: false)
     @title = title
     @description = description
     @completed = completed
     @current = current
     @html_options = html_options
     @step_index = step_index
+    @last_step = last_step
   end
 
   def view_template
@@ -17,7 +18,9 @@ class OnboardingSidebarStep::Component < ApplicationComponent
       },
       **@html_options
     ) do
-      div(class: "absolute left-4 top-4 -ml-px mt-0.5 h-full w-0.5 #{@completed ? 'bg-[#008A05]' : 'bg-gray-300'}", aria: { hidden: true })
+      unless @last_step
+        div(class: "absolute left-4 top-4 -ml-px mt-0.5 h-full w-0.5 #{@completed ? 'bg-[#008A05]' : 'bg-gray-300'}", aria: { hidden: true })
+      end
 
       div(class: "group relative flex items-start") do
         span(class: "flex h-9 items-center") do

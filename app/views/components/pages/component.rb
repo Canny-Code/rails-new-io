@@ -14,7 +14,9 @@ module Pages
         if @onboarding_step.present?
           div(class: "flex gap-0 max-w-6xl mx-auto") do
             #  Left sidebar (1/3)
-            render "shared/onboarding_sidebar"
+            div(class: "space-y-8 w-1/3") do
+              render "shared/onboarding/#{@onboarding_step}/sidebar"
+            end
 
             # Main content (2/3)
             div(class: "space-y-8 w-2/3 ") do

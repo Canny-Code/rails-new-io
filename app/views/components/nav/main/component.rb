@@ -5,7 +5,7 @@ class Nav::Main::Component < ApplicationComponent
   include Phlex::Rails::Helpers::ButtonTo
   include Phlex::Rails::Helpers::ClassNames
 
-  delegate :current_user, :current_page?, to: :helpers
+  delegate :current_user, :current_page?, :params, to: :helpers
 
   def view_template
     header(class: "bg-white border-b border-gray-200") do
@@ -33,7 +33,10 @@ class Nav::Main::Component < ApplicationComponent
                 plain "My Apps"
               end
               whitespace
-              link_to(recipes_path, class: nav_link_classes(recipes_path)) do
+              link_to(
+                params[:onboarding_step] ? recipes_path(onboarding_step: params[:onboarding_step].to_i + 1) : recipes_path,
+                class: nav_link_classes(recipes_path)
+              ) do
                 plain "My Recipes"
               end
               whitespace

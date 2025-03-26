@@ -6,7 +6,7 @@ module Buttons
       include Phlex::Rails::Helpers::LinkTo
       include Phlex::Rails::Helpers::ButtonTag
 
-      def initialize(text:, path: nil, size: :medium, icon: false, disabled: false, data: {}, html_options: {}, type: :link)
+      def initialize(text:, path: nil, size: :medium, icon: false, disabled: false, data: {}, html_options: {}, type: :link, onboarding_step: nil)
         @text = text
         @path = path
         @size = size
@@ -15,6 +15,7 @@ module Buttons
         @data = data
         @html_options = html_options
         @type = type
+        @onboarding_step = onboarding_step
       end
 
       def view_template
@@ -30,7 +31,7 @@ module Buttons
           end
         else
           link_to(
-            @path,
+            @onboarding_step ? "#{@path}?onboarding_step=#{@onboarding_step}" : @path,
             class: button_classes,
             data: @data,
             **@html_options.except(:class)

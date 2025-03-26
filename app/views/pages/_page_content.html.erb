@@ -1,0 +1,70 @@
+<div id="rails-new-command-generator-holder"
+    class="flex flex-col items-center pt-3 sticky top-0 z-50 bg-[#6e7074] w-full"
+    data-controller="modal">
+
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <%= render "terminal_window" %>
+    <% if @recipe %>
+      <input type="radio"
+              class="hidden"
+              id="recipe-rehydration-radio"
+              data-controller="recipe-selector"
+              name="recipe-rehydration"
+              data-recipe-selector-target="radio"
+              data-cli-flags="<%= @recipe.cli_flags %>"
+              data-ingredients="<%= @recipe.ingredients.map(&:name).join(",") %>">
+    <% end %>
+    <%= render "ingredients_container" %>
+    <div class="mt-4 sm:flex-wrap flex items-center justify-center">
+      <%= render Buttons::Primary::Component.new(
+        text: params[:action] == "edit" ? "Update Recipe" : "Done Tweaking",
+        size: :large,
+        icon: false,
+        type: :button,
+        data: {
+          action: params[:action] == "edit" ?
+            "click->recipe-ui-state-store#submitUpdate" :
+            "click->modal#open"
+        }
+      ) %>
+    </div>
+    <%= render "recipe_form_modal" %>
+  </div>
+</div>
+
+<%# Tabs and Content %>
+<div data-controller="tabs" data-tabs-current-page-value="<%= @page.slug %>">
+  <div class="bg-[#6e7074]">
+    <div class="max-w-7xl mx-auto">
+      <div>
+        <div>
+          <nav class="-mb-px flex space-x-1 md:space-x-2" aria-label="Tabs">
+            <% Page.all.each do |page| %>
+              <%= link_to recipe_page_path(page, recipe_id: @recipe.try(:id)),
+                  id: "#{page.slug}-tab",
+                  data: {
+                    tabs_target: "tab",
+                    action: "click->tabs#change click->recipe-ui-state-restore#restorePageState",
+                    page_slug: page.slug,
+                    page_url: recipe_page_path(page, recipe_id: @recipe.try(:id))
+                  },
+                  class: "tab #{page == @page ? 'tab-active' : 'tab-inactive'}" do %>
+                <%= page.title %>
+              <% end %>
+            <% end %>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div data-tabs-target="panels">
+    <% Page.all.each do |page| %>
+      <div id="<%= page.slug %>-panel"
+          class="<%= page == @page ? "" : "hidden" %>"
+          data-tabs-target="panel"
+          data-recipe-ui-state-store-page-id-value="<%= page.slug %>">
+        <%= render Pages::Component.new(page: page, onboarding_step: params[:onboarding_step]) %>
+      </div>
+    <% end %>
+  </div>
+</div>

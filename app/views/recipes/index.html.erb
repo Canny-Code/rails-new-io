@@ -1,3 +1,8 @@
+<% if params[:onboarding_step].present? %>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-14">
+    <%= render "shared/onboarding/#{params[:onboarding_step]}/explanation" %>
+  </div>
+<% end %>
 <%= render ResourceLayout::Component.new(
   title: "Recipes",
   subtitle: "Manage your collection of recipes.",
@@ -12,7 +17,8 @@
     button_text: "New Recipe",
     button_path: setup_recipes_path(slug: "basic-setup"),
     icon: true,
-    emoji: "📝"
+    emoji: "📝",
+    onboarding_step: params[:onboarding_step] ? params[:onboarding_step].to_i + 1 : nil
   ),
   columns: [
     {

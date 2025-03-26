@@ -1,37 +1,39 @@
 <div data-controller="onboarding-sidebar"
      data-onboarding-sidebar-steps-value="<%= {
-       'input[name="ingredient[name]"]' => { currentStep: 1, expectedValue: 'Rails authentication' },
-       'input[name="ingredient[category]"]' => { currentStep: 2, expectedValue: 'Authentication' },
-       'textarea[name="ingredient[description]"]' => { currentStep: 3, expectedValue: '' }
+       'input[name="ingredient[name]"]' => { currentStep: 1, expectedValue: "Rails authentication" },
+       'input[name="ingredient[category]"]' => { currentStep: 2, expectedValue: "Authentication" },
+       'textarea[name="ingredient[description]"]' => { currentStep: 3, expectedValue: "" },
+       'textarea[name="ingredient[template_content]"] + div[class*="CodeMirror"]' => { currentStep: 4, expectedValue: "generate 'authentication'" }
      }.to_json %>">
   <div class="min-h-[calc(100vh-10rem)] mt-8 px-4 pt-16 bg-gray-50">
     <nav aria-label="Progress">
       <ol role="list" class="overflow-hidden">
         <%= render OnboardingSidebarStep::Component.new(
           title: "Name your ingredient",
-          description: "Type 'Rails authentication' in the name field, and move on to the 'Category' field",
+          description: "Type 'Rails authentication' in the name field.",
           current: true,
           step_index: 1
         ) %>
         <%= render OnboardingSidebarStep::Component.new(
           title: "Add a category",
-          description: "Type 'Authentication' in the 'Category' field, and move on to the 'Description' field",
+          description: "Type 'Authentication' in the 'Category' field",
           step_index: 2
         ) %>
         <%= render OnboardingSidebarStep::Component.new(
           title: "Add a description",
-          description: "This is technically optional, but strongly recommended. Add something like 'Using the build-in Rails authentication gem'.",
+          description: "This is optional, but strongly recommended. Add something like 'Adding the built-in Rails authentication gem'.",
           step_index: 3
         ) %>
         <%= render OnboardingSidebarStep::Component.new(
-          title: "Theme",
-          description: "Faucibus nec enim leo et.",
+          title: "Template content",
+          description: "This is the most important part of your ingredient: the actual Thor template that will be executed. Add the following content to the 'Template content' text area: generate 'authentication'",
           step_index: 4
         ) %>
         <%= render OnboardingSidebarStep::Component.new(
-          title: "Preview",
-          description: "Iusto et officia maiores porro ad non quas.",
-          step_index: 5
+          title: "Create your first ingredient",
+          description: "Click the 'Create Ingredient' button to save your ingredient.",
+          step_index: 5,
+          last_step: true
         ) %>
       </ol>
     </nav>
