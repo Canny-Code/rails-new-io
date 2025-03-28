@@ -29,7 +29,7 @@ gem "solid_cable", "~> 3.0.7"
 gem "solid_queue", "~> 1.1.3"
 gem "sqlite3", "~> 2.5.0"
 gem "stimulus-rails"
-gem "turbo-rails", "~> 2.0.11"
+gem "turbo-rails", "~> 2.0.13"
 gem "vite_rails", "~> 3.0.19"
 
 group :development do
