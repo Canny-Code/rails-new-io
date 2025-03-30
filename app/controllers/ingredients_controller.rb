@@ -45,14 +45,7 @@ class IngredientsController < ApplicationController
     if @ingredient.update(ingredient_params)
       WriteIngredientJob.perform_later(ingredient_id: @ingredient.id, user_id: current_user.id)
 
-      redirect_path = if params[:onboarding_step].present?
-        next_step = params[:onboarding_step].to_i + 1
-        ingredient_path(@ingredient, onboarding_step: next_step)
-      else
-        ingredient_path(@ingredient)
-      end
-
-      redirect_to redirect_path, notice: "Ingredient was successfully updated."
+      redirect_to ingredient_path(@ingredient), notice: "Ingredient was successfully updated."
     else
       @onboarding_step = params[:onboarding_step]
       render :edit, status: :unprocessable_entity

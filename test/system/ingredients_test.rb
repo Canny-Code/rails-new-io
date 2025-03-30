@@ -9,24 +9,6 @@ class IngredientsTest < ApplicationSystemTestCase
     @ingredient = ingredients(:rails_authentication)
     @user = users(:john)
 
-    # Set up OmniAuth mock for system tests
-    OmniAuth.config.test_mode = true
-    OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new({
-      provider: "github",
-      uid: @user.uid,
-      info: {
-        email: @user.email,
-        name: @user.name,
-        image: @user.image
-      },
-      credentials: { token: "mock_token" },
-      extra: {
-        raw_info: {
-          login: @user.github_username
-        }
-      }
-    })
-
     # Mock GitHub API calls
     mock_client = mock("octokit_client")
     ref_response = Data.define(:object).new(object: Data.define(:sha).new(sha: "old_sha"))
@@ -45,12 +27,32 @@ class IngredientsTest < ApplicationSystemTestCase
 
     Octokit::Client.stubs(:new).returns(mock_client)
 
-    # Visit root and click the auth link - this is the actual browser flow
-    visit root_path
-    click_on "Get in"
+    # Set up OmniAuth test mode
+    OmniAuth.config.test_mode = true
   end
 
   test "creating a new ingredient" do
+    # Set up OmniAuth for john
+    OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new({
+      provider: "github",
+      uid: @user.uid,
+      info: {
+        email: @user.email,
+        name: @user.name,
+        image: @user.image
+      },
+      credentials: { token: "mock_token" },
+      extra: {
+        raw_info: {
+          login: @user.github_username
+        }
+      }
+    })
+
+    # Login as john
+    visit root_path
+    click_on "Get in"
+
     visit new_ingredient_path
 
     fill_in "Name", with: "Test Ingredient"
@@ -68,7 +70,75 @@ class IngredientsTest < ApplicationSystemTestCase
     assert_selector "h2", text: "Test Ingredient"
   end
 
+  test "rails-new-io user creating an ingredient adds it to the correct page group" do
+    # Set up rails-new-io user
+    rails_new_io_user = users(:rails_new_io)
+    OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new({
+      provider: "github",
+      uid: rails_new_io_user.uid,
+      info: {
+        email: rails_new_io_user.email,
+        name: rails_new_io_user.name,
+        image: rails_new_io_user.image
+      },
+      credentials: { token: "mock_token" },
+      extra: {
+        raw_info: {
+          login: "rails-new-io"
+        }
+      }
+    })
+
+    # Login as rails-new-io
+    visit root_path
+    click_on "Get in"
+
+    visit new_ingredient_path
+
+    fill_in "Name", with: "RSpec"
+    fill_in "Description", with: "RSpec testing framework"
+
+    select "Testing", from: "Page"
+    fill_in "Category", with: "RSpec"
+
+    page.execute_script(<<~JS)
+      document.querySelector('textarea[name="ingredient[template_content]"] + div[class*="CodeMirror"]').CodeMirror.setValue("gem 'rspec'")
+    JS
+
+    click_on "Create Ingredient"
+
+    assert_text "Ingredient was successfully created"
+
+    # Visit the Testing page through the recipe setup flow
+    visit setup_recipes_path("testing")
+
+    # Verify the group and checkbox exist
+    assert_selector "h3", text: "RSpec"
+    assert_selector "li.menu-card-row label", text: "RSpec"
+  end
+
   test "updating an ingredient" do
+    # Set up OmniAuth for john
+    OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new({
+      provider: "github",
+      uid: @user.uid,
+      info: {
+        email: @user.email,
+        name: @user.name,
+        image: @user.image
+      },
+      credentials: { token: "mock_token" },
+      extra: {
+        raw_info: {
+          login: @user.github_username
+        }
+      }
+    })
+
+    # Login as john
+    visit root_path
+    click_on "Get in"
+
     visit edit_ingredient_path(@ingredient)
 
     fill_in "Name", with: "Updated Ingredient"
@@ -80,6 +150,27 @@ class IngredientsTest < ApplicationSystemTestCase
   end
 
   test "showing validation errors" do
+    # Set up OmniAuth for john
+    OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new({
+      provider: "github",
+      uid: @user.uid,
+      info: {
+        email: @user.email,
+        name: @user.name,
+        image: @user.image
+      },
+      credentials: { token: "mock_token" },
+      extra: {
+        raw_info: {
+          login: @user.github_username
+        }
+      }
+    })
+
+    # Login as john
+    visit root_path
+    click_on "Get in"
+
     visit new_ingredient_path
 
     fill_in "Name", with: ""
@@ -90,6 +181,27 @@ class IngredientsTest < ApplicationSystemTestCase
   end
 
   test "deleting an ingredient" do
+    # Set up OmniAuth for john
+    OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new({
+      provider: "github",
+      uid: @user.uid,
+      info: {
+        email: @user.email,
+        name: @user.name,
+        image: @user.image
+      },
+      credentials: { token: "mock_token" },
+      extra: {
+        raw_info: {
+          login: @user.github_username
+        }
+      }
+    })
+
+    # Login as john
+    visit root_path
+    click_on "Get in"
+
     visit ingredient_path(@ingredient)
     accept_confirm do
       click_on "Delete", match: :first
