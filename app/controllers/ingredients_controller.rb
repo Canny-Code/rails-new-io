@@ -83,6 +83,7 @@ class IngredientsController < ApplicationController
   def ingredient_params
     params.require(:ingredient).permit(
       :name,
+      :page_id,
       :description,
       :template_content,
       :category,

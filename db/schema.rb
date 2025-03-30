@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_03_01_203533) do
+ActiveRecord::Schema[8.0].define(version: 2025_03_30_100505) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -254,8 +254,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_01_203533) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.json "snippets", default: []
+    t.integer "page_id"
     t.index ["created_by_id"], name: "index_ingredients_on_created_by_id"
     t.index ["name", "created_by_id"], name: "index_ingredients_on_name_and_created_by_id", unique: true
+    t.index ["page_id"], name: "index_ingredients_on_page_id"
   end
 
   create_table "noticed_events", force: :cascade do |t|
@@ -497,6 +499,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_01_203533) do
   add_foreign_key "generated_apps", "users"
   add_foreign_key "groups", "pages"
   add_foreign_key "ingredient_changes", "ingredients", on_delete: :cascade
+  add_foreign_key "ingredients", "pages"
   add_foreign_key "ingredients", "users", column: "created_by_id"
   add_foreign_key "recipe_changes", "ingredients"
   add_foreign_key "recipe_changes", "recipes", on_delete: :cascade

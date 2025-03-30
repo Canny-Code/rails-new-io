@@ -14,15 +14,18 @@
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  created_by_id    :integer          not null
+#  page_id          :integer
 #
 # Indexes
 #
 #  index_ingredients_on_created_by_id           (created_by_id)
 #  index_ingredients_on_name_and_created_by_id  (name,created_by_id) UNIQUE
+#  index_ingredients_on_page_id                 (page_id)
 #
 # Foreign Keys
 #
 #  created_by_id  (created_by_id => users.id)
+#  page_id        (page_id => pages.id)
 #
 require "test_helper"
 

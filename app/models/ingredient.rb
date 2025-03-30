@@ -14,15 +14,18 @@
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  created_by_id    :integer          not null
+#  page_id          :integer
 #
 # Indexes
 #
 #  index_ingredients_on_created_by_id           (created_by_id)
 #  index_ingredients_on_name_and_created_by_id  (name,created_by_id) UNIQUE
+#  index_ingredients_on_page_id                 (page_id)
 #
 # Foreign Keys
 #
 #  created_by_id  (created_by_id => users.id)
+#  page_id        (page_id => pages.id)
 #
 class Ingredient < ApplicationRecord
   class InvalidConfigurationError < StandardError; end
@@ -32,6 +35,7 @@ class Ingredient < ApplicationRecord
   has_one_attached :after_screenshot
 
   belongs_to :created_by, class_name: "User"
+  belongs_to :page, optional: true
   has_many :recipe_ingredients, dependent: :delete_all
   has_many :recipes, through: :recipe_ingredients
   has_many :recipe_changes, dependent: :delete_all
@@ -44,6 +48,7 @@ class Ingredient < ApplicationRecord
   before_destroy :cleanup_ui_elements
   after_update :update_ui_elements, if: :ui_relevant_attributes_changed?
   before_save :process_snippets
+  after_save :handle_railsnewio_page_group, if: :should_handle_railsnewio_page_group?
 
   serialize :conflicts_with, coder: YAML
   serialize :requires, coder: YAML
@@ -156,5 +161,14 @@ class Ingredient < ApplicationRecord
         "\"#{snippet}\""
       end
     end
+  end
+
+  def should_handle_railsnewio_page_group?
+    created_by.github_username == "rails-new-io" && page_id.present? && saved_change_to_page_id?
+  end
+
+  def handle_railsnewio_page_group
+    return unless page
+    IngredientUiCreator.call(self, page_title: page.title)
   end
 end

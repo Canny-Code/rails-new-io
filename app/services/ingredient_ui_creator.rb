@@ -1,15 +1,16 @@
 class IngredientUiCreator
-  def self.call(ingredient)
-    new(ingredient).call
+  def self.call(ingredient, page_title: "Your Custom Ingredients")
+    new(ingredient, page_title).call
   end
 
-  def initialize(ingredient)
+  def initialize(ingredient, page_title)
     @ingredient = ingredient
+    @page_title = page_title
   end
 
   def call
     ActiveRecord::Base.transaction do
-      page = Page.find_by!(title: "Your Custom Ingredients")
+      page = Page.find_by!(title: page_title)
       group = find_or_create_group(page)
       sub_group = find_or_create_sub_group(group)
       create_element(sub_group)
@@ -18,7 +19,7 @@ class IngredientUiCreator
 
   private
 
-  attr_reader :ingredient
+  attr_reader :ingredient, :page_title
 
   def find_or_create_group(page)
     page.groups.find_or_create_by!(title: ingredient.category, behavior_type: "custom_ingredient_checkbox")
