@@ -1,3 +1,6 @@
 <div data-controller="recipe-ui-state-store">
+  <% if params[:onboarding_step] %>
+    <%= render OnboardingDialog::Component.new(onboarding_step: params[:onboarding_step]) %>
+  <% end %>
   <%= render "page_content" %>
 </div>
