@@ -89,13 +89,13 @@ export default class extends Controller {
     )
 
     const title = currentStep.querySelector('.text-sm.font-medium').textContent
-    const description = currentStep.querySelector('.text-sm.text-gray-500').textContent
+    const description = currentStep.querySelector('.text-sm.text-gray-500').innerHTML
 
     const templateContent = this.nextStepTemplateTarget.content.cloneNode(true)
     const templateStep = templateContent.querySelector('[data-onboarding-sidebar-target="step"]')
 
     templateStep.querySelector('.text-sm.font-medium').textContent = title
-    templateStep.querySelector('.text-sm.text-gray-500').textContent = description
+    templateStep.querySelector('.text-sm.text-gray-500').innerHTML = description
 
     currentStep.innerHTML = templateStep.innerHTML
 
