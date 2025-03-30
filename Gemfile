@@ -31,6 +31,7 @@ gem "sqlite3", "~> 2.6.0"
 gem "stimulus-rails"
 gem "turbo-rails", "~> 2.0.13"
 gem "vite_rails", "~> 3.0.19"
+gem "redcarpet", "~> 3.6.1"
 
 group :development do
   gem "aasm-diagram", "~> 0.1.3"

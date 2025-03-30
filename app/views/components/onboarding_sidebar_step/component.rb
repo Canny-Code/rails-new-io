@@ -1,4 +1,6 @@
 class OnboardingSidebarStep::Component < ApplicationComponent
+  include MarkdownHelper
+
   def initialize(title:, description:, completed: false, current: false, html_options: {}, step_index: nil, last_step: false)
     @title = title
     @description = description
@@ -42,8 +44,8 @@ class OnboardingSidebarStep::Component < ApplicationComponent
         end
 
         span(class: "ml-4 flex min-w-0 flex-col") do
-          span(class: "text-sm font-medium") { @title }
-          span(class: "text-sm text-gray-500") { @description }
+          span(class: "text-sm font-medium mt-2 underline") { @title }
+          div(class: "text-sm text-gray-500 prose prose-sm mt-2") { unsafe_raw markdown(@description) }
         end
       end
     end
