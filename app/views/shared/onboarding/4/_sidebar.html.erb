@@ -1,16 +1,14 @@
 <div data-controller="onboarding-sidebar"
      data-onboarding-sidebar-steps-value="<%= {
-       'input[name="ingredient[name]"]' => { currentStep: 1, expectedValue: "Rails authentication" },
-       'input[name="ingredient[category]"]' => { currentStep: 2, expectedValue: "Authentication" },
-       'textarea[name="ingredient[description]"]' => { currentStep: 3, expectedValue: "" },
-       'textarea[name="ingredient[template_content]"] + div[class*="CodeMirror"]' => { currentStep: 4, expectedValue: "generate 'authentication'" }
+      "appear:input#main-tab-mains-skip-test" => { currentStep: 1, expectedValue: "" },
+      "click:input#main-tab-mains-skip-test" => { currentStep: 2, expectedValue: "" }
      }.to_json %>">
   <div class="min-h-[calc(100vh-10rem)] mt-8 px-4 pt-16 bg-gray-50">
     <nav aria-label="Progress">
       <ol role="list" class="overflow-hidden">
         <%= render OnboardingSidebarStep::Component.new(
-          title: "Add RSpec as your test framework",
-          description: "Click the `Testing` tab",
+          title: "Go to the 'Testing' tab",
+          description: "Let's start by adding RSpec as our test framework. You'll find everything related to testing under the `Testing` tab - click on it.",
           current: true,
           step_index: 1
         ) %>
@@ -40,8 +38,8 @@
 
     <template data-onboarding-sidebar-target="nextStepTemplate">
       <%= render OnboardingSidebarStep::Component.new(
-        title: "Name your ingredient",
-        description: "Type 'Rails authentication' in the name field, and move on to the 'Category' field",
+        title: "",
+        description: "",
         completed: true,
         current: false,
         step_index: 1

@@ -23,41 +23,69 @@ export default class extends Controller {
     // Give a small delay to ensure everything is ready
     setTimeout(() => {
       Object.entries(this.stepsValue).forEach(([selector, config]) => {
-        console.log("DEBUG: Trying to find selector:", selector)
-        const field = document.querySelector(selector)
-        console.log("DEBUG: Query result:", field)
+        console.log("DEBUG: Processing selector:", selector)
 
-        if (field) {
-          if (selector.includes('CodeMirror')) {
-            let attempts = 0
-            const maxAttempts = 50 // 5 seconds total
-            const checkCodeMirror = setInterval(() => {
-              attempts++
-              console.log("DEBUG: Checking CodeMirror initialization attempt:", attempts)
+        if (selector.startsWith('appear:')) {
+          const targetSelector = selector.replace('appear:', '')
+          console.log("DEBUG: Setting up observer for:", targetSelector)
 
-              if (field.CodeMirror) {
-                console.log("DEBUG: CodeMirror initialized")
-                field.CodeMirror.on('change', () => {
-                  console.log("DEBUG: CodeMirror change event fired")
-                  this.checkFieldAndUpdateSteps(selector, config)
-                })
-                clearInterval(checkCodeMirror)
-                return
+          const observer = new ResizeObserver((entries) => {
+            const targetElement = document.querySelector(targetSelector)
+            if (targetElement) {
+              const isVisible = getComputedStyle(targetElement).display !== 'none' && targetElement.offsetParent !== null
+              console.log("DEBUG: Target element found:", targetSelector, "visible:", isVisible)
+
+              if (isVisible) {
+                console.log("DEBUG: Target element is visible, updating step")
+                this.updateStep(config.currentStep)
+                observer.disconnect()
               }
+            }
+          })
 
+          // Start observing the document
+          observer.observe(document.body)
+        } else if (selector.includes('CodeMirror')) {
+          let attempts = 0
+          const maxAttempts = 50 // 5 seconds total
+          const checkCodeMirror = setInterval(() => {
+            attempts++
+            console.log("DEBUG: Checking CodeMirror initialization attempt:", attempts)
+
+            const field = document.querySelector(selector)
+            if (!field) {
               if (attempts >= maxAttempts) {
-                console.log("DEBUG: Failed to initialize CodeMirror after", maxAttempts, "attempts")
+                console.log("DEBUG: Failed to find field after", maxAttempts, "attempts")
                 clearInterval(checkCodeMirror)
               }
-            }, 100)
-          } else {
+              return
+            }
+
+            if (field.CodeMirror) {
+              console.log("DEBUG: CodeMirror initialized")
+              field.CodeMirror.on('change', () => {
+                console.log("DEBUG: CodeMirror change event fired")
+                this.checkFieldAndUpdateSteps(selector, config)
+              })
+              clearInterval(checkCodeMirror)
+              return
+            }
+
+            if (attempts >= maxAttempts) {
+              console.log("DEBUG: Failed to initialize CodeMirror after", maxAttempts, "attempts")
+              clearInterval(checkCodeMirror)
+            }
+          }, 100)
+        } else {
+          const field = document.querySelector(selector)
+          if (field) {
             field.addEventListener('input', () => {
               console.log("DEBUG: Input event fired for selector:", selector)
               this.checkFieldAndUpdateSteps(selector, config)
             })
+          } else {
+            console.log("DEBUG: No field found for selector:", selector)
           }
-        } else {
-          console.log("DEBUG: No field found for selector:", selector)
         }
       })
     }, 100)
