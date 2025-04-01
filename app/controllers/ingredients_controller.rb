@@ -37,7 +37,7 @@ class IngredientsController < ApplicationController
     else
       @ingredient.snippets = params.dig(:ingredient, :new_snippets) || []
       @onboarding_step = params[:onboarding_step]
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_entity, notice: "Error creating ingredient: #{@ingredient.errors.full_messages.join(", ")}"
     end
   end
 
