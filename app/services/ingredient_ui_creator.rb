@@ -33,6 +33,7 @@ class IngredientUiCreator
     last_position = sub_group.elements.maximum(:position) || -1
 
     sub_group.elements.create!(
+      user: Current.user,
       label: ingredient.name,
       description: ingredient.description,
       position: last_position + 1,
