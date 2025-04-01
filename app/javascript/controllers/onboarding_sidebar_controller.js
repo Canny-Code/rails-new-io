@@ -45,6 +45,19 @@ export default class extends Controller {
 
           // Start observing the document
           observer.observe(document.body)
+        } else if (selector.startsWith('click:')) {
+          const targetSelector = selector.replace('click:', '')
+          console.log("DEBUG: Setting up click handler for:", targetSelector)
+
+          const field = document.querySelector(targetSelector)
+          if (field) {
+            field.addEventListener('click', () => {
+              console.log("DEBUG: Click event fired for:", targetSelector)
+              this.updateStep(config.currentStep)
+            })
+          } else {
+            console.log("DEBUG: No field found for click selector:", targetSelector)
+          }
         } else if (selector.includes('CodeMirror')) {
           let attempts = 0
           const maxAttempts = 50 // 5 seconds total
