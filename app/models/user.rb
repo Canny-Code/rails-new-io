@@ -32,7 +32,7 @@ class User < ApplicationRecord
                           dependent: :destroy,
                           class_name: "Noticed::Notification"
   has_many :ingredients, foreign_key: :created_by_id, dependent: :destroy
-
+  has_many :elements, dependent: :destroy
 
   validates :provider, presence: true
   validates :uid, presence: true, uniqueness: true

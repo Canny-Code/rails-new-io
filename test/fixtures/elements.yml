@@ -14,6 +14,7 @@
 #  created_at         :datetime         not null
 #  updated_at         :datetime         not null
 #  sub_group_id       :integer
+#  user_id            :integer          not null
 #  variant_id         :string
 #
 # Indexes
@@ -22,11 +23,13 @@
 #  index_elements_on_label                        (label)
 #  index_elements_on_position                     (position)
 #  index_elements_on_sub_group_id                 (sub_group_id)
+#  index_elements_on_user_id                      (user_id)
 #  index_elements_on_variant_type_and_variant_id  (variant_type,variant_id)
 #
 # Foreign Keys
 #
 #  sub_group_id  (sub_group_id => sub_groups.id)
+#  user_id       (user_id => users.id)
 #
 
 database_sqlite3:
@@ -36,6 +39,7 @@ database_sqlite3:
   description: Use SQLite3 as your database
   image_path: SQLite.svg
   position: 0
+  user: rails_new_io
 
 database_postgresql:
   label: PostgreSQL
@@ -44,6 +48,7 @@ database_postgresql:
   description: Use PostgreSQL as your database
   image_path: Postgres.svg
   position: 1
+  user: rails_new_io
 
 database_mysql:
   label: MySQL
@@ -52,6 +57,7 @@ database_mysql:
   description: Use MySQL as your database
   image_path: MySQL.svg
   position: 2
+  user: rails_new_io
 
 database_trilogy:
   label: Trilogy
@@ -60,6 +66,7 @@ database_trilogy:
   description: Use Trilogy as your database
   image_path: Trilogy.svg
   position: 3
+  user: rails_new_io
 
 database_mariadb_mysql:
   label: MariaDB (MySQL)
@@ -68,6 +75,7 @@ database_mariadb_mysql:
   description: Use MariaDB (MySQL) as your database
   image_path: Mariadb.svg
   position: 4
+  user: rails_new_io
 
 database_mariadb_trilogy:
   label: MariaDB (Trilogy)
@@ -76,6 +84,7 @@ database_mariadb_trilogy:
   description: Use MariaDB (Trilogy) as your database
   image_path: Mariadb.svg
   position: 5
+  user: rails_new_io
 
 skip_docker_element:
   label: Skip Docker
@@ -84,6 +93,7 @@ skip_docker_element:
   description: Skip Docker setup
   position: 0
   command_line_value: --skip-docker
+  user: rails_new_io
 
 skip_kamal_element:
   label: Skip Kamal
@@ -91,6 +101,7 @@ skip_kamal_element:
   variant: skip_kamal (Element::RailsFlagCheckbox)
   description: Skip Kamal setup
   position: 1
+  user: rails_new_io
 
 skip_thruster_element:
   label: Skip Thruster
@@ -98,6 +109,7 @@ skip_thruster_element:
   variant: skip_thruster (Element::RailsFlagCheckbox)
   description: Skip Thruster setup
   position: 2
+  user: rails_new_io
 
 skip_ci_element:
   label: Skip CI
@@ -105,6 +117,7 @@ skip_ci_element:
   variant: skip_ci (Element::RailsFlagCheckbox)
   description: Skip CI setup
   position: 3
+  user: rails_new_io
 
 skip_active_record_element:
   label: Skip Active Record
@@ -112,6 +125,7 @@ skip_active_record_element:
   variant: skip_active_record (Element::RailsFlagCheckbox)
   description: Skip Active Record setup
   position: 0
+  user: rails_new_io
 
 skip_action_text_element:
   label: Skip Action Text
@@ -119,6 +133,7 @@ skip_action_text_element:
   variant: skip_action_text (Element::RailsFlagCheckbox)
   description: Skip Action Text setup
   position: 1
+  user: rails_new_io
 
 skip_active_storage_element:
   label: Skip Active Storage
@@ -126,6 +141,7 @@ skip_active_storage_element:
   variant: skip_active_storage (Element::RailsFlagCheckbox)
   description: Skip Active Storage setup
   position: 2
+  user: rails_new_io
 
 skip_action_cable_element:
   label: Skip Action Cable
@@ -133,6 +149,7 @@ skip_action_cable_element:
   variant: skip_action_cable (Element::RailsFlagCheckbox)
   description: Skip Action Cable setup
   position: 3
+  user: rails_new_io
 
 skip_active_job_element:
   label: Skip Active Job
@@ -140,6 +157,7 @@ skip_active_job_element:
   variant: skip_active_job (Element::RailsFlagCheckbox)
   description: Skip Active Job setup
   position: 4
+  user: rails_new_io
 
 skip_solid_element:
   label: Skip Solid
@@ -147,6 +165,7 @@ skip_solid_element:
   variant: skip_solid (Element::RailsFlagCheckbox)
   description: Skip Solid setup
   position: 5
+  user: rails_new_io
 
 skip_action_mailer_element:
   label: Skip Action Mailer
@@ -154,6 +173,7 @@ skip_action_mailer_element:
   variant: skip_action_mailer (Element::RailsFlagCheckbox)
   description: Skip Action Mailer setup
   position: 0
+  user: rails_new_io
 
 skip_action_mailbox_element:
   label: Skip Action Mailbox
@@ -161,6 +181,7 @@ skip_action_mailbox_element:
   variant: skip_action_mailbox (Element::RailsFlagCheckbox)
   description: Skip Action Mailbox setup
   position: 1
+  user: rails_new_io
 
 skip_rubocop_element:
   label: Skip Rubocop
@@ -168,6 +189,7 @@ skip_rubocop_element:
   variant: skip_rubocop (Element::RailsFlagCheckbox)
   description: Skip Rubocop setup
   position: 0
+  user: rails_new_io
 
 skip_brakeman_element:
   label: Skip Brakeman
@@ -175,6 +197,7 @@ skip_brakeman_element:
   variant: skip_brakeman (Element::RailsFlagCheckbox)
   description: Skip Brakeman setup
   position: 1
+  user: rails_new_io
 
 skip_dev_gems_element:
   label: Skip Dev Gems
@@ -182,6 +205,7 @@ skip_dev_gems_element:
   variant: skip_dev_gems (Element::RailsFlagCheckbox)
   description: Skip Dev Gems setup
   position: 2
+  user: rails_new_io
 
 skip_devcontainer_element:
   label: Skip Devcontainer
@@ -189,6 +213,7 @@ skip_devcontainer_element:
   variant: skip_devcontainer (Element::RailsFlagCheckbox)
   description: Skip Devcontainer setup
   position: 3
+  user: rails_new_io
 
 skip_keeps_element:
   label: Skip Keeps
@@ -196,6 +221,7 @@ skip_keeps_element:
   variant: skip_keeps (Element::RailsFlagCheckbox)
   description: Skip Keeps setup
   position: 4
+  user: rails_new_io
 
 skip_jbuilder_element:
   label: Skip Jbuilder
@@ -203,6 +229,7 @@ skip_jbuilder_element:
   variant: skip_jbuilder (Element::RailsFlagCheckbox)
   description: Skip Jbuilder setup
   position: 5
+  user: rails_new_io
 
 skip_bootsnap_element:
   label: Skip Bootsnap
@@ -210,6 +237,7 @@ skip_bootsnap_element:
   variant: skip_bootsnap (Element::RailsFlagCheckbox)
   description: Skip Bootsnap setup
   position: 6
+  user: rails_new_io
 
 skip_asset_pipeline_element:
   label: Skip Asset Pipeline
@@ -217,6 +245,7 @@ skip_asset_pipeline_element:
   variant: skip_asset_pipeline (Element::RailsFlagCheckbox)
   description: Skip Asset Pipeline setup
   position: 0
+  user: rails_new_io
 
 skip_js_element:
   label: Skip JS
@@ -224,6 +253,7 @@ skip_js_element:
   variant: skip_js (Element::RailsFlagCheckbox)
   description: Skip JS setup
   position: 1
+  user: rails_new_io
 
 skip_hotwire_element:
   label: Skip Hotwire
@@ -231,6 +261,7 @@ skip_hotwire_element:
   variant: skip_hotwire (Element::RailsFlagCheckbox)
   description: Skip Hotwire setup
   position: 2
+  user: rails_new_io
 
 skip_test_element:
   label: Skip Test
@@ -238,6 +269,7 @@ skip_test_element:
   variant: skip_test (Element::RailsFlagCheckbox)
   description: Skip Test setup
   position: 0
+  user: rails_new_io
 
 skip_system_test_element:
   label: Skip System Test
@@ -245,6 +277,7 @@ skip_system_test_element:
   variant: skip_system_test (Element::RailsFlagCheckbox)
   description: Skip System Test setup
   position: 1
+  user: rails_new_io
 
 javascript_importmap_element:
   label: Importmap
@@ -252,6 +285,7 @@ javascript_importmap_element:
   variant: javascript_importmap (Element::RadioButton)
   description: Use Importmap as your JavaScript framework
   position: 0
+  user: rails_new_io
 
 javascript_bun_element:
   label: Bun
@@ -259,6 +293,7 @@ javascript_bun_element:
   variant: javascript_bun (Element::RadioButton)
   description: Use Bun as your JavaScript framework
   position: 1
+  user: rails_new_io
 
 javascript_webpack_element:
   label: Webpack
@@ -266,6 +301,7 @@ javascript_webpack_element:
   variant: javascript_webpack (Element::RadioButton)
   description: Use Webpack as your JavaScript framework
   position: 2
+  user: rails_new_io
 
 javascript_esbuild_element:
   label: Esbuild
@@ -273,6 +309,7 @@ javascript_esbuild_element:
   variant: javascript_esbuild (Element::RadioButton)
   description: Use Esbuild as your JavaScript framework
   position: 3
+  user: rails_new_io
 
 javascript_rollup_element:
   label: Rollup
@@ -280,6 +317,7 @@ javascript_rollup_element:
   variant: javascript_rollup (Element::RadioButton)
   description: Use Rollup as your JavaScript framework
   position: 4
+  user: rails_new_io
 
 no_css_framework_element:
   label: No CSS Framework
@@ -287,6 +325,7 @@ no_css_framework_element:
   variant: no_css_framework (Element::RadioButton)
   description: Skip CSS Framework setup
   position: 0
+  user: rails_new_io
 
 css_tailwind_element:
   label: Tailwind
@@ -294,6 +333,7 @@ css_tailwind_element:
   variant: css_tailwind (Element::RadioButton)
   description: Use Tailwind as your CSS framework
   position: 1
+  user: rails_new_io
 
 css_bootstrap_element:
   label: Bootstrap
@@ -301,6 +341,7 @@ css_bootstrap_element:
   variant: css_bootstrap (Element::RadioButton)
   description: Use Bootstrap as your CSS framework
   position: 2
+  user: rails_new_io
 
 css_bulma_element:
   label: Bulma
@@ -308,6 +349,7 @@ css_bulma_element:
   variant: css_bulma (Element::RadioButton)
   description: Use Bulma as your CSS framework
   position: 3
+  user: rails_new_io
 
 css_postcss_element:
   label: PostCSS
@@ -315,6 +357,7 @@ css_postcss_element:
   variant: css_postcss (Element::RadioButton)
   description: Use PostCSS as your CSS framework
   position: 4
+  user: rails_new_io
 
 css_sass_element:
   label: Sass
@@ -322,3 +365,4 @@ css_sass_element:
   variant: css_sass (Element::RadioButton)
   description: Use Sass as your CSS framework
   position: 5
+  user: rails_new_io

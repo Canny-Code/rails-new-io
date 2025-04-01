@@ -12,6 +12,7 @@
 #  created_at         :datetime         not null
 #  updated_at         :datetime         not null
 #  sub_group_id       :integer
+#  user_id            :integer          not null
 #  variant_id         :string
 #
 # Indexes
@@ -20,11 +21,13 @@
 #  index_elements_on_label                        (label)
 #  index_elements_on_position                     (position)
 #  index_elements_on_sub_group_id                 (sub_group_id)
+#  index_elements_on_user_id                      (user_id)
 #  index_elements_on_variant_type_and_variant_id  (variant_type,variant_id)
 #
 # Foreign Keys
 #
 #  sub_group_id  (sub_group_id => sub_groups.id)
+#  user_id       (user_id => users.id)
 #
 require "test_helper"
 

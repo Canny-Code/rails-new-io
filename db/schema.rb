@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_03_30_100505) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_01_072936) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -188,10 +188,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_30_100505) do
     t.string "image_path"
     t.integer "position"
     t.string "command_line_value"
+    t.integer "user_id", null: false
     t.index ["command_line_value"], name: "index_elements_on_command_line_value"
     t.index ["label"], name: "index_elements_on_label"
     t.index ["position"], name: "index_elements_on_position"
     t.index ["sub_group_id"], name: "index_elements_on_sub_group_id"
+    t.index ["user_id"], name: "index_elements_on_user_id"
     t.index ["variant_type", "variant_id"], name: "index_elements_on_variant_type_and_variant_id"
   end
 
@@ -495,6 +497,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_30_100505) do
   add_foreign_key "commits", "users", column: "author_id"
   add_foreign_key "element_custom_ingredient_checkboxes", "ingredients"
   add_foreign_key "elements", "sub_groups"
+  add_foreign_key "elements", "users"
   add_foreign_key "generated_apps", "recipes"
   add_foreign_key "generated_apps", "users"
   add_foreign_key "groups", "pages"
