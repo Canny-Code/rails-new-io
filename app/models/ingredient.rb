@@ -164,11 +164,13 @@ class Ingredient < ApplicationRecord
   end
 
   def should_handle_railsnewio_page_group?
-    created_by.github_username == "rails-new-io" && page_id.present? && saved_change_to_page_id?
+    created_by.github_username == "rails-new-io" &&
+    page_id.present? &&
+    page.title != "Your Custom Ingredients" &&
+    saved_change_to_page_id?
   end
 
   def handle_railsnewio_page_group
-    return unless page
     IngredientUiCreator.call(self, page_title: page.title)
   end
 end
