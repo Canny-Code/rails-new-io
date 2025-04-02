@@ -5,7 +5,7 @@ class PagesController < ApplicationController
     @page = Page.includes(
       groups: {
         sub_groups: {
-          elements: [ :variant ]
+          elements: [ :variant, :user ]
         }
       }
     ).friendly.find(params[:slug])

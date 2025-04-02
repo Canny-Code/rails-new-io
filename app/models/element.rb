@@ -31,6 +31,7 @@
 #
 class Element < ApplicationRecord
   include CommandLineValueGenerator
+  include ElementVisibility
 
   before_save :set_command_line_value
 

@@ -10,7 +10,7 @@ module Pages
     end
 
     def view_template
-      if @page.groups.any?
+      if @page.groups.any? && has_visible_groups?
         if @onboarding_step.present?
           div(class: "flex gap-0 max-w-6xl mx-auto") do
             #  Left sidebar (1/3)
@@ -52,5 +52,19 @@ module Pages
     private
 
     attr_reader :page
+
+    def has_visible_groups?
+      @page.groups.any? do |group|
+        group.sub_groups.any? do |sub_group|
+          sub_group.elements.any? do |element|
+            Element.visible_for_user?(
+              element,
+              Current.user,
+              @page.title
+            )
+          end
+        end
+      end
+    end
   end
 end

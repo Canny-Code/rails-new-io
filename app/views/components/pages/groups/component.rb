@@ -8,6 +8,9 @@ module Pages
       end
 
       def view_template
+        # Skip rendering if no subgroups would be visible
+        return unless has_visible_subgroups?
+
         div(data_id: "rails-menu-card-holder") do
           div(class: "max-w-2xl mx-auto py-6 sm:px-6 lg:px-8") do
             div(data_id: "rails-menu-card", class: "max-w-none mx-auto") do
@@ -54,6 +57,18 @@ module Pages
 
       def stimulus_attributes
         group.stimulus_attributes.transform_keys { |key| "data-#{key}" }
+      end
+
+      def has_visible_subgroups?
+        group.sub_groups.any? do |sub_group|
+          sub_group.elements.any? do |element|
+            Element.visible_for_user?(
+              element,
+              Current.user,
+              group.page.title
+            )
+          end
+        end
       end
     end
   end

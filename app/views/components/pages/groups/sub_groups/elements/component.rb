@@ -10,6 +10,9 @@ module Pages
           end
 
           def view_template
+            # Skip rendering if element should not be visible to current user
+            return unless visible_for_current_user?
+
             case element.variant_type
             when "Element::RadioButton"
               render Pages::Groups::SubGroups::Elements::RadioButton::Component.new(
@@ -65,6 +68,14 @@ module Pages
           private
 
           attr_reader :element
+
+          def visible_for_current_user?
+            Element.visible_for_user?(
+              element,
+              Current.user,
+              element.sub_group.group.page.title
+            )
+          end
         end
       end
     end
