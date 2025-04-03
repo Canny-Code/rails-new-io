@@ -16,7 +16,7 @@ class OnboardingSidebarStepTest < PhlexComponentTestCase
     assert doc.css("span.bg-\\[\\#008A05\\]").any?
     assert doc.css("svg.text-white").any?
     assert_equal "Test Step", doc.css("span.text-sm.font-medium").text.strip
-    assert_equal "Test Description", doc.css("span.text-sm.text-gray-500").text.strip
+    assert_equal "Test Description", doc.css("div.text-sm.text-gray-500").text.strip
   end
 
   test "renders incomplete step" do
@@ -32,7 +32,7 @@ class OnboardingSidebarStepTest < PhlexComponentTestCase
     assert doc.css("div.bg-gray-300").any?
     assert doc.css("span.border-gray-300").any?
     assert_equal "Test Step", doc.css("span.text-sm.font-medium").text.strip
-    assert_equal "Test Description", doc.css("span.text-sm.text-gray-500").text.strip
+    assert_equal "Test Description", doc.css("div.text-sm.text-gray-500").text.strip
   end
 
   test "renders current step" do
@@ -49,7 +49,7 @@ class OnboardingSidebarStepTest < PhlexComponentTestCase
     assert doc.css("span.border-2.border-\\[\\#008A05\\]").any?
     assert doc.css("span.bg-\\[\\#008A05\\]").any?
     assert_equal "Test Step", doc.css("span.text-sm.font-medium").text.strip
-    assert_equal "Test Description", doc.css("span.text-sm.text-gray-500").text.strip
+    assert_equal "Test Description", doc.css("div.text-sm.text-gray-500").text.strip
   end
 
   private
