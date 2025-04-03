@@ -9,8 +9,12 @@ module Pages
       module Elements
         class ComponentTest < PhlexComponentTestCase
           test "raises error for unknown element variant type" do
-            sub_group = SubGroup.new
-            element = Element.new(sub_group: sub_group)
+            page = pages(:basic_setup)
+            group = Group.new(page:)
+            sub_group = SubGroup.new(group:)
+            element = Element.new(sub_group:)
+
+            Element.stubs(:visible_for_user?).returns(true)
             element.stubs(:variant_type).returns("Element::UnknownType")
 
             component = Component.new(element: element)
@@ -19,13 +23,14 @@ module Pages
               component.view_template
             end
 
-            assert_equal "Unknown element variant_type: Element::UnknownType", error.message
+            assert_equal "Unknown element variant_type: #{element.variant_type}", error.message
           end
 
           test "renders custom ingredient checkbox" do
             ingredient = ingredients(:rails_authentication)
 
-            group = Group.new(behavior_type: "custom_ingredient_checkbox")
+            page = pages(:basic_setup)
+            group = Group.new(page:, behavior_type: "custom_ingredient_checkbox")
             group.stubs(:title).returns("Custom Ingredients")
 
             sub_group = SubGroup.new(group: group)
@@ -35,6 +40,7 @@ module Pages
             checkbox.stubs(:ingredient).returns(ingredient)
 
             element = Element.new(sub_group: sub_group)
+            Element.stubs(:visible_for_user?).returns(true)
             element.stubs(:variant_type).returns("Element::CustomIngredientCheckbox")
             element.stubs(:variant).returns(checkbox)
             element.stubs(:label).returns("Test Element")
