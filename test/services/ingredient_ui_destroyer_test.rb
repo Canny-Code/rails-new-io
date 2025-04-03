@@ -20,7 +20,8 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       label: "Rails Authentication",
       description: @ingredient.description,
       position: 999,
-      variant: checkbox
+      variant: checkbox,
+      user: @ingredient.created_by
     )
 
     assert_difference -> { Element.count } => -1 do
@@ -38,11 +39,12 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       checked: false,
       display_when: "checked"
     )
-    element = sub_group.elements.create!(
+    sub_group.elements.create!(
       label: "Rails Authentication",
       description: @ingredient.description,
       position: 999,
-      variant: checkbox
+      variant: checkbox,
+      user: @ingredient.created_by
     )
 
     assert_difference -> { SubGroup.count } => -1 do
@@ -60,11 +62,12 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       checked: false,
       display_when: "checked"
     )
-    element = sub_group.elements.create!(
+    sub_group.elements.create!(
       label: "Rails Authentication",
       description: @ingredient.description,
       position: 999,
-      variant: checkbox
+      variant: checkbox,
+      user: @ingredient.created_by
     )
 
     assert_difference -> { Group.count } => -1 do
@@ -81,13 +84,14 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
 
     checkbox1 = Element::RailsFlagCheckbox.create!(
       checked: false,
-      display_when: "checked"
+      display_when: "checked",
     )
     element1 = sub_group.elements.create!(
       label: "Rails Authentication",
       description: @ingredient.description,
       position: 998,
-      variant: checkbox1
+      variant: checkbox1,
+      user: @ingredient.created_by
     )
     checkbox2 = Element::RailsFlagCheckbox.create!(
       checked: false,
@@ -97,7 +101,8 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       label: "Other Element",
       description: "Another element",
       position: 999,
-      variant: checkbox2
+      variant: checkbox2,
+      user: @ingredient.created_by
     )
 
     assert_difference -> { Element.count } => -1 do
@@ -119,11 +124,12 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       checked: false,
       display_when: "checked"
     )
-    element = sub_group1.elements.create!(
+    sub_group1.elements.create!(
       label: "Rails Authentication",
       description: @ingredient.description,
       position: 999,
-      variant: checkbox
+      variant: checkbox,
+      user: @ingredient.created_by
     )
 
     assert_difference -> { Element.count } => -1 do
@@ -198,7 +204,8 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       label: ingredient.name,
       description: ingredient.description,
       position: 0,
-      variant: checkbox
+      variant: checkbox,
+      user: ingredient.created_by
     )
 
     assert_difference("Element.count", -1) do
@@ -224,7 +231,8 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       label: ingredient.name,
       description: ingredient.description,
       position: 0,
-      variant: checkbox
+      variant: checkbox,
+      user: ingredient.created_by
     )
 
     # Create another element in the same sub_group
@@ -237,7 +245,8 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       label: other_ingredient.name,
       description: other_ingredient.description,
       position: 1,
-      variant: other_checkbox
+      variant: other_checkbox,
+      user: ingredient.created_by
     )
 
     assert_difference("Element.count", -1) do
@@ -265,7 +274,8 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       label: ingredient.name,
       description: ingredient.description,
       position: 0,
-      variant: checkbox
+      variant: checkbox,
+      user: ingredient.created_by
     )
 
     assert_difference("Element.count", -1) do
@@ -294,7 +304,8 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       label: ingredient.name,
       description: ingredient.description,
       position: 0,
-      variant: checkbox1
+      variant: checkbox1,
+      user: ingredient.created_by
     )
 
     # Create another element in a different sub_group
@@ -307,7 +318,8 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       label: "Other Element", # Different name to avoid validation error
       description: "Other Description",
       position: 0,
-      variant: checkbox2
+      variant: checkbox2,
+      user: ingredient.created_by
     )
 
     assert_difference("Element.count", -1) do
@@ -342,7 +354,8 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       label: ingredient.name,
       description: ingredient.description,
       position: 0,
-      variant: checkbox
+      variant: checkbox,
+      user: ingredient.created_by
     )
 
     # Create another sub_group with a different element
