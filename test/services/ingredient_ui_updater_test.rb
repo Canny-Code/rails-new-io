@@ -39,7 +39,8 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
       description: @ingredient.description,
       variant_type: "Element::CustomIngredientCheckbox",
       variant_id: @variant.id,
-      sub_group: @sub_group
+      sub_group: @sub_group,
+      user: @ingredient.created_by
     )
   end
 
@@ -96,7 +97,6 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
   end
 
   test "does not clean up groups that still have elements" do
-    # Create another ingredient with unique name
     other_ingredient = Ingredient.create!(
       name: "Basic Setup #{SecureRandom.hex(8)}",
       description: "A basic setup",
@@ -105,7 +105,6 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
       created_by: @ingredient.created_by
     )
 
-    # Create the variant first
     other_variant = Element::CustomIngredientCheckbox.create!(
       ingredient: other_ingredient,
       checked: false,
@@ -118,7 +117,8 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
       description: other_ingredient.description,
       variant_type: "Element::CustomIngredientCheckbox",
       variant_id: other_variant.id,
-      sub_group: @sub_group
+      sub_group: @sub_group,
+      user: other_ingredient.created_by
     )
 
     old_group_id = @group.id
@@ -226,7 +226,8 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
       description: @ingredient.description,
       variant_type: "Element::CustomIngredientCheckbox",
       variant_id: advanced_variant.id,
-      sub_group: advanced_sub_group
+      sub_group: advanced_sub_group,
+      user: @ingredient.created_by
     )
 
     # Move to new category
@@ -387,7 +388,8 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
       description: @ingredient.description,
       variant_type: "Element::CustomIngredientCheckbox",
       variant_id: @variant.id,
-      sub_group: @sub_group
+      sub_group: @sub_group,
+      user: @ingredient.created_by
     )
 
     # Update ingredient to match the group
@@ -442,7 +444,8 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
       description: @ingredient.description,
       variant_type: "Element::CustomIngredientCheckbox",
       variant_id: second_variant.id,
-      sub_group: @sub_group
+      sub_group: @sub_group,
+      user: @ingredient.created_by
     )
 
     # Store IDs for verification
