@@ -7,12 +7,23 @@ module Pages
   module Groups
     class ComponentTest < PhlexComponentTestCase
       test "renders group with stimulus attributes" do
-        group = Group.new(title: "Test Group", behavior_type: "generic_checkbox")
+        page = pages(:basic_setup)
+        group = Group.new(title: "Test Group", behavior_type: "generic_checkbox", page:)
+        sub_group = group.sub_groups.build(title: "Default")
+        sub_group.elements.build(
+          label: "Test Element",
+          user: users(:john),
+          position: 0,
+          variant: Element::RailsFlagCheckbox.new(checked: false)
+        )
+
+        Current.user = users(:john)
+
         group.stubs(:stimulus_attributes).returns({
           controller: "rails-flag-checkbox",
           "rails-flag-checkbox-generated-output-outlet": "#rails-flags"
         })
-        group.stubs(:sub_groups).returns([])
+        Element.stubs(:visible_for_user?).returns(true)
 
         component = Component.new(group: group)
         html = component.render_in(view_context)

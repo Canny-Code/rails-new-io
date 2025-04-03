@@ -72,11 +72,12 @@ class ElementTest < ActiveSupport::TestCase
       checked: false,
       display_when: "checked"
     )
-    element1 = sub_group1.elements.create!(
+    sub_group1.elements.create!(
       label: "Test Element",
       description: "Test Description",
       position: 0,
-      variant: checkbox1
+      variant: checkbox1,
+      user: users(:john)
     )
 
     checkbox2 = Element::RailsFlagCheckbox.create!(
@@ -87,7 +88,8 @@ class ElementTest < ActiveSupport::TestCase
       label: "Test Element", # Same label as element1
       description: "Another Description",
       position: 0,
-      variant: checkbox2
+      variant: checkbox2,
+      user: users(:john)
     )
 
     assert_not element2.valid?
