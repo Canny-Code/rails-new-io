@@ -1,7 +1,9 @@
 <div data-controller="onboarding-sidebar"
      data-onboarding-sidebar-steps-value="<%= {
       "appear:input#main-tab-mains-skip-test" => { currentStep: 1, expectedValue: "" },
-      "click:input#main-tab-mains-skip-test" => { currentStep: 2, expectedValue: "" }
+      "click:input#main-tab-mains-skip-test" => { currentStep: 2, expectedValue: "" },
+      "click:input#custom-ingredient-rspec" => { currentStep: 3, expectedValue: "" },
+      "appear:input#main-tab-database-choice-tailwind" => { currentStep: 4, expectedValue: "" }
      }.to_json %>">
   <div class="min-h-[calc(100vh-10rem)] mt-8 px-4 pt-16 bg-gray-50">
     <nav aria-label="Progress">
@@ -13,23 +15,23 @@
           step_index: 1
         ) %>
         <%= render OnboardingSidebarStep::Component.new(
-          title: "Add a category",
-          description: "Type 'Authentication' in the 'Category' field",
+          title: "Click 'Skip Test'",
+          description: "This adds the `--skip-test` rails new CLI flag. Since we are using **RSpec**, we want to generate an app without the **Minitest** files.",
           step_index: 2
         ) %>
         <%= render OnboardingSidebarStep::Component.new(
-          title: "Add a description",
-          description: "This is optional, but strongly recommended. Add something like 'Adding the built-in Rails authentication gem'.",
+          title: "Click 'RSpec'",
+          description: "Scroll down to locate and click the `RSpec` checkbox. This will add RSpec to your recipe.",
           step_index: 3
         ) %>
         <%= render OnboardingSidebarStep::Component.new(
-          title: "Template content",
-          description: "This is the most important part of your ingredient: the actual Thor template that will be executed. Add the following content to the 'Template content' text area: generate 'authentication'",
+          title: "Go to the 'Frontend tab' tab",
+          description: "We want to add Tailwind CSS to our recipe. Frontend-related stuff (like Tailwind) can be found under the `Frontend` tab (who would've thought!? 😅)",
           step_index: 4
         ) %>
         <%= render OnboardingSidebarStep::Component.new(
-          title: "Create your first ingredient",
-          description: "Click the 'Create Ingredient' button to save your ingredient.",
+          title: "Choose 'Tailwind CSS'",
+          description: "Locate the `CSS Framework` category at the bottom of the page. Select `Tailwind`.",
           step_index: 5,
           last_step: true
         ) %>

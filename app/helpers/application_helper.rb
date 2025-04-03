@@ -9,7 +9,9 @@ module ApplicationHelper
     end
   end
 
-  def recipe_page_path(page, recipe_id: nil)
-    params[:action] == "edit" ? edit_recipes_path(recipe_id: recipe_id, slug: page.slug) : setup_recipes_path(slug: page.slug)
+  def recipe_page_path(page, recipe_id: nil, onboarding_step: nil)
+    path_params = { recipe_id: recipe_id, slug: page.slug }
+    path_params[:onboarding_step] = onboarding_step if onboarding_step.present?
+    params[:action] == "edit" ? edit_recipes_path(**path_params) : setup_recipes_path(**path_params)
   end
 end

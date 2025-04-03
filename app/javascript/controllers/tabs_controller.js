@@ -40,8 +40,17 @@ export default class extends Controller {
       return
     }
 
+    // Create URL object to preserve existing query parameters
+    const currentUrl = new URL(window.location.href)
+    const newUrl = new URL(pageUrl, window.location.origin)
+
+    // Copy over existing query parameters
+    currentUrl.searchParams.forEach((value, key) => {
+      newUrl.searchParams.set(key, value)
+    })
+
     // Update URL without reloading the page
-    window.history.pushState({ pageSlug }, '', pageUrl)
+    window.history.pushState({ pageSlug }, '', newUrl)
 
     this.switchToTab(selectedTab)
   }

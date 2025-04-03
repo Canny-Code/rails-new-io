@@ -40,7 +40,7 @@
         <div>
           <nav class="-mb-px flex space-x-1 md:space-x-2" aria-label="Tabs">
             <% Page.all.each do |page| %>
-              <%= link_to recipe_page_path(page, recipe_id: @recipe.try(:id)),
+              <%= link_to recipe_page_path(page, recipe_id: @recipe.try(:id), onboarding_step: params[:onboarding_step]),
                   id: "#{page.slug}-tab",
                   data: {
                     tabs_target: "tab",
