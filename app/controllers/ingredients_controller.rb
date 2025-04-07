@@ -15,14 +15,17 @@ class IngredientsController < ApplicationController
   end
 
   def edit
-    @onboarding_step = params[:onboarding_step]
+    unless @ingredient.created_by == current_user || current_user.github_username == "rails-new-io"
+      redirect_to ingredient_path(@ingredient), notice: "You can only edit ingredients your own ingredients!"
+    end
   end
 
   def create
     @ingredient = current_user.ingredients.build(ingredient_params)
 
     if @ingredient.save
-      IngredientUiCreator.call(@ingredient)
+      # UI elements for rails-new-io are handled by the callback in the Ingredient model
+      IngredientUiCreator.call(@ingredient) unless current_user.github_username == "rails-new-io"
 
       WriteIngredientJob.perform_later(ingredient_id: @ingredient.id, user_id: current_user.id)
 
@@ -42,6 +45,9 @@ class IngredientsController < ApplicationController
   end
 
   def update
+    unless @ingredient.created_by == current_user || current_user.github_username == "rails-new-io"
+      redirect_to ingredient_path(@ingredient), notice: "You can only update your own ingredients!"
+    end
     if @ingredient.update(ingredient_params)
       WriteIngredientJob.perform_later(ingredient_id: @ingredient.id, user_id: current_user.id)
 
@@ -53,6 +59,10 @@ class IngredientsController < ApplicationController
   end
 
   def destroy
+    unless @ingredient.created_by == current_user || current_user.github_username == "rails-new-io"
+      redirect_to ingredient_path(@ingredient), notice: "You can only delete your own ingredients!"
+    end
+
     data_repository = DataRepositoryService.new(user: current_user)
 
     DeleteIngredientJob.perform_later(
@@ -70,7 +80,7 @@ class IngredientsController < ApplicationController
   private
 
   def set_ingredient
-    @ingredient = current_user.ingredients.find(params[:id])
+    @ingredient = Ingredient.find(params[:id])
   end
 
   def ingredient_params
