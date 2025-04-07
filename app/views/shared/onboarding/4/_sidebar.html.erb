@@ -3,7 +3,10 @@
       "appear:input#main-tab-mains-skip-test" => { currentStep: 1, expectedValue: "" },
       "click:input#main-tab-mains-skip-test" => { currentStep: 2, expectedValue: "" },
       "click:input#custom-ingredient-rspec" => { currentStep: 3, expectedValue: "" },
-      "appear:input#main-tab-database-choice-tailwind" => { currentStep: 4, expectedValue: "" }
+      "appear:input#main-tab-database-choice-tailwind" => { currentStep: 4, expectedValue: "" },
+      "click:input#main-tab-database-choice-tailwind" => { currentStep: 5, expectedValue: "" },
+      "appear:input#custom-ingredient-rails-authentication" => { currentStep: 6, expectedValue: "" },
+      "click:input#custom-ingredient-rails-authentication" => { currentStep: 7, expectedValue: "" }
      }.to_json %>">
   <div class="min-h-[calc(100vh-10rem)] mt-8 px-4 pt-16 bg-gray-50">
     <nav aria-label="Progress">
@@ -30,9 +33,21 @@
           step_index: 4
         ) %>
         <%= render OnboardingSidebarStep::Component.new(
-          title: "Choose 'Tailwind CSS'",
+          title: "Choose 'Tailwind'",
           description: "Locate the `CSS Framework` category at the bottom of the page. Select `Tailwind`.",
           step_index: 5,
+          last_step: true
+        ) %>
+        <%= render OnboardingSidebarStep::Component.new(
+          title: "Go to the 'Your Custom Ingredients' tab",
+          description: "It's time to add the ingredient we created in the first step! All the ingredients you've created will be listed under the `Your Custom Ingredients` tab.",
+          step_index: 6,
+          last_step: true
+        ) %>
+        <%= render OnboardingSidebarStep::Component.new(
+          title: "Select 'Rails authentication'",
+          description: "You guessed it: click the `Rails authentication` checkbox, adding the ingredient to your recipe.",
+          step_index: 7,
           last_step: true
         ) %>
       </ol>
