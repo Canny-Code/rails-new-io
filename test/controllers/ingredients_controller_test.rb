@@ -81,14 +81,15 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Ingredient was successfully created.", flash[:notice]
   end
 
-  test "should not create ingredient with duplicate name for same user" do
+  test "should not create ingredient with duplicate name, page and category for same user" do
     assert_no_difference("Ingredient.count") do
       post ingredients_url, params: {
         ingredient: {
-          name: @ingredient.name,  # Using existing ingredient's name
+          name: @ingredient.name,
+          page: @ingredient.page,
+          category: @ingredient.category,
           description: "A different description",
-          template_content: "gem 'something_else'",
-          category: "Testing"
+          template_content: "gem 'something_else'"
         }
       }
     end
@@ -115,6 +116,23 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to ingredient_url(Ingredient.last)
     assert_equal @ingredient.name, Ingredient.last.name
     assert_not_equal @ingredient.created_by_id, Ingredient.last.created_by_id
+  end
+
+  test "should create ingredient with the same name for different category and page for the same user" do
+    assert_difference("Ingredient.count") do
+      post ingredients_url, params: {
+        ingredient: {
+          name: @ingredient.name,
+          category: "Different Category",
+          page: pages(:frontend),
+          description: "A different description",
+          template_content: "gem 'something_else'"
+        }
+      }
+    end
+
+    assert_redirected_to ingredient_url(Ingredient.last)
+    assert_equal "Ingredient was successfully created.", flash[:notice]
   end
 
   test "should show ingredient" do
@@ -190,13 +208,15 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     assert_equal original_name, @ingredient.name
   end
 
-  test "should not update ingredient with duplicate name for same user" do
+  test "should not update ingredient with duplicate name, page and category for same user" do
     other_ingredient = ingredients(:basic)  # Another ingredient from the same user (john)
 
     patch ingredient_url(@ingredient), params: {
       ingredient: {
-        name: other_ingredient.name,  # Try to use another ingredient's name
-        template_content: @ingredient.template_content  # Keep the required field
+        name: other_ingredient.name,
+        page: other_ingredient.page,
+        category: other_ingredient.category,
+        template_content: @ingredient.template_content
       }
     }
 

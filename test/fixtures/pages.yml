@@ -33,7 +33,17 @@ frontend:
   slug: "frontend"
   position: 2
 
+authentication:
+  title: "Authentication"
+  slug: "authentication"
+  position: 3
+
+business_logic:
+  title: "Business Logic"
+  slug: "business-logic"
+  position: 4
+
 custom_ingredients:
   title: "Your Custom Ingredients"
   slug: "your-custom-ingredients"
-  position: 3
+  position: 5

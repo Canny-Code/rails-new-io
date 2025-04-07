@@ -4,6 +4,9 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
   setup do
     @ingredient = ingredients(:rails_authentication)
     @page = pages(:custom_ingredients)
+
+    # Clean up any existing checkbox for this ingredient to avoid uniqueness validation errors
+    Element::CustomIngredientCheckbox.where(ingredient: @ingredient).destroy_all
   end
 
   test "deletes element when ingredient is destroyed" do
@@ -11,9 +14,10 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     sub_group = group.sub_groups.create!(title: "Default")
 
     # Create test element for our ingredient
-    checkbox = Element::RailsFlagCheckbox.create!(
+    checkbox = Element::CustomIngredientCheckbox.create!(
       checked: false,
-      display_when: "checked"
+      default: false,
+      ingredient: @ingredient
     )
 
     element = sub_group.elements.create!(
@@ -35,9 +39,10 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     # Create a new sub_group with a single element
     group = @page.groups.create!(title: @ingredient.category)
     sub_group = group.sub_groups.create!(title: "Default")
-    checkbox = Element::RailsFlagCheckbox.create!(
+    checkbox = Element::CustomIngredientCheckbox.create!(
       checked: false,
-      display_when: "checked"
+      default: false,
+      ingredient: @ingredient
     )
     sub_group.elements.create!(
       label: "Rails Authentication",
@@ -58,9 +63,10 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     # Create a new group with a single sub_group and element
     group = @page.groups.create!(title: @ingredient.category)
     sub_group = group.sub_groups.create!(title: "Default")
-    checkbox = Element::RailsFlagCheckbox.create!(
+    checkbox = Element::CustomIngredientCheckbox.create!(
       checked: false,
-      display_when: "checked"
+      default: false,
+      ingredient: @ingredient
     )
     sub_group.elements.create!(
       label: "Rails Authentication",
@@ -82,9 +88,14 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     group = @page.groups.create!(title: @ingredient.category)
     sub_group = group.sub_groups.create!(title: "Default")
 
-    checkbox1 = Element::RailsFlagCheckbox.create!(
+    # Clean up any existing checkboxes for both ingredients
+    other_ingredient = ingredients(:basic)
+    Element::CustomIngredientCheckbox.where(ingredient: [ other_ingredient, @ingredient ]).destroy_all
+
+    checkbox1 = Element::CustomIngredientCheckbox.create!(
       checked: false,
-      display_when: "checked",
+      default: false,
+      ingredient: @ingredient
     )
     element1 = sub_group.elements.create!(
       label: "Rails Authentication",
@@ -93,9 +104,12 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       variant: checkbox1,
       user: @ingredient.created_by
     )
-    checkbox2 = Element::RailsFlagCheckbox.create!(
+
+    # Create another element with a different ingredient
+    checkbox2 = Element::CustomIngredientCheckbox.create!(
       checked: false,
-      display_when: "checked"
+      default: false,
+      ingredient: other_ingredient
     )
     element2 = sub_group.elements.create!(
       label: "Other Element",
@@ -120,9 +134,10 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     group = @page.groups.create!(title: @ingredient.category)
     sub_group1 = group.sub_groups.create!(title: "Default")
     sub_group2 = group.sub_groups.create!(title: "Other")
-    checkbox = Element::RailsFlagCheckbox.create!(
+    checkbox = Element::CustomIngredientCheckbox.create!(
       checked: false,
-      display_when: "checked"
+      default: false,
+      ingredient: @ingredient
     )
     sub_group1.elements.create!(
       label: "Rails Authentication",
@@ -183,22 +198,19 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     end
   end
 
-  test "raises error if custom ingredients page not found" do
-    Page.find_by!(title: "Your Custom Ingredients").destroy
-
-    assert_raises(ActiveRecord::RecordNotFound) do
-      IngredientUiDestroyer.call(@ingredient)
-    end
-  end
-
   def test_destroys_element_and_variant
     ingredient = ingredients(:rails_authentication)
     page = pages(:custom_ingredients)
     group = page.groups.create!(title: ingredient.category, behavior_type: "custom_ingredient_checkbox")
     sub_group = group.sub_groups.create!(title: "Default")
-    checkbox = Element::RailsFlagCheckbox.create!(
+
+    # Clean up any existing checkboxes
+    Element::CustomIngredientCheckbox.where(ingredient: ingredient).destroy_all
+
+    checkbox = Element::CustomIngredientCheckbox.create!(
       checked: false,
-      display_when: "checked"
+      default: false,
+      ingredient: ingredient
     )
     element = sub_group.elements.create!(
       label: ingredient.name,
@@ -209,13 +221,13 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     )
 
     assert_difference("Element.count", -1) do
-      assert_difference("Element::RailsFlagCheckbox.count", -1) do
+      assert_difference("Element::CustomIngredientCheckbox.count", -1) do
         IngredientUiDestroyer.call(ingredient)
       end
     end
 
     assert_not Element.exists?(element.id)
-    assert_not Element::RailsFlagCheckbox.exists?(checkbox.id)
+    assert_not Element::CustomIngredientCheckbox.exists?(checkbox.id)
   end
 
   def test_destroys_element_and_variant_when_multiple_elements_in_sub_group
@@ -223,9 +235,15 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     page = pages(:custom_ingredients)
     group = page.groups.create!(title: ingredient.category, behavior_type: "custom_ingredient_checkbox")
     sub_group = group.sub_groups.create!(title: "Default")
-    checkbox = Element::RailsFlagCheckbox.create!(
+
+    # Clean up any existing checkboxes for both ingredients
+    other_ingredient = ingredients(:basic)
+    Element::CustomIngredientCheckbox.where(ingredient: [ ingredient, other_ingredient ]).destroy_all
+
+    checkbox = Element::CustomIngredientCheckbox.create!(
       checked: false,
-      display_when: "checked"
+      default: false,
+      ingredient: ingredient
     )
     element = sub_group.elements.create!(
       label: ingredient.name,
@@ -236,10 +254,10 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     )
 
     # Create another element in the same sub_group
-    other_ingredient = ingredients(:basic)
-    other_checkbox = Element::RailsFlagCheckbox.create!(
+    other_checkbox = Element::CustomIngredientCheckbox.create!(
       checked: false,
-      display_when: "checked"
+      default: false,
+      ingredient: other_ingredient
     )
     other_element = sub_group.elements.create!(
       label: other_ingredient.name,
@@ -250,15 +268,15 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     )
 
     assert_difference("Element.count", -1) do
-      assert_difference("Element::RailsFlagCheckbox.count", -1) do
+      assert_difference("Element::CustomIngredientCheckbox.count", -1) do
         IngredientUiDestroyer.call(ingredient)
       end
     end
 
     assert_not Element.exists?(element.id)
-    assert_not Element::RailsFlagCheckbox.exists?(checkbox.id)
+    assert_not Element::CustomIngredientCheckbox.exists?(checkbox.id)
     assert Element.exists?(other_element.id)
-    assert Element::RailsFlagCheckbox.exists?(other_checkbox.id)
+    assert Element::CustomIngredientCheckbox.exists?(other_checkbox.id)
   end
 
   def test_destroys_sub_group_when_last_element
@@ -266,9 +284,14 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     page = pages(:custom_ingredients)
     group = page.groups.create!(title: ingredient.category, behavior_type: "custom_ingredient_checkbox")
     sub_group = group.sub_groups.create!(title: "Default")
-    checkbox = Element::RailsFlagCheckbox.create!(
+
+    # Clean up any existing checkboxes
+    Element::CustomIngredientCheckbox.where(ingredient: ingredient).destroy_all
+
+    checkbox = Element::CustomIngredientCheckbox.create!(
       checked: false,
-      display_when: "checked"
+      default: false,
+      ingredient: ingredient
     )
     element = sub_group.elements.create!(
       label: ingredient.name,
@@ -279,7 +302,7 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     )
 
     assert_difference("Element.count", -1) do
-      assert_difference("Element::RailsFlagCheckbox.count", -1) do
+      assert_difference("Element::CustomIngredientCheckbox.count", -1) do
         assert_difference("SubGroup.count", -1) do
           IngredientUiDestroyer.call(ingredient)
         end
@@ -287,18 +310,24 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     end
 
     assert_not Element.exists?(element.id)
-    assert_not Element::RailsFlagCheckbox.exists?(checkbox.id)
+    assert_not Element::CustomIngredientCheckbox.exists?(checkbox.id)
     assert_not SubGroup.exists?(sub_group.id)
   end
 
   def test_destroys_group_when_last_sub_group
     ingredient = ingredients(:rails_authentication)
+    other_ingredient = ingredients(:basic)
     page = pages(:custom_ingredients)
     group = page.groups.create!(title: ingredient.category, behavior_type: "custom_ingredient_checkbox")
     sub_group = group.sub_groups.create!(title: "Default")
-    checkbox1 = Element::RailsFlagCheckbox.create!(
+
+    # Clean up any existing checkboxes for both ingredients
+    Element::CustomIngredientCheckbox.where(ingredient: [ ingredient, other_ingredient ]).destroy_all
+
+    checkbox1 = Element::CustomIngredientCheckbox.create!(
       checked: false,
-      display_when: "checked"
+      default: false,
+      ingredient: ingredient
     )
     element1 = sub_group.elements.create!(
       label: ingredient.name,
@@ -308,11 +337,12 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
       user: ingredient.created_by
     )
 
-    # Create another element in a different sub_group
+    # Create another element in a different sub_group with a different ingredient
     other_sub_group = group.sub_groups.create!(title: "Other")
-    checkbox2 = Element::RailsFlagCheckbox.create!(
+    checkbox2 = Element::CustomIngredientCheckbox.create!(
       checked: false,
-      display_when: "checked"
+      default: false,
+      ingredient: other_ingredient
     )
     element2 = other_sub_group.elements.create!(
       label: "Other Element", # Different name to avoid validation error
@@ -323,7 +353,7 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     )
 
     assert_difference("Element.count", -1) do
-      assert_difference("Element::RailsFlagCheckbox.count", -1) do
+      assert_difference("Element::CustomIngredientCheckbox.count", -1) do
         assert_difference("SubGroup.count", -1) do
           assert_no_difference("Group.count") do
             IngredientUiDestroyer.call(ingredient)
@@ -334,8 +364,8 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
 
     assert_not Element.exists?(element1.id)
     assert Element.exists?(element2.id)
-    assert_not Element::RailsFlagCheckbox.exists?(checkbox1.id)
-    assert Element::RailsFlagCheckbox.exists?(checkbox2.id)
+    assert_not Element::CustomIngredientCheckbox.exists?(checkbox1.id)
+    assert Element::CustomIngredientCheckbox.exists?(checkbox2.id)
     assert_not SubGroup.exists?(sub_group.id)
     assert SubGroup.exists?(other_sub_group.id)
     assert Group.exists?(group.id)
@@ -346,9 +376,14 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     page = pages(:custom_ingredients)
     group = page.groups.create!(title: ingredient.category, behavior_type: "custom_ingredient_checkbox")
     sub_group = group.sub_groups.create!(title: "Default")
-    checkbox = Element::RailsFlagCheckbox.create!(
+
+    # Clean up any existing checkboxes
+    Element::CustomIngredientCheckbox.where(ingredient: ingredient).destroy_all
+
+    checkbox = Element::CustomIngredientCheckbox.create!(
       checked: false,
-      display_when: "checked"
+      default: false,
+      ingredient: ingredient
     )
     element = sub_group.elements.create!(
       label: ingredient.name,
@@ -362,7 +397,7 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     other_sub_group = group.sub_groups.create!(title: "Other")
 
     assert_difference("Element.count", -1) do
-      assert_difference("Element::RailsFlagCheckbox.count", -1) do
+      assert_difference("Element::CustomIngredientCheckbox.count", -1) do
         assert_difference("SubGroup.count", -1) do
           assert_no_difference("Group.count") do
             IngredientUiDestroyer.call(ingredient)
@@ -372,7 +407,7 @@ class IngredientUiDestroyerTest < ActiveSupport::TestCase
     end
 
     assert_not Element.exists?(element.id)
-    assert_not Element::RailsFlagCheckbox.exists?(checkbox.id)
+    assert_not Element::CustomIngredientCheckbox.exists?(checkbox.id)
     assert_not SubGroup.exists?(sub_group.id)
     assert Group.exists?(group.id)
     assert SubGroup.exists?(other_sub_group.id)

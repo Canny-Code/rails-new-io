@@ -18,9 +18,9 @@
 #
 # Indexes
 #
-#  index_ingredients_on_created_by_id           (created_by_id)
-#  index_ingredients_on_name_and_created_by_id  (name,created_by_id) UNIQUE
-#  index_ingredients_on_page_id                 (page_id)
+#  index_ingredients_on_created_by_id  (created_by_id)
+#  index_ingredients_on_name_scope     (name,created_by_id,page_id,category) UNIQUE
+#  index_ingredients_on_page_id        (page_id)
 #
 # Foreign Keys
 #
@@ -343,5 +343,44 @@ class IngredientTest < ActiveSupport::TestCase
       snippets: [ "'already quoted'" ]
     )
     assert_equal "Text: 'already quoted'", ingredient.template_with_interpolated_snippets
+  end
+
+  test "template_with_interpolated_snippets moves comma after heredoc to new line" do
+    ingredient = Ingredient.new(
+      template_content: "inject_into_file 'config/routes.rb', {{1}}, after: 'Rails.application.routes.draw do\n'",
+      snippets: [ "resources :users do\n  resources :posts\nend" ]
+    )
+    expected = <<~EXPECTED.chomp
+      inject_into_file 'config/routes.rb', <<~SNIPPET_1,
+      resources :users do
+        resources :posts
+      end
+      SNIPPET_1
+      after: 'Rails.application.routes.draw do\n'
+    EXPECTED
+    result = ingredient.template_with_interpolated_snippets
+    assert_equal expected, result
+  end
+
+  test "template_with_interpolated_snippets moves comma after heredoc to new line - multi-line version" do
+    ingredient = Ingredient.new(
+      template_content: <<~CONTENT,
+        inject_into_file 'app/controllers/registrations_controller.rb',
+        {{1}},
+        after: "class RegistrationsController < ApplicationController\n"
+      CONTENT
+      snippets: [ "resources :users do\n  resources :posts\nend" ]
+    )
+    expected = <<~EXPECTED.chomp
+      inject_into_file 'app/controllers/registrations_controller.rb',
+      <<~SNIPPET_1,
+      resources :users do
+        resources :posts
+      end
+      SNIPPET_1
+      after: "class RegistrationsController < ApplicationController\n"
+    EXPECTED
+    result = ingredient.template_with_interpolated_snippets
+    assert_equal expected, result
   end
 end

@@ -10,7 +10,6 @@ module Pages
           end
 
           def view_template
-            # Skip rendering if element should not be visible to current user
             return unless visible_for_current_user?
 
             case element.variant_type

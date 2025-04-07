@@ -11,11 +11,13 @@
 #
 # Indexes
 #
-#  index_element_custom_ingredient_checkboxes_on_ingredient_id  (ingredient_id)
+#  index_element_custom_ingredient_checkboxes_on_ingredient_id   (ingredient_id)
+#  index_element_custom_ingredient_checkboxes_unique_ingredient  (ingredient_id) UNIQUE
+#  unique_ingredient_checkbox                                    (ingredient_id) UNIQUE
 #
 # Foreign Keys
 #
-#  ingredient_id  (ingredient_id => ingredients.id)
+#  ingredient_id  (ingredient_id => ingredients.id) ON DELETE => cascade
 #
 require "test_helper"
 

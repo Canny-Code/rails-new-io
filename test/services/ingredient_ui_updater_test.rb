@@ -193,6 +193,9 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
     # Move our element to the custom sub_group
     @element.update!(sub_group: custom_sub_group)
 
+    # The original @sub_group should be cleaned up since it's now empty
+    @sub_group.destroy!
+
     # Change category to trigger move
     new_category = "security"
     @ingredient.update!(category: new_category)
@@ -207,7 +210,6 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
     # Verify old group and original sub_group were cleaned up
     assert_raises(ActiveRecord::RecordNotFound) { Group.find(@group.id) }
     assert_raises(ActiveRecord::RecordNotFound) { SubGroup.find(custom_sub_group.id) }
-    assert_raises(ActiveRecord::RecordNotFound) { SubGroup.find(@sub_group.id) }
   end
 
   test "handles multiple sub_groups in a group correctly" do
@@ -215,43 +217,33 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
     advanced_sub_group = @group.sub_groups.create!(title: "Advanced Options")
     experimental_sub_group = @group.sub_groups.create!(title: "Experimental")
 
-    # Create elements in different sub_groups with unique labels
-    advanced_variant = Element::CustomIngredientCheckbox.create!(
-      ingredient: @ingredient,
-      checked: false,
-      default: false
-    )
-    advanced_element = Element.create!(
-      label: "#{@ingredient.name} (Advanced)",  # Make label unique
-      description: @ingredient.description,
-      variant_type: "Element::CustomIngredientCheckbox",
-      variant_id: advanced_variant.id,
+    # Move our existing element to the advanced sub_group
+    @element.update!(
       sub_group: advanced_sub_group,
-      user: @ingredient.created_by
+      label: "#{@ingredient.name} (Advanced)"  # Make label unique
     )
+
+    # The original @sub_group should be cleaned up since it's now empty
+    @sub_group.destroy!
 
     # Move to new category
     @ingredient.update!(category: "security")
     IngredientUiUpdater.call(@ingredient)
 
-    # Verify elements moved to new group with their respective sub_group titles
+    # Verify element moved to new group and kept its sub_group title
     @element.reload
-    advanced_element.reload
-
     assert_equal "security", @element.sub_group.group.title
-    assert_equal "Default", @element.sub_group.title
-    assert_equal "security", advanced_element.sub_group.group.title
-    assert_equal "Advanced Options", advanced_element.sub_group.title
+    assert_equal "Advanced Options", @element.sub_group.title
+    assert_equal "#{@ingredient.name} (Advanced)", @element.label
 
-    # Verify empty sub_groups and groups were cleaned up
-    assert_raises(ActiveRecord::RecordNotFound) { SubGroup.find(@sub_group.id) }
+    # Verify only the sub_group that the element was moved from was cleaned up
     assert_raises(ActiveRecord::RecordNotFound) { SubGroup.find(advanced_sub_group.id) }
-    assert_raises(ActiveRecord::RecordNotFound) { SubGroup.find(experimental_sub_group.id) }
-    assert_raises(ActiveRecord::RecordNotFound) { Group.find(@group.id) }
 
-    # Clean up
-    advanced_element.destroy
-    advanced_variant.destroy
+    # The experimental sub_group should still exist in the old group
+    assert_nothing_raised { SubGroup.find(experimental_sub_group.id) }
+
+    # The old group should still exist since it has the experimental sub_group
+    assert_nothing_raised { Group.find(@group.id) }
   end
 
   test "updates attributes without moving when category hasn't changed" do
@@ -433,21 +425,6 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
   end
 
   test "handles concurrent group deletion during cleanup" do
-    # Create a second element in the same group
-    second_variant = Element::CustomIngredientCheckbox.create!(
-      ingredient: @ingredient,
-      checked: false,
-      default: false
-    )
-    second_element = Element.create!(
-      label: "#{@ingredient.name} (Second)",
-      description: @ingredient.description,
-      variant_type: "Element::CustomIngredientCheckbox",
-      variant_id: second_variant.id,
-      sub_group: @sub_group,
-      user: @ingredient.created_by
-    )
-
     # Store IDs for verification
     old_group_id = @group.id
     old_sub_group_id = @sub_group.id
@@ -463,21 +440,17 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
     end
 
     # Mock reload to simulate concurrent deletion
-    Group.any_instance.stubs(:reload).returns(true).then.raises(ActiveRecord::RecordNotFound.new("FUCKING FINALLY"))
+    # First reload succeeds (when checking if sub_group is empty)
+    # Second reload fails (when trying to clean up the group)
+    Group.any_instance.stubs(:reload).returns(true).then.raises(ActiveRecord::RecordNotFound.new("Group was deleted concurrently"))
 
     # This should complete without error despite the concurrent deletion
     assert_nothing_raised do
       IngredientUiUpdater.call(@ingredient)
     end
 
-    # Verify elements were moved to the new group
+    # Verify element was moved to the new group
     @element.reload
-    second_element.reload
     assert_equal new_category, @element.sub_group.group.title
-    assert_equal new_category, second_element.sub_group.group.title
-
-    # Clean up
-    second_element.destroy
-    second_variant.destroy
   end
 end

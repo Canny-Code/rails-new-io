@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_01_072936) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_06_094200) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -147,6 +147,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_01_072936) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["ingredient_id"], name: "index_element_custom_ingredient_checkboxes_on_ingredient_id"
+    t.index ["ingredient_id"], name: "index_element_custom_ingredient_checkboxes_unique_ingredient", unique: true
+    t.index ["ingredient_id"], name: "unique_ingredient_checkbox", unique: true
   end
 
   create_table "element_radio_buttons", force: :cascade do |t|
@@ -258,7 +260,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_01_072936) do
     t.json "snippets", default: []
     t.integer "page_id"
     t.index ["created_by_id"], name: "index_ingredients_on_created_by_id"
-    t.index ["name", "created_by_id"], name: "index_ingredients_on_name_and_created_by_id", unique: true
+    t.index ["name", "created_by_id", "page_id", "category"], name: "index_ingredients_on_name_scope", unique: true
     t.index ["page_id"], name: "index_ingredients_on_page_id"
   end
 
@@ -495,7 +497,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_01_072936) do
   add_foreign_key "app_generation_log_entries", "generated_apps", on_delete: :cascade
   add_foreign_key "app_statuses", "generated_apps", on_delete: :cascade
   add_foreign_key "commits", "users", column: "author_id"
-  add_foreign_key "element_custom_ingredient_checkboxes", "ingredients"
+  add_foreign_key "element_custom_ingredient_checkboxes", "ingredients", on_delete: :cascade
   add_foreign_key "elements", "sub_groups"
   add_foreign_key "elements", "users"
   add_foreign_key "generated_apps", "recipes"
