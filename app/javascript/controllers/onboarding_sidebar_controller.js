@@ -16,27 +16,17 @@ export default class extends Controller {
   }
 
   initializeSteps() {
-    console.log("DEBUG: Starting initializeSteps")
-    console.log("DEBUG: Document readyState:", document.readyState)
-    console.log("DEBUG: Document body:", document.body)
-
-    // Give a small delay to ensure everything is ready
     setTimeout(() => {
       Object.entries(this.stepsValue).forEach(([selector, config]) => {
-        console.log("DEBUG: Processing selector:", selector)
-
         if (selector.startsWith('appear:')) {
           const targetSelector = selector.replace('appear:', '')
-          console.log("DEBUG: Setting up observer for:", targetSelector)
 
           const observer = new ResizeObserver((entries) => {
             const targetElement = document.querySelector(targetSelector)
             if (targetElement) {
               const isVisible = getComputedStyle(targetElement).display !== 'none' && targetElement.offsetParent !== null
-              console.log("DEBUG: Target element found:", targetSelector, "visible:", isVisible)
 
               if (isVisible) {
-                console.log("DEBUG: Target element is visible, updating step")
                 this.updateStep(config.currentStep)
                 observer.disconnect()
               }
@@ -47,12 +37,10 @@ export default class extends Controller {
           observer.observe(document.body)
         } else if (selector.startsWith('click:')) {
           const targetSelector = selector.replace('click:', '')
-          console.log("DEBUG: Setting up click handler for:", targetSelector)
 
           const field = document.querySelector(targetSelector)
           if (field) {
             field.addEventListener('click', () => {
-              console.log("DEBUG: Click event fired for:", targetSelector)
               this.updateStep(config.currentStep)
             })
           } else {
@@ -63,21 +51,17 @@ export default class extends Controller {
           const maxAttempts = 50 // 5 seconds total
           const checkCodeMirror = setInterval(() => {
             attempts++
-            console.log("DEBUG: Checking CodeMirror initialization attempt:", attempts)
 
             const field = document.querySelector(selector)
             if (!field) {
               if (attempts >= maxAttempts) {
-                console.log("DEBUG: Failed to find field after", maxAttempts, "attempts")
                 clearInterval(checkCodeMirror)
               }
               return
             }
 
             if (field.CodeMirror) {
-              console.log("DEBUG: CodeMirror initialized")
               field.CodeMirror.on('change', () => {
-                console.log("DEBUG: CodeMirror change event fired")
                 this.checkFieldAndUpdateSteps(selector, config)
               })
               clearInterval(checkCodeMirror)
@@ -85,7 +69,6 @@ export default class extends Controller {
             }
 
             if (attempts >= maxAttempts) {
-              console.log("DEBUG: Failed to initialize CodeMirror after", maxAttempts, "attempts")
               clearInterval(checkCodeMirror)
             }
           }, 100)
@@ -93,7 +76,6 @@ export default class extends Controller {
           const field = document.querySelector(selector)
           if (field) {
             field.addEventListener('input', () => {
-              console.log("DEBUG: Input event fired for selector:", selector)
               this.checkFieldAndUpdateSteps(selector, config)
             })
           } else {
