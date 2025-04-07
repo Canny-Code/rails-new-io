@@ -4,13 +4,10 @@ export default class extends Controller {
   static targets = ["storage"]
 
   connect() {
-    console.log("DEBUG: recipe_ui_state_restore_controller connected")
     this.findStorageAndRestore()
   }
 
   findStorageAndRestore() {
-    console.log("DEBUG: findStorageAndRestore")
-
     if (!this.hasStorageTarget) {
       requestAnimationFrame(() => this.findStorageAndRestore())
       return
