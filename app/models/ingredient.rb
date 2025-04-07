@@ -18,15 +18,17 @@
 #
 # Indexes
 #
-#  index_ingredients_on_created_by_id           (created_by_id)
-#  index_ingredients_on_name_and_created_by_id  (name,created_by_id) UNIQUE
-#  index_ingredients_on_page_id                 (page_id)
+#  index_ingredients_on_created_by_id  (created_by_id)
+#  index_ingredients_on_name_scope     (name,created_by_id,page_id,category) UNIQUE
+#  index_ingredients_on_page_id        (page_id)
 #
 # Foreign Keys
 #
 #  created_by_id  (created_by_id => users.id)
 #  page_id        (page_id => pages.id)
 #
+# frozen_string_literal: true
+
 class Ingredient < ApplicationRecord
   class InvalidConfigurationError < StandardError; end
   include GitBackedModel
@@ -39,9 +41,9 @@ class Ingredient < ApplicationRecord
   has_many :recipe_ingredients, dependent: :delete_all
   has_many :recipes, through: :recipe_ingredients
   has_many :recipe_changes, dependent: :delete_all
-  has_many :custom_ingredient_checkboxes, class_name: "Element::CustomIngredientCheckbox", dependent: :destroy
+  has_one :custom_ingredient_checkbox, class_name: "Element::CustomIngredientCheckbox", dependent: :destroy
 
-  validates :name, presence: true, uniqueness: { scope: :created_by_id }
+  validates :name, presence: true, uniqueness: { scope: [ :created_by_id, :page_id, :category ] }
   validates :template_content, presence: true
   validates :category, presence: true
 
@@ -118,8 +120,14 @@ class Ingredient < ApplicationRecord
       snippets.each_with_index do |snippet, index|
         placeholder = "{{#{index + 1}}}"
         content.gsub!(placeholder, to_literal(snippet, index))
+        if content =~ /SNIPPET_#{index+1}\s*,/
+          # First move the comma to the opening marker
+          content.gsub!(/<<~SNIPPET_#{index+1}/, "<<~SNIPPET_#{index+1},")
+          # Then remove any comma after the closing marker, preserving whitespace
+          content.gsub!(/^(\s*)SNIPPET_#{index+1}\s*,\s*(\S)/, "\\1SNIPPET_#{index+1}\n\\2")
+        end
       end
-    end
+    end.chomp
   end
 
 
@@ -158,16 +166,16 @@ class Ingredient < ApplicationRecord
       if snippet.start_with?("'") || snippet.start_with?('"')
         snippet
       else
-        "\"#{snippet}\""
+        snippet.include?('"') ? "'#{snippet}'" : "\"#{snippet}\""
       end
     end
   end
 
   def should_handle_railsnewio_page_group?
     created_by.github_username == "rails-new-io" &&
-    page_id.present? &&
-    page.title != "Your Custom Ingredients" &&
-    saved_change_to_page_id?
+      page_id.present? &&
+      page.title != "Your Custom Ingredients" &&
+      saved_change_to_page_id?
   end
 
   def handle_railsnewio_page_group
