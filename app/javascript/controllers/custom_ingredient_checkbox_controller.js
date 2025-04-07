@@ -16,6 +16,11 @@ export default class extends Controller {
     this.selectedIngredients = new Set()
     this.update()
     this.toggleHeadingVisibility()
+
+    const form = document.querySelector('form#new-recipe')
+    if (form) {
+      form.addEventListener('submit', this.validateBeforeSubmit.bind(this))
+    }
   }
 
   update(event) {
@@ -78,6 +83,12 @@ export default class extends Controller {
   addHiddenInput(ingredientId) {
     const form = document.querySelector('form#new-recipe')
 
+    // Check if field already exists
+    const existingField = form.querySelector(`input[data-ingredient-id="${ingredientId}"]`)
+    if (existingField) {
+      return // Field already exists, do nothing
+    }
+
     const input = document.createElement('input')
     input.type = 'hidden'
     input.name = 'recipe[ingredient_ids][]'
@@ -88,10 +99,31 @@ export default class extends Controller {
 
   removeHiddenInput(ingredientId) {
     const form = document.querySelector('form#new-recipe')
-
     const input = form.querySelector(`input[data-ingredient-id="${ingredientId}"]`)
     if (input) {
       input.remove()
     }
+  }
+
+  validateBeforeSubmit(event) {
+    const form = event.target
+    const checkedBoxes = document.querySelectorAll('input[type="checkbox"][data-controller="custom-ingredient-checkbox"]:checked')
+    const hiddenFields = form.querySelectorAll('input[name="recipe[ingredient_ids][]"]')
+
+    // Remove orphaned fields
+    hiddenFields.forEach(field => {
+      const id = field.dataset.ingredientId
+      if (!document.querySelector(`input[type="checkbox"][data-ingredient-id="${id}"]:checked`)) {
+        field.remove()
+      }
+    })
+
+    // Add missing fields
+    checkedBoxes.forEach(box => {
+      const id = box.dataset.elementId
+      if (!form.querySelector(`input[data-ingredient-id="${id}"]`)) {
+        this.addHiddenInput(id)
+      }
+    })
   }
 }

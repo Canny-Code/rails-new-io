@@ -61,6 +61,15 @@ class RecipesController < ApplicationController
       rails_version: RailsNewConfig.rails_version_for_new_apps
     )
 
+    @recipe.recipe_ingredients.destroy_all
+
+    if recipe_params[:ingredient_ids].present?
+      recipe_params[:ingredient_ids].each do |ingredient_id|
+        ingredient = Ingredient.find_by(id: ingredient_id)
+        @recipe.add_ingredient!(ingredient) if ingredient
+      end
+    end
+
     WriteRecipeJob.perform_later(recipe_id: @recipe.id, user_id: current_user.id)
 
     redirect_to @recipe, notice: "Recipe was successfully updated."
