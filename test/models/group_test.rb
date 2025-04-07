@@ -5,6 +5,7 @@
 #  id            :integer          not null, primary key
 #  behavior_type :string
 #  description   :string
+#  position      :integer          default(0)
 #  title         :string           not null
 #  created_at    :datetime         not null
 #  updated_at    :datetime         not null

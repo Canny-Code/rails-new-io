@@ -20,7 +20,7 @@ module Pages
 
             # Main content (2/3)
             div(class: "space-y-8 w-2/3 ") do
-              @page.groups.each do |group|
+              @page.groups.order(:position).each do |group|
                 render Pages::Groups::Component.new(group: group)
               end
             end
@@ -28,7 +28,7 @@ module Pages
         else
           div(class: "max-w-4xl mx-auto py-8 space-y-8") do
             div(class: "space-y-8") do
-              @page.groups.each do |group|
+              @page.groups.order(:position).each do |group|
                 render Pages::Groups::Component.new(group: group)
               end
             end

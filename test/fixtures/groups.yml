@@ -7,6 +7,7 @@
 #  id            :integer          not null, primary key
 #  behavior_type :string
 #  description   :string
+#  position      :integer          default(0)
 #  title         :string           not null
 #  created_at    :datetime         not null
 #  updated_at    :datetime         not null
@@ -26,37 +27,46 @@ databases:
   title: Databases
   page: basic_setup
   behavior_type: database_choice
+  position: 0
 
 main_courses:
   title: Main Courses
   page: basic_setup
-
-email_me_maybe:
-  title: Email Me Maybe
-  page: basic_setup
+  position: 1
 
 infrastructure_setup:
   title: Infrastructure Setup
   page: basic_setup
+  position: 2
+
+email_me_maybe:
+  title: Email Me Maybe
+  page: basic_setup
+  position: 3
 
 basic_setup_misc:
   title: Basic Setup Misc
   page: basic_setup
+  position: 4
+
+testing_basics:
+  title: Testing Basics
+  page: testing
+  position: 0
 
 frontend_basics:
   title: Frontend Basics
   page: frontend
+  position: 0
 
 javascript_framework:
   title: Javascript Framework
   page: frontend
   behavior_type: javascript_radio_button
+  position: 1
 
 css_framework:
   title: CSS Framework
   page: frontend
   behavior_type: css_radio_button
-
-testing_basics:
-  title: Testing Basics
-  page: testing
+  position: 2

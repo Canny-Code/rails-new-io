@@ -5,6 +5,7 @@
 # Table name: sub_groups
 #
 #  id         :integer          not null, primary key
+#  position   :integer          default(0)
 #  title      :string           not null
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
@@ -20,50 +21,47 @@
 #  group_id  (group_id => groups.id)
 #
 
-relational_dbs:
-  title: Relational Databases
-  group: databases
-
-document_dbs:
-  title: Document Databases
-  group: databases
-
-key_value_dbs:
-  title: Key-Value Stores
-  group: databases
-
 databases_default:
   title: Default
   group: databases
+  position: 0
 
 main_courses_default:
   title: Default
   group: main_courses
+  position: 0
 
 email_me_maybe_default:
   title: Default
   group: email_me_maybe
+  position: 0
 
 infrastructure_setup_default:
   title: Default
   group: infrastructure_setup
+  position: 0
 
 basic_setup_misc_default:
   title: Default
   group: basic_setup_misc
+  position: 0
 
 frontend_basics_default:
   title: Default
   group: frontend_basics
+  position: 0
 
 javascript_framework_default:
   title: Default
   group: javascript_framework
+  position: 0
 
 css_framework_default:
   title: Default
   group: css_framework
+  position: 0
 
 testing_basics_default:
   title: Default
   group: testing_basics
+  position: 0

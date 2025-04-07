@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_06_094200) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_07_173857) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -229,6 +229,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_06_094200) do
     t.datetime "updated_at", null: false
     t.string "behavior_type"
     t.string "description"
+    t.integer "position", default: 0
     t.index ["page_id"], name: "index_groups_on_page_id"
     t.index ["title"], name: "index_groups_on_title"
   end
@@ -468,6 +469,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_06_094200) do
     t.integer "group_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "position", default: 0
     t.index ["group_id"], name: "index_sub_groups_on_group_id"
     t.index ["title"], name: "index_sub_groups_on_title"
   end

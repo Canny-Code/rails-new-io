@@ -3,6 +3,7 @@
 # Table name: sub_groups
 #
 #  id         :integer          not null, primary key
+#  position   :integer          default(0)
 #  title      :string           not null
 #  created_at :datetime         not null
 #  updated_at :datetime         not null

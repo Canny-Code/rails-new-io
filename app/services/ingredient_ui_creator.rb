@@ -1,5 +1,5 @@
 class IngredientUiCreator
-  def self.call(ingredient, page_title: "Your Custom Ingredients")
+  def self.call(ingredient, page_title: "Your Custom Ingredients", position: nil)
     new(ingredient, page_title).call
   end
 
@@ -22,7 +22,14 @@ class IngredientUiCreator
   attr_reader :ingredient, :page_title
 
   def find_or_create_group(page)
-    page.groups.find_or_create_by!(title: ingredient.category, behavior_type: "custom_ingredient_checkbox")
+    position = 0 if page.groups.empty?
+    position = position || page.groups.maximum(:position) + 1
+
+    page.groups.find_or_create_by!(
+      title: ingredient.category,
+      behavior_type: "custom_ingredient_checkbox",
+      position: position
+    )
   end
 
   def find_or_create_sub_group(group)

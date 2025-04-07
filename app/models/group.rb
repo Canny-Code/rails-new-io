@@ -5,6 +5,7 @@
 #  id            :integer          not null, primary key
 #  behavior_type :string
 #  description   :string
+#  position      :integer          default(0)
 #  title         :string           not null
 #  created_at    :datetime         not null
 #  updated_at    :datetime         not null
@@ -26,4 +27,5 @@ class Group < ApplicationRecord
   has_many :sub_groups, dependent: :destroy
 
   validates :title, presence: true, uniqueness: { scope: :page_id }
+  validates :position, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 end
