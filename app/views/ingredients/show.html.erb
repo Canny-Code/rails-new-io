@@ -3,7 +3,9 @@
     <div class="min-w-0 flex-1">
       <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight"><%= @ingredient.name %></h2>
       <% if @ingredient.category.present? %>
-        <p class="mt-2 text-sm text-gray-500">Category: <%= @ingredient.category %></p>
+        <p class="mt-2 text-sm text-gray-500">
+          <span class="font-bold">Category/SubCategory:</span> <%= @ingredient.category %> > <%= @ingredient.sub_category %>
+        </p>
       <% end %>
     </div>
     <div class="mt-4 flex md:mt-0 md:ml-4 space-x-2">

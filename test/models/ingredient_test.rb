@@ -10,6 +10,7 @@
 #  name             :string           not null
 #  requires         :text
 #  snippets         :json
+#  sub_category     :string           default("Default")
 #  template_content :text             not null
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null

@@ -14,10 +14,10 @@ export default class extends Controller {
       this.element.style.marginTop = '0px'
       this.element.style.marginBottom = '0px'
       this.element.style.padding = '0px'
-      
+
       setTimeout(() => {
         this.element.remove()
-      }, 500)
+      }, 1500)
     }, 2000)
   }
-} 
+}

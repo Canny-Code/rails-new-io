@@ -16,10 +16,10 @@
   ),
   columns: [
     {
-      header: "Name & Category",
+      header: "Name & Category > SubCategory",
       content: ->(ingredient) { ingredient.name },
       link: ->(ingredient) { ingredient_path(ingredient) },
-      subcontent: ->(ingredient) { ingredient.category }
+      subcontent: ->(ingredient) { "#{ingredient.category} > #{ingredient.sub_category}" }
     },
     {
       header: "Description",

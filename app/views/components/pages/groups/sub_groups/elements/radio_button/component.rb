@@ -33,7 +33,7 @@ module Pages
                           plain @label
                         end
 
-                        div(class: "menu-card-row-description mt-2 flex items-center text-sm leading-5 text-gray-500 max-w-lg truncate pr-10") do
+                        div(class: "menu-card-row-description mt-2 flex items-center text-sm leading-5 text-gray-500 max-w-lg") do
                           span { plain @description }
                         end
                       end

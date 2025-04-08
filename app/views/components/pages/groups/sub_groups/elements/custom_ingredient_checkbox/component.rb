@@ -34,7 +34,7 @@ module Pages
                         ) { plain @label }
                         div(
                           class:
-                            "menu-card-row-description mt-2 flex items-center text-sm leading-5 text-gray-500 max-w-lg truncate pr-10"
+                            "menu-card-row-description mt-2 flex items-center text-sm leading-5 text-gray-500 max-w-lg"
                         ) do
                           whitespace
                           span { plain @description }

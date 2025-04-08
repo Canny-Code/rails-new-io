@@ -10,6 +10,7 @@
 #  name             :string           not null
 #  requires         :text
 #  snippets         :json
+#  sub_category     :string           default("Default")
 #  template_content :text             not null
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
@@ -43,14 +44,14 @@ class Ingredient < ApplicationRecord
   has_many :recipe_changes, dependent: :delete_all
   has_one :custom_ingredient_checkbox, class_name: "Element::CustomIngredientCheckbox", dependent: :destroy
 
-  validates :name, presence: true, uniqueness: { scope: [ :created_by_id, :page_id, :category ] }
+  validates :name, presence: true, uniqueness: { scope: [ :created_by_id, :page_id, :category, :sub_category ] }
   validates :template_content, presence: true
   validates :category, presence: true
+  validates :sub_category, presence: true
 
   before_destroy :cleanup_ui_elements
   after_update :update_ui_elements, if: :ui_relevant_attributes_changed?
   before_save :process_snippets
-  after_save :handle_railsnewio_page_group, if: :should_handle_railsnewio_page_group?
 
   serialize :conflicts_with, coder: YAML
   serialize :requires, coder: YAML
@@ -142,7 +143,7 @@ class Ingredient < ApplicationRecord
   end
 
   def ui_relevant_attributes_changed?
-    saved_changes.keys.any? { |attr| %w[name description category].include?(attr) }
+    saved_changes.keys.any? { |attr| %w[name description category sub_category].include?(attr) }
   end
 
   def process_snippets
@@ -169,16 +170,5 @@ class Ingredient < ApplicationRecord
         snippet.include?('"') ? "'#{snippet}'" : "\"#{snippet}\""
       end
     end
-  end
-
-  def should_handle_railsnewio_page_group?
-    created_by.github_username == "rails-new-io" &&
-      page_id.present? &&
-      page.title != "Your Custom Ingredients" &&
-      saved_change_to_page_id?
-  end
-
-  def handle_railsnewio_page_group
-    IngredientUiCreator.call(self, page_title: page.title)
   end
 end

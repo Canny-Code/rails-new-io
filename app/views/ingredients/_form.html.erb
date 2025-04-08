@@ -53,6 +53,8 @@
                 class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
             </div>
           </div>
+        <% else %>
+          <%= f.hidden_field :page_id, value: Page.find_by(title: "Your Custom Ingredients").id %>
         <% end %>
         <div class="sm:col-span-4">
           <%= f.label :category, class: "block text-sm font-medium text-gray-700" do %>
@@ -60,6 +62,16 @@
           <% end %>
           <div class="mt-1">
             <%= f.text_field :category,
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+          </div>
+        </div>
+        <div class="sm:col-span-4">
+          <%= f.label :sub_category, class: "block text-sm font-medium text-gray-700" do %>
+            SubCategory
+          <% end %>
+          <div class="mt-1">
+            <%= f.text_field :sub_category,
+                value: ingredient.sub_category.presence || "Default",
                 class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
           </div>
         </div>

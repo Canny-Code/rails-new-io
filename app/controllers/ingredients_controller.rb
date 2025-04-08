@@ -24,8 +24,18 @@ class IngredientsController < ApplicationController
     @ingredient = current_user.ingredients.build(ingredient_params)
 
     if @ingredient.save
-      # UI elements for rails-new-io are handled by the callback in the Ingredient model
-      IngredientUiCreator.call(@ingredient) unless current_user.github_username == "rails-new-io"
+      begin
+        IngredientUiCreator.call(@ingredient, page_title: @ingredient.page.title)
+      rescue IngredientUiCreationError => e
+        Rails.logger.error("Failed to create ingredient UI: #{e.message}")
+        Rails.logger.error(e.backtrace.join("\n"))
+        @ingredient.destroy
+        @ingredient.new_snippets = params.dig(:ingredient, :new_snippets) || []
+        @onboarding_step = params[:onboarding_step]
+        flash[:alert] = "There was a problem creating the ingredient. Please try again or contact support if the problem persists."
+        render :new, status: :unprocessable_entity
+        return
+      end
 
       WriteIngredientJob.perform_later(ingredient_id: @ingredient.id, user_id: current_user.id)
 
@@ -38,9 +48,10 @@ class IngredientsController < ApplicationController
 
       redirect_to redirect_path, notice: "Ingredient was successfully created."
     else
-      @ingredient.snippets = params.dig(:ingredient, :new_snippets) || []
+      @ingredient.new_snippets = params.dig(:ingredient, :new_snippets) || []
       @onboarding_step = params[:onboarding_step]
-      render :new, status: :unprocessable_entity, notice: "Error creating ingredient: #{@ingredient.errors.full_messages.join(", ")}"
+      flash[:alert] = "Error creating ingredient: #{@ingredient.errors.full_messages.join(", ")}"
+      render :new, status: :unprocessable_entity
     end
   end
 
@@ -90,6 +101,7 @@ class IngredientsController < ApplicationController
       :description,
       :template_content,
       :category,
+      :sub_category,
       :conflicts_with,
       :requires,
       :configures_with,
