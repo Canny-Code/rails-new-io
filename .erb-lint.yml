@@ -38,6 +38,8 @@ linters:
     enabled: false
   SpaceAroundErbTag:
     enabled: true
+    ignore_patterns:
+      - 'DESC\s*%>'
   SpaceInHtmlTag:
     enabled: true
   SpaceIndentation:
