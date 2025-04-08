@@ -161,10 +161,16 @@ module ActiveRecord
         # First load users (no dependencies)
         ordered_fixtures << "users" if fixture_set_names.include?("users")
 
-        # Then load models that depend on users
-        %w[recipes ingredients commits].each do |model|
+        # Then load pages (depends on nothing)
+        ordered_fixtures << "pages" if fixture_set_names.include?("pages")
+
+        # Then load recipes and commits (depend on users)
+        %w[recipes commits].each do |model|
           ordered_fixtures << model if fixture_set_names.include?(model)
         end
+
+        # Then load ingredients (depends on users AND pages)
+        ordered_fixtures << "ingredients" if fixture_set_names.include?("ingredients")
 
         # Then load recipe_ingredients (depends on recipes and ingredients)
         ordered_fixtures << "recipe_ingredients" if fixture_set_names.include?("recipe_ingredients")
@@ -173,7 +179,7 @@ module ActiveRecord
         ordered_fixtures << "generated_apps" if fixture_set_names.include?("generated_apps")
 
         # Finally load models that depend on generated_apps
-        %w[app_statuses app_changes].each do |model|
+        %w[app_statuses].each do |model|
           ordered_fixtures << model if fixture_set_names.include?(model)
         end
 

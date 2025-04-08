@@ -53,6 +53,7 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
           name: "Test Ingredient",
           description: "A test ingredient",
           template_content: "gem 'test'",
+          page_id: pages(:custom_ingredients).id,
           category: "Testing",
           conflicts_with: [],
           requires: [],
@@ -89,6 +90,7 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
           page: @ingredient.page,
           category: @ingredient.category,
           description: "A different description",
+          page_id: pages(:custom_ingredients).id,
           template_content: "gem 'something_else'"
         }
       }
@@ -107,6 +109,7 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
         ingredient: {
           name: @ingredient.name,  # Using existing ingredient's name
           description: "A different description",
+          page_id: pages(:custom_ingredients).id,
           template_content: "gem 'something_else'",
           category: "Testing"
         }
@@ -126,6 +129,7 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
           category: "Different Category",
           page: pages(:frontend),
           description: "A different description",
+          page_id: pages(:custom_ingredients).id,
           template_content: "gem 'something_else'"
         }
       }
@@ -165,6 +169,7 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
           name: "Ingredient With Snippets",
           template_content: "gem 'test'",
           category: "Testing",
+          page_id: pages(:custom_ingredients).id,
           new_snippets: [ "puts 'First snippet'", "puts 'Second snippet'" ]
         }
       }

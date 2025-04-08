@@ -15,7 +15,7 @@
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  created_by_id    :integer          not null
-#  page_id          :integer
+#  page_id          :integer          not null
 #
 # Indexes
 #
@@ -227,7 +227,8 @@ class IngredientTest < ActiveSupport::TestCase
       name: "Test Multiple Snippets",
       template_content: "test content",
       category: "Testing",
-      created_by: @user
+      created_by: @user,
+      page: pages(:custom_ingredients)
     )
 
     # Set multiple snippets via the accessor
@@ -243,7 +244,8 @@ class IngredientTest < ActiveSupport::TestCase
       name: "Test Blank Snippets",
       template_content: "test content",
       category: "Testing",
-      created_by: @user
+      created_by: @user,
+      page: pages(:custom_ingredients)
     )
 
     # Set snippets with some blank values
@@ -260,6 +262,7 @@ class IngredientTest < ActiveSupport::TestCase
       template_content: "test content",
       category: "Testing",
       created_by: @user,
+      page: pages(:custom_ingredients),
       snippets: [ "existing snippet" ]
     )
 
@@ -276,7 +279,8 @@ class IngredientTest < ActiveSupport::TestCase
       name: "Test Ingredient",
       category: "Testing",
       template_content: 'say "This is my template"\ncreate_file "myfile.rb", {{1}}\ncreate_file "my_other_file.rb", {{2}}',
-      created_by: users(:john)
+      created_by: users(:john),
+      page: pages(:custom_ingredients)
     )
     ingredient.new_snippets = [ '"foo"', '"bar"' ]
     ingredient.save!
@@ -290,7 +294,8 @@ class IngredientTest < ActiveSupport::TestCase
       name: "Test Ingredient",
       category: "Testing",
       template_content: 'say "This is my template"',
-      created_by: users(:john)
+      created_by: users(:john),
+      page: pages(:custom_ingredients)
     )
     ingredient.new_snippets = [ '"foo"', '"bar"' ]
     ingredient.save!

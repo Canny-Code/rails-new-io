@@ -160,18 +160,6 @@ class GeneratedApp < ApplicationRecord
       raise "Bundler environment not properly set"
     end
 
-    recipe_change = recipe.recipe_changes.create!(
-      ingredient: ingredient,
-      change_type: "add_ingredient",
-      change_data: { configuration: configuration }
-    )
-
-    # Create AppChange linked to the RecipeChange
-    app_changes.create!(
-      recipe_change: recipe_change,
-      configuration: configuration
-    )
-
     template_path = DataRepositoryService.new(user:).template_path(ingredient)
 
     unless File.exist?(template_path)

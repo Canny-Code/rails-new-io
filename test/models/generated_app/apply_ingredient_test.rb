@@ -29,6 +29,11 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
     @command_service.stubs(:execute).returns(@app_directory)
     CommandExecutionService.stubs(:new).returns(@command_service)
 
+    # Mock repository service
+    @repository_service = mock("repository_service")
+    @repository_service.stubs(:commit_changes).returns(true)
+    @generated_app.instance_variable_set(:@repository_service, @repository_service)
+
     # Save original BUNDLE_GEMFILE
     @original_bundle_gemfile = ENV["BUNDLE_GEMFILE"]
     # Set BUNDLE_GEMFILE to match the test app's Gemfile
@@ -41,33 +46,20 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
   end
 
   test "successfully applies ingredient" do
-    configuration = { "auth_type" => "devise" }
-
     # Ensure template exists
     template_path = DataRepositoryService.new(user: @user).template_path(@ingredient)
     FileUtils.mkdir_p(File.dirname(template_path))
     File.write(template_path, "# Test template")
 
-    # Expect CommandExecutionService to be called with the correct command
+    # Set up expectations BEFORE calling the method
     expected_command = "rails app:template LOCATION=#{template_path}"
     CommandExecutionService.expects(:new)
       .with(@generated_app, @logger, expected_command)
       .returns(@command_service)
     @command_service.expects(:execute).returns(@app_directory)
 
-    assert_difference -> { @recipe.recipe_changes.count }, 1 do
-      assert_difference -> { @generated_app.app_changes.count }, 1 do
-        @generated_app.send(:apply_ingredient, @ingredient, configuration)
-      end
-    end
-
-    recipe_change = @recipe.recipe_changes.last
-    app_change = @generated_app.app_changes.last
-
-    assert_equal "add_ingredient", recipe_change.change_type
-    assert_equal configuration, recipe_change.change_data["configuration"]
-    assert_equal configuration, app_change.configuration
-    assert_equal recipe_change, app_change.recipe_change
+    # Now call the method
+    @generated_app.apply_ingredients
   end
 
   test "handles errors during application" do
@@ -218,15 +210,6 @@ class GeneratedApp::ApplyIngredientTest < ActiveSupport::TestCase
       .returns(@command_service)
     @command_service.expects(:execute).returns(@app_directory)
 
-    @generated_app.send(:apply_ingredient, @ingredient, configuration)
-
-    # Verify the changes were created
-    recipe_change = @recipe.recipe_changes.last
-    app_change = @generated_app.app_changes.last
-
-    assert_equal "add_ingredient", recipe_change.change_type
-    assert_equal configuration, recipe_change.change_data["configuration"]
-    assert_equal configuration, app_change.configuration
-    assert_equal recipe_change, app_change.recipe_change
+    @generated_app.apply_ingredients
   end
 end

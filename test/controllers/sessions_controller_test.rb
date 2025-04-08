@@ -127,7 +127,6 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
     # Clean up in correct order to respect foreign key constraints
     AppGeneration::LogEntry.delete_all
     AppStatus.delete_all
-    AppChange.delete_all
     Commit.delete_all
     GeneratedApp.delete_all
     RecipeIngredient.delete_all

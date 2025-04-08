@@ -19,7 +19,8 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
       description: fixture_ingredient.description,
       template_content: fixture_ingredient.template_content,
       category: fixture_ingredient.category,
-      created_by: users(:john)  # Use the user fixture directly since it's just a reference
+      created_by: users(:john),  # Use the user fixture directly since it's just a reference
+      page_id: pages(:custom_ingredients).id  # Add the required page_id
     )
 
     @page = pages(:custom_ingredients)  # Use the fixture instead of creating a new page
@@ -102,7 +103,8 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
       description: "A basic setup",
       template_content: "template",
       category: @ingredient.category,
-      created_by: @ingredient.created_by
+      created_by: @ingredient.created_by,
+      page_id: pages(:custom_ingredients).id  # Add the required page_id
     )
 
     other_variant = Element::CustomIngredientCheckbox.create!(
@@ -452,5 +454,61 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
     # Verify element was moved to the new group
     @element.reload
     assert_equal new_category, @element.sub_group.group.title
+  end
+
+  test "updates sub_group title when ingredient sub_category changes" do
+    # Create a sub_group with a different title
+    custom_sub_group = @group.sub_groups.create!(title: "Advanced Options")
+
+    # Move our element to the custom sub_group
+    @element.update!(sub_group: custom_sub_group)
+
+    # The original @sub_group should be cleaned up since it's now empty
+    @sub_group.destroy!
+
+    # Change both category and sub_category
+    new_category = "security"
+    new_sub_category = "Premium Features"
+    @ingredient.update!(
+      category: new_category,
+      sub_category: new_sub_category
+    )
+
+    IngredientUiUpdater.call(@ingredient)
+
+    # Verify element moved to new group with new sub_category
+    @element.reload
+    assert_equal new_category, @element.sub_group.group.title
+    assert_equal new_sub_category, @element.sub_group.title
+
+    # Verify old group and original sub_group were cleaned up
+    assert_raises(ActiveRecord::RecordNotFound) { Group.find(@group.id) }
+    assert_raises(ActiveRecord::RecordNotFound) { SubGroup.find(custom_sub_group.id) }
+  end
+
+  test "preserves sub_group title when only category changes but not sub_category" do
+    # Create a sub_group with a different title
+    custom_sub_group = @group.sub_groups.create!(title: "Advanced Options")
+
+    # Move our element to the custom sub_group
+    @element.update!(sub_group: custom_sub_group)
+
+    # The original @sub_group should be cleaned up since it's now empty
+    @sub_group.destroy!
+
+    # Change only category, not sub_category
+    new_category = "security"
+    @ingredient.update!(category: new_category)
+
+    IngredientUiUpdater.call(@ingredient)
+
+    # Verify element moved to new group but kept its sub_group title
+    @element.reload
+    assert_equal new_category, @element.sub_group.group.title
+    assert_equal "Advanced Options", @element.sub_group.title
+
+    # Verify old group and original sub_group were cleaned up
+    assert_raises(ActiveRecord::RecordNotFound) { Group.find(@group.id) }
+    assert_raises(ActiveRecord::RecordNotFound) { SubGroup.find(custom_sub_group.id) }
   end
 end

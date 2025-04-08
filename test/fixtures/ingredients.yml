@@ -17,7 +17,7 @@
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  created_by_id    :integer          not null
-#  page_id          :integer
+#  page_id          :integer          not null
 #
 # Indexes
 #
@@ -40,6 +40,7 @@ rails_authentication:
     auth_type: ["devise", "rodauth"]
   created_by: john
   category: "authentication"
+  page_id: <%= ActiveRecord::FixtureSet.identify(:custom_ingredients) %>
 
 api_setup:
   name: "API Setup"
@@ -52,6 +53,7 @@ api_setup:
     documentation: false
   created_by: jane
   category: "api"
+  page_id: <%= ActiveRecord::FixtureSet.identify(:custom_ingredients) %>
 
 basic:
   name: "Basic Rails"
@@ -65,3 +67,4 @@ basic:
       - mysql
   created_by: john
   category: "setup"
+  page_id: <%= ActiveRecord::FixtureSet.identify(:custom_ingredients) %>

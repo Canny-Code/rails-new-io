@@ -15,7 +15,7 @@
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  created_by_id    :integer          not null
-#  page_id          :integer
+#  page_id          :integer          not null
 #
 # Indexes
 #
@@ -38,16 +38,16 @@ class Ingredient < ApplicationRecord
   has_one_attached :after_screenshot
 
   belongs_to :created_by, class_name: "User"
-  belongs_to :page, optional: true
+  belongs_to :page
   has_many :recipe_ingredients, dependent: :delete_all
   has_many :recipes, through: :recipe_ingredients
-  has_many :recipe_changes, dependent: :delete_all
   has_one :custom_ingredient_checkbox, class_name: "Element::CustomIngredientCheckbox", dependent: :destroy
 
   validates :name, presence: true, uniqueness: { scope: [ :created_by_id, :page_id, :category, :sub_category ] }
   validates :template_content, presence: true
   validates :category, presence: true
   validates :sub_category, presence: true
+  validates :page_id, presence: true
 
   before_destroy :cleanup_ui_elements
   after_update :update_ui_elements, if: :ui_relevant_attributes_changed?

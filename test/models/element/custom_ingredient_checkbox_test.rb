@@ -17,7 +17,7 @@
 #
 # Foreign Keys
 #
-#  ingredient_id  (ingredient_id => ingredients.id) ON DELETE => cascade
+#  ingredient_id  (ingredient_id => ingredients.id)
 #
 require "test_helper"
 

@@ -18,7 +18,7 @@ class IngredientUiUpdater
     old_group = old_sub_group.group
 
     ActiveRecord::Base.transaction do
-      if old_group.title != ingredient.category || old_sub_group.title != ingredient.sub_category
+      if old_group.title != ingredient.category
         move_element_to_new_group(element, old_group, old_sub_group)
       else
         update_element_attributes(element)
@@ -39,7 +39,14 @@ class IngredientUiUpdater
   def move_element_to_new_group(element, old_group, old_sub_group)
     page = old_group.page
     new_group = page.groups.find_or_create_by!(title: ingredient.category, behavior_type: "custom_ingredient_checkbox")
-    new_sub_group = new_group.sub_groups.find_or_create_by!(title: ingredient.sub_category)
+
+    updated_sub_group_title = if ingredient.saved_change_to_sub_category?
+      ingredient.sub_category
+    else
+      old_sub_group.title
+    end
+
+    new_sub_group = new_group.sub_groups.find_or_create_by!(title: updated_sub_group_title)
 
     element.update!(
       sub_group: new_sub_group,

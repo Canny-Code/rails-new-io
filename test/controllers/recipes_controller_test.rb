@@ -7,7 +7,6 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     @other_users_recipe = recipes(:api_recipe)
     sign_in @user
 
-    # Mock repository operations
     DataRepositoryService.any_instance.stubs(:push_app_files).returns(true)
     DataRepositoryService.any_instance.stubs(:initialize_repository).returns(true)
     DataRepositoryService.stubs(:name_for_environment).returns("rails-new-io-data-test")
