@@ -62,7 +62,8 @@ class IngredientsTest < ApplicationSystemTestCase
       document.querySelector('textarea[name="ingredient[template_content]"] + div[class*="CodeMirror"]').CodeMirror.setValue("gem 'test_gem'")
     JS
 
-    fill_in "Category", with: "Authentication"
+    fill_in "ingredient[category]", with: "Authentication"
+    fill_in "ingredient[sub_category]", with: "Devise"
 
     click_on "Create Ingredient"
 
@@ -99,7 +100,9 @@ class IngredientsTest < ApplicationSystemTestCase
     fill_in "Description", with: "RSpec testing framework"
 
     select "Testing", from: "Page"
-    fill_in "Category", with: "RSpec"
+    fill_in "ingredient[category]", with: "Alternative Frameworks"
+    fill_in "ingredient[sub_category]", with: "RSpec"
+
 
     page.execute_script(<<~JS)
       document.querySelector('textarea[name="ingredient[template_content]"] + div[class*="CodeMirror"]').CodeMirror.setValue("gem 'rspec'")
@@ -113,7 +116,7 @@ class IngredientsTest < ApplicationSystemTestCase
     visit setup_recipes_path("testing")
 
     # Verify the group and checkbox exist
-    assert_selector "h3", text: "RSpec"
+    assert_selector "h3", text: "Alternative Frameworks"
     assert_selector "li.menu-card-row label", text: "RSpec"
   end
 

@@ -49,6 +49,9 @@ class Element < ApplicationRecord
 
   validates :label, presence: true, uniqueness: { scope: :sub_group_id }
   validate :unique_label_within_group
+  validates :variant_type, presence: true
+  validates :variant_id, presence: true
+  validate :variant_must_exist
 
   def self.null
     new(variant: Element::Null.new)
@@ -63,6 +66,15 @@ class Element < ApplicationRecord
   end
 
   private
+
+  def variant_must_exist
+    return unless variant_type && variant_id
+    return if variant_type == "Element::Null"  # Allow null objects
+
+    unless variant_type.constantize.exists?(id: variant_id)
+      errors.add(:variant, "must exist")
+    end
+  end
 
   def set_command_line_value
     self.command_line_value = generate_command_line_value

@@ -49,7 +49,6 @@ class Ingredient < ApplicationRecord
   validates :sub_category, presence: true
   validates :page_id, presence: true
 
-  before_destroy :cleanup_ui_elements
   after_update :update_ui_elements, if: :ui_relevant_attributes_changed?
   before_save :process_snippets
 
@@ -133,10 +132,6 @@ class Ingredient < ApplicationRecord
 
 
   private
-
-  def cleanup_ui_elements
-    IngredientUiDestroyer.call(self)
-  end
 
   def update_ui_elements
     IngredientUiUpdater.call(self)

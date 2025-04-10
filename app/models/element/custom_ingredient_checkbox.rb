@@ -24,10 +24,20 @@
 class Element::CustomIngredientCheckbox < ApplicationRecord
   has_one :element, as: :variant, dependent: :destroy
   belongs_to :ingredient
+  before_destroy :ensure_destroyed_through_element
 
   validates :ingredient_id, presence: true, uniqueness: true
 
   def displayed?
     true
+  end
+
+  private
+
+  def ensure_destroyed_through_element
+    return if element&.destroyed? || element.nil?
+
+    errors.add(:base, "must be destroyed through its element")
+    throw :abort
   end
 end

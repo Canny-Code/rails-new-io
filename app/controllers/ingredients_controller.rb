@@ -83,7 +83,7 @@ class IngredientsController < ApplicationController
       local_template_path: data_repository.template_path(@ingredient)
     )
 
-    @ingredient.destroy
+    IngredientUiDestroyer.call(@ingredient)
 
     redirect_to ingredients_url, notice: "Ingredient was successfully deleted."
   end

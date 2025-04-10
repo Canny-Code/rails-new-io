@@ -10,25 +10,28 @@ class IngredientUiDestroyer
   def call
     ActiveRecord::Base.transaction do
       checkbox = Element::CustomIngredientCheckbox.find_by(ingredient_id: ingredient.id)
-      return unless checkbox
+      if checkbox
+        element = checkbox.element
+        if element
+          sub_group = element.sub_group
+          group = sub_group.group
 
-      element = checkbox.element
-      return unless element
+          # First destroy the checkbox
+          checkbox.destroy
 
-      sub_group = element.sub_group
-      group = sub_group.group
+          # Clean up empty ancestors
+          if sub_group.elements.reload.empty?
+            sub_group.destroy
 
-      # Destroy the element (this will also destroy the checkbox due to delegated_type)
-      element.destroy
-
-      # Clean up empty ancestors
-      if sub_group.elements.reload.empty?
-        sub_group.destroy
-
-        if group.sub_groups.reload.empty?
-          group.destroy
+            if group.sub_groups.reload.empty?
+              group.destroy
+            end
+          end
         end
       end
+
+      # Finally destroy the ingredient
+      ingredient.destroy
     end
   end
 
