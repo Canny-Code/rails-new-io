@@ -3,7 +3,7 @@ glob: "**/app/**/*.{html,turbo_stream,js}{+*,}.erb"
 exclude:
   - '*vendor/*'
   - '*app/views/svg/*'
-  - 'DESC\s*%>'
+  - 'app/views/shared/onboarding/1/_sidebar.html.erb'
 linters:
   AllowedScriptType:
     enabled: true
