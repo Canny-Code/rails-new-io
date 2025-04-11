@@ -15,26 +15,38 @@ export default class extends Controller {
     }
   }
 
+  disconnect() {
+    if (this.resizeObservers) {
+      this.resizeObservers.forEach(observer => observer.disconnect())
+      this.resizeObservers = []
+    }
+    this.initialized = false
+  }
+
   initializeSteps() {
+    this.initialized = true
+    this.resizeObservers = []
+
     setTimeout(() => {
       Object.entries(this.stepsValue).forEach(([selector, config]) => {
         if (selector.startsWith('appear:')) {
           const targetSelector = selector.replace('appear:', '')
 
           const observer = new ResizeObserver((entries) => {
-            const targetElement = document.querySelector(targetSelector)
-            if (targetElement) {
-              const isVisible = getComputedStyle(targetElement).display !== 'none' && targetElement.offsetParent !== null
+            entries.forEach(entry => {
+              const targetElement = entry.target
+              const computedStyle = getComputedStyle(targetElement)
 
+              const isVisible = computedStyle.display !== 'none' && targetElement.offsetParent !== null
               if (isVisible) {
                 this.updateStep(config.currentStep)
-                observer.disconnect()
               }
-            }
+            })
           })
 
-          // Start observing the document
-          observer.observe(document.body)
+          document.querySelectorAll(targetSelector).forEach(element => observer.observe(element))
+
+          this.resizeObservers.push(observer)
         } else if (selector.startsWith('click:')) {
           const targetSelector = selector.replace('click:', '')
 
@@ -43,8 +55,6 @@ export default class extends Controller {
             field.addEventListener('click', () => {
               this.updateStep(config.currentStep)
             })
-          } else {
-            console.log("DEBUG: No field found for click selector:", targetSelector)
           }
         } else if (selector.includes('CodeMirror')) {
           let attempts = 0
@@ -78,8 +88,6 @@ export default class extends Controller {
             field.addEventListener('input', () => {
               this.checkFieldAndUpdateSteps(selector, config)
             })
-          } else {
-            console.log("DEBUG: No field found for selector:", selector)
           }
         }
       })

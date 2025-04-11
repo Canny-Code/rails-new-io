@@ -94,12 +94,12 @@ class DataRepositoryService < GithubRepositoryService
     )
   end
 
-  def write_recipe(recipe_name, repo_name:)
+  def write_recipe(recipe, repo_name:)
     tree_items = []
 
     # Create recipe file
     tree_items << {
-      path: "recipes/#{recipe_name}.yml",
+      path: "recipes/#{recipe.name}.yml",
       mode: "100644",
       type: "blob",
       content: recipe.to_yaml
@@ -107,7 +107,7 @@ class DataRepositoryService < GithubRepositoryService
 
     commit = commit_changes(
       repo_name: repo_name,
-      message: "Update recipe: #{recipe_name}",
+      message: "Update recipe: #{recipe.name}",
       tree_items: tree_items
     )
 

@@ -11,26 +11,10 @@ module Pages
 
     def view_template
       if @page.groups.any? && has_visible_groups?
-        if @onboarding_step.present?
-          div(class: "flex gap-0 max-w-6xl mx-auto") do
-            #  Left sidebar (1/3)
-            div(class: "space-y-8 w-1/3") do
-              render "shared/onboarding/#{@onboarding_step}/sidebar"
-            end
-
-            # Main content (2/3)
-            div(class: "space-y-8 w-2/3 ") do
-              @page.groups.order(:position).each do |group|
-                render Pages::Groups::Component.new(group: group)
-              end
-            end
-          end
-        else
-          div(class: "max-w-4xl mx-auto py-8 space-y-8") do
-            div(class: "space-y-8") do
-              @page.groups.order(:position).each do |group|
-                render Pages::Groups::Component.new(group: group)
-              end
+        div(class: "max-w-4xl mx-auto py-8 space-y-8") do
+          div(class: "space-y-8") do
+            @page.groups.order(:position).each do |group|
+              render Pages::Groups::Component.new(group: group)
             end
           end
         end

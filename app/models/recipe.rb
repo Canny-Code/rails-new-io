@@ -34,7 +34,7 @@ class Recipe < ApplicationRecord
   has_many :ingredients, through: :recipe_ingredients
   has_many :commits, as: :versioned, dependent: :destroy
 
-  validates :name, presence: true
+  validates :name, presence: true, uniqueness: { scope: :created_by_id }
   validates :status, inclusion: { in: %w[draft published archived] }
 
   def add_ingredient!(ingredient, configuration = {})
