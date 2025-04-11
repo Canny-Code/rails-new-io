@@ -20,7 +20,7 @@
 # Indexes
 #
 #  index_ingredients_on_created_by_id  (created_by_id)
-#  index_ingredients_on_name_scope     (name,created_by_id,page_id,category) UNIQUE
+#  index_ingredients_on_name_scope     (name,created_by_id,page_id,category,sub_category) UNIQUE
 #  index_ingredients_on_page_id        (page_id)
 #
 # Foreign Keys

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_10_074617) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_10_100002) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -236,7 +236,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_10_074617) do
     t.integer "page_id", null: false
     t.string "sub_category", default: "Default"
     t.index ["created_by_id"], name: "index_ingredients_on_created_by_id"
-    t.index ["name", "created_by_id", "page_id", "category"], name: "index_ingredients_on_name_scope", unique: true
+    t.index ["name", "created_by_id", "page_id", "category", "sub_category"], name: "index_ingredients_on_name_scope", unique: true
     t.index ["page_id"], name: "index_ingredients_on_page_id"
   end
 
