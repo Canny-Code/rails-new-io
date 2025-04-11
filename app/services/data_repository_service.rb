@@ -81,7 +81,11 @@ class DataRepositoryService < GithubRepositoryService
       sha: nil # Setting SHA to nil marks it for deletion
     }
 
-    File.delete(local_template_path) if File.exist?(local_template_path)
+    # TODO: these should not be here; this is a git-related concern, not a file-system one
+    if File.exist?(local_template_path)
+      File.delete(local_template_path)
+      FileUtils.rm_rf(File.dirname(local_template_path))
+    end
 
     commit_changes(
       repo_name:,
@@ -90,12 +94,12 @@ class DataRepositoryService < GithubRepositoryService
     )
   end
 
-  def write_recipe(recipe, repo_name:)
+  def write_recipe(recipe_name, repo_name:)
     tree_items = []
 
     # Create recipe file
     tree_items << {
-      path: "recipes/#{recipe.name}.yml",
+      path: "recipes/#{recipe_name}.yml",
       mode: "100644",
       type: "blob",
       content: recipe.to_yaml
@@ -103,11 +107,29 @@ class DataRepositoryService < GithubRepositoryService
 
     commit = commit_changes(
       repo_name: repo_name,
-      message: "Update recipe: #{recipe.name}",
+      message: "Update recipe: #{recipe_name}",
       tree_items: tree_items
     )
 
     recipe.update(head_commit_sha: commit.sha)
+  end
+
+  def delete_recipe(recipe_name:, repo_name:)
+    tree_items = []
+
+    # Mark recipe file for deletion
+    tree_items << {
+      path: "recipes/#{recipe_name}.yml",
+      mode: "100644",
+      type: "blob",
+      sha: nil # Setting SHA to nil marks it for deletion
+    }
+
+    commit_changes(
+      repo_name:,
+      message: "Delete recipe: #{recipe_name}",
+      tree_items: tree_items
+    )
   end
 
   def commit_changes(message:, tree_items:, repo_name: nil)
