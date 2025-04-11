@@ -3,6 +3,7 @@ glob: "**/app/**/*.{html,turbo_stream,js}{+*,}.erb"
 exclude:
   - '*vendor/*'
   - '*app/views/svg/*'
+  - 'DESC\s*%>'
 linters:
   AllowedScriptType:
     enabled: true
@@ -38,8 +39,6 @@ linters:
     enabled: false
   SpaceAroundErbTag:
     enabled: true
-    ignore_patterns:
-      - 'DESC\s*%>'
   SpaceInHtmlTag:
     enabled: true
   SpaceIndentation:
