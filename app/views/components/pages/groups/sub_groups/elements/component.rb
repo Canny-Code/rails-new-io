@@ -52,6 +52,7 @@ module Pages
                 checked: element.variant.checked,
                 command_line_value: element.label,
                 ingredient_id: element.variant.ingredient.id,
+                ingredient_group_sub_group: element.cleaned_group_sub_group,
                 data: {
                   action: "change->custom-ingredient-checkbox#update change->recipe-ui-state-store#ingredientChanged",
                   element_id: element.id,

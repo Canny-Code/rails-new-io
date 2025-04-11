@@ -2,11 +2,17 @@
      data-onboarding-sidebar-steps-value="<%= {
       "appear:input#main-tab-mains-skip-test" => { currentStep: 1, expectedValue: "" },
       "click:input#main-tab-mains-skip-test" => { currentStep: 2, expectedValue: "" },
-      "click:input#custom-ingredient-rspec" => { currentStep: 3, expectedValue: "" },
+      "click:input#custom-ingredient-alternative-testing-frameworks-default-rspec" => { currentStep: 3, expectedValue: "" },
       "appear:input#main-tab-database-choice-tailwind" => { currentStep: 4, expectedValue: "" },
       "click:input#main-tab-database-choice-tailwind" => { currentStep: 5, expectedValue: "" },
-      "appear:input#custom-ingredient-rails-authentication" => { currentStep: 6, expectedValue: "" },
-      "click:input#custom-ingredient-rails-authentication" => { currentStep: 7, expectedValue: "" }
+      "appear:input#custom-ingredient-authentication-default-rails-authentication" => { currentStep: 6, expectedValue: "" },
+      "click:input#custom-ingredient-authentication-default-rails-authentication" => { currentStep: 7, expectedValue: "" },
+      "appear:input#custom-ingredient-built-in-rails-auth-add-ons-default-registration" => { currentStep: 8, expectedValue: "" },
+      "click:input#custom-ingredient-built-in-rails-auth-add-ons-default-registration" => { currentStep: 9, expectedValue: "" },
+      "click:input#custom-ingredient-forms-tailwind-importmaps--registration-view" => { currentStep: 10, expectedValue: "" },
+      "appear:input#custom-ingredient-basics-default-simple-homepage" => { currentStep: 11, expectedValue: "" },
+      "click:input#custom-ingredient-basics-default-simple-homepage" => { currentStep: 12, expectedValue: "" },
+
      }.to_json %>">
   <div class="min-h-[calc(100vh-10rem)] mt-8 px-4 pt-16 bg-gray-50">
     <nav aria-label="Progress">
@@ -35,21 +41,51 @@
         <%= render OnboardingSidebarStep::Component.new(
           title: "Choose 'Tailwind'",
           description: "Locate the `CSS Framework` category at the bottom of the page. Select `Tailwind`.",
-          step_index: 5,
-          last_step: true
+          step_index: 5
         ) %>
         <%= render OnboardingSidebarStep::Component.new(
           title: "Go to the 'Your Custom Ingredients' tab",
           description: "It's time to add the ingredient we created in the first step! All the ingredients you've created will be listed under the `Your Custom Ingredients` tab.",
-          step_index: 6,
-          last_step: true
+          step_index: 6
         ) %>
         <%= render OnboardingSidebarStep::Component.new(
           title: "Select 'Rails authentication'",
           description: "You guessed it: click the `Rails authentication` checkbox, adding the ingredient to your recipe.",
-          step_index: 7,
+          step_index: 7
+        ) %>
+        <%= render OnboardingSidebarStep::Component.new(
+          title: "Go to the 'Authentication' tab",
+          description: "The built-in Rails authentication functionality and views are a bit bare-bones compared to e.g. Devise. Let's do something about that! Go to the `Authentication` tab.",
+          step_index: 8
+        ) %>
+        <%= render OnboardingSidebarStep::Component.new(
+          title: "Registration - backend",
+          description: "Find the `Built-in Rails auth add-ons` > `Registration` checkbox and click it. This generates the view-agnostic part of the registration functionality.",
+          step_index: 9
+        ) %>
+        <%= render OnboardingSidebarStep::Component.new(
+          title: "Registration - frontend",
+          description: "The choice of registration view depends on the frontend framework/bundling combo. For simplicity's sake, we'll go with the easiest Tailwind option: importmaps. Click the `Forms` > `Tailwind (importmaps)` > `Registration view` > checkbox and click it.",
+          step_index: 10
+        ) %>
+        <%= render OnboardingSidebarStep::Component.new(
+          title: "Go to the 'Business Logic' tab",
+          description: "Last but not least, we'll add a simple homepage (The built-in Rails auth will recdirect to `root_url`, which is not set up by default.) Let's go to the `Business Logic` tab.",
+          step_index: 11
+        ) %>
+        <%= render OnboardingSidebarStep::Component.new(
+          title: "Add 'Simple homepage'",
+          description: "Click the `Simple homepage` checkbox.",
+          step_index: 12
+        ) %>
+        <%= render OnboardingSidebarStep::Component.new(
+          title: "Click 'Done Tweaking'",
+          description: "Your recipe setup is now complete! Click the `Done Tweaking` button to save your recipe. Fill out the form and click `Create Recipe` to save your recipe.",
+          step_index: 13,
           last_step: true
         ) %>
+
+
       </ol>
     </nav>
 

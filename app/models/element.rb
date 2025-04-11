@@ -65,6 +65,10 @@ class Element < ApplicationRecord
     variant.displayed?
   end
 
+  def cleaned_group_sub_group
+    "#{sub_group.group.title}-#{sub_group.title}".downcase.gsub(/[^a-z0-9-]+/, "-")
+  end
+
   private
 
   def variant_must_exist

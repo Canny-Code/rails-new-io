@@ -8,7 +8,7 @@ module Pages
           class Component < ApplicationComponent
             include Phlex::Rails::Helpers::ImageTag
 
-            def initialize(label:, description:, image_path:, name:, command_line_value:, checked:, ingredient_id:, data: {})
+            def initialize(label:, description:, image_path:, name:, command_line_value:, ingredient_group_sub_group:, checked:, ingredient_id:, data: {})
               @label = label
               @description = description
               @image_path = image_path.presence || "ingredient-generic.svg"
@@ -16,6 +16,7 @@ module Pages
               @command_line_value = command_line_value
               @checked = checked
               @ingredient_id = ingredient_id
+              @ingredient_group_sub_group = ingredient_group_sub_group
               @data = data
             end
 
@@ -46,7 +47,7 @@ module Pages
                   div do
                     input(
                       type: "checkbox",
-                      id: "custom-ingredient-#{@label.downcase.gsub(' ', '-')}",
+                      id: "custom-ingredient-#{@ingredient_group_sub_group}-#{@label.downcase.gsub(' ', '-')}",
                       data: @data.merge({
                         command_output: @command_line_value,
                         ingredient_id: @ingredient_id
