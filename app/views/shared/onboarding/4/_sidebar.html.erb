@@ -14,7 +14,7 @@
   "click:input#custom-ingredient-basics-default-simple-homepage" => { currentStep: 12, expectedValue: "" },
   "click:button#done-tweaking" => { currentStep: 13, expectedValue: "" }
 }.to_json %>">
-  <div class="min-h-[calc(100vh-10rem)] mt-8 px-4 pt-16 bg-gray-50 overflow-y-auto max-h-[calc(100vh-4rem)]" data-onboarding-sidebar-target="container">
+  <div class="min-h-[calc(100vh-10rem)] mt-2 px-4 pt-4 bg-gray-50 overflow-y-auto max-h-[calc(100vh-4rem)]" data-onboarding-sidebar-target="container">
     <nav aria-label="Progress">
       <ol role="list" class="overflow-hidden">
         <%= render OnboardingSidebarStep::Component.new(
