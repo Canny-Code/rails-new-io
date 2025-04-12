@@ -1,20 +1,20 @@
 <div data-controller="onboarding-sidebar"
      data-onboarding-sidebar-steps-value="<%= {
-      "appear:input#main-tab-mains-skip-test" => { currentStep: 1, expectedValue: "" },
-      "click:input#main-tab-mains-skip-test" => { currentStep: 2, expectedValue: "" },
-      "click:input#custom-ingredient-alternative-testing-frameworks-default-rspec" => { currentStep: 3, expectedValue: "" },
-      "appear:input#main-tab-database-choice-tailwind" => { currentStep: 4, expectedValue: "" },
-      "click:input#main-tab-database-choice-tailwind" => { currentStep: 5, expectedValue: "" },
-      "appear:input#custom-ingredient-authentication-default-rails-authentication" => { currentStep: 6, expectedValue: "" },
-      "click:input#custom-ingredient-authentication-default-rails-authentication" => { currentStep: 7, expectedValue: "" },
-      "appear:input#custom-ingredient-built-in-rails-auth-add-ons-default-registration" => { currentStep: 8, expectedValue: "" },
-      "click:input#custom-ingredient-built-in-rails-auth-add-ons-default-registration" => { currentStep: 9, expectedValue: "" },
-      "click:input#custom-ingredient-forms-tailwind-importmaps--registration-view" => { currentStep: 10, expectedValue: "" },
-      "appear:input#custom-ingredient-basics-default-simple-homepage" => { currentStep: 11, expectedValue: "" },
-      "click:input#custom-ingredient-basics-default-simple-homepage" => { currentStep: 12, expectedValue: "" },
-      "click:button#done-tweaking" => { currentStep: 13, expectedValue: "" }
-     }.to_json %>">
-  <div class="min-h-[calc(100vh-10rem)] mt-8 px-4 pt-16 bg-gray-50">
+  "appear:input#main-tab-mains-skip-test" => { currentStep: 1, expectedValue: "" },
+  "click:input#main-tab-mains-skip-test" => { currentStep: 2, expectedValue: "" },
+  "click:input#custom-ingredient-alternative-testing-frameworks-default-rspec" => { currentStep: 3, expectedValue: "" },
+  "appear:input#main-tab-database-choice-tailwind" => { currentStep: 4, expectedValue: "" },
+  "click:input#main-tab-database-choice-tailwind" => { currentStep: 5, expectedValue: "" },
+  "appear:input#custom-ingredient-authentication-default-rails-authentication" => { currentStep: 6, expectedValue: "" },
+  "click:input#custom-ingredient-authentication-default-rails-authentication" => { currentStep: 7, expectedValue: "" },
+  "appear:input#custom-ingredient-built-in-rails-auth-add-ons-default-registration" => { currentStep: 8, expectedValue: "" },
+  "click:input#custom-ingredient-built-in-rails-auth-add-ons-default-registration" => { currentStep: 9, expectedValue: "" },
+  "click:input#custom-ingredient-forms-tailwind-importmaps--registration-view" => { currentStep: 10, expectedValue: "" },
+  "appear:input#custom-ingredient-basics-default-simple-homepage" => { currentStep: 11, expectedValue: "" },
+  "click:input#custom-ingredient-basics-default-simple-homepage" => { currentStep: 12, expectedValue: "" },
+  "click:button#done-tweaking" => { currentStep: 13, expectedValue: "" }
+}.to_json %>">
+  <div class="min-h-[calc(100vh-10rem)] mt-8 px-4 pt-16 bg-gray-50 overflow-y-auto max-h-[calc(100vh-4rem)]" data-onboarding-sidebar-target="container">
     <nav aria-label="Progress">
       <ol role="list" class="overflow-hidden">
         <%= render OnboardingSidebarStep::Component.new(
