@@ -114,30 +114,21 @@ export default class extends Controller {
   }
 
   updateStep(stepIndex) {
-    console.log("DEBUG: updateStep called with stepIndex", stepIndex)
-
-    // Find the current step
     const currentStep = this.stepTargets.find(step => {
       const stepIdx = parseInt(step.dataset.stepIndex)
-      console.log("DEBUG: Comparing step indices", { stepIdx, stepIndex, match: stepIdx === stepIndex })
+
       return stepIdx === stepIndex
     })
 
-    console.log("DEBUG: Found current step", currentStep)
-    if (!currentStep) {
-      console.log("DEBUG: ERROR - Could not find current step!")
-      return
-    }
+    if (!currentStep) return
 
     // Mark current step as completed
     const currentStepCircle = currentStep.querySelector('.size-8')
-    console.log("DEBUG: Found step circle", currentStepCircle)
+
     if (currentStepCircle) {
-      console.log("DEBUG: Updating step circle")
-      // Remove all existing content
       currentStepCircle.innerHTML = ''
 
-      // Add completed state
+
       currentStepCircle.classList.remove('border-2', 'border-gray-300', 'bg-white', 'group-hover:border-gray-400')
       currentStepCircle.classList.add('bg-[#008A05]')
 
@@ -147,14 +138,11 @@ export default class extends Controller {
           <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"></path>
         </svg>
       `
-    } else {
-      console.log("DEBUG: ERROR - Could not find circle element!")
     }
 
     // Update the connecting line
     const connectingLine = currentStep.querySelector('.w-0\\.5')
     if (connectingLine) {
-      console.log("DEBUG: Updating connecting line")
       connectingLine.classList.remove('bg-gray-300')
       connectingLine.classList.add('bg-[#008A05]')
     }
@@ -162,73 +150,26 @@ export default class extends Controller {
     // Find and activate next step
     const nextStep = this.stepTargets.find(step => {
       const nextStepIdx = parseInt(step.dataset.stepIndex)
-      console.log("DEBUG: Looking for next step", { nextStepIdx, target: stepIndex + 1, match: nextStepIdx === stepIndex + 1 })
+
       return nextStepIdx === stepIndex + 1
     })
 
-    console.log("DEBUG: Found next step", nextStep)
 
     if (nextStep) {
       // Update next step to current
       const nextStepCircle = nextStep.querySelector('.size-8')
       if (nextStepCircle) {
-        console.log("DEBUG: Updating next step circle")
         nextStepCircle.innerHTML = '<span class="size-2.5 rounded-full bg-[#008A05]"></span>'
         nextStepCircle.classList.remove('border-gray-300')
         nextStepCircle.classList.add('border-[#008A05]')
       }
 
-      // Get the relative position of the next step within the scrollable container
-      const containerRect = this.containerTarget.getBoundingClientRect()
-      const stepRect = nextStep.getBoundingClientRect()
-      const relativeTop = stepRect.top - containerRect.top + this.containerTarget.scrollTop
+      nextStep.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 
-      console.log("DEBUG: Scroll calculations", {
-        containerTop: containerRect.top,
-        stepTop: stepRect.top,
-        currentScroll: this.containerTarget.scrollTop,
-        relativeTop,
-        containerElement: this.containerTarget,
-        nextStepElement: nextStep
-      })
-
-      // Try multiple scroll approaches
-      try {
-        // First try: scrollTo
-        this.containerTarget.scrollTo({
-          top: relativeTop,
-          behavior: 'smooth'
-        })
-
-        // Second try: scrollTop
-        setTimeout(() => {
-          if (this.containerTarget.scrollTop === 0) {
-            console.log("DEBUG: First scroll attempt failed, trying scrollTop")
-            this.containerTarget.scrollTop = relativeTop
-          }
-        }, 100)
-
-        // Third try: scroll
-        setTimeout(() => {
-          if (this.containerTarget.scrollTop === 0) {
-            console.log("DEBUG: Second scroll attempt failed, trying scroll")
-            this.containerTarget.scroll(0, relativeTop)
-          }
-        }, 200)
-      } catch (e) {
-        console.log("DEBUG: Scroll error", e)
-      }
-
-      // Update current step input
       const currentStepInput = document.querySelector('input[name="current_step"]')
       if (currentStepInput) {
-        console.log("DEBUG: Updating step input from", currentStepInput.value, "to", stepIndex + 1)
         currentStepInput.value = stepIndex + 1
-      } else {
-        console.log("DEBUG: ERROR - Could not find current step input!")
       }
-    } else {
-      console.log("DEBUG: No next step found - we might be at the end")
     }
   }
 }
