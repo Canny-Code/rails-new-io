@@ -9,7 +9,8 @@ fi
 
 # If running the rails server then create or migrate existing database
 if [ "${2}" == "./bin/rails" ] && [ "${3}" == "server" ]; then
-  ./bin/rails db:prepare
+  ./bin/rails db:drop:all db:create:all db:schema:load:all
+
 fi
 
 # Ensure workspaces directory exists with correct permissions
