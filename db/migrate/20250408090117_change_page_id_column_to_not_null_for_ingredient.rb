@@ -1,7 +1,7 @@
 class ChangePageIdColumnToNotNullForIngredient < ActiveRecord::Migration[8.0]
   def change
-    # Disable foreign key checks
-    execute("PRAGMA foreign_keys = OFF")
+    # Defer foreign key checks until the end of the transaction
+    execute("PRAGMA defer_foreign_keys = ON")
 
     # Drop and recreate the table
     drop_table :ingredients if table_exists?(:ingredients)
@@ -25,8 +25,5 @@ class ChangePageIdColumnToNotNullForIngredient < ActiveRecord::Migration[8.0]
     add_index :ingredients, :created_by_id
     add_index :ingredients, [ :name, :created_by_id, :page_id, :category, :sub_category ], unique: true, name: "index_ingredients_on_name_scope"
     add_index :ingredients, :page_id
-
-    # Re-enable foreign key checks
-    execute("PRAGMA foreign_keys = ON")
   end
 end
