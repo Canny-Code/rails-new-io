@@ -4,7 +4,9 @@
     </div>
   </div>
   <div>
+  <% if params[:onboarding_step].present? %>
     <%= render "shared/onboarding/#{params[:onboarding_step]}/explanation" %>
+  <% end %>
   </div>
   <div class="mt-8">
     <div data-controller="app-form-validator"

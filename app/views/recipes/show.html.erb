@@ -17,7 +17,7 @@
             path: edit_recipes_path(recipe_id: @recipe.id, slug: "basic-setup")
           ) %>
           <%= render Buttons::Primary::Component.new(
-            text: "Configure App with this Recipe",
+            text: "Create a new App using this Recipe",
             path: new_generated_app_path(recipe_id: @recipe.id, onboarding_step: params[:onboarding_step].present? ? params[:onboarding_step].to_i + 1 : nil)
           ) %>
         </div>

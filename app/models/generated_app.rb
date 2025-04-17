@@ -195,6 +195,13 @@ class GeneratedApp < ApplicationRecord
       partial: "shared/github_clone_box",
       locals: { generated_app: self }
     )
+
+    Turbo::StreamsChannel.broadcast_update_to(
+      "#{to_gid}:app_generation_log_entries",
+      target: "explanation",
+      partial: "shared/onboarding/7/final_instructions"
+    )
+
     # TODO: This is a hack to broadcast the last step as completed
     app_status.broadcast_status_steps
   end
