@@ -1,8 +1,6 @@
 service: rails-new-io
 image: canny-code/rails-new-io
 
-deploy_timeout: 1200
-
 volumes:
   - "/storage:/rails/storage"
   - "/home/deploy/rails-new-io/workspaces:/var/lib/rails-new-io/workspaces"
