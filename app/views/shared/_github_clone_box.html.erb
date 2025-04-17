@@ -1,6 +1,11 @@
 <% if generated_app.completed? %>
   <div class="mb-6 p-4 bg-green-100 border border-green-400 rounded-lg">
     <h2 class="text-xl font-semibold text-green-800 mb-2">Your app is ready!</h2>
+    <% if params[:onboarding_step].present? %>
+      <p class="text-sm text-gray-500">
+            <%= render "shared/onboarding/#{params[:onboarding_step]}/final_instructions" %>
+      </p>
+    <% end %>
     <div class="flex items-center gap-2">
       <code class="bg-gray-100 p-2 rounded flex-grow">
         git clone <%= github_ssh_url(generated_app.user.github_username, generated_app.github_repo_name) %>

@@ -26,7 +26,12 @@ class GeneratedAppsController < ApplicationController
 
       if @generated_app.save
         AppGenerationJob.perform_later(@generated_app.id)
-        redirect_to generated_app_log_entries_path(@generated_app)
+        redirect_path = if params[:onboarding_step].present?
+          generated_app_log_entries_path(@generated_app, onboarding_step: params[:onboarding_step])
+        else
+          generated_app_log_entries_path(@generated_app)
+        end
+        redirect_to redirect_path
       else
         redirect_to new_generated_app_path, alert: "Failed to create generated app: #{@generated_app.errors.full_messages.to_sentence}"
       end

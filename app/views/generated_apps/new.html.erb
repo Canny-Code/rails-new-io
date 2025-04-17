@@ -3,12 +3,15 @@
     <div class="flex-1 min-w-0">
     </div>
   </div>
-
+  <div>
+    <%= render "shared/onboarding/#{params[:onboarding_step]}/explanation" %>
+  </div>
   <div class="mt-8">
     <div data-controller="app-form-validator"
          data-app-form-validator-check-url-value="<%= check_github_name_path %>"
          data-app-form-validator-debounce-value="500">
       <%= form_tag generated_apps_path, method: :post, class: "space-y-8 divide-y divide-gray-200", data: { turbo: false } do %>
+        <%= hidden_field_tag "onboarding_step", params[:onboarding_step].to_i + 1 if params[:onboarding_step].present? %>
         <div class="space-y-6 sm:space-y-5">
           <div class="relative overflow-hidden">
             <div class="hidden sm:block sm:absolute sm:inset-y-0 sm:h-full sm:w-full pointer-events-none">

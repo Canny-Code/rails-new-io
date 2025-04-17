@@ -43,7 +43,13 @@ class RecipesController < ApplicationController
 
       WriteRecipeJob.perform_later(recipe_id: @recipe.id, user_id: current_user.id)
 
-      redirect_to @recipe, notice: "Recipe was successfully created."
+      redirect_path = if params[:onboarding_step].present?
+        recipe_path(@recipe, onboarding_step: params[:onboarding_step].to_i + 1)
+      else
+        recipe_path(@recipe)
+      end
+
+      redirect_to redirect_path, notice: "Recipe was successfully created."
     else
       error_messages = @recipe.errors.full_messages.join(", ")
       redirect_to setup_recipes_path(slug: "basic-setup"), alert: "Failed to save recipe: #{error_messages}", status: :see_other

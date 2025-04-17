@@ -27,6 +27,7 @@
                 data: { form_values_target: "cssChoice" } %>
         <%= hidden_field_tag "recipe[rails_flags]", nil,
                 data: { form_values_target: "railsFlags" } %>
+        <%= hidden_field_tag "onboarding_step", params[:onboarding_step] if params[:onboarding_step].present? && params[:action] != "edit" %>
 
         <% if params[:action] == "edit" && @recipe.ingredient_ids.present? %>
           <% @recipe.ingredient_ids.each do |ingredient_id| %>

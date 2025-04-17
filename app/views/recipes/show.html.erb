@@ -1,4 +1,9 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <% if params[:onboarding_step].present? %>
+    <div class="max-w-4xl mx-auto my-8">
+       <%= render "shared/onboarding/#{params[:onboarding_step]}/explanation" %>
+    </div>
+  <% end %>
   <div class="max-w-4xl mx-auto my-8">
     <div class="bg-white shadow rounded-lg p-6">
       <div class="px-4 sm:px-0">
@@ -13,7 +18,7 @@
           ) %>
           <%= render Buttons::Primary::Component.new(
             text: "Configure App with this Recipe",
-            path: new_generated_app_path(recipe_id: @recipe.id)
+            path: new_generated_app_path(recipe_id: @recipe.id, onboarding_step: params[:onboarding_step].present? ? params[:onboarding_step].to_i + 1 : nil)
           ) %>
         </div>
       </div>
