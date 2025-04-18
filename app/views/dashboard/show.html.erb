@@ -1,7 +1,15 @@
 <%= turbo_stream_from [ :generated_app, current_user.id ] %>
 <%= turbo_stream_from [ :notification_badge, current_user.id ] %>
+<% if current_user.should_start_onboarding? %>
+  <%= render WelcomeModal::Component.new(
+    title: "Welcome to railsnew.io!",
+    description: "Let's get you started with your first app. We'll guide you through the process step by step. While onboarding is optional, we highly recommend it to learn the ropes and get the most out of railsnew.io",
+    button_text: "Start Onboarding",
+    button_path: "/ingredients/new?onboarding_step=1#"
+  ) %>
+<% end %>
 
-<%= turbo_frame_tag "generated_apps_list" do %>
+  <%= turbo_frame_tag "generated_apps_list" do %>
   <%= render ResourceLayout::Component.new(
     title: "Welcome #{current_user.github_username}!",
     subtitle: "What will you build today?",

@@ -47,8 +47,8 @@ class Element < ApplicationRecord
   belongs_to :user
   has_one :group, through: :sub_group
 
-  validates :label, presence: true, uniqueness: { scope: :sub_group_id }
-  validate :unique_label_within_group_and_subgroup
+  validates :label, presence: true
+  validate :unique_label_within_group_subgroup_and_user
   validates :variant_type, presence: true
   validates :variant_id, presence: true
   validate :variant_must_exist
@@ -84,14 +84,14 @@ class Element < ApplicationRecord
     self.command_line_value = generate_command_line_value
   end
 
-  def unique_label_within_group_and_subgroup
+  def unique_label_within_group_subgroup_and_user
     return unless group
 
     duplicate = group.sub_groups
                     .where(id: sub_group_id) # Only check within the same subgroup
                     .joins(:elements)
                     .where.not(elements: { id: id })
-                    .where(elements: { label: label })
+                    .where(elements: { label: label, user_id: user_id })
                     .exists?
 
     if duplicate

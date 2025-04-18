@@ -75,6 +75,9 @@ class AppStatus < ApplicationRecord
       transitions from: :running_ci, to: :completed
       after do
         update(completed_at: Time.current)
+        unless Current.user.onboarding_completed
+          Current.user.update(onboarding_completed: true)
+        end
       end
     end
 

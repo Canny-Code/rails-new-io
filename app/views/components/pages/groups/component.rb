@@ -34,7 +34,7 @@ module Pages
                   end
                 end
                 ul(**wrapper_attributes, aria_disabled: "true") do
-                  group.sub_groups.each do |sub_group|
+                  group.sub_groups.order(:position).each do |sub_group|
                     render Pages::Groups::SubGroups::Component.new(sub_group: sub_group)
                   end
                 end

@@ -44,7 +44,17 @@ class IngredientUiCreator
   end
 
   def find_or_create_sub_group(group)
-    group.sub_groups.find_or_create_by!(title: ingredient.sub_category)
+    if existing_sub_group = group.sub_groups.find_by(title: ingredient.sub_category)
+      return existing_sub_group
+    end
+
+    position = 0 if group.sub_groups.empty?
+    position = position || group.sub_groups.maximum(:position) + 1
+
+    group.sub_groups.create!(
+      title: ingredient.sub_category,
+      position: position
+    )
   end
 
   def create_element(sub_group)

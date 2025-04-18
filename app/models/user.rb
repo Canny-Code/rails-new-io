@@ -2,18 +2,19 @@
 #
 # Table name: users
 #
-#  id              :integer          not null, primary key
-#  admin           :boolean          default(FALSE), not null
-#  email           :string
-#  github_token    :text
-#  github_username :string           not null
-#  image           :string
-#  name            :string
-#  provider        :string
-#  slug            :string
-#  uid             :string
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
+#  id                   :integer          not null, primary key
+#  admin                :boolean          default(FALSE), not null
+#  email                :string
+#  github_token         :text
+#  github_username      :string           not null
+#  image                :string
+#  name                 :string
+#  onboarding_completed :boolean          default(FALSE)
+#  provider             :string
+#  slug                 :string
+#  uid                  :string
+#  created_at           :datetime         not null
+#  updated_at           :datetime         not null
 #
 # Indexes
 #
@@ -56,5 +57,9 @@ class User < ApplicationRecord
 
   def notifications
     Noticed::Notification.where(recipient: self)
+  end
+
+  def should_start_onboarding?
+    generated_apps.empty? && recipes.empty? && ingredients.empty? && !onboarding_completed?
   end
 end
