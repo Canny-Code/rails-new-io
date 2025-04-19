@@ -33,6 +33,13 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       )
     ).returns(response)
 
+    # Mock branch conversion from master to main
+    master_ref = Data.define(:object).new(object: Data.define(:sha).new(sha: "master_sha"))
+    mock_client.expects(:ref).with("#{@user.github_username}/#{@repository_name}", "heads/master").returns(master_ref).twice
+    mock_client.expects(:create_ref).with("#{@user.github_username}/#{@repository_name}", "refs/heads/main", "master_sha")
+    mock_client.expects(:edit_repository).with("#{@user.github_username}/#{@repository_name}", default_branch: "main")
+    mock_client.expects(:delete_ref).with("#{@user.github_username}/#{@repository_name}", "heads/master")
+
     Octokit::Client.stubs(:new).returns(mock_client)
 
     result = @service.create_repository(repo_name: @repository_name)
@@ -168,11 +175,11 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
     mock_client = mock("octokit_client")
     Octokit::Client.stubs(:new).returns(mock_client)
 
-    # Expect ref call to fail with NotFound 3 times due to retries
+    # Expect ref call to fail with NotFound once (no retries for NotFound)
     mock_client.expects(:ref)
               .with(repo_full_name, "heads/main")
               .raises(not_found_error)
-              .times(3)
+              .once
 
     # We should never get to these calls
     mock_client.expects(:commit).never
@@ -180,7 +187,7 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
     mock_client.expects(:create_commit).never
     mock_client.expects(:update_ref).never
 
-    error = assert_raises(GithubRepositoryService::ApiError) do
+    error = assert_raises(GithubRepositoryService::Error) do
       @service.commit_changes(
         repo_name: @repository_name,
         message: "test commit",
@@ -188,6 +195,6 @@ class GithubRepositoryServiceTest < ActiveSupport::TestCase
       )
     end
 
-    assert_equal "GitHub API error:  : 404 - Not Found", error.message
+    assert_equal "Unexpected error: Main branch not found. This should never happen as we always create repositories with main branch.", error.message
   end
 end

@@ -22,6 +22,7 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
   test "initializes repository with correct structure" do
     repo_full_name = "#{@user.github_username}/#{@repo_name}"
 
+    # Mock repository existence check and creation
     @mock_client.expects(:repository?).with(repo_full_name).returns(false)
     @mock_client.expects(:create_repository).with(
       @repo_name,
@@ -34,12 +35,12 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
     # Mock branch creation and deletion
     master_ref_mock = mock("master_ref")
     master_ref_mock.stubs(:object).returns(GitObject.new(sha: "master_sha"))
-    @mock_client.expects(:ref).with(repo_full_name, "heads/master").returns(master_ref_mock)
+    @mock_client.expects(:ref).with(repo_full_name, "heads/master").returns(master_ref_mock).twice
     @mock_client.expects(:create_ref).with(repo_full_name, "refs/heads/main", "master_sha")
     @mock_client.expects(:edit_repository).with(repo_full_name, default_branch: "main")
     @mock_client.expects(:delete_ref).with(repo_full_name, "heads/master")
 
-    # First ref call to get base tree SHA
+    # Mock initial structure creation
     @mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(@first_ref_mock)
     @mock_client.expects(:commit).with(repo_full_name, "old_sha").returns(@commit_mock)
     @mock_client.expects(:create_tree).with(
@@ -67,32 +68,23 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
       base_tree: "tree_sha"
     ).returns(@tree_mock)
 
-    # Second ref call to get latest commit SHA for parent
+    # Mock commit creation and update
     @mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(@first_ref_mock)
-
-    # Create commit with the latest commit SHA as parent
     @mock_client.expects(:create_commit).with(
       repo_full_name,
       "Initialize repository structure",
       "new_tree_sha",
       "old_sha",
-      author: {
-        name: @user.name,
-        email: @user.email
-      }
+      author: { name: @user.name, email: @user.email }
     ).returns(@new_commit_mock)
-
-    # Update ref to point to new commit
     @mock_client.expects(:update_ref).with(
       repo_full_name,
       "heads/main",
       "new_sha"
     )
 
-    # Just assert that it doesn't raise an error
-    assert_nothing_raised do
-      @service.initialize_repository
-    end
+    # Call the method being tested
+    @service.initialize_repository
   end
 
   test "writes ingredient to repository" do
@@ -255,6 +247,48 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
 
     result = @service.write_recipe(recipe, repo_name: @repo_name)
     assert_equal "new_sha", result.head_commit_sha
+  end
+
+  test "deletes recipe from repository" do
+    recipe_name = "test_recipe"
+    repo_full_name = "#{@user.github_username}/#{@repo_name}"
+
+    # Mock the GitHub API calls in sequence
+    # First ref call to get base tree SHA
+    @mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(@first_ref_mock)
+    @mock_client.expects(:commit).with(repo_full_name, "old_sha").returns(@commit_mock)
+    @mock_client.expects(:create_tree).with(
+      repo_full_name,
+      [
+        {
+          path: "recipes/test_recipe.yml",
+          mode: "100644",
+          type: "blob",
+          sha: nil # Setting SHA to nil marks it for deletion
+        }
+      ],
+      base_tree: "tree_sha"
+    ).returns(@tree_mock)
+    # Second ref call to get latest commit SHA
+    @mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(@first_ref_mock)
+    @mock_client.expects(:create_commit).with(
+      repo_full_name,
+      "Delete recipe: test_recipe",
+      "new_tree_sha",
+      "old_sha",
+      author: {
+        name: @user.name,
+        email: @user.email
+      }
+    ).returns(@new_commit_mock)
+    @mock_client.expects(:update_ref).with(
+      repo_full_name,
+      "heads/main",
+      "new_sha"
+    )
+
+    result = @service.delete_recipe(recipe_name: recipe_name, repo_name: @repo_name)
+    assert_equal "new_sha", result.sha
   end
 
   test "name_for_environment returns base name with dev suffix in development" do

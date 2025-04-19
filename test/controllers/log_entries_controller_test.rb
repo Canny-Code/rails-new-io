@@ -55,6 +55,7 @@ class LogEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "#github_clone_box", text: /git clone/, count: 0
 
     @generated_app.app_status.start_ci!
+    Current.user = @user # Ensure Current.user is set before completing
     @generated_app.app_status.complete!
 
     get generated_app_log_entries_path(@generated_app)

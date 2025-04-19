@@ -142,7 +142,19 @@ class IngredientsTest < ApplicationSystemTestCase
     visit root_path
     click_on "Get in"
 
+    # Wait for authentication to complete
+    assert_selector "button", text: "Logout", wait: 5
+
+    # Verify we're on the dashboard
+    assert_current_path "/dashboard"
+
+    # Navigate to ingredients index first
+    visit ingredients_path
+    assert_current_path "/ingredients"
+
+    # Now visit the edit page
     visit edit_ingredient_path(@ingredient)
+    assert_current_path "/ingredients/#{@ingredient.id}/edit"
 
     fill_in "Name", with: "Updated Ingredient"
     fill_in "Description", with: "An updated description"

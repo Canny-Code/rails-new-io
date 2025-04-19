@@ -227,6 +227,7 @@ class GeneratedAppTest < ActiveSupport::TestCase
     assert app.running_ci?
 
     # Complete generation
+    Current.user = @user
     assert_changes -> { app.reload.last_build_at } do
       app.complete!
     end
@@ -321,6 +322,7 @@ class GeneratedAppTest < ActiveSupport::TestCase
     assert app.running_ci?
 
     # Complete generation
+    Current.user = @user
     assert_changes -> { app.reload.last_build_at } do
       app.complete!
     end

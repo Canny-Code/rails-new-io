@@ -72,6 +72,7 @@ class AppStatusTest < ActiveSupport::TestCase
     assert_equal "running_ci", @app_status.status
 
     # Complete
+    Current.user = users(:john)
     @app_status.complete!
     assert_equal "completed", @app_status.status
     assert_not_nil @app_status.completed_at
@@ -297,7 +298,7 @@ class AppStatusTest < ActiveSupport::TestCase
 
     @app_status.start_ci!
     logger.info("Starting CI")
-
+    Current.user = users(:john)
     @app_status.complete!
     logger.info("Completed successfully")
 
