@@ -36,18 +36,17 @@ class GithubRepositoryService
         default_branch: "main"
       )
 
-      # Get the master branch's SHA
-      master_ref = client.ref(repo_full_name, "heads/master")
-      master_sha = master_ref.object.sha
+      begin
+        client.ref(repo_full_name, "heads/master")
 
-      # Create main branch from master's SHA
-      client.create_ref(repo_full_name, "refs/heads/main", master_sha)
-
-      # Update default branch to main
-      client.edit_repository(repo_full_name, default_branch: "main")
-
-      # Delete master branch
-      client.delete_ref(repo_full_name, "heads/master")
+        default_ref = client.ref(repo_full_name, "heads/master")
+        default_sha = default_ref.object.sha
+        client.create_ref(repo_full_name, "refs/heads/main", default_sha)
+        client.edit_repository(repo_full_name, default_branch: "main")
+        client.delete_ref(repo_full_name, "heads/master")
+      rescue Octokit::NotFound
+        # main is already the default
+      end
 
       response
     end
