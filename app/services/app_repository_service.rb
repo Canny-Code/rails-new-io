@@ -16,15 +16,15 @@ class AppRepositoryService < GithubRepositoryService
   def create_github_repository
     repo_name = generated_app.name
 
-    response = create_repository(
+    create_repository(
       repo_name: repo_name,
       auto_init: false
-    )
-
-    generated_app.update!(
-      github_repo_name: repo_name,
-      github_repo_url: response.html_url
-    )
+    ).tap do |response|
+      generated_app.update!(
+        github_repo_name: repo_name,
+        github_repo_url: response.html_url
+      )
+    end
   end
 
   def create_initial_commit
