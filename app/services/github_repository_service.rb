@@ -56,7 +56,7 @@ class GithubRepositoryService
           commit = client.commit(repo_full_name, ref.object.sha)
           base_tree_sha = commit.commit.tree.sha
         rescue Octokit::NotFound => e
-          raise
+          raise ApiError, "Main branch not found. This should never happen as we always create repositories with main branch."
         end
       end
 
