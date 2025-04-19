@@ -603,26 +603,22 @@ module AppGeneration
     end
 
     test "successfully completes generation" do
-      # Reset to initial state
       @generated_app.app_status.update!(status: "running_ci")
 
-      # Set up logger
       @logger = AppGeneration::Logger.new(@generated_app.app_status)
       AppGeneration::Logger.expects(:new).with(@generated_app.app_status).returns(@logger).once
 
-      # Mock command execution service
       command_service = mock("command_service")
       CommandExecutionService.expects(:new).with(@generated_app, @logger).returns(command_service)
 
-      # Mock repository service
       repository_service = mock("repository_service")
       AppRepositoryService.expects(:new).with(@generated_app, @logger).returns(repository_service)
 
-      # Expect proper logging
       sequence = sequence("completion_logging")
       @logger.expects(:info).with("Starting app generation workflow").in_sequence(sequence)
       @logger.expects(:info).with("App generation workflow completed successfully").in_sequence(sequence)
 
+      Current.user = users(:john)
       @orchestrator = Orchestrator.new(@generated_app)
       @orchestrator.complete_generation
 
@@ -678,6 +674,7 @@ module AppGeneration
     end
 
     test "log entries have correct icons throughout the workflow" do
+      Current.user = users(:john)
       Turbo::StreamsChannel.stubs(:broadcast_update_to)
       ApplicationController.helpers.stubs(:turbo_stream_from)
 
