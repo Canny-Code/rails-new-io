@@ -51,7 +51,7 @@ module Pages
             doc = Nokogiri::HTML.fragment(result)
 
             input = doc.css("input[type='checkbox']").first
-            assert_equal "custom-ingredient-test-element", input["id"]
+            assert_equal "custom-ingredient-custom-ingredients--test-element", input["id"]
             assert_equal "Test Element", input["data-command-output"]
             assert_equal ingredient.id.to_s, input["data-ingredient-id"]
             assert_equal "change->custom-ingredient-checkbox#update change->recipe-ui-state-store#ingredientChanged", input["data-action"]
