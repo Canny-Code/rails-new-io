@@ -31,6 +31,14 @@ class DataRepositoryServiceTest < ActiveSupport::TestCase
       default_branch: "main"
     ).returns(@new_commit_mock)
 
+    # Mock branch creation and deletion
+    master_ref_mock = mock("master_ref")
+    master_ref_mock.stubs(:object).returns(GitObject.new(sha: "master_sha"))
+    @mock_client.expects(:ref).with(repo_full_name, "heads/master").returns(master_ref_mock)
+    @mock_client.expects(:create_ref).with(repo_full_name, "refs/heads/main", "master_sha")
+    @mock_client.expects(:edit_repository).with(repo_full_name, default_branch: "main")
+    @mock_client.expects(:delete_ref).with(repo_full_name, "heads/master")
+
     # First ref call to get base tree SHA
     @mock_client.expects(:ref).with(repo_full_name, "heads/main").returns(@first_ref_mock)
     @mock_client.expects(:commit).with(repo_full_name, "old_sha").returns(@commit_mock)

@@ -25,13 +25,29 @@ class GithubRepositoryService
       raise RepositoryExistsError, "Repository '#{repo_name}' already exists"
     end
 
+    repo_full_name = "#{user.github_username}/#{repo_name}"
+
     with_error_handling do
+      # Create the repository first
       client.create_repository(repo_name,
         private: private,
         auto_init: auto_init,
         description: description,
         default_branch: "main"
       )
+
+      # Get the master branch's SHA
+      master_ref = client.ref(repo_full_name, "heads/master")
+      master_sha = master_ref.object.sha
+
+      # Create main branch from master's SHA
+      client.create_ref(repo_full_name, "refs/heads/main", master_sha)
+
+      # Update default branch to main
+      client.edit_repository(repo_full_name, default_branch: "main")
+
+      # Delete master branch
+      client.delete_ref(repo_full_name, "heads/master")
     end
   end
 

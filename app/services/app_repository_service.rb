@@ -25,8 +25,6 @@ class AppRepositoryService < GithubRepositoryService
       github_repo_name: repo_name,
       github_repo_url: response.html_url
     )
-
-    response
   end
 
   def create_initial_commit

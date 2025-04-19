@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_18_104132) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_19_090253) do
   create_table "_litestream_lock", id: false, force: :cascade do |t|
     t.integer "id"
   end
@@ -295,7 +295,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_18_104132) do
     t.string "ruby_version"
     t.string "rails_version"
     t.string "status", default: "draft"
-    t.string "head_commit_sha"
+    t.string "head_commit_sha", default: "unknown", null: false
     t.integer "created_by_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

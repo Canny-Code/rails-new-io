@@ -57,7 +57,6 @@ class GeneratedApp < ApplicationRecord
     },
     allow_blank: true
   validates :recipe, presence: true
-  validates :generated_with_recipe_version, presence: true
 
   def apply_ingredients
     unless ingredients.any?

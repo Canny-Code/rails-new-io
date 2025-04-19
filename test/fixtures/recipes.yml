@@ -7,7 +7,7 @@
 #  id              :integer          not null, primary key
 #  cli_flags       :string
 #  description     :text
-#  head_commit_sha :string
+#  head_commit_sha :string           default("unknown"), not null
 #  name            :string           not null
 #  rails_version   :string
 #  ruby_version    :string
