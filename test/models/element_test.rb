@@ -62,7 +62,7 @@ class ElementTest < ActiveSupport::TestCase
     assert_equal "cockroachdb", element.command_line_value
   end
 
-  test "validates uniqueness of label within group" do
+  test "allows the same label within group if it's in a different sub group" do
     page = pages(:custom_ingredients)
     group = page.groups.create!(title: "Test Group")
     sub_group1 = group.sub_groups.create!(title: "Sub Group 1")
@@ -92,7 +92,71 @@ class ElementTest < ActiveSupport::TestCase
       user: users(:john)
     )
 
+    assert element2.valid?
+  end
+
+  test "allows same label for different users in same sub_group" do
+    page = pages(:custom_ingredients)
+    group = page.groups.create!(title: "Test Group")
+    sub_group = group.sub_groups.create!(title: "Sub Group")
+
+    checkbox1 = Element::RailsFlagCheckbox.create!(
+      checked: false,
+      display_when: "checked"
+    )
+    sub_group.elements.create!(
+      label: "Test Element",
+      description: "Test Description",
+      position: 0,
+      variant: checkbox1,
+      user: users(:john)
+    )
+
+    checkbox2 = Element::RailsFlagCheckbox.create!(
+      checked: false,
+      display_when: "checked"
+    )
+    element2 = sub_group.elements.build(
+      label: "Test Element",
+      description: "Another Description",
+      position: 0,
+      variant: checkbox2,
+      user: users(:jane)
+    )
+
+    assert element2.valid?
+  end
+
+  test "prevents duplicate labels for same user in same sub_group" do
+    page = pages(:custom_ingredients)
+    group = page.groups.create!(title: "Test Group")
+    sub_group = group.sub_groups.create!(title: "Sub Group")
+
+    checkbox1 = Element::RailsFlagCheckbox.create!(
+      checked: false,
+      display_when: "checked"
+    )
+    sub_group.elements.create!(
+      label: "Test Element",
+      description: "Test Description",
+      position: 0,
+      variant: checkbox1,
+      user: users(:john)
+    )
+
+    checkbox2 = Element::RailsFlagCheckbox.create!(
+      checked: false,
+      display_when: "checked"
+    )
+    element2 = sub_group.elements.build(
+      label: "Test Element",
+      description: "Another Description",
+      position: 0,
+      variant: checkbox2,
+      user: users(:john)
+    )
+
     assert_not element2.valid?
-    assert_includes element2.errors[:label], "must be unique within the group"
+    assert_includes element2.errors[:label], "must be unique within the group and subgroup for the same user"
   end
 end

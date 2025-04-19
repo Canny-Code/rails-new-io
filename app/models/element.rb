@@ -95,7 +95,7 @@ class Element < ApplicationRecord
                     .exists?
 
     if duplicate
-      errors.add(:label, "must be unique within the group and subgroup")
+      errors.add(:label, "must be unique within the group and subgroup for the same user")
     end
   end
 end
