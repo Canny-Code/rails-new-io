@@ -105,6 +105,13 @@ class InitializeUserDataRepositoryJobTest < ActiveSupport::TestCase
       default_branch: "main"
     ).returns(mock)
 
+    # Expect the branch migration flow
+    mock_client.expects(:ref).with("test-user/#{DataRepositoryService.name_for_environment}", "heads/master").returns(mock.tap { |m| m.stubs(:object).returns(GitObject.new(sha: "master_sha")) })
+    mock_client.expects(:create_ref).with("test-user/#{DataRepositoryService.name_for_environment}", "refs/heads/main", "master_sha")
+    mock_client.expects(:edit_repository).with("test-user/#{DataRepositoryService.name_for_environment}", default_branch: "main")
+    mock_client.expects(:delete_ref).with("test-user/#{DataRepositoryService.name_for_environment}", "heads/master")
+
+    # Now expect the structure creation
     mock_client.expects(:ref).with("test-user/#{DataRepositoryService.name_for_environment}", "heads/main").returns(mock.tap { |m| m.stubs(:object).returns(GitObject.new(sha: "old_sha")) })
     mock_client.expects(:commit).with("test-user/#{DataRepositoryService.name_for_environment}", "old_sha").returns(mock.tap { |m| m.stubs(:commit).returns(GitCommitData.new(tree: GitCommitTree.new(sha: "tree_sha"))); m.stubs(:sha).returns("old_sha") })
     mock_client.expects(:create_tree).with(
