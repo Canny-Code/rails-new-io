@@ -76,7 +76,7 @@ class RecipesController < ApplicationController
       end
     end
 
-    WriteRecipeJob.perform_later(recipe_name: @recipe.name, user_id: current_user.id)
+    WriteRecipeJob.perform_later(recipe_id: @recipe.id, user_id: current_user.id)
 
     redirect_to @recipe, notice: "Recipe was successfully updated."
   end
