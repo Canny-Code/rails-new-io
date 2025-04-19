@@ -29,7 +29,7 @@ class GithubRepositoryService
 
     with_error_handling do
       # Create the repository first
-      client.create_repository(repo_name,
+      response = client.create_repository(repo_name,
         private: private,
         auto_init: auto_init,
         description: description,
@@ -48,6 +48,8 @@ class GithubRepositoryService
 
       # Delete master branch
       client.delete_ref(repo_full_name, "heads/master")
+
+      response
     end
   end
 

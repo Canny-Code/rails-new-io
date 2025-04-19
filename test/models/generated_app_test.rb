@@ -261,6 +261,7 @@ class GeneratedAppTest < ActiveSupport::TestCase
       configuration_options: {},
       github_repo_url: "https://github.com/johndoe/test-app"
     )
+    Current.user = @user
 
     # Follow the proper state transition sequence
     app.start_github_repo_creation!
