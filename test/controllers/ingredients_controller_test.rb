@@ -314,4 +314,47 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to ingredients_url
     assert_equal "Ingredient was successfully deleted.", flash[:notice]
   end
+
+  test "should handle IngredientUiCreationError and destroy ingredient" do
+    # Stub IngredientUiCreator to raise an error
+    IngredientUiCreator.stubs(:call).raises(IngredientUiCreationError.new("Test error"))
+
+    assert_no_difference("Ingredient.count") do
+      post ingredients_url, params: {
+        ingredient: {
+          name: "Test Ingredient",
+          description: "A test ingredient",
+          template_content: "gem 'test'",
+          page_id: pages(:custom_ingredients).id,
+          category: "Testing",
+          sub_category: "Default",
+          new_snippets: [ "puts 'test'" ]
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal "There was a problem creating the ingredient. Please try again or contact support if the problem persists.", flash[:alert]
+  end
+
+  test "should create ingredient with onboarding step" do
+    assert_difference("Ingredient.count") do
+      post ingredients_url, params: {
+        ingredient: {
+          name: "Test Ingredient",
+          description: "A test ingredient",
+          template_content: "gem 'test'",
+          page_id: pages(:custom_ingredients).id,
+          category: "Testing",
+          conflicts_with: [],
+          requires: [],
+          configures_with: {}
+        },
+        onboarding_step: 1
+      }
+    end
+
+    new_ingredient = @controller.instance_variable_get(:@ingredient)
+    assert_redirected_to ingredient_path(new_ingredient, onboarding_step: 2)
+  end
 end
