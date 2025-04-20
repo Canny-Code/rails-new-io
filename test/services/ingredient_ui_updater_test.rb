@@ -47,12 +47,10 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
 
   teardown do
     # Clean up any created records that aren't in fixtures
-    Element.where(sub_group_id: [ @sub_group&.id ]).destroy_all
-    Element::CustomIngredientCheckbox.where(ingredient_id: [ @ingredient&.id ]).destroy_all
+    Element.where(sub_group_id: [ @sub_group&.id ]).destroy_all  # This will also destroy variants through after_destroy
     SubGroup.where(id: @sub_group&.id).destroy_all
     Group.where(id: @group&.id).destroy_all
     @ingredient&.destroy
-    # Page.where(title: "Your Custom Ingredients").destroy_all  # Remove this line as we're using the fixture
   end
 
   test "updates element attributes when ingredient is updated" do
@@ -364,19 +362,22 @@ class IngredientUiUpdaterTest < ActiveSupport::TestCase
     matching_category = "matching-category-#{SecureRandom.hex(8)}"
 
     # First destroy existing groups to avoid uniqueness validation
-    @element.destroy
-    @variant.destroy
+    @element.destroy  # This will also destroy the variant through after_destroy
     @sub_group.destroy
     @group.destroy
 
     # Create new group with matching category
     @group = @page.groups.create!(title: matching_category, behavior_type: "custom_ingredient_checkbox")
     @sub_group = @group.sub_groups.create!(title: "Default")
+
+    # Create the variant first
     @variant = Element::CustomIngredientCheckbox.create!(
       ingredient: @ingredient,
       checked: false,
       default: false
     )
+
+    # Then create the element with the variant
     @element = Element.create!(
       label: @ingredient.name,
       description: @ingredient.description,

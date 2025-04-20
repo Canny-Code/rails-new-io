@@ -16,7 +16,10 @@ class IngredientUiDestroyer
           sub_group = element.sub_group
           group = sub_group.group
 
-          # First destroy the checkbox
+          # First destroy the element
+          element.destroy
+
+          # Then destroy the checkbox
           checkbox.destroy
 
           # Clean up empty ancestors

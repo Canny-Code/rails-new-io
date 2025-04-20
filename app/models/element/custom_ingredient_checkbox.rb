@@ -22,9 +22,8 @@
 # frozen_string_literal: true
 
 class Element::CustomIngredientCheckbox < ApplicationRecord
-  has_one :element, as: :variant, dependent: :destroy
+  has_one :element, as: :variant
   belongs_to :ingredient
-  before_destroy :ensure_destroyed_through_element
 
   validates :ingredient_id, presence: true, uniqueness: true
 
@@ -32,12 +31,13 @@ class Element::CustomIngredientCheckbox < ApplicationRecord
     true
   end
 
-  private
-
-  def ensure_destroyed_through_element
-    return if element&.destroyed? || element.nil?
-
-    errors.add(:base, "must be destroyed through its element")
-    throw :abort
+  def destroy
+    if element&.destroyed? || element.nil?
+      super
+    else
+      message = "must be destroyed through its element"
+      errors.add(:base, message)
+      raise ActiveRecord::RecordNotDestroyed.new(message)
+    end
   end
 end

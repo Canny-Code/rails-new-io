@@ -384,4 +384,49 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to recipe_path(recipe)
     assert_equal "Recipe was successfully created.", flash[:notice]
   end
+  test "update with ingredients replaces existing ingredients" do
+    ingredient1 = ingredients(:rails_authentication)
+    ingredient2 = ingredients(:api_setup)
+    ingredient3 = ingredients(:basic)
+
+    # First add some initial ingredients
+    @recipe.add_ingredient!(ingredient1)
+    @recipe.add_ingredient!(ingredient2)
+
+    assert_difference("RecipeIngredient.count", -1) do
+      patch recipe_path(@recipe), params: {
+        recipe: {
+          name: "Updated Recipe",
+          description: "Updated description",
+          api_flag: "--api",
+          ui_state: "{}",
+          ingredient_ids: [ ingredient2.id, ingredient3.id ]
+        }
+      }
+    end
+
+    @recipe.reload
+    assert_equal [ ingredient2.id, ingredient3.id ], @recipe.ingredient_ids
+    assert_equal 2, @recipe.ingredients.count
+    assert_includes @recipe.ingredients, ingredient2
+    assert_includes @recipe.ingredients, ingredient3
+    assert_not_includes @recipe.ingredients, ingredient1
+  end
+
+  test "create with onboarding step increments step and redirects to recipe" do
+    assert_difference("Recipe.count") do
+      post recipes_path, params: {
+        recipe: {
+          name: "My API App",
+          description: "A cool API app",
+          api_flag: "--api",
+          ui_state: "{}"
+        },
+        onboarding_step: 2
+      }
+    end
+
+    new_recipe = Recipe.last
+    assert_redirected_to recipe_path(new_recipe, onboarding_step: 3)
+  end
 end

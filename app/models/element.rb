@@ -34,6 +34,7 @@ class Element < ApplicationRecord
   include ElementVisibility
 
   before_save :set_command_line_value
+  after_destroy :destroy_variant
 
   delegated_type :variant, types: %w[
     Element::RailsFlagCheckbox
@@ -41,7 +42,7 @@ class Element < ApplicationRecord
     Element::RadioButton
     Element::TextField
     Element::Unclassified
-  ], dependent: :destroy
+  ]
 
   belongs_to :sub_group
   belongs_to :user
@@ -70,6 +71,10 @@ class Element < ApplicationRecord
   end
 
   private
+
+  def destroy_variant
+    variant.destroy if variant.present? && !variant.is_a?(Element::Null)
+  end
 
   def variant_must_exist
     return unless variant_type && variant_id

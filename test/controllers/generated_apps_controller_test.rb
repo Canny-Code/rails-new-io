@@ -158,4 +158,33 @@ class GeneratedAppsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to generated_app_log_entries_path(GeneratedApp.last)
     assert_equal recipe, GeneratedApp.last.recipe
   end
+
+  test "redirects to log entries with onboarding step when provided" do
+    recipe = recipes(:minimal_recipe)
+    recipe.update!(created_by: @user)
+
+    assert_difference "GeneratedApp.count" do
+      post generated_apps_path, params: {
+        app_name: "test-app",
+        generated_app: { recipe_id: recipe.id },
+        onboarding_step: "step_2"
+      }
+    end
+
+    assert_redirected_to generated_app_log_entries_path(GeneratedApp.last, onboarding_step: "step_2")
+  end
+
+  test "redirects to log entries without onboarding step when not provided" do
+    recipe = recipes(:minimal_recipe)
+    recipe.update!(created_by: @user)
+
+    assert_difference "GeneratedApp.count" do
+      post generated_apps_path, params: {
+        app_name: "test-app",
+        generated_app: { recipe_id: recipe.id }
+      }
+    end
+
+    assert_redirected_to generated_app_log_entries_path(GeneratedApp.last)
+  end
 end

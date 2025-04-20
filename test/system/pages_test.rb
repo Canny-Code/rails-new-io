@@ -1,24 +1,14 @@
 require "application_system_test_case"
+require_relative "./base_system_test_case"
 
-class PagesTest < ApplicationSystemTestCase
+class PagesTest < BaseSystemTestCase
   def setup
+    super
     @user = users(:john)
-    OmniAuth.config.test_mode = true
-    OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new(
-      provider: @user.provider,
-      uid: @user.uid,
-      info: {
-        email: @user.email,
-        name: @user.name,
-        image: @user.image,
-        nickname: @user.github_username
-      }
-    )
-    visit root_path
-    click_on "Get in"
   end
 
   test "visiting the basic setup page" do
+    sign_in_as(@user)
     visit setup_recipes_path(slug: pages(:basic_setup).slug)
 
     assert_selector "h3", text: "Databases", wait: 5
@@ -26,6 +16,7 @@ class PagesTest < ApplicationSystemTestCase
   end
 
   test "can navigate between pages" do
+    sign_in_as(@user)
     visit setup_recipes_path(slug: pages(:basic_setup).slug)
 
     click_on "Your Custom Ingredients"

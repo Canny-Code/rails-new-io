@@ -159,4 +159,32 @@ class ElementTest < ActiveSupport::TestCase
     assert_not element2.valid?
     assert_includes element2.errors[:label], "must be unique within the group and subgroup for the same user"
   end
+
+  test "validates that variant exists" do
+    # Test valid case
+    page = pages(:custom_ingredients)
+    group = page.groups.create!(title: "Test Group")
+    sub_group = group.sub_groups.create!(title: "Sub Group")
+
+    checkbox = Element::RailsFlagCheckbox.create!(checked: false)
+    element = Element.new(
+      label: "Test Element",
+      variant_type: "Element::RailsFlagCheckbox",
+      variant_id: checkbox.id,
+      user: users(:john),
+      sub_group: sub_group
+    )
+    assert element.valid?
+
+    # Test invalid case with non-existent variant
+    element = Element.new(
+      label: "Test Element",
+      variant_type: "Element::RailsFlagCheckbox",
+      variant_id: 999999, # Non-existent ID
+      user: users(:john),
+      sub_group: sub_group
+    )
+    assert_not element.valid?
+    assert_includes element.errors[:variant], "must exist"
+  end
 end
