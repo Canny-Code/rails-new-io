@@ -257,4 +257,61 @@ class IngredientsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_includes @response.body, "Category can&#39;t be blank"
   end
+
+  test "should not allow non-owner to edit ingredient" do
+    ingredient = ingredients(:rails_authentication)
+    sign_in users(:jane)
+
+    get edit_ingredient_url(ingredient)
+    assert_redirected_to ingredient_url(ingredient)
+    assert_equal "You can only perform this action on your own ingredients!", flash[:notice]
+  end
+
+  test "should not allow non-owner to update ingredient" do
+    ingredient = ingredients(:rails_authentication)
+    sign_in users(:jane)
+
+    patch ingredient_url(ingredient), params: { ingredient: { name: "New Name" } }
+    assert_redirected_to ingredient_url(ingredient)
+    assert_equal "You can only perform this action on your own ingredients!", flash[:notice]
+  end
+
+  test "should not allow non-owner to destroy ingredient" do
+    ingredient = ingredients(:rails_authentication)
+    sign_in users(:jane)
+
+    assert_no_difference("Ingredient.count") do
+      delete ingredient_url(ingredient)
+    end
+    assert_redirected_to ingredient_url(ingredient)
+    assert_equal "You can only perform this action on your own ingredients!", flash[:notice]
+  end
+
+  test "should allow rails-new-io user to edit any ingredient" do
+    ingredient = ingredients(:rails_authentication)
+    sign_in users(:rails_new_io)
+
+    get edit_ingredient_url(ingredient)
+    assert_response :success
+  end
+
+  test "should allow rails-new-io user to update any ingredient" do
+    ingredient = ingredients(:rails_authentication)
+    sign_in users(:rails_new_io)
+
+    patch ingredient_url(ingredient), params: { ingredient: { name: "New Name" } }
+    assert_redirected_to ingredient_url(ingredient)
+    assert_equal "Ingredient was successfully updated.", flash[:notice]
+  end
+
+  test "should allow rails-new-io user to destroy any ingredient" do
+    ingredient = ingredients(:rails_authentication)
+    sign_in users(:rails_new_io)
+
+    assert_difference("Ingredient.count", -1) do
+      delete ingredient_url(ingredient)
+    end
+    assert_redirected_to ingredients_url
+    assert_equal "Ingredient was successfully deleted.", flash[:notice]
+  end
 end

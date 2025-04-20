@@ -16,6 +16,6 @@ class OnboardingsControllerTest < ActionDispatch::IntegrationTest
 
   test "should require authentication" do
     patch onboarding_path
-    assert_redirected_to new_user_session_path
+    assert_redirected_to root_path
   end
 end

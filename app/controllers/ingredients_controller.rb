@@ -1,6 +1,7 @@
 class IngredientsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_ingredient, only: [ :show, :edit, :update, :destroy ]
+  before_action :authorize_action, only: [ :edit, :update, :destroy ]
 
   def index
     @ingredients = current_user.ingredients
@@ -15,9 +16,6 @@ class IngredientsController < ApplicationController
   end
 
   def edit
-    unless @ingredient.created_by == current_user || current_user.github_username == "rails-new-io"
-      redirect_to ingredient_path(@ingredient), notice: "You can only edit ingredients your own ingredients!"
-    end
   end
 
   def create
@@ -56,9 +54,6 @@ class IngredientsController < ApplicationController
   end
 
   def update
-    unless @ingredient.created_by == current_user || current_user.github_username == "rails-new-io"
-      redirect_to ingredient_path(@ingredient), notice: "You can only update your own ingredients!"
-    end
     if @ingredient.update(ingredient_params)
       WriteIngredientJob.perform_later(ingredient_id: @ingredient.id, user_id: current_user.id)
 
@@ -70,10 +65,6 @@ class IngredientsController < ApplicationController
   end
 
   def destroy
-    unless @ingredient.created_by == current_user || current_user.github_username == "rails-new-io"
-      redirect_to ingredient_path(@ingredient), notice: "You can only delete your own ingredients!"
-    end
-
     data_repository = DataRepositoryService.new(user: current_user)
 
     DeleteIngredientJob.perform_later(
@@ -92,6 +83,12 @@ class IngredientsController < ApplicationController
 
   def set_ingredient
     @ingredient = Ingredient.find(params[:id])
+  end
+
+  def authorize_action
+    unless @ingredient.created_by == Current.user || current_user.github_username == "rails-new-io"
+      redirect_to ingredient_path(@ingredient), notice: "You can only perform this action on your own ingredients!"
+    end
   end
 
   def ingredient_params
