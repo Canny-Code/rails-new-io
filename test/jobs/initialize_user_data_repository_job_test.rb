@@ -91,7 +91,7 @@ class InitializeUserDataRepositoryJobTest < ActiveSupport::TestCase
     end
   end
 
-  test "creates data repository if it does not exist with master default branch" do
+  test "creates data repository if it does not exist" do
     User.any_instance.stubs(:github_username).returns("test-user")
 
     mock_client = mock
@@ -104,87 +104,6 @@ class InitializeUserDataRepositoryJobTest < ActiveSupport::TestCase
       description: "Repository created via railsnew.io",
       default_branch: "main"
     ).returns(mock)
-
-    # First check if master exists
-    mock_client.expects(:ref).with("test-user/#{DataRepositoryService.name_for_environment}", "heads/master").returns(mock.tap { |m| m.stubs(:object).returns(GitObject.new(sha: "master_sha")) })
-
-    # Then get master's SHA for migration
-    mock_client.expects(:ref).with("test-user/#{DataRepositoryService.name_for_environment}", "heads/master").returns(mock.tap { |m| m.stubs(:object).returns(GitObject.new(sha: "master_sha")) })
-
-    # Migrate to main
-    mock_client.expects(:create_ref).with("test-user/#{DataRepositoryService.name_for_environment}", "refs/heads/main", "master_sha")
-    mock_client.expects(:edit_repository).with("test-user/#{DataRepositoryService.name_for_environment}", default_branch: "main")
-    mock_client.expects(:delete_ref).with("test-user/#{DataRepositoryService.name_for_environment}", "heads/master")
-
-    # Now expect the structure creation
-    mock_client.expects(:ref).with("test-user/#{DataRepositoryService.name_for_environment}", "heads/main").returns(mock.tap { |m| m.stubs(:object).returns(GitObject.new(sha: "old_sha")) })
-    mock_client.expects(:commit).with("test-user/#{DataRepositoryService.name_for_environment}", "old_sha").returns(mock.tap { |m| m.stubs(:commit).returns(GitCommitData.new(tree: GitCommitTree.new(sha: "tree_sha"))); m.stubs(:sha).returns("old_sha") })
-    mock_client.expects(:create_tree).with(
-      "test-user/#{DataRepositoryService.name_for_environment}",
-      [
-        {
-          path: "README.md",
-          mode: "100644",
-          type: "blob",
-          content: "# Data Repository\nThis repository contains data for railsnew.io"
-        },
-        {
-          path: "ingredients/.keep",
-          mode: "100644",
-          type: "blob",
-          content: ""
-        },
-        {
-          path: "recipes/.keep",
-          mode: "100644",
-          type: "blob",
-          content: ""
-        }
-      ],
-      base_tree: "tree_sha"
-    ).returns(mock.tap { |m| m.stubs(:sha).returns("new_tree_sha") })
-
-    # Second ref call in commit_changes
-    mock_client.expects(:ref).with("test-user/#{DataRepositoryService.name_for_environment}", "heads/main").returns(mock.tap { |m| m.stubs(:object).returns(GitObject.new(sha: "old_sha")) })
-
-    mock_client.expects(:create_commit).with(
-      "test-user/#{DataRepositoryService.name_for_environment}",
-      "Initialize repository structure",
-      "new_tree_sha",
-      "old_sha",
-      author: {
-        name: @user.name,
-        email: @user.email
-      }
-    ).returns(mock.tap { |m| m.stubs(:sha).returns("new_sha") })
-    mock_client.expects(:update_ref).with(
-      "test-user/#{DataRepositoryService.name_for_environment}",
-      "heads/main",
-      "new_sha"
-    )
-
-    # Assert that the job completes without error
-    assert_nothing_raised do
-      InitializeUserDataRepositoryJob.perform_now(@user.id)
-    end
-  end
-
-  test "creates data repository if it does not exist with main default branch" do
-    User.any_instance.stubs(:github_username).returns("test-user")
-
-    mock_client = mock
-    Octokit::Client.stubs(:new).returns(mock_client)
-    mock_client.expects(:repository?).with("test-user/#{DataRepositoryService.name_for_environment}").returns(false)
-    mock_client.expects(:create_repository).with(
-      DataRepositoryService.name_for_environment,
-      private: false,
-      auto_init: true,
-      description: "Repository created via railsnew.io",
-      default_branch: "main"
-    ).returns(mock)
-
-    # Expect master branch not found
-    mock_client.expects(:ref).with("test-user/#{DataRepositoryService.name_for_environment}", "heads/master").raises(Octokit::NotFound)
 
     # First ref call in commit_changes (for tree SHA)
     mock_client.expects(:ref).with("test-user/#{DataRepositoryService.name_for_environment}", "heads/main").returns(mock.tap { |m| m.stubs(:object).returns(GitObject.new(sha: "old_sha")) })

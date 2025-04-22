@@ -34,13 +34,6 @@ class AppRepositoryServiceTest < ActiveSupport::TestCase
       default_branch: "main"
     ).returns(response)
 
-    # Mock the ref calls to get master branch SHA
-    master_ref = Data.define(:object).new(object: Data.define(:sha).new(sha: "master_sha"))
-    mock_client.expects(:ref).with("#{@user.github_username}/#{@repository_name}", "heads/master").returns(master_ref).twice
-    mock_client.expects(:create_ref).with("#{@user.github_username}/#{@repository_name}", "refs/heads/main", "master_sha")
-    mock_client.expects(:edit_repository).with("#{@user.github_username}/#{@repository_name}", default_branch: "main")
-    mock_client.expects(:delete_ref).with("#{@user.github_username}/#{@repository_name}", "heads/master")
-
     Octokit::Client.stubs(:new).returns(mock_client)
 
     @generated_app.name = @repository_name

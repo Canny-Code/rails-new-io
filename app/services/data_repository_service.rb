@@ -1,5 +1,7 @@
 # app/services/data_repository_service.rb
 class DataRepositoryService < GithubRepositoryService
+  include GithubRepositoryErrors
+
   require "shellwords"
 
   BASE_NAME = "rails-new-io-data"
@@ -30,13 +32,13 @@ class DataRepositoryService < GithubRepositoryService
       )
 
       create_initial_structure(repo_name)
-    rescue RepositoryExistsError
-      begin
-        create_initial_structure(repo_name)
-      rescue StandardError => e
-        # Continue anyway as the repository might already have the structure
-      end
+    rescue GithubRepositoryErrors::RepositoryExistsError
+      # Repository exists, try to create initial structure
+      create_initial_structure(repo_name)
     rescue StandardError => e
+      # If we get here, either:
+      # 1. Repository creation failed
+      # 2. Initial structure creation failed
       raise Error, "Failed to initialize repository: #{e.message}"
     end
   end
