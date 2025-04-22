@@ -210,7 +210,9 @@ class CommandExecutionService
       # Node.js environment for new Rails apps
       "npm_config_prefix" => "#{RAILS_GEN_ROOT}/node",
       "NODE_PATH" => "#{RAILS_GEN_ROOT}/node_modules",
-      "COREPACK_HOME" => "#{RAILS_GEN_ROOT}/.corepack"
+      "COREPACK_HOME" => "#{RAILS_GEN_ROOT}/.corepack",
+      "BUNDLE_WITHOUT" => "",
+      "BUNDLE_WITH" => "development:test"
     }
 
     if RUBY_PLATFORM.include?("darwin")
