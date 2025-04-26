@@ -50,8 +50,7 @@ RUN yarn --version
 FROM nodejs AS build
 
 # Set build-specific environment variables for the host app (railsnew.io)
-ENV BUNDLE_WITHOUT="development:test" \
-    BUNDLE_DEPLOYMENT="1"
+ENV BUNDLE_DEPLOYMENT="1"
 
 # Copy package files first
 COPY package.json yarn.lock .yarnrc.yml ./
@@ -82,7 +81,6 @@ ARG NODE_VERSION=23.7.0
 
 # Set production environment for the host app (railsnew.io)
 ENV RAILS_ENV="production" \
-    BUNDLE_WITHOUT="development:test" \
     NODE_VERSION=${NODE_VERSION} \
     PATH=/usr/local/bin:$PATH
 
