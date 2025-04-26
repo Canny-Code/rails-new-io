@@ -175,9 +175,6 @@ class CommandExecutionService
     env = env_for_command
     log_environment_variables_for_command_execution(env)
 
-    buffer = Buffer.new(@generated_app, @command)
-    error_buffer = []
-
     rails_cmd = "#{RAILS_GEN_ROOT}/gems/bin/rails"
 
     command_args = if @command.start_with?("rails new")
@@ -190,6 +187,9 @@ class CommandExecutionService
     # Validate work directory one final time before execution
     validate_work_directory!
     options = { unsetenv_others: true, chdir: @work_dir }
+
+    buffer = Buffer.new(@generated_app, [ rails_cmd, *command_args ].join(" "))
+    error_buffer = []
 
     Bundler.with_unbundled_env do
       execute_command(env, [ rails_cmd, *command_args ], buffer, error_buffer, options)
