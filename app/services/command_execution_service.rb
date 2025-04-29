@@ -212,7 +212,8 @@ class CommandExecutionService
       "NODE_PATH" => "#{RAILS_GEN_ROOT}/node_modules",
       "COREPACK_HOME" => "#{RAILS_GEN_ROOT}/.corepack",
       "BUNDLE_WITHOUT" => "",
-      "BUNDLE_WITH" => "development:test"
+      "BUNDLE_WITH" => "development:test",
+      "BUNDLE_AUTO_INSTALL" => "true"
     }
 
     if RUBY_PLATFORM.include?("darwin")
