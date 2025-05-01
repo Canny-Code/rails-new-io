@@ -678,6 +678,12 @@ module AppGeneration
       Turbo::StreamsChannel.stubs(:broadcast_update_to)
       ApplicationController.helpers.stubs(:turbo_stream_from)
 
+      # Stub route helpers
+      Rails.application.routes.url_helpers.stubs(:generated_app_path).returns("/generated_apps/1")
+
+      # Stub view rendering
+      ApplicationController.stubs(:render).returns("rendered content")
+
       # Reset to initial state
       @generated_app.app_status.update!(status: "pending")
 
@@ -791,7 +797,7 @@ module AppGeneration
         /💻 🛠️ ✅ Preparing to execute command/,
         /💻 📈 🔍 System environment details/,
         /💻 📈 🔍 Environment variables for command execution/,
-        /🍱 🏗️ 🔄 Command execution started: `rails app:template LOCATION/,
+        /🍱 🏗️ 🔄 Command execution started: `\/var\/lib\/rails-new-io\/rails-env\/gems\/bin\/rails app:template LOCATION/,
         /🐙 🍣 📝 Committing ingredient changes/,
         /🍱 🍣 ✅ Ingredient Rails Authentication applied successfully/,
 
@@ -803,7 +809,7 @@ module AppGeneration
         /💻 🛠️ ✅ Preparing to execute command/,
         /💻 📈 🔍 System environment details/,
         /💻 📈 🔍 Environment variables for command execution/,
-        /🍱 🏗️ 🔄 Command execution started: `rails app:template LOCATION/,
+        /🍱 🏗️ 🔄 Command execution started: `\/var\/lib\/rails-new-io\/rails-env\/gems\/bin\/rails app:template LOCATION/,
         /🐙 🍣 📝 Committing ingredient changes/,
         /🍱 🍣 ✅ Ingredient API Setup applied successfully/,
 

@@ -63,7 +63,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
         log_entries = @generated_app.log_entries.order(created_at: :asc).offset(initial_count)
 
         buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
-        assert_equal "Command execution started: `#{command}`\nSample output", buffer_entry.message
+        assert_equal "Command execution started: `/var/lib/rails-new-io/rails-env/gems/bin/#{command}`\nSample output", buffer_entry.message
         assert log_entries.all? { it.info? || it.debug? }
 
         @generated_app.log_entries.where("id > ?", @generated_app.log_entries.limit(initial_count).pluck(:id).last).destroy_all
@@ -208,7 +208,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       end
 
       buffer_entry = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
-      assert_equal "Command execution started: `#{@valid_commands.first}`\nSample output", buffer_entry.message
+      assert_equal "Command execution started: `/var/lib/rails-new-io/rails-env/gems/bin/#{@valid_commands.first}`\nSample output", buffer_entry.message
       assert log_entries.all? { it.info? || it.debug? }
     end
   end
@@ -227,7 +227,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
       expected_messages = [
         "Command failed",
         "Command stderr:<br>Error message",
-        "Command execution started: `#{@valid_commands.first}`",
+        "Command execution started: `/var/lib/rails-new-io/rails-env/gems/bin/#{@valid_commands.first}`",
         "Environment variables for command execution",
         "System environment details",
         "Preparing to execute command",
@@ -343,7 +343,7 @@ class CommandExecutionServiceTest < ActiveSupport::TestCase
 
       # Find the command execution log entry
       command_log = log_entries.find { |entry| entry.metadata["stream"] == "stdout" }
-      assert_equal "Command execution started: `#{template_command}`", command_log.message
+      assert_equal "Command execution started: `/var/lib/rails-new-io/rails-env/gems/bin/#{template_command}`", command_log.message
     end
   end
 
