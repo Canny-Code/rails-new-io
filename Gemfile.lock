@@ -125,7 +125,7 @@ GEM
     bigdecimal (3.1.9)
     bootsnap (1.18.4)
       msgpack (~> 1.2)
-    brakeman (7.0.0)
+    brakeman (7.0.2)
       racc
     builder (3.3.0)
     capybara (3.40.0)
@@ -165,9 +165,9 @@ GEM
     dispersion (0.2.0)
       prism
     docile (1.4.1)
-    dotenv (3.1.7)
-    dotenv-rails (3.1.7)
-      dotenv (= 3.1.7)
+    dotenv (3.1.8)
+    dotenv-rails (3.1.8)
+      dotenv (= 3.1.8)
       railties (>= 6.1)
     drb (2.2.1)
     dry-cli (1.2.0)
@@ -190,7 +190,7 @@ GEM
       logger
     faraday-net_http (3.4.0)
       net-http (>= 0.5.0)
-    faraday-retry (2.2.1)
+    faraday-retry (2.3.1)
       faraday (~> 2.0)
     friendly_id (5.5.1)
       activerecord (>= 4.0.0)
@@ -319,7 +319,7 @@ GEM
       racc (~> 1.4)
     nokogiri (1.18.2-x86_64-linux-musl)
       racc (~> 1.4)
-    noticed (2.6.0)
+    noticed (2.6.1)
       rails (>= 6.1.0)
     oauth2 (2.0.9)
       faraday (>= 0.17.3, < 3.0)
@@ -328,7 +328,7 @@ GEM
       rack (>= 1.2, < 4)
       snaky_hash (~> 2.0)
       version_gem (~> 1.1)
-    octokit (9.2.0)
+    octokit (10.0.0)
       faraday (>= 1, < 3)
       sawyer (~> 0.9)
     omniauth (2.1.2)
@@ -468,7 +468,7 @@ GEM
       addressable (>= 2.3.5)
       faraday (>= 0.17.3, < 3)
     securerandom (0.4.1)
-    selenium-webdriver (4.30.1)
+    selenium-webdriver (4.31.0)
       base64 (~> 0.2)
       logger (~> 1.4)
       rexml (~> 3.2, >= 3.2.5)
@@ -501,7 +501,7 @@ GEM
       activejob (>= 7.2)
       activerecord (>= 7.2)
       railties (>= 7.2)
-    solid_queue (1.1.4)
+    solid_queue (1.1.5)
       activejob (>= 7.1)
       activerecord (>= 7.1)
       concurrent-ruby (>= 1.3.1)
@@ -527,10 +527,10 @@ GEM
       railties (>= 6.0.0)
     stringio (3.1.3)
     thor (1.3.2)
-    thruster (0.1.12)
-    thruster (0.1.12-aarch64-linux)
-    thruster (0.1.12-arm64-darwin)
-    thruster (0.1.12-x86_64-linux)
+    thruster (0.1.13)
+    thruster (0.1.13-aarch64-linux)
+    thruster (0.1.13-arm64-darwin)
+    thruster (0.1.13-x86_64-linux)
     timeout (0.4.3)
     turbo-rails (2.0.13)
       actionpack (>= 7.1.0)
@@ -583,15 +583,15 @@ DEPENDENCIES
   aws-sdk-s3 (= 1.170)
   better_html
   bootsnap
-  brakeman (~> 7.0.0)
+  brakeman (~> 7.0.2)
   capybara
   capybara-lockstep (~> 2.2.3)
   database_cleaner-active_record
   debug (~> 1.10.0)
-  dotenv-rails (~> 3.1.7)
+  dotenv-rails (~> 3.1.8)
   erb_lint (~> 0.9.0)
   faker
-  faraday-retry (~> 2.2.1)
+  faraday-retry (~> 2.3.1)
   friendly_id (~> 5.5.1)
   kamal (~> 2.5.3)
   litestream (~> 0.12.0)
@@ -599,8 +599,8 @@ DEPENDENCIES
   minitest-difftastic (~> 0.2.1)
   mission_control-jobs (~> 1.0.2)
   mocha (~> 2.7.1)
-  noticed (~> 2.6.0)
-  octokit (~> 9.2.0)
+  noticed (~> 2.6.1)
+  octokit (~> 10.0.0)
   omniauth-github!
   omniauth-rails_csrf_protection
   overcommit
@@ -612,18 +612,18 @@ DEPENDENCIES
   rails-erd (~> 1.7.2)
   redcarpet (~> 3.6.1)
   rubocop-rails-omakase
-  selenium-webdriver (~> 4.30.1)
+  selenium-webdriver (~> 4.31.0)
   sentry-rails (~> 5.23.0)
   sentry-ruby (~> 5.23.0)
   simplecov
   simplecov-tailwindcss
   solid_cable (~> 3.0.7)
   solid_cache (~> 1.0.7)
-  solid_queue (~> 1.1.4)
+  solid_queue (~> 1.1.5)
   sqlite3 (~> 2.6.0)
   stackprof (~> 0.2.27)
   stimulus-rails
-  thruster (~> 0.1.12)
+  thruster (~> 0.1.13)
   turbo-rails (~> 2.0.13)
   vite_rails (~> 3.0.19)
 
