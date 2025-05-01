@@ -13,4 +13,22 @@ module GeneratedAppsHelper
       "bg-gray-100 text-gray-800"
     end
   end
+
+  def render_onboarding_explanation(step)
+    return unless step.present?
+
+    valid_steps = (1..10).to_a
+    return unless valid_steps.include?(step.to_i)
+
+    render "shared/onboarding/#{step}/explanation"
+  end
+
+  def render_onboarding_sidebar(step)
+    return unless step.present?
+
+    valid_steps = (1..10).to_a
+    return unless valid_steps.include?(step.to_i)
+
+    render "shared/onboarding/#{step}/sidebar"
+  end
 end

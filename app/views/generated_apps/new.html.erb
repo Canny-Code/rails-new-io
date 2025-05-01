@@ -5,7 +5,7 @@
   </div>
   <div>
   <% if params[:onboarding_step].present? %>
-    <%= render "shared/onboarding/#{params[:onboarding_step]}/explanation" %>
+    <%= render_onboarding_explanation(params[:onboarding_step]) %>
   <% end %>
   </div>
   <div class="mt-8">

@@ -1,6 +1,6 @@
 <% if params[:onboarding_step].present? %>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-14">
-    <%= render "shared/onboarding/#{params[:onboarding_step]}/explanation" %>
+    <%= render_onboarding_explanation(params[:onboarding_step]) %>
   </div>
 <% end %>
 <%= render ResourceLayout::Component.new(

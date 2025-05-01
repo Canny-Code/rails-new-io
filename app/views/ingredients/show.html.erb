@@ -23,7 +23,7 @@
     </div>
   </div>
   <% if params[:onboarding_step].present? %>
-    <%= render "shared/onboarding/#{params[:onboarding_step]}/explanation" %>
+    <%= render_onboarding_explanation(params[:onboarding_step]) %>
   <% end %>
   <div class="mt-8 space-y-8 divide-y divide-gray-200">
     <% if @ingredient.description.present? %>

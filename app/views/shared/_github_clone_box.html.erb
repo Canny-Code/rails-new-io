@@ -3,7 +3,7 @@
     <h2 class="text-xl font-semibold text-green-800 mb-2">Your app is ready!</h2>
     <% if params[:onboarding_step].present? %>
       <p class="text-sm text-gray-500">
-            <%= render "shared/onboarding/#{params[:onboarding_step]}/final_instructions" %>
+        <%= render_onboarding_final_instructions(params[:onboarding_step]) %>
       </p>
     <% end %>
     <div class="flex items-center gap-2">
