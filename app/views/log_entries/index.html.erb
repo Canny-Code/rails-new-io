@@ -3,6 +3,7 @@
   <%= turbo_stream_from "#{@generated_app.to_gid}:app_status" %>
   <div data-controller="onboarding-completed" data-onboarding-step="<%= params[:onboarding_step] %>">
     <div id="explanation" data-onboarding-completed-target="explanation">
+      <%= render_onboarding_explanation(params[:onboarding_step]) %>
     </div>
   </div>
   <%= render "shared/status_steps_content", generated_app: @generated_app %>

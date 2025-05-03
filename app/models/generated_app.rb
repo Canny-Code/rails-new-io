@@ -198,7 +198,7 @@ class GeneratedApp < ApplicationRecord
     Turbo::StreamsChannel.broadcast_update_to(
       "#{to_gid}:app_generation_log_entries",
       target: "explanation",
-      partial: "shared/onboarding/7/final_instructions"
+      partial: "shared/onboarding/final_instructions"
     )
 
     # TODO: This is a hack to broadcast the last step as completed

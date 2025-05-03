@@ -1,17 +1,10 @@
-<div class="mt-4🎉 bg-yellow-50 py-4 px-8 rounded-md flex gap-1">
-  <div class="flex text-4xl items-center">👋</div>
-  <div class="ml-6 flex flex-col gap-1">
-    <h1 class="text-lg font-medium leading-6 text-gray-900 underline-offset-2 underline">
-      Onboarding step 7: Sit back and relax!
-    </h1>
-    <p class="mt-1 text-sm text-gray-500">
-      You've done your part, now it's railsnew.io's turn. See the magic happen in real time!
-    </p>
-    <p class="mt-1 text-sm text-gray-500">
-      There's not much to say here - the green bubbles below show the progress, and you can see the logs in real time.
-    </p>
-    <p class="mt-1 text-sm text-gray-500">
-      You'll see the final instructions once the build is complete.
-    </p>
-    </div>
-</div>
+<%= render Onboarding::Explanation::Component.new(
+  content: <<~MARKDOWN,
+  # Onboarding step 7: Your App is Cooking!
+  Watch those green bubbles pop up like LEGO bricks snapping into place.
+  Below, you'll see logs scrolling like the Matrix, except it's actually doing something useful.
+  Grab a coffee, do some desk stretches, or watch those satisfying progress bubbles – we'll let you know when your masterpiece is ready →
+
+  MARKDOWN
+  subtitle: "(Like watching paint dry, but with more blinking lights)"
+) %>

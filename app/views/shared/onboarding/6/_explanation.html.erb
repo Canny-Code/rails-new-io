@@ -1,20 +1,12 @@
-<div class="mt-4 bg-yellow-50 py-4 px-8 rounded-md flex gap-1">
-  <div class="flex text-4xl items-center">👋</div>
-  <div class="ml-6 flex flex-col gap-1">
-    <h1 class="text-lg font-medium leading-6 text-gray-900 underline-offset-2 underline">
-      Onboarding step 6: Creating your first app
-    </h1>
-    <p class="mt-1 text-sm text-gray-500">
-      Enter the name of your new app in the text field.
-    </p>
-    <p class="mt-1 text-sm text-gray-500">
-      Once railsnew.io has generated the app, it will push it to your GitHub account.
-    </p>
-    <p class="mt-1 text-sm text-gray-500">
-      Therefore, the app name has to be 1) a valid GitHub repo name, and 2) not already taken by another repo in your GitHub account.
-    </p>
-    <p class="mt-1 text-sm text-gray-500">
-      After filling out the text field with a valid name (you should see "✓ Name is available" in green below the text field), click 'Generate App'!
-    </p>
-    </div>
-</div>
+<%= render Onboarding::Explanation::Component.new(
+  content: <<~MARKDOWN,
+  # Onboarding step 6: Name That App!
+  Oh yeah, plot twist: railsnew.io is gonna push this baby straight to GitHub when it's done generatingt the app.
+  Thus, your app name needs to be:
+  * Valid for GitHub (so maybe skip 'my_awesome_$$_app!!!')
+  * Not already camping in your GitHub repos (check for that green "✓ Name is available" below)
+
+  **I can haz green checkmark?! Smash that 'Generate App' button →**
+  MARKDOWN
+  subtitle: "(Like naming a pet, but with fewer responsibilities)"
+) %>

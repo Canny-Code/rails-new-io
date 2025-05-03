@@ -3,16 +3,16 @@
     <h2 class="text-xl font-semibold text-green-800 mb-2">Your app is ready!</h2>
     <% if params[:onboarding_step].present? %>
       <p class="text-sm text-gray-500">
-        <%= render_onboarding_final_instructions(params[:onboarding_step]) %>
+        <%= render "shared/onboarding/final_instructions" %>
       </p>
     <% end %>
     <div class="flex items-center gap-2">
       <code class="bg-gray-100 p-2 rounded flex-grow">
-        git clone <%= github_ssh_url(generated_app.user.github_username, generated_app.github_repo_name) %>
+        git clone <%= final_instructions(generated_app.user.github_username, generated_app.github_repo_name) %>
       </code>
       <button data-controller="clipboard"
               data-action="clipboard#copy"
-              data-clipboard-text-value="git clone <%= github_ssh_url(generated_app.user.github_username, generated_app.github_repo_name) %>"
+              data-clipboard-text-value="git clone <%= final_instructions(generated_app.user.github_username, generated_app.github_repo_name) %>"
               class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />

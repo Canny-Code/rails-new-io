@@ -1,14 +1,9 @@
-<div class="mt-4 bg-yellow-50 py-4 px-8 rounded-md flex gap-1">
-  <div class="flex text-4xl items-center">👋</div>
-  <div class="ml-6 flex flex-col gap-1">
-    <h1 class="text-lg font-medium leading-6 text-gray-900 underline-offset-2 underline">
-      Onboarding step 5: Review your recipe and create your first app!
-    </h1>
-    <p class="mt-1 text-sm text-gray-500">
-      This is the show page for your recipe.
-    </p>
-    <p class="mt-1 text-sm text-gray-500">
-      Let's create your first app - click 'Create a new App using this recipe'!
-    </p>
-    </div>
-</div>
+<%= render Onboarding::Explanation::Component.new(
+  content: <<~MARKDOWN,
+  # Onboarding step 5: Put the recipe to work
+  All your LEGO pieces are lined up perfectly (and not scattered on the floor waiting to ambush your bare feet at midnight).
+  Your recipe is ready to cook up some Rails magic!
+  Time to push the big red button and watch this baby come to life.
+  Hit 'Create a new App using this recipe' to unleash your creation →
+  MARKDOWN
+) %>

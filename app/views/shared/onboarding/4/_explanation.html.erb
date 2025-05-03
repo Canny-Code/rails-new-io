@@ -1,20 +1,10 @@
-<div class="mt-4 bg-yellow-50 py-4 px-8 rounded-md flex gap-1">
-  <div class="flex text-4xl items-center">👋</div>
-  <div class="ml-6 flex flex-col gap-1">
-    <h1 class="text-lg font-medium leading-6 text-gray-900 underline-offset-2 underline">
-      Onboarding step 4: Creating your first recipe!
-    </h1>
-    <p class="mt-4 text-sm text-gray-500">
-      Exciting times ahead - you are ready to create your first recipe, using the ingredient created in step 1 - and some others.
-    </p>
-    <p class="mt-1 text-sm text-gray-500">
-      Let's create a new Recipe with Tailwind CSS, built in Rails authentication (with some extra goodies), and RSpec instead of Minitest.
-    </p>
-    <p class="mt-1 text-sm text-gray-500">
-      Btw. we are fans of Minitest + fixtures at railsnew.io, so this is not an endorsement of RSpec - or anything, really. But that is exactly the point: you can mix and match ingredients (or replace them in an existing recipe) to create your own custom Rails experience.
-    </p>
-    <p class="mt-4 text-sm text-gray-500">
-      Close this popup to get started - follow the steps in the sidebar to create your first recipe!
-    </p>
-    </div>
-</div>
+<%= render Onboarding::Explanation::Component.new(
+  content: <<~MARKDOWN,
+  # Onboarding step 4: It's build-a-recipe'o Clock
+  Remember those LEGO sets where you'd ignore the instructions and build your own spaceship-castle-submarine?
+  That's exactly what we're doing here with Rails – except it'll actually work.
+
+  Close this popup and follow the sidebar steps like they're sacred LEGO instructions →
+  MARKDOWN
+  subtitle: "a.k.a. time to mix & match, baby!"
+) %>
