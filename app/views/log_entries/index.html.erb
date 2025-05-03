@@ -14,6 +14,9 @@
     <h1 class="text-2xl font-bold">
       Log Entries for <%= @generated_app.name %>
     </h1>
+    <div id="current-ingredient-being-applied">
+      <%= render "shared/current_ingredient", ingredient: nil %>
+    </div>
     <div class="flex items-center gap-2">
       <%= render Buttons::Tertiary::Component.new(
         text: "Back to App",

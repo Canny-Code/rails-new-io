@@ -65,6 +65,7 @@ class GeneratedApp < ApplicationRecord
     end
 
     ingredients.each do |ingredient|
+      broadcast_current_ingredient(ingredient)
       apply_ingredient(ingredient)
 
       @logger.info("Committing ingredient changes")
@@ -75,6 +76,7 @@ class GeneratedApp < ApplicationRecord
       COMMIT_MESSAGE
       @logger.info("Ingredient #{ingredient.name} applied successfully")
     end
+    broadcast_current_ingredient(nil)
   end
 
   def command
@@ -203,5 +205,14 @@ class GeneratedApp < ApplicationRecord
 
     # TODO: This is a hack to broadcast the last step as completed
     app_status.broadcast_status_steps
+  end
+
+  def broadcast_current_ingredient(ingredient)
+    Turbo::StreamsChannel.broadcast_update_to(
+      "#{to_gid}:app_generation_log_entries",
+      target: "current-ingredient-being-applied",
+      partial: "shared/current_ingredient",
+      locals: { ingredient: ingredient }
+    )
   end
 end
