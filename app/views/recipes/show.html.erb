@@ -9,7 +9,7 @@
       <div class="px-4 sm:px-0">
         <div class="md:flex md:items-center md:justify-between">
           <div>
-            <h3 class="text-base/7 font-semibold text-gray-900">Recipe Details</h3>
+            <h3 class="font-semibold text-gray-900 text-2xl">Recipe Details</h3>
             <p class="mt-1 max-w-2xl text-sm/6 text-gray-500">A carefully crafted recipe for your next Rails app.</p>
           </div>
           <%= render Buttons::Secondary::Component.new(
@@ -57,11 +57,32 @@
             <dt class="text-sm/6 font-medium text-gray-900">Ingredients</dt>
             <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
               <% if @recipe.recipe_ingredients.any? %>
-                <% @recipe.recipe_ingredients.each do |recipe_ingredient| %>
-                  <%= link_to ingredient_path(recipe_ingredient.ingredient), class: "rounded-xl bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 mr-4" do %>
-                    <%= recipe_ingredient.ingredient.name %>
+                <div class="space-y-6">
+                  <% @recipe.recipe_ingredients.includes(ingredient: :page).group_by { |ri| ri.ingredient.page }.each do |page, recipe_ingredients| %>
+                    <div class="border-b border-gray-200 pb-4">
+                      <h4 class="font-semibold text-gray-900 mb-2 text-xl"><%= page.title %></h4>
+                      <div class="space-y-4">
+                        <% recipe_ingredients.group_by { |ri| ri.ingredient.category }.each do |category, ris| %>
+                          <div>
+                            <h5 class="font-medium text-gray-700 mb-1 text-lg"><%= category %></h5>
+                            <div class="pl-4 space-y-1">
+                              <% ris.group_by { |ri| ri.ingredient.sub_category }.each do |sub_category, sub_ris| %>
+                                <% sub_ris.each do |ri| %>
+                                  <%= link_to ingredient_path(ri.ingredient), class: "block text-sm text-gray-600 hover:text-gray-900 underline" do %>
+                                    <%= sub_category == "Default" ? ri.ingredient.name : "#{sub_category} → #{ri.ingredient.name}" %>
+                                  <% end %>
+                                  <span class="text-xs text-gray-500">
+                                    <%= ri.ingredient.description %>
+                                  </span>
+                                <% end %>
+                              <% end %>
+                            </div>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
                   <% end %>
-                <% end %>
+                </div>
               <% else %>
                 <span>No custom ingredients added.</span>
               <% end %>
