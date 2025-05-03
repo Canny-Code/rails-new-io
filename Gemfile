@@ -4,6 +4,7 @@ gem "rails", "8.0.2"
 
 gem "acidic_job", "= 1.0.0.rc1"
 gem "aasm", "~> 5.5.0"
+gem "amazing_print", "~> 1.7.2"
 gem "aws-sdk-s3", "1.170", require: false
 gem "aws-sdk-core", "3.211"
 gem "bootsnap", require: false
@@ -55,7 +56,6 @@ group :development, :test do
   gem "brakeman", "~> 7.0.2", require: false
   gem "debug", "~> 1.10.0", platforms: %i[ mri ], require: "debug/prelude"
   gem "rubocop-rails-omakase", require: false
-  gem "amazing_print", "~> 1.7.2"
   gem "minio", "~> 0.4.0"
   gem "dotenv-rails", "~> 3.1.8"
   gem "simplecov", require: false
