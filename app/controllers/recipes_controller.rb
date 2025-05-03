@@ -43,7 +43,7 @@ class RecipesController < ApplicationController
 
       WriteRecipeJob.perform_later(recipe_id: @recipe.id, user_id: current_user.id)
 
-      redirect_path = if params[:onboarding_step].present?
+      redirect_path = if params[:onboarding_step].present? && !current_user.onboarding_completed
         recipe_path(@recipe, onboarding_step: params[:onboarding_step].to_i + 1)
       else
         recipe_path(@recipe)

@@ -37,7 +37,7 @@ class IngredientsController < ApplicationController
 
       WriteIngredientJob.perform_later(ingredient_id: @ingredient.id, user_id: current_user.id)
 
-      redirect_path = if params[:onboarding_step].present?
+      redirect_path = if params[:onboarding_step].present? && !current_user.onboarding_completed
         next_step = params[:onboarding_step].to_i + 1
         ingredient_path(@ingredient, onboarding_step: next_step)
       else

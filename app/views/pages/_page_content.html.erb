@@ -61,7 +61,7 @@
     </div>
   </div>
   <div data-tabs-target="panels" class="relative">
-    <% if params[:onboarding_step].present? %>
+    <% if params[:onboarding_step].present? && !current_user.onboarding_completed %>
       <div class="flex gap-0 max-w-6xl mx-auto">
         <%# Left sidebar (1/3) %>
         <div class="w-1/3">

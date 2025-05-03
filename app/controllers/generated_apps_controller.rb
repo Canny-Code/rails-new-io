@@ -26,7 +26,7 @@ class GeneratedAppsController < ApplicationController
 
       if @generated_app.save
         AppGenerationJob.perform_later(@generated_app.id)
-        redirect_path = if params[:onboarding_step].present?
+        redirect_path = if params[:onboarding_step].present? && !current_user.onboarding_completed
           generated_app_log_entries_path(@generated_app, onboarding_step: params[:onboarding_step])
         else
           generated_app_log_entries_path(@generated_app)

@@ -11,7 +11,7 @@
     </div>
   </div>
 
-  <% if params[:onboarding_step].present? %>
+  <% if params[:onboarding_step].present? && !current_user.onboarding_completed %>
     <%= render_onboarding_explanation(params[:onboarding_step]) %>
     <div class="flex w-full gap-12">
       <!-- Left sidebar (1/3) -->
