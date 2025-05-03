@@ -22,7 +22,7 @@
         ) %>
         <%= render OnboardingSidebarStep::Component.new(
           title: "Add a description",
-          description: "This is optional, but strongly recommended. Add something like `Adding the built-in Rails authentication gem` to the **Description** text area.",
+          description: "This is optional, but strongly recommended. Add something like `Generating built-in Rails authentication` to the **Description** text area.",
           step_index: 3
         ) %>
         <% desc = <<~DESC
@@ -32,7 +32,7 @@
             generate 'authentication'
             ```
 
-            ⚠️ Make sure to use the **Template content** text area, rather than **Code Snippets** that follows **Description**. We are not using **Code Snippets** in this tutorial.
+            ⚠️ Make sure to use the **Template content** text area, rather than **Code Snippets** (they are easy to confuse). We are not using **Code Snippets** in this tutorial.
           DESC
         %>
         <%= render OnboardingSidebarStep::Component.new(
