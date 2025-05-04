@@ -16,6 +16,11 @@
             text: "Edit Recipe",
             path: edit_recipes_path(recipe_id: @recipe.id, slug: "basic-setup")
           ) %>
+          <%= render Buttons::Tertiary::Component.new(
+            text: "Delete Recipe",
+            path: recipe_path(@recipe),
+            data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this recipe?" }
+          ) %>
           <%= render Buttons::Primary::Component.new(
             text: "Create a new App using this Recipe",
             path: new_generated_app_path(recipe_id: @recipe.id, onboarding_step: params[:onboarding_step].present? ? params[:onboarding_step].to_i + 1 : nil)

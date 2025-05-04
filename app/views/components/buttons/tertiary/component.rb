@@ -5,24 +5,38 @@ module Buttons
   module Tertiary
     class Component < ApplicationComponent
       include Phlex::Rails::Helpers::LinkTo
+      include Phlex::Rails::Helpers::ButtonTag
 
-      def initialize(text:, path:, size: :medium, disabled: false, data: {}, html_options: {})
+      def initialize(text:, path:, size: :medium, disabled: false, type: :link, data: {}, html_options: {})
         @text = text
         @path = path
         @size = size
         @disabled = disabled
         @data = data
         @html_options = html_options
+        @type = type
       end
 
       def view_template
-        link_to(
-          @path,
-          class: button_classes,
-          data: @data,
-          **@html_options.except(:class)
-        ) do
-          plain @text
+        if @type == :button
+          button_tag(
+            type: "button",
+            class: button_classes,
+            disabled: @disabled,
+            data: @data,
+            **@html_options.except(:class)
+          ) do
+            render_content
+          end
+        else
+          link_to(
+            @path,
+            class: button_classes,
+            data: @data,
+            **@html_options.except(:class)
+          ) do
+            plain @text
+          end
         end
       end
 
