@@ -6,8 +6,8 @@ require "pathname"
 class CommandExecutionService
   RAILS_GEN_ROOT = "/var/lib/rails-new-io/rails-env".freeze
   WORKSPACES_ROOT = "/var/lib/rails-new-io/workspaces".freeze
-  RUBY_VERSION = "3.4.1".freeze
-  RAILS_VERSION = "8.0.1".freeze
+  RUBY_VERSION = RailsNewConfig.ruby_version_for_new_apps.freeze
+  RAILS_VERSION = RailsNewConfig.rails_version_for_new_apps.freeze
   BUNDLER_VERSION = "2.6.3".freeze
 
   ALLOWED_COMMANDS = [

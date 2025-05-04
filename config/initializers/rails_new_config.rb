@@ -4,7 +4,7 @@ module RailsNewConfig
 
   # These will be updated when new versions are released
   self.ruby_version = "3.4.1"
-  self.rails_version = "8.0.1"
+  self.rails_version = "8.0.2"
 
   class << self
     def ruby_version_for_new_apps

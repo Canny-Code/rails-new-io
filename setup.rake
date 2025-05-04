@@ -3,7 +3,7 @@ require "rbconfig"
 
 RAILS_GEN_ROOT = "/var/lib/rails-new-io/rails-env".freeze
 RUBY_VERSION = "3.4.1".freeze
-RAILS_VERSION = "8.0.1".freeze
+RAILS_VERSION = "8.0.2".freeze
 BUNDLER_VERSION = "2.6.3".freeze
 
 def ruby_platform

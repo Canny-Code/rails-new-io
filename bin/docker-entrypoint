@@ -87,14 +87,14 @@ if [ ! -d "/var/lib/rails-new-io/rails-env/ruby" ] || [ "$FORCE_ISOLATED_RUBY_RE
 
     echo "DEBUG: Bundler configured:\n\n$(/var/lib/rails-new-io/rails-env/gems/bin/bundle config list)"
 
-    echo "DEBUG: Installing Rails 8.0.1"
-    /var/lib/rails-new-io/rails-env/ruby/bin/gem install rails -v 8.0.1
+    echo "DEBUG: Installing Rails 8.0.2"
+    /var/lib/rails-new-io/rails-env/ruby/bin/gem install rails -v 8.0.2
 
     # Create the rails executable
     cat > /var/lib/rails-new-io/rails-env/gems/bin/rails << 'EOF'
 #!/var/lib/rails-new-io/rails-env/ruby/bin/ruby
 require "rubygems"
-gem "railties", "8.0.1"  # Force the specific version
+gem "railties", "8.0.2"  # Force the specific version
 require "rails/cli"
 EOF
 
