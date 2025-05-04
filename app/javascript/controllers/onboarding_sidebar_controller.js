@@ -158,6 +158,15 @@ export default class extends Controller {
     if (nextStep) {
       // Update next step to current
       const nextStepCircle = nextStep.querySelector('.size-8')
+
+      if (stepIndex === this.stepTargets.length - 1) {
+        const createIngredientButton = document.querySelector('#create-ingredient-button')
+        if (createIngredientButton) {
+          createIngredientButton.removeAttribute('disabled')
+          createIngredientButton.classList.remove('disabled:bg-[#99C49B]', 'disabled:cursor-not-allowed')
+          createIngredientButton.classList.add('bg-[#008A05]', 'hover:bg-[#006D04]', 'active:bg-[#005503]')
+        }
+      }
       if (nextStepCircle) {
         nextStepCircle.innerHTML = '<span class="size-2.5 rounded-full bg-[#008A05]"></span>'
         nextStepCircle.classList.remove('border-gray-300')

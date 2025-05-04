@@ -96,9 +96,9 @@
       ) %>
       <%= render Buttons::Submit::Component.new(
         text: @ingredient.new_record? ? "Create Ingredient" : "Update Ingredient",
-        disabled: false,
+        disabled: @ingredient.new_record? && !current_user.onboarding_completed,
         data: { app_form_validator_target: "submitButton" },
-        html_options: { class: "ml-3" }
+        html_options: { class: "ml-3", id: "create-ingredient-button" }
       ) %>
     </div>
   </div>
