@@ -1,5 +1,19 @@
 class ResourceLayout::Component < ApplicationComponent
-  def initialize(title:, subtitle:, new_button_text: nil, new_button_path: nil, new_button_html_options: {}, resources:, empty_state: nil, columns:, actions: [ :view, :edit, :delete ], search: false, secondary_actions: nil, icon: false)
+  def initialize(
+    title:,
+    subtitle:,
+    new_button_text: nil,
+    new_button_path: nil,
+    new_button_html_options: {},
+    resources:,
+    empty_state: nil,
+    columns:,
+    actions: [ :view, :edit, :delete ],
+    search: false,
+    secondary_actions: nil,
+    icon: false,
+    edit_path_proc: nil
+  )
     @title = title
     @subtitle = subtitle
     @new_button_text = new_button_text
@@ -12,6 +26,7 @@ class ResourceLayout::Component < ApplicationComponent
     @actions = actions
     @search = search
     @secondary_actions = secondary_actions
+    @edit_path_proc = edit_path_proc
   end
 
   def view_template
@@ -26,7 +41,8 @@ class ResourceLayout::Component < ApplicationComponent
                   render ResourceTable::Component.new(
                     resources: @resources,
                     columns: @columns,
-                    actions: @actions
+                    actions: @actions,
+                    edit_path_proc: @edit_path_proc
                   )
                 end
               else

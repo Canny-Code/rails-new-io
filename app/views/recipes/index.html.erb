@@ -43,5 +43,6 @@
       content: ->(recipe) { recipe.created_by.name }
     }
   ],
-  actions: [ :view, :delete ]
+  actions: [ :view, :edit, :delete ],
+  edit_path_proc: ->(recipe) { edit_recipes_path(recipe_id: recipe.id, slug: "basic-setup") }
 ) %>
