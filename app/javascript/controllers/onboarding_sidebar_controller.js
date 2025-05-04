@@ -163,6 +163,7 @@ export default class extends Controller {
         const createIngredientButton = document.querySelector('#create-ingredient-button')
         if (createIngredientButton) {
           createIngredientButton.removeAttribute('disabled')
+          createIngredientButton.removeAttribute('title')
           createIngredientButton.classList.remove('disabled:bg-[#99C49B]', 'disabled:cursor-not-allowed')
           createIngredientButton.classList.add('bg-[#008A05]', 'hover:bg-[#006D04]', 'active:bg-[#005503]')
         }
