@@ -66,12 +66,14 @@
           </div>
         </div>
         <div class="sm:col-span-4">
+          <% onboarding_extra_message = !current_user.onboarding_completed ? '<span class="text-gray-500">(disabled during onboarding)</span>' : "" %>
           <%= f.label :sub_category, class: "block text-sm font-medium text-gray-700" do %>
-            SubCategory
+            SubCategory <%= onboarding_extra_message.html_safe %>
           <% end %>
           <div class="mt-1">
             <%= f.text_field :sub_category,
                 value: ingredient.sub_category.presence || "Default",
+                disabled: !current_user.onboarding_completed,
                 class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
           </div>
         </div>

@@ -1,14 +1,14 @@
 <div class="pt-8">
   <div>
     <%= f.label :template_content do %>
-      Template content<span class="text-red-500 ml-1">*</span>
+      Template Content<span class="text-red-500 ml-1">*</span>
     <% end %>
 
     <p class="mt-1 text-sm text-gray-500">The actual Thor template that will be used in the recipe.</p>
   </div>
   <div class="mt-6">
     <%= f.label :template_content, class: "sr-only" do %>
-      Template content<span class="text-red-500 ml-1">*</span>
+      Template Content<span class="text-red-500 ml-1">*</span>
     <% end %>
     <%= f.text_area :template_content, rows: 10,
         class: "block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 #{'border-red-300' if ingredient.errors[:template_content].any?}",
