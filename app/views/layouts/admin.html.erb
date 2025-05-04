@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      <%= full_title %>
+    </title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <%= vite_client_tag %>
+    <%= vite_javascript_tag "application" %>
+    <%= Sentry.get_trace_propagation_meta.html_safe %>
+  </head>
+  <body class="bg-white">
+    <main class="isolate">
+      <% if notice %>
+        <div class="p-4 mb-4 text-sm text-green-800 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800"
+             data-controller="dismissible">
+          <%= notice %>
+        </div>
+      <% end %>
+      <% if alert %>
+        <div class="p-4 mb-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800"
+             data-controller="dismissible">
+          <%= alert %>
+        </div>
+      <% end %>
+      <% if user_signed_in? %>
+        <%= render Nav::Admin::Component.new %>
+      <% end %>
+      <%= yield %>
+    </main>
+  </body>
+</html>
