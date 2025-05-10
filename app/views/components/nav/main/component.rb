@@ -43,6 +43,10 @@ class Nav::Main::Component < ApplicationComponent
               link_to(ingredients_path, class: nav_link_classes(ingredients_path)) do
                 plain "My Ingredients"
               end
+              whitespace
+              link_to(official_ingredients_path, class: nav_link_classes(official_ingredients_path)) do
+                plain "Official Ingredients"
+              end
             end
           end
 

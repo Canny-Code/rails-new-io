@@ -1,8 +1,8 @@
 <%= render ResourceLayout::Component.new(
   title: "Ingredients",
   subtitle: "A list of all ingredients available for recipes.",
-  new_button_text:  @ingredients.any? ? "Add new Ingredient" : nil,
-  new_button_path:  @ingredients.any? ? new_ingredient_path : nil,
+  new_button_text:  @ingredients.any? && current_page?(ingredients_path) ? "Add new Ingredient" : nil,
+  new_button_path:  @ingredients.any? && current_page?(ingredients_path) ? new_ingredient_path : nil,
   icon: true,
   resources: @ingredients,
   empty_state: EmptyState::Component.new(
@@ -26,5 +26,5 @@
       content: ->(ingredient) { truncate(ingredient.description, length: 80) }
     }
   ],
-  actions: [ :view, :edit, :delete ]
+  actions: current_page?(official_ingredients_path) ? [ :view ] : [ :view, :edit, :delete ]
 ) %>

@@ -12,6 +12,7 @@ Rails.application.routes.draw do
     resources :log_entries, only: [ :index ]
   end
 
+  resources :official_ingredients, only: [ :index ]
   resources :ingredients
   resources :users, only: [ :show ], path: ""
   resource :onboarding, only: [ :update ]
